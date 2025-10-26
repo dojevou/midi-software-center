@@ -1,0 +1,306 @@
+// pipeline/src-tauri/src/commands.rs
+// Grown-up Script: Tauri command handlers for Pipeline app
+// Purpose: Expose processing operations to frontend
+
+use tauri::State;
+use std::sync::Arc;
+use tokio::sync::Mutex;
+use uuid::Uuid;
+use crate::db::models::*;
+use crate::db::repositories::*;
+use crate::core::midi::MidiParser;
+use crate::core::analysis::{BpmDetector, KeyDetector};
+use crate::core::naming::SmartRenamer;
+use crate::core::hash::ContentHasher;
+
+/// Shared application state across all commands
+pub struct AppState {
+    pub db_pool: sqlx::PgPool,
+    pub current_job: Arc<Mutex<Option<ProcessingJob>>>,
+    pub job_stats: Arc<Mutex<ProcessingStats>>,
+}
+
+// ============================================================================
+// PROCESSING COMMANDS
+// ============================================================================
+
+/// Start a new batch processing job
+#[tauri::command]
+pub async fn start_processing(
+    config: ProcessingConfig,
+    state: State<'_, AppState>,
+) -> Result<String, String> {
+    let job_id = Uuid::new_v4();
+    
+    let job = ProcessingJob {
+        id: job_id,
+        source_dir: config.source_directory,
+        extract_dir: config.extract_directory,
+        status: JobStatus::Running,
+        created_at: chrono::Utc::now(),
+    };
+    
+    *state.current_job.lock().await = Some(job.clone());
+    
+    // Spawn background task for processing
+    tokio::spawn(async move {
+        // Processing logic will be implemented in separate module
+        // This is just the command handler wrapper
+    });
+    
+    Ok(job_id.to_string())
+}
+
+/// Get current processing progress and statistics
+#[tauri::command]
+pub async fn get_processing_progress(
+    state: State<'_, AppState>,
+) -> Result<ProcessingProgress, String> {
+    let stats = state.job_stats.lock().await.clone();
+    
+    Ok(ProcessingProgress {
+        phase: stats.current_phase.clone(),
+        current: stats.files_processed,
+        total: stats.total_files,
+        speed: stats.processing_speed,
+        eta_seconds: stats.estimated_seconds_remaining,
+        stats,
+    })
+}
+
+/// Pause the current processing job
+#[tauri::command]
+pub async fn pause_processing(
+    state: State<'_, AppState>,
+) -> Result<(), String> {
+    if let Some(job) = state.current_job.lock().await.as_mut() {
+        job.status = JobStatus::Paused;
+        Ok(())
+    } else {
+        Err("No active job to pause".to_string())
+    }
+}
+
+/// Resume a paused processing job
+#[tauri::command]
+pub async fn resume_processing(
+    state: State<'_, AppState>,
+) -> Result<(), String> {
+    if let Some(job) = state.current_job.lock().await.as_mut() {
+        if job.status == JobStatus::Paused {
+            job.status = JobStatus::Running;
+            Ok(())
+        } else {
+            Err("Job is not paused".to_string())
+        }
+    } else {
+        Err("No active job to resume".to_string())
+    }
+}
+
+/// Cancel the current processing job
+#[tauri::command]
+pub async fn cancel_processing(
+    state: State<'_, AppState>,
+) -> Result<(), String> {
+    if let Some(job) = state.current_job.lock().await.as_mut() {
+        job.status = JobStatus::Cancelled;
+        Ok(())
+    } else {
+        Err("No active job to cancel".to_string())
+    }
+}
+
+/// Get list of all processing jobs (history)
+#[tauri::command]
+pub async fn get_job_history(
+    limit: Option<i64>,
+    state: State<'_, AppState>,
+) -> Result<Vec<JobSummary>, String> {
+    let repo = JobRepository::new(&state.db_pool);
+    repo.get_recent_jobs(limit.unwrap_or(50))
+        .await
+        .map_err(|e| e.to_string())
+}
+
+// ============================================================================
+// FILE BROWSER COMMANDS
+// ============================================================================
+
+/// Browse directory and return files/folders
+#[tauri::command]
+pub async fn browse_directory(
+    path: String,
+) -> Result<DirectoryListing, String> {
+    use std::fs;
+    
+    let entries = fs::read_dir(&path)
+        .map_err(|e| format!("Failed to read directory: {}", e))?;
+    
+    let mut files = Vec::new();
+    let mut directories = Vec::new();
+    
+    for entry in entries.flatten() {
+        if let Ok(metadata) = entry.metadata() {
+            let name = entry.file_name().to_string_lossy().to_string();
+            let path = entry.path().to_string_lossy().to_string();
+            
+            if metadata.is_dir() {
+                directories.push(DirectoryEntry { name, path });
+            } else {
+                files.push(FileEntry {
+                    name,
+                    path,
+                    size: metadata.len(),
+                    extension: entry.path()
+                        .extension()
+                        .and_then(|s| s.to_str())
+                        .map(|s| s.to_string()),
+                });
+            }
+        }
+    }
+    
+    Ok(DirectoryListing {
+        current_path: path,
+        directories,
+        files,
+    })
+}
+
+/// Validate that a directory exists and is writable
+#[tauri::command]
+pub async fn validate_directory(
+    path: String,
+    check_writable: bool,
+) -> Result<bool, String> {
+    use std::fs;
+    use std::path::Path;
+    
+    let path_obj = Path::new(&path);
+    
+    if !path_obj.exists() {
+        return Err("Directory does not exist".to_string());
+    }
+    
+    if !path_obj.is_dir() {
+        return Err("Path is not a directory".to_string());
+    }
+    
+    if check_writable {
+        // Try to create a temporary file to test write permissions
+        let test_file = path_obj.join(".midi_lib_write_test");
+        match fs::write(&test_file, b"test") {
+            Ok(_) => {
+                let _ = fs::remove_file(test_file);
+                Ok(true)
+            }
+            Err(e) => Err(format!("Directory is not writable: {}", e)),
+        }
+    } else {
+        Ok(true)
+    }
+}
+
+// ============================================================================
+// ANALYSIS COMMANDS (For Preview)
+// ============================================================================
+
+/// Analyze a single MIDI file and return metadata (preview before processing)
+#[tauri::command]
+pub async fn analyze_midi_file(
+    file_path: String,
+) -> Result<MidiFileMetadata, String> {
+    use std::fs;
+    
+    let bytes = fs::read(&file_path)
+        .map_err(|e| format!("Failed to read file: {}", e))?;
+    
+    let parser = MidiParser::new();
+    let midi_data = parser.parse(&bytes)
+        .map_err(|e| format!("Failed to parse MIDI: {}", e))?;
+    
+    let bpm_detector = BpmDetector::new();
+    let key_detector = KeyDetector::new();
+    
+    let bpm = bpm_detector.detect(&midi_data);
+    let key = key_detector.detect(&midi_data);
+    
+    Ok(MidiFileMetadata {
+        file_path,
+        bpm,
+        key,
+        track_count: midi_data.tracks.len() as i32,
+        duration_seconds: midi_data.duration_seconds,
+        has_notes: midi_data.has_notes,
+        has_drums: midi_data.has_drums,
+    })
+}
+
+// ============================================================================
+// CONFIGURATION COMMANDS
+// ============================================================================
+
+/// Get current application configuration
+#[tauri::command]
+pub async fn get_config() -> Result<AppConfig, String> {
+    // Load from config file or use defaults
+    Ok(AppConfig::default())
+}
+
+/// Save application configuration
+#[tauri::command]
+pub async fn save_config(config: AppConfig) -> Result<(), String> {
+    // Save to config file
+    use std::fs;
+    let config_path = dirs::config_dir()
+        .ok_or("Failed to get config directory")?
+        .join("midi-library-pipeline")
+        .join("config.json");
+    
+    fs::create_dir_all(config_path.parent().unwrap())
+        .map_err(|e| format!("Failed to create config directory: {}", e))?;
+    
+    let json = serde_json::to_string_pretty(&config)
+        .map_err(|e| format!("Failed to serialize config: {}", e))?;
+    
+    fs::write(config_path, json)
+        .map_err(|e| format!("Failed to write config: {}", e))?;
+    
+    Ok(())
+}
+
+/// Get database connection status
+#[tauri::command]
+pub async fn get_database_status(
+    state: State<'_, AppState>,
+) -> Result<DatabaseStatus, String> {
+    match sqlx::query("SELECT 1")
+        .fetch_one(&state.db_pool)
+        .await
+    {
+        Ok(_) => Ok(DatabaseStatus {
+            connected: true,
+            connection_string: "Connected".to_string(),
+        }),
+        Err(e) => Ok(DatabaseStatus {
+            connected: false,
+            connection_string: format!("Error: {}", e),
+        }),
+    }
+}
+
+// ============================================================================
+// STATISTICS COMMANDS
+// ============================================================================
+
+/// Get overall library statistics
+#[tauri::command]
+pub async fn get_library_stats(
+    state: State<'_, AppState>,
+) -> Result<LibraryStats, String> {
+    let repo = StatsRepository::new(&state.db_pool);
+    repo.get_stats()
+        .await
+        .map_err(|e| e.to_string())
+}

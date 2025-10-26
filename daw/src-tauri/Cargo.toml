@@ -1,0 +1,81 @@
+# daw/src-tauri/Cargo.toml
+[package]
+name = "midi-daw"
+version = "0.1.0"
+description = "MIDI library DAW and sequencer"
+authors = ["Your Name"]
+license = ""
+repository = ""
+edition = "2021"
+default-run = "midi-daw"
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+# Tauri framework
+tauri = { workspace = true }
+tauri-plugin-shell = { workspace = true }
+tauri-plugin-dialog = { workspace = true }
+tauri-plugin-fs = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# MIDI hardware I/O
+midir = "0.9"                    # Cross-platform MIDI I/O (uses ALSA on Linux)
+alsa = "0.8"                     # Direct ALSA support for Ubuntu
+
+# MIDI processing
+midly = "0.5"                    # Fast MIDI parser
+rimd = "0.0.1"                   # MIDI manipulation
+
+# Audio timing and sync
+cpal = "0.15"                    # Cross-platform audio (for timing reference)
+
+# Async runtime
+tokio = { workspace = true }
+tokio-util = "0.7"
+
+# Threading and synchronization
+crossbeam-channel = "0.5"
+parking_lot = "0.12"             # Faster mutex/rwlock
+
+# Database (read-only for DAW)
+sqlx = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+
+# Search integration
+meilisearch-sdk = "0.24"         # Meilisearch client
+
+# Error handling
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+
+# Logging
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+tracing-appender = "0.2"
+
+# String utilities
+regex = "1.10"
+
+# Configuration
+config = { workspace = true }
+directories = "5.0"
+
+# Collections and utilities
+itertools = "0.12"
+indexmap = "2.0"
+
+# Time and scheduling
+instant = "0.1"                  # Cross-platform instant timing
+
+[dev-dependencies]
+tokio-test = "0.4"
+criterion = "0.5"
+
+[[bin]]
+name = "test_midi"
+path = "src/bin/test_midi.rs"
+

@@ -1,0 +1,48 @@
+{
+  "uid": "midi_files",
+  "primaryKey": "id",
+  "searchableAttributes": [
+    "new_filename",
+    "manufacturer",
+    "collection_name",
+    "auto_tags",
+    "user_tags",
+    "category"
+  ],
+  "filterableAttributes": [
+    "detected_bpm",
+    "detected_key",
+    "category",
+    "manufacturer",
+    "collection_name",
+    "duration_seconds",
+    "complexity_score",
+    "polyphony_max",
+    "total_notes"
+  ],
+  "sortableAttributes": [
+    "new_filename",
+    "detected_bpm",
+    "duration_seconds",
+    "created_at",
+    "complexity_score"
+  ],
+  "rankingRules": [
+    "words",
+    "typo",
+    "proximity",
+    "attribute",
+    "sort",
+    "exactness"
+  ],
+  "typoTolerance": {
+    "enabled": true,
+    "minWordSizeForTypos": {
+      "oneTypo": 4,
+      "twoTypos": 8
+    }
+  },
+  "pagination": {
+    "maxTotalHits": 10000
+  }
+}

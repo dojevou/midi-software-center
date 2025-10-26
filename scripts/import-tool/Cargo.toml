@@ -1,0 +1,11 @@
+[package]
+name = "import-tool"
+version = "1.0.0"
+edition = "2021"
+
+[dependencies]
+tokio = { workspace = true }
+sqlx = { workspace = true }
+chrono = { workspace = true }
+walkdir = "2"
+sha2 = { workspace = true }

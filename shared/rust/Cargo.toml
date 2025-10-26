@@ -1,0 +1,46 @@
+[package]
+name = "midi-library-shared"
+version = "0.1.0"
+edition = "2021"
+authors = ["MIDI Library System"]
+description = "Shared library for MIDI Library System (Pipeline + DAW)"
+
+[lib]
+name = "midi_library_shared"
+path = "src/lib.rs"
+
+[dependencies]
+# MIDI parsing - for Priority 1 (MIDI Core)
+midly = "0.5"
+
+# Database - for Priority 2 (Database models & repositories)
+sqlx = { version = "0.7", features = ["postgres", "runtime-tokio-rustls", "chrono", "uuid"], optional = true }
+
+# Serialization - for all modules
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# Error handling - for all modules
+thiserror = "1.0"
+anyhow = "1.0"
+
+# Async runtime - for Priority 2 (repositories)
+tokio = { version = "1.35", features = ["full"], optional = true }
+
+# Time - for database models
+chrono = { version = "0.4", features = ["serde"] }
+
+# UUID - for database models
+uuid = { version = "1.6", features = ["v4", "serde"] }
+
+# Logging - for all modules
+tracing = "0.1"
+
+[features]
+default = []
+database = ["sqlx", "tokio"]
+full = ["database"]
+
+[dev-dependencies]
+tokio-test = "0.4"
+tempfile = "3.8"

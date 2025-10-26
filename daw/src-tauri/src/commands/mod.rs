@@ -1,0 +1,71 @@
+//! Tauri command handlers
+//!
+//! Grown-up Scripts: Thin wrappers that expose backend functionality to frontend.
+//! All commands delegate business logic to Trusty Modules or Grown-up Scripts.
+
+pub mod midi;
+pub mod sequencer;
+pub mod search;
+pub mod analysis;
+pub mod export;
+pub mod project;
+
+/// Shared application state across all commands
+///
+/// Contains database pool for read-only access to MIDI file metadata.
+pub struct AppState {
+    pub db_pool: Option<sqlx::PgPool>,
+}
+
+#[tauri::command]
+pub async fn initialize_database(state: tauri::State<'_, AppState>) -> Result<(), String> {
+    // Verify that the database connection pool exists
+    if state.db_pool.is_none() {
+        return Err("Database connection not available. Please set DATABASE_URL environment variable.".to_string());
+    }
+
+    // Test the connection with a simple query
+    let pool = state.db_pool.as_ref().unwrap();
+    sqlx::query("SELECT COUNT(*) FROM files")
+        .execute(pool)
+        .await
+        .map_err(|e| format!("Database connection test failed: {}", e))?;
+
+    Ok(())
+}
+
+// Re-export all command functions for easy registration
+#[allow(unused_imports)]
+pub use midi::{
+    midi_list_devices, midi_connect, midi_disconnect,
+    midi_is_connected, midi_get_current_device, midi_send_test_note,
+};
+
+#[allow(unused_imports)]
+pub use sequencer::{
+    start_sequencer, stop_sequencer, pause_sequencer, resume_sequencer,
+    get_playback_position, seek_position, set_tempo, get_tempo,
+    add_track, remove_track, update_track, get_tracks,
+    load_sequencer_tracks, is_sequencer_playing,
+};
+
+#[allow(unused_imports)]
+pub use search::{
+    search_files, get_file_details, get_search_suggestions,
+};
+
+#[allow(unused_imports)]
+pub use analysis::{
+    find_compatible_files, add_favorite, remove_favorite,
+    is_favorite, get_favorites, get_usage_stats,
+};
+
+#[allow(unused_imports)]
+pub use export::{
+    export_project_midi,
+};
+
+#[allow(unused_imports)]
+pub use project::{
+    load_multiple_tracks, clear_all_tracks, get_track_details,
+};

@@ -1,0 +1,265 @@
+//! Tag Commands - Tauri commands for tag operations
+//!
+//! This module provides frontend-facing commands for:
+//! - Retrieving tags for files
+//! - Getting popular tags (for tag cloud)
+//! - Searching tags (for autocomplete)
+//! - Updating file tags
+
+use crate::AppState;
+use crate::db::repositories::tag_repository::{DbTag, TagRepository, TagWithCount};
+use serde::{Deserialize, Serialize};
+use tauri::State;
+
+// =============================================================================
+// TYPE DEFINITIONS
+// =============================================================================
+
+/// Tag for JSON serialization (frontend-friendly)
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct TagResponse {
+    pub id: i32,
+    pub name: String,
+    pub category: Option<String>,
+    pub usage_count: i32,
+}
+
+impl From<DbTag> for TagResponse {
+    fn from(db_tag: DbTag) -> Self {
+        Self {
+            id: db_tag.id,
+            name: db_tag.name,
+            category: db_tag.category,
+            usage_count: db_tag.usage_count,
+        }
+    }
+}
+
+impl From<TagWithCount> for TagResponse {
+    fn from(tag: TagWithCount) -> Self {
+        Self {
+            id: tag.id,
+            name: tag.name,
+            category: tag.category,
+            usage_count: tag.usage_count,
+        }
+    }
+}
+
+// =============================================================================
+// TAURI COMMANDS
+// =============================================================================
+
+/// Get all tags for a specific file
+#[tauri::command]
+pub async fn get_file_tags(
+    file_id: i64,
+    state: State<'_, AppState>,
+) -> Result<Vec<TagResponse>, String> {
+    let pool = state.database.pool().await;
+    let repo = TagRepository::new(pool);
+
+    let tags = repo
+        .get_file_tags(file_id)
+        .await
+        .map_err(|e| format!("Failed to get file tags: {}", e))?;
+
+    Ok(tags.into_iter().map(TagResponse::from).collect())
+}
+
+/// Get popular tags with usage counts (for tag cloud)
+///
+/// # Arguments
+/// * `limit` - Maximum number of tags to return (default: 50)
+#[tauri::command]
+pub async fn get_popular_tags(
+    limit: Option<i32>,
+    state: State<'_, AppState>,
+) -> Result<Vec<TagResponse>, String> {
+    let pool = state.database.pool().await;
+    let repo = TagRepository::new(pool);
+
+    let limit = limit.unwrap_or(50);
+
+    let tags = repo
+        .get_popular_tags(limit)
+        .await
+        .map_err(|e| format!("Failed to get popular tags: {}", e))?;
+
+    Ok(tags.into_iter().map(TagResponse::from).collect())
+}
+
+/// Search tags by name prefix (for autocomplete)
+///
+/// # Arguments
+/// * `query` - Search query (prefix match)
+/// * `limit` - Maximum number of results (default: 10)
+#[tauri::command]
+pub async fn search_tags(
+    query: String,
+    limit: Option<i32>,
+    state: State<'_, AppState>,
+) -> Result<Vec<TagResponse>, String> {
+    let pool = state.database.pool().await;
+    let repo = TagRepository::new(pool);
+
+    let limit = limit.unwrap_or(10);
+
+    let tags = repo
+        .search_tags(&query, limit)
+        .await
+        .map_err(|e| format!("Failed to search tags: {}", e))?;
+
+    Ok(tags.into_iter().map(TagResponse::from).collect())
+}
+
+/// Get all unique tag categories
+#[tauri::command]
+pub async fn get_tag_categories(
+    state: State<'_, AppState>,
+) -> Result<Vec<String>, String> {
+    let pool = state.database.pool().await;
+    let repo = TagRepository::new(pool);
+
+    let categories = repo
+        .get_tag_categories()
+        .await
+        .map_err(|e| format!("Failed to get tag categories: {}", e))?;
+
+    Ok(categories)
+}
+
+/// Get tags by category
+#[tauri::command]
+pub async fn get_tags_by_category(
+    category: String,
+    state: State<'_, AppState>,
+) -> Result<Vec<TagResponse>, String> {
+    let pool = state.database.pool().await;
+    let repo = TagRepository::new(pool);
+
+    let tags = repo
+        .get_tags_by_category(&category)
+        .await
+        .map_err(|e| format!("Failed to get tags by category: {}", e))?;
+
+    Ok(tags.into_iter().map(TagResponse::from).collect())
+}
+
+/// Update tags for a file (replace all existing tags)
+///
+/// # Arguments
+/// * `file_id` - File ID
+/// * `tag_names` - Array of tag names to set
+#[tauri::command]
+pub async fn update_file_tags(
+    file_id: i64,
+    tag_names: Vec<String>,
+    state: State<'_, AppState>,
+) -> Result<(), String> {
+    let pool = state.database.pool().await;
+    let repo = TagRepository::new(pool);
+
+    // Get or create tags and get their IDs
+    let tag_data: Vec<(String, Option<String>)> = tag_names
+        .into_iter()
+        .map(|name| (name, None)) // No category for user-added tags
+        .collect();
+
+    let tag_ids = repo
+        .get_or_create_tags_batch(&tag_data)
+        .await
+        .map_err(|e| format!("Failed to create tags: {}", e))?;
+
+    // Update file tags
+    repo.update_file_tags(file_id, &tag_ids)
+        .await
+        .map_err(|e| format!("Failed to update file tags: {}", e))?;
+
+    Ok(())
+}
+
+/// Add tags to a file (without removing existing tags)
+#[tauri::command]
+pub async fn add_tags_to_file(
+    file_id: i64,
+    tag_names: Vec<String>,
+    state: State<'_, AppState>,
+) -> Result<(), String> {
+    let pool = state.database.pool().await;
+    let repo = TagRepository::new(pool);
+
+    // Get or create tags and get their IDs
+    let tag_data: Vec<(String, Option<String>)> = tag_names
+        .into_iter()
+        .map(|name| (name, None))
+        .collect();
+
+    let tag_ids = repo
+        .get_or_create_tags_batch(&tag_data)
+        .await
+        .map_err(|e| format!("Failed to create tags: {}", e))?;
+
+    // Add tags to file
+    repo.add_tags_to_file(file_id, &tag_ids)
+        .await
+        .map_err(|e| format!("Failed to add tags to file: {}", e))?;
+
+    Ok(())
+}
+
+/// Remove a specific tag from a file
+#[tauri::command]
+pub async fn remove_tag_from_file(
+    file_id: i64,
+    tag_id: i32,
+    state: State<'_, AppState>,
+) -> Result<(), String> {
+    let pool = state.database.pool().await;
+    let repo = TagRepository::new(pool);
+
+    repo.remove_tag_from_file(file_id, tag_id)
+        .await
+        .map_err(|e| format!("Failed to remove tag from file: {}", e))?;
+
+    Ok(())
+}
+
+/// Get files by tags (for filtering)
+///
+/// # Arguments
+/// * `tag_names` - Array of tag names to filter by
+/// * `match_all` - If true, file must have ALL tags (AND logic). If false, file must have at least one tag (OR logic)
+#[tauri::command]
+pub async fn get_files_by_tags(
+    tag_names: Vec<String>,
+    match_all: bool,
+    state: State<'_, AppState>,
+) -> Result<Vec<i64>, String> {
+    let pool = state.database.pool().await;
+    let repo = TagRepository::new(pool);
+
+    let file_ids = repo
+        .get_files_by_tags(&tag_names, match_all)
+        .await
+        .map_err(|e| format!("Failed to get files by tags: {}", e))?;
+
+    Ok(file_ids)
+}
+
+/// Get usage statistics for a tag
+#[tauri::command]
+pub async fn get_tag_stats(
+    tag_id: i32,
+    state: State<'_, AppState>,
+) -> Result<i64, String> {
+    let pool = state.database.pool().await;
+    let repo = TagRepository::new(pool);
+
+    let count = repo
+        .get_tag_file_count(tag_id)
+        .await
+        .map_err(|e| format!("Failed to get tag stats: {}", e))?;
+
+    Ok(count)
+}

@@ -1,0 +1,103 @@
+# pipeline/src-tauri/Cargo.toml
+[package]
+name = "midi-pipeline"
+version = "0.1.0"
+description = "MIDI file processing pipeline"
+authors = ["Your Name"]
+license = ""
+repository = ""
+edition = "2021"
+default-run = "midi-pipeline"
+
+# See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
+
+[build-dependencies]
+tauri-build = { version = "2", features = [] }
+
+[dependencies]
+# Tauri framework
+tauri = { workspace = true }
+tauri-plugin-shell = { workspace = true }
+tauri-plugin-dialog = { workspace = true }
+tauri-plugin-fs = { workspace = true }
+serde = { workspace = true }
+serde_json = { workspace = true }
+
+# Shared library (common code)
+midi-library-shared = { path = "../../shared/rust" }
+
+# MIDI processing
+midly = "0.5"                    # Fast MIDI parser, zero-copy
+rimd = "0.0.1"                   # MIDI manipulation and generation
+
+# Async runtime
+tokio = { workspace = true }
+tokio-util = "0.7"
+
+# Parallel processing
+rayon = "1.8"                    # Data parallelism
+crossbeam-channel = "0.5"        # Multi-producer multi-consumer channels
+num_cpus = "1.16"                # Detect CPU count
+
+# File handling
+walkdir = "2"                    # Recursive directory traversal
+jwalk = "0.8"                    # Parallel directory walking
+glob = "0.3"                     # File pattern matching
+
+# Archive handling
+zip = { version = "0.6", default-features = false, features = ["deflate"] }
+unrar = "0.5"                    # RAR extraction
+sevenz-rust = "0.5"              # 7z extraction
+
+# Hashing and deduplication
+blake3 = "1.5"                   # Fast cryptographic hash
+sha2 = "0.10"                    # SHA-256 for compatibility
+xxhash-rust = { version = "0.8", features = ["xxh3"] }  # Fast non-cryptographic hash
+
+# Database
+sqlx = { workspace = true }
+uuid = { workspace = true }
+chrono = { workspace = true }
+
+# Error handling
+anyhow = { workspace = true }
+thiserror = { workspace = true }
+
+# Logging and tracing
+tracing = { workspace = true }
+tracing-subscriber = { workspace = true }
+tracing-appender = "0.2"
+
+# String utilities
+regex = "1.10"
+unicode-normalization = "0.1"
+unicode-segmentation = "1.10"
+strsim = "0.11"                  # String similarity for fuzzy matching
+num-traits = "0.2"               # Numeric traits for BigDecimal conversion
+
+# Configuration
+config = { workspace = true }
+directories = "5.0"              # Cross-platform directories
+
+# Performance monitoring
+sysinfo = "0.30"                 # System information
+
+# CLI tools
+clap = { version = "4.4", features = ["derive", "env"] }
+dotenv = "0.15"
+indicatif = "0.17"
+futures = "0.3"
+hex = "0.4.3"
+
+[dev-dependencies]
+tokio-test = "0.4"
+tempfile = "3"
+criterion = "0.5"                # Benchmarking
+proptest = "1.4"                 # Property-based testing
+
+# Binary targets
+[[bin]]
+name = "import_unified"
+path = "src/bin/import_unified.rs"
+
+walkdir = "2"

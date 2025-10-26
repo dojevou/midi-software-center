@@ -1,0 +1,288 @@
+# MIDI Library System - Complete .gitignore
+
+#=============================================================================
+# RUST
+#=============================================================================
+# Cargo build artifacts
+target/
+**/target/
+
+# Cargo.lock for libraries (keep for binaries)
+# **/Cargo.lock
+
+# Backup files
+**/*.rs.bk
+**/*.bk
+
+# MacOS artifacts
+.DS_Store
+**/.DS_Store
+
+#=============================================================================
+# NODE / JAVASCRIPT
+#=============================================================================
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build outputs
+dist/
+build/
+.svelte-kit/
+**/.svelte-kit/
+**/.svelte-kit/**
+
+# Vite build outputs
+.vite/
+**/.vite/
+
+# Production builds
+**/dist-ssr/
+**/dist/
+**/build/
+
+# Testing
+coverage/
+.nyc_output/
+
+# Package manager files
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Package manager locks (keep pnpm-lock.yaml for consistency)
+# pnpm-lock.yaml
+package-lock.json
+yarn.lock
+
+#=============================================================================
+# TAURI
+#=============================================================================
+# Tauri build artifacts
+**/src-tauri/target/
+**/src-tauri/WixTools/
+
+# Tauri generated files
+**/src-tauri/gen/
+
+#=============================================================================
+# ENVIRONMENT & SECRETS
+#=============================================================================
+# Environment files
+.env
+.env.local
+.env.*.local
+**/.env
+
+# Keep example files
+!.env.example
+!**/.env.example
+
+# Secrets
+secrets/
+**/*.pem
+**/*.key
+**/*.crt
+
+#=============================================================================
+# DATABASE
+#=============================================================================
+# PostgreSQL data
+postgres-data/
+**/pgdata/
+
+# Database backups
+*.sql.gz
+*.dump
+
+# Migration temp files
+**/migrations/*.tmp
+
+#=============================================================================
+# EDITOR / IDE
+#=============================================================================
+# VSCode
+.vscode/
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+*.code-workspace
+
+# JetBrains IDEs
+.idea/
+*.iml
+*.iws
+*.ipr
+
+# Sublime Text
+*.sublime-workspace
+*.sublime-project
+
+# Vim
+*.swp
+*.swo
+*~
+
+# Emacs
+*~
+\#*\#
+.\#*
+
+#=============================================================================
+# OPERATING SYSTEM
+#=============================================================================
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+._*
+
+# Windows
+Thumbs.db
+Thumbs.db:encryptable
+ehthumbs.db
+ehthumbs_vista.db
+*.stackdump
+[Dd]esktop.ini
+$RECYCLE.BIN/
+
+# Linux
+.directory
+.Trash-*
+
+#=============================================================================
+# TESTING
+#=============================================================================
+# Test outputs
+test-results/
+**/test-results/
+playwright-report/
+**/playwright-report/
+
+# Coverage reports
+coverage/
+**/coverage/
+*.lcov
+
+#=============================================================================
+# TEMPORARY FILES
+#=============================================================================
+# Temp directories
+tmp/
+temp/
+**/tmp/
+**/temp/
+
+# Cache
+.cache/
+**/.cache/
+.parcel-cache/
+
+# Log files
+*.log
+logs/
+**/logs/
+
+#=============================================================================
+# PROJECT SPECIFIC
+#=============================================================================
+# Import checkpoints
+.import_checkpoint
+**/.import_checkpoint
+
+# MIDI test files (large)
+test_data/large/
+**/test_data/large/
+
+# Generated documentation
+docs/api/generated/
+**/generated-docs/
+
+# Benchmark results
+benchmarks/results/
+**/benchmark-*.json
+
+# Profiling data
+*.prof
+perf.data*
+flamegraph*.svg
+
+#=============================================================================
+# DOCKER
+#=============================================================================
+# Docker volumes
+docker-volumes/
+
+#=============================================================================
+# BUILD ARTIFACTS
+#=============================================================================
+# Compiled binaries
+*.exe
+*.dll
+*.so
+*.dylib
+
+# Archives
+*.tar.gz
+*.zip
+*.7z
+
+# Installation packages
+*.deb
+*.rpm
+*.dmg
+*.msi
+
+#=============================================================================
+# DOCUMENTATION
+#=============================================================================
+# Generated API docs
+**/docs/api/html/
+**/docs/api/json/
+
+# Keep markdown
+!*.md
+
+#=============================================================================
+# MISC
+#=============================================================================
+# Backup files
+*.bak
+*.backup
+*.backup.*
+*-backup-*
+*.old
+*~
+
+# Lock files for editors
+.~lock.*
+
+# Python (if any Python tools used)
+__pycache__/
+*.py[cod]
+*$py.class
+.Python
+venv/
+ENV/
+
+# Performance monitoring
+*.perf
+*.trace
+
+#=============================================================================
+# CLAUDE CODE
+#=============================================================================
+# Local settings (keep example and base settings)
+.claude/settings.local.json
+.claude/settings.local.json.*
+.claude/*.backup.*
+.claude/*-backup-*
+
+# Keep these files
+!.claude/commands/
+!.claude/settings.json
+!.claude/README.md
