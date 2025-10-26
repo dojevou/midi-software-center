@@ -19,13 +19,12 @@ pub struct AppState {
 
 #[tauri::command]
 pub async fn initialize_database(state: tauri::State<'_, AppState>) -> Result<(), String> {
-    // Verify that the database connection pool exists
-    if state.db_pool.is_none() {
-        return Err("Database connection not available. Please set DATABASE_URL environment variable.".to_string());
-    }
+    // Get database connection pool
+    let pool = state.db_pool.as_ref().ok_or_else(|| {
+        "Database connection not available. Please set DATABASE_URL environment variable.".to_string()
+    })?;
 
     // Test the connection with a simple query
-    let pool = state.db_pool.as_ref().unwrap();
     sqlx::query("SELECT COUNT(*) FROM files")
         .execute(pool)
         .await

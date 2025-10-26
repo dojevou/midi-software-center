@@ -144,7 +144,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                 let pool = pool_clone.clone();
 
                 async move {
-                    let _permit = sem.acquire().await.unwrap();
+                    let _permit = match sem.acquire().await {
+                        Ok(permit) => permit,
+                        Err(_) => {
+                            eprintln!("Warning: Semaphore closed during analysis");
+                            return;
+                        }
+                    };
 
                     let current = current_index.fetch_add(1, Ordering::SeqCst) + 1;
 

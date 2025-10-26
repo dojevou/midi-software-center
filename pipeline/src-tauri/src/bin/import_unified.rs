@@ -181,7 +181,10 @@ async fn main() -> anyhow::Result<()> {
     // Connect to database
     let database_url = args.database_url.unwrap_or_else(|| {
         std::env::var("DATABASE_URL")
-            .expect("DATABASE_URL must be set in environment or via --database-url")
+            .unwrap_or_else(|_| {
+                eprintln!("❌ Error: DATABASE_URL must be set in environment or via --database-url");
+                std::process::exit(1);
+            })
     });
 
     println!("🔌 Connecting to database...");
@@ -364,7 +367,13 @@ async fn process_archive_with_stats(
 
             async move {
                 // Acquire semaphore permit
-                let _permit = sem.acquire().await.unwrap();
+                let _permit = match sem.acquire().await {
+                    Ok(permit) => permit,
+                    Err(_) => {
+                        eprintln!("Warning: Semaphore closed during import");
+                        return;
+                    }
+                };
 
                 let current = processed.fetch_add(1, Ordering::SeqCst) + 1;
 
@@ -516,7 +525,7 @@ async fn analyze_midi_file(
 
     let filepath = file_path.to_str().unwrap_or("").to_string();
 
-    let auto_tagger = AutoTagger::new();
+    let auto_tagger = AutoTagger::new()?;
     let tags_obj = auto_tagger.extract_tags(
         &filepath,
         &filename,
@@ -913,7 +922,9 @@ fn calculate_complexity_score(note_stats: &NoteStats, midi_file: &MidiFile) -> O
 //=============================================================================
 
 fn print_progress_summary(stats: &ImportStats) {
-    let elapsed = stats.start_time.unwrap().elapsed().as_secs_f64();
+    let elapsed = stats.start_time
+        .map(|t| t.elapsed().as_secs_f64())
+        .unwrap_or(0.0);
     let imported = stats.files_imported.load(Ordering::SeqCst);
     let rate = if elapsed > 0.0 { imported as f64 / elapsed } else { 0.0 };
 
@@ -929,7 +940,9 @@ fn print_progress_summary(stats: &ImportStats) {
 }
 
 fn print_final_summary(stats: &ImportStats) {
-    let elapsed = stats.start_time.unwrap().elapsed();
+    let elapsed = stats.start_time
+        .map(|t| t.elapsed())
+        .unwrap_or_else(|| std::time::Duration::from_secs(0));
     let duration_secs = elapsed.as_secs_f64();
     let imported = stats.files_imported.load(Ordering::SeqCst);
     let rate = if duration_secs > 0.0 { imported as f64 / duration_secs } else { 0.0 };

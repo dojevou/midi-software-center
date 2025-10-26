@@ -22,7 +22,7 @@ use sequencer::SequencerEngine;
 use std::sync::Arc;
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Initialize tracing/logging
     init_logging();
 
@@ -106,8 +106,9 @@ async fn main() {
             // Export commands
             commands::export::export_project_midi,
         ])
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .run(tauri::generate_context!())?;
+
+    Ok(())
 }
 
 /// Initialize logging/tracing system

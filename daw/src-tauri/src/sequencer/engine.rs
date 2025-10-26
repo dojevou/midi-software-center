@@ -324,7 +324,13 @@ impl SequencerEngine {
                 // Calculate current tick from elapsed time
                 let elapsed = {
                     let start_guard = start_time.lock().await;
-                    start_guard.expect("Start time not set").elapsed()
+                    match start_guard.as_ref() {
+                        Some(instant) => instant.elapsed(),
+                        None => {
+                            error!("Start time not set in sequencer playback loop");
+                            break;
+                        }
+                    }
                 };
 
                 let bpm_val = *bpm.read().await;

@@ -192,9 +192,11 @@ pub fn resolve_naming_conflict(base_filename: &str, existing_files: &[String]) -
     }
 
     // Fallback with timestamp
+    // Note: SystemTime before Unix epoch is impossible on modern systems,
+    // but we handle it gracefully per architecture requirements
     let timestamp = std::time::SystemTime::now()
         .duration_since(std::time::UNIX_EPOCH)
-        .unwrap()
+        .unwrap_or_else(|_| std::time::Duration::from_secs(0))
         .as_secs();
 
     format!("{}_{}.mid", without_ext, timestamp)

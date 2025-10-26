@@ -422,7 +422,8 @@ async fn process_single_file(
     let midi_instruments = extract_instrument_names(&midi_data);
 
     // 8. Auto-tag extraction (NEW: intelligently extract tags from filename, path, and MIDI content)
-    let auto_tagger = AutoTagger::new();
+    let auto_tagger = AutoTagger::new()
+        .map_err(|e| format!("Failed to initialize auto-tagger: {}", e))?;
     let tags = auto_tagger.extract_tags(
         &filepath,
         &filename,

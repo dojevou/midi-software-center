@@ -58,7 +58,10 @@ async fn main() -> Result<()> {
     // Connect to database
     let database_url = args.database_url.unwrap_or_else(|| {
         std::env::var("DATABASE_URL")
-            .expect("DATABASE_URL must be set")
+            .unwrap_or_else(|_| {
+                eprintln!("❌ Error: DATABASE_URL environment variable must be set");
+                std::process::exit(1);
+            })
     });
 
     println!("🔌 Connecting to database...");
@@ -100,13 +103,21 @@ async fn main() -> Result<()> {
             let processed = Arc::clone(&processed);
 
             async move {
-                let _permit = sem.acquire().await.unwrap();
+                let _permit = match sem.acquire().await {
+                    Ok(permit) => permit,
+                    Err(_) => {
+                        eprintln!("Warning: Semaphore closed during import");
+                        return;
+                    }
+                };
 
                 let current = processed.fetch_add(1, Ordering::SeqCst) + 1;
 
                 // Show progress every 100 files
                 if current % 100 == 0 || current == total_files {
-                    let elapsed = stats.start_time.unwrap().elapsed().as_secs_f64();
+                    let elapsed = stats.start_time
+                        .map(|t| t.elapsed().as_secs_f64())
+                        .unwrap_or(0.0);
                     let rate = if elapsed > 0.0 { current as f64 / elapsed } else { 0.0 };
                     println!(
                         "    Processing: {}/{} ({:.1}%) - {:.1} files/sec",
@@ -389,7 +400,9 @@ fn analyze_notes(midi_file: &midi_library_shared::core::midi::types::MidiFile) -
 
 /// Print final summary
 fn print_summary(stats: &ImportStats) {
-    let elapsed = stats.start_time.unwrap().elapsed();
+    let elapsed = stats.start_time
+        .map(|t| t.elapsed())
+        .unwrap_or_else(|| std::time::Duration::from_secs(0));
     let duration_secs = elapsed.as_secs_f64();
     let imported = stats.files_imported.load(Ordering::SeqCst);
     let rate = if duration_secs > 0.0 {

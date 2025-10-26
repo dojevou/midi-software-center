@@ -50,8 +50,11 @@ impl Tag {
 
 impl AutoTagger {
     /// Create a new auto-tagger with default keyword dictionaries
-    pub fn new() -> Self {
-        Self {
+    ///
+    /// # Errors
+    /// Returns error if internal regex pattern compilation fails (should never happen with valid pattern)
+    pub fn new() -> Result<Self, regex::Error> {
+        Ok(Self {
             genre_keywords: Self::load_genre_keywords(),
             instrument_keywords: Self::load_instrument_keywords(),
             manufacturer_keywords: Self::load_manufacturer_keywords(),
@@ -59,8 +62,8 @@ impl AutoTagger {
             common_words: Self::load_common_words(),
             // Split on underscores, hyphens, spaces, and dots
             // Note: camelCase splitting requires lookahead/lookbehind which isn't supported in Rust regex
-            split_pattern: Regex::new(r"[_\-\s.]+").unwrap(),
-        }
+            split_pattern: Regex::new(r"[_\-\s.]+")?,
+        })
     }
 
     /// Extract tags from file path, name, and MIDI content
@@ -407,11 +410,8 @@ impl AutoTagger {
     }
 }
 
-impl Default for AutoTagger {
-    fn default() -> Self {
-        Self::new()
-    }
-}
+// Note: Default trait removed since AutoTagger::new() now returns Result.
+// Users should call AutoTagger::new()? instead of using Default.
 
 // =============================================================================
 // TESTS
@@ -423,7 +423,7 @@ mod tests {
 
     #[test]
     fn test_extract_from_filename() {
-        let tagger = AutoTagger::new();
+        let tagger = AutoTagger::new().unwrap();
 
         // Test 1: Vengeance style naming
         let tags = tagger.extract_from_filename("VEC_Deep_House_Kick_128_C.mid");
@@ -443,7 +443,7 @@ mod tests {
 
     #[test]
     fn test_extract_from_path() {
-        let tagger = AutoTagger::new();
+        let tagger = AutoTagger::new().unwrap();
 
         let tags = tagger.extract_from_path("/Vengeance/DeepHouse/Drums/Kicks/file.mid");
         let tag_names: Vec<String> = tags.iter().map(|t| t.full_name()).collect();
@@ -454,7 +454,7 @@ mod tests {
 
     #[test]
     fn test_fuzzy_matching() {
-        let tagger = AutoTagger::new();
+        let tagger = AutoTagger::new().unwrap();
 
         // "vengance" should match "vengeance" (1 char difference)
         let result = tagger.fuzzy_match("vengance", &tagger.manufacturer_keywords);
@@ -467,7 +467,7 @@ mod tests {
 
     #[test]
     fn test_full_tag_extraction() {
-        let tagger = AutoTagger::new();
+        let tagger = AutoTagger::new().unwrap();
 
         let tags = tagger.extract_tags(
             "/Samples/Vengeance/DeepHouse/Drums/VEC_Deep_Kick_128_C.mid",
@@ -493,7 +493,7 @@ mod tests {
 
     #[test]
     fn test_common_words_filtered() {
-        let tagger = AutoTagger::new();
+        let tagger = AutoTagger::new().unwrap();
 
         let tags = tagger.extract_from_filename("The_New_Kick_For_Mix.mid");
         let tag_names: Vec<String> = tags.iter().map(|t| t.name.clone()).collect();

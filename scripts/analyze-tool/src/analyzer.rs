@@ -100,8 +100,8 @@ pub fn analyze_midi(data: &[u8]) -> Result<MidiAnalysis, String> {
             notes.iter().map(|(_, pitch, _)| *pitch).collect();
         analysis.unique_pitches = unique_pitches.len() as i32;
 
-        analysis.pitch_range_min = *notes.iter().map(|(_, p, _)| p).min().unwrap() as i16;
-        analysis.pitch_range_max = *notes.iter().map(|(_, p, _)| p).max().unwrap() as i16;
+        analysis.pitch_range_min = notes.iter().map(|(_, p, _)| *p).min().unwrap_or(127) as i16;
+        analysis.pitch_range_max = notes.iter().map(|(_, p, _)| *p).max().unwrap_or(0) as i16;
 
         // Velocity analysis
         let total_vel: u32 = notes.iter().map(|(_, _, v)| *v as u32).sum();

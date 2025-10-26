@@ -86,7 +86,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let errors = Arc::clone(&errors);
 
         let task = tokio::spawn(async move {
-            let _permit = sem.acquire().await.unwrap();
+            let _permit = match sem.acquire().await {
+                Ok(permit) => permit,
+                Err(_) => {
+                    eprintln!("Warning: Semaphore closed during import");
+                    return;
+                }
+            };
 
             match process_file(&file_path, &pool_clone).await {
                 Ok(true) => {

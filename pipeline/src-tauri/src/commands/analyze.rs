@@ -209,7 +209,13 @@ pub async fn start_analysis(
                     let pool = pool.clone();
                 async move {
                     // Acquire semaphore permit (blocks if at limit)
-                    let _permit = sem.acquire().await.unwrap();
+                    let _permit = match sem.acquire().await {
+                        Ok(permit) => permit,
+                        Err(_) => {
+                            eprintln!("Warning: Semaphore closed during analysis");
+                            return;
+                        }
+                    };
 
                     let current = current_index.fetch_add(1, Ordering::SeqCst) + 1;
 

@@ -14,7 +14,7 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 use midi_pipeline::{AppState, Database};
 
 #[tokio::main]
-async fn main() {
+async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Load .env file
     dotenv::dotenv().ok();
 
@@ -35,10 +35,10 @@ async fn main() {
         }
         Err(e) => {
             info!("Database initialization deferred (will retry on first command): {}", e);
-            // Create a fallback database instance
-            Database::new(&database_url).await.unwrap_or_else(|_| {
-                panic!("Could not create database instance")
-            })
+            // Retry once
+            Database::new(&database_url).await.map_err(|retry_err| {
+                format!("Failed to create database instance after retry: {}", retry_err)
+            })?
         }
     };
 
@@ -113,8 +113,9 @@ async fn main() {
             info!("Application setup complete");
             Ok(())
         })
-        .run(tauri::generate_context!())
-        .expect("error while running tauri application");
+        .run(tauri::generate_context!())?;
+
+    Ok(())
 }
 
 /// Initialize logging/tracing system
