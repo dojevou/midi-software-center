@@ -211,18 +211,100 @@ See `FINAL-FILE-SEPARATION.md` for comprehensive source→destination mapping.
 
 **Result:** Both frontends migrated, building, and running successfully
 
-### Phase 4 - Scripts & Verification (Day 4)
-1. Copy launch scripts to scripts/launch/
-2. Adapt setup scripts to scripts/setup/
-3. Copy verification scripts to scripts/verify/
-4. Test: `make dev-both`
+### Phase 4 - Scripts & Verification (Day 4) ✅ COMPLETE
 
-### Phase 5 - Final Verification (Day 5)
-1. Full integration test
-2. Verify all components compile
-3. Test database connectivity
-4. Test dev servers
-5. Update documentation
+**Step-by-Step Process:**
+1. ✅ Extract scripts from archive `midi-library-system-refined.tar.gz`
+2. ✅ Copy launch scripts (5 files) to scripts/launch/
+3. ✅ Copy verification scripts (2 files) to scripts/verify/
+4. ✅ Copy setup/import scripts (3 files) to scripts/setup/, scripts/import/, scripts/modules/
+5. ✅ Fix hardcoded path references (11 occurrences)
+6. ✅ Set executable permissions on all scripts
+7. ✅ Architecture review: ARCHITECTURE-REVIEWER verification
+8. ✅ Test status.sh script
+9. ✅ Verify no emergency/fix scripts migrated
+
+**Result:** All 10 scripts migrated, paths fixed, system status working
+
+### Phase 5 - Final Verification (Day 5) ⏳ IN PROGRESS
+
+**Step-by-Step Process:**
+
+#### 1. Build Verification (15 min)
+- ✅ Test Rust compilation: `export DATABASE_URL=... && cargo build --all`
+- ⏳ Test frontend builds: `cd pipeline && pnpm build`, `cd daw && pnpm build`
+- ⏳ Test production builds: `make build-all` (if Makefile configured)
+- ⏳ Verify no compilation errors or warnings
+
+#### 2. Database Verification (10 min)
+- ⏳ Check PostgreSQL health: `docker ps | grep postgres`
+- ⏳ Verify migrations applied: `psql -h localhost -p 5433 -U midiuser -d midi_library -c "\dt"`
+- ⏳ Test database connectivity from Rust: `cargo test --package shared-rust -- db --nocapture`
+- ⏳ Verify Meilisearch health: `curl http://localhost:7700/health`
+
+#### 3. Integration Testing (20 min)
+- ⏳ Run quick check: `./scripts/verify/quick_check.sh`
+- ⏳ Run integration tests: `./scripts/verify/integration_test.sh`
+- ⏳ Test launch scripts: `./scripts/launch/status.sh`
+- ⏳ Test import tool: `cd scripts/import-tool && cargo run -- --help`
+
+#### 4. Full-Stack Development Testing (30 min)
+- ⏳ Launch Pipeline with backend: Test Tauri integration
+- ⏳ Launch DAW with backend: Test Tauri integration
+- ⏳ Test frontend → backend communication (Tauri commands)
+- ⏳ Verify database queries work from frontends
+- ⏳ Test MIDI file operations (if test files available)
+
+#### 5. Makefile Verification (10 min)
+- ⏳ Test `make docker-up` - Start database services
+- ⏳ Test `make dev-pipeline` - Pipeline dev mode
+- ⏳ Test `make dev-daw` - DAW dev mode
+- ⏳ Test `make format` - Code formatting
+- ⏳ Test `make lint` - Linting
+- ⏳ Test `make clean` - Cleanup
+
+#### 6. Architecture Compliance Final Check (15 min)
+- ⏳ Verify all files in correct locations
+- ⏳ Check for any remaining .unwrap() calls (per ARCHITECTURE-REFERENCE.md)
+- ⏳ Verify Three Archetypes Pattern compliance across all components
+- ⏳ Check for code duplication between components
+
+#### 7. Documentation Review (20 min)
+- ⏳ Update README.md with quickstart guide
+- ⏳ Document environment variables needed
+- ⏳ Document port usage (5173, 5174, 5433, 7700)
+- ⏳ Create MIGRATION-COMPLETE.md summary
+- ⏳ Update CLAUDE.md with final status
+
+#### 8. Final Cleanup (10 min)
+- ⏳ Remove temporary files and artifacts
+- ⏳ Clean up /tmp/phase4-migration/
+- ⏳ Review and handle warnings from architecture reviews:
+  - analyze-tool/ incomplete directory
+  - Empty structure directories
+  - Hardcoded credentials in scripts
+- ⏳ Create final git commit
+
+#### 9. Production Readiness Check (15 min)
+- ⏳ Verify .env.example is complete
+- ⏳ Check .gitignore includes all necessary patterns
+- ⏳ Verify no secrets in version control
+- ⏳ Test fresh clone and setup on new machine (optional)
+
+#### 10. Success Criteria Verification
+- ⏳ All 222 files migrated and in correct locations
+- ⏳ All components compile without errors
+- ⏳ Database migrations applied successfully
+- ⏳ Both dev servers start and run
+- ⏳ Frontend ↔ Backend communication working
+- ⏳ Scripts executable and working
+- ⏳ Documentation updated and complete
+- ⏳ No architecture violations
+- ⏳ Production builds successful
+
+**Estimated Time:** 2-3 hours
+
+**Result:** Production-ready codebase with full verification
 
 **Estimated Time:** 5 days (full-time) or 2 weeks (part-time)
 

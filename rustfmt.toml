@@ -51,7 +51,6 @@ condense_wildcard_suffixes = true
 normalize_comments = true
 normalize_doc_attributes = true
 format_code_in_doc_comments = true
-wrap_comments = true
 
 # Blank lines
 blank_lines_upper_bound = 2
