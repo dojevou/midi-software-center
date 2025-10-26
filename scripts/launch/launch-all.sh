@@ -1,66 +1,21 @@
 #!/bin/bash
 # MIDI Library System - Main Launch Script
-# Archetype: Task-O-Matic (Complete standalone task)
-# Starts all services: Database, Pipeline, and/or DAW
-#
-# Usage: ./scripts/launch/launch-all.sh
-# Example: ./scripts/launch/launch-all.sh
+# Starts all services: Database, Backend, and optionally Frontend
 
 set -e  # Exit on error
-set -u  # Error on undefined variables
-set -o pipefail  # Catch errors in pipes
 
-# ============================================================================
-# AUTO-DETECT PROJECT ROOT
-# ============================================================================
-
-SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
-PROJECT_ROOT="$(cd "$SCRIPT_DIR/../.." && pwd)"
-
-# ============================================================================
-# LOAD ENVIRONMENT CONFIGURATION
-# ============================================================================
-
-if [ -f "$PROJECT_ROOT/.env" ]; then
-    # Export all variables from .env
-    set -a
-    source "$PROJECT_ROOT/.env"
-    set +a
-else
-    echo "❌ Error: .env file not found at $PROJECT_ROOT/.env"
-    echo "Please copy .env.example to .env and configure it:"
-    echo "  cp .env.example .env"
-    exit 1
-fi
-
-# ============================================================================
-# CONFIGURATION FROM .ENV
-# ============================================================================
-
-# Parse DATABASE_URL to extract components
-# Format: postgresql://username:password@host:port/database
-if [[ $DATABASE_URL =~ postgresql://([^:]+):([^@]+)@([^:]+):([^/]+)/(.+) ]]; then
-    DB_USER="${BASH_REMATCH[1]}"
-    DB_PASSWORD="${BASH_REMATCH[2]}"
-    DB_HOST="${BASH_REMATCH[3]}"
-    DB_PORT="${BASH_REMATCH[4]}"
-    DB_NAME="${BASH_REMATCH[5]}"
-else
-    echo "❌ Error: Invalid DATABASE_URL format in .env"
-    echo "Expected: postgresql://username:password@host:port/database"
-    exit 1
-fi
-
-# Set directory paths
+# Configuration
+PROJECT_ROOT="$HOME/projects/midi-software-center"
 DATABASE_DIR="$PROJECT_ROOT/database"
-PIPELINE_DIR="$PROJECT_ROOT/pipeline"
-DAW_DIR="$PROJECT_ROOT/daw"
-LOGS_DIR="${LOG_DIR:-$PROJECT_ROOT/logs}"
+BACKEND_DIR="$PROJECT_ROOT/pipeline/src-tauri"
+LOGS_DIR="$PROJECT_ROOT/logs"
+DB_HOST="localhost"
+DB_PORT="5433"
+DB_USER="midiuser"
+DB_PASSWORD="145278963"
+DB_NAME="midi_library"
 
-# ============================================================================
-# COLORS FOR OUTPUT
-# ============================================================================
-
+# Colors for output (optional but nice)
 RED='\033[0;31m'
 GREEN='\033[0;32m'
 YELLOW='\033[1;33m'
@@ -68,10 +23,10 @@ BLUE='\033[0;34m'
 MAGENTA='\033[0;35m'
 NC='\033[0m' # No Color
 
-# ============================================================================
-# UTILITY FUNCTIONS
-# ============================================================================
+# Create logs directory
+mkdir -p "$LOGS_DIR"
 
+# Function to print colored messages
 print_status() {
     echo -e "${BLUE}$1${NC}"
 }
@@ -88,25 +43,14 @@ print_warning() {
     echo -e "${YELLOW}⚠️  $1${NC}"
 }
 
-# Create logs directory
-mkdir -p "$LOGS_DIR"
-
-# ============================================================================
-# FUNCTION: LAUNCH DATABASE
-# ============================================================================
-
+# Function to launch database
 launch_database() {
     print_status "🗄️  Starting PostgreSQL database..."
-
-    if [ ! -d "$DATABASE_DIR" ]; then
-        print_error "Database directory not found: $DATABASE_DIR"
-        return 1
-    fi
 
     cd "$DATABASE_DIR"
 
     # Check if already running
-    if docker-compose ps 2>/dev/null | grep -q "Up"; then
+    if docker-compose ps | grep -q "Up"; then
         print_warning "Database already running"
         return 0
     fi
@@ -138,191 +82,176 @@ launch_database() {
     return 1
 }
 
-# ============================================================================
-# FUNCTION: LAUNCH PIPELINE
-# ============================================================================
+# Function to launch backend/Tauri app
+launch_backend() {
+    print_status "⚙️  Starting backend/Tauri app..."
 
-launch_pipeline() {
-    print_status "⚙️  Starting Pipeline application..."
-
-    if [ ! -d "$PIPELINE_DIR" ]; then
-        print_error "Pipeline directory not found: $PIPELINE_DIR"
-        return 1
-    fi
-
-    cd "$PIPELINE_DIR"
+    cd "$BACKEND_DIR"
 
     # Check if already running
-    if [ -f /tmp/midi-pipeline.pid ]; then
-        local old_pid=$(cat /tmp/midi-pipeline.pid)
+    if [ -f /tmp/midi-backend.pid ]; then
+        local old_pid=$(cat /tmp/midi-backend.pid)
         if ps -p "$old_pid" &>/dev/null; then
-            print_warning "Pipeline already running (PID: $old_pid)"
+            print_warning "Backend already running (PID: $old_pid)"
             return 0
         else
-            rm /tmp/midi-pipeline.pid
+            # Remove stale PID file
+            rm /tmp/midi-backend.pid
         fi
+    elif pgrep -f "tauri dev" &>/dev/null; then
+        print_warning "Backend already running (unknown PID)"
+        return 0
     fi
 
     # Check if pnpm is available
     if ! command -v pnpm &>/dev/null; then
-        print_error "pnpm not found. Please install pnpm: https://pnpm.io/installation"
+        print_error "pnpm not found. Please install pnpm."
         return 1
     fi
 
     # Start in background with logging
-    print_status "Starting Pipeline Tauri dev server..."
-    pnpm tauri dev > "$LOGS_DIR/pipeline.log" 2>&1 &
-    local pipeline_pid=$!
-    echo "$pipeline_pid" > /tmp/midi-pipeline.pid
+    print_status "Starting Tauri dev server (this may take a moment)..."
+    pnpm tauri dev > "$LOGS_DIR/backend.log" 2>&1 &
+    local backend_pid=$!
+    echo "$backend_pid" > /tmp/midi-backend.pid
 
-    # Wait and verify
+    # Wait a bit and check if process is still running
     sleep 5
-    if ps -p "$pipeline_pid" &>/dev/null; then
-        print_success "Pipeline started (PID: $pipeline_pid)"
+    if ps -p "$backend_pid" &>/dev/null; then
+        print_success "Backend started (PID: $backend_pid)"
         return 0
     else
-        print_error "Pipeline failed to start - check logs at: $LOGS_DIR/pipeline.log"
-        rm -f /tmp/midi-pipeline.pid
+        print_error "Backend failed to start"
+        echo "Check logs at: $LOGS_DIR/backend.log"
+        rm /tmp/midi-backend.pid
         return 1
     fi
 }
 
-# ============================================================================
-# FUNCTION: LAUNCH DAW
-# ============================================================================
+# Function to launch frontend (if separate from Tauri)
+# Uncomment if you have a separate frontend
+launch_frontend() {
+    print_status "🌐 Starting frontend..."
 
-launch_daw() {
-    print_status "🎹 Starting DAW application..."
+    local frontend_dir="$PROJECT_ROOT/frontend"  # Adjust path as needed
 
-    if [ ! -d "$DAW_DIR" ]; then
-        print_error "DAW directory not found: $DAW_DIR"
-        return 1
-    fi
-
-    cd "$DAW_DIR"
+    cd "$frontend_dir"
 
     # Check if already running
-    if [ -f /tmp/midi-daw.pid ]; then
-        local old_pid=$(cat /tmp/midi-daw.pid)
+    if [ -f /tmp/midi-frontend.pid ]; then
+        local old_pid=$(cat /tmp/midi-frontend.pid)
         if ps -p "$old_pid" &>/dev/null; then
-            print_warning "DAW already running (PID: $old_pid)"
+            print_warning "Frontend already running (PID: $old_pid)"
             return 0
         else
-            rm /tmp/midi-daw.pid
+            rm /tmp/midi-frontend.pid
         fi
+    elif pgrep -f "npm.*dev" &>/dev/null; then
+        print_warning "Frontend already running (unknown PID)"
+        return 0
     fi
 
-    # Check if pnpm is available
-    if ! command -v pnpm &>/dev/null; then
-        print_error "pnpm not found. Please install pnpm"
+    # Check if npm is available
+    if ! command -v npm &>/dev/null; then
+        print_error "npm not found. Please install Node.js."
         return 1
     fi
 
-    # Start in background with logging
-    print_status "Starting DAW Tauri dev server..."
-    pnpm tauri dev > "$LOGS_DIR/daw.log" 2>&1 &
-    local daw_pid=$!
-    echo "$daw_pid" > /tmp/midi-daw.pid
+    # Install dependencies if needed
+    if [ ! -d "node_modules" ]; then
+        print_status "Installing frontend dependencies..."
+        npm install
+    fi
 
-    # Wait and verify
-    sleep 5
-    if ps -p "$daw_pid" &>/dev/null; then
-        print_success "DAW started (PID: $daw_pid)"
+    # Start frontend
+    npm run dev > "$LOGS_DIR/frontend.log" 2>&1 &
+    local frontend_pid=$!
+    echo "$frontend_pid" > /tmp/midi-frontend.pid
+
+    sleep 2
+    if ps -p "$frontend_pid" &>/dev/null; then
+        print_success "Frontend started (PID: $frontend_pid)"
         return 0
     else
-        print_error "DAW failed to start - check logs at: $LOGS_DIR/daw.log"
-        rm -f /tmp/midi-daw.pid
+        print_error "Frontend failed to start"
+        echo "Check logs at: $LOGS_DIR/frontend.log"
+        rm /tmp/midi-frontend.pid
         return 1
     fi
 }
 
-# ============================================================================
-# MAIN EXECUTION
-# ============================================================================
+# Function to show service URLs
+show_urls() {
+    echo ""
+    print_status "🌐 Service URLs:"
+    echo "   Database:  postgresql://$DB_HOST:$DB_PORT/$DB_NAME"
+    echo "   Backend:   Check Tauri window or logs"
+    # echo "   Frontend:  http://localhost:3000"  # Uncomment if separate frontend
+}
 
+# Main execution
 main() {
+    # Clear screen and show banner
     clear
     echo ""
     echo -e "${MAGENTA}🎵 ==================================${NC}"
     echo -e "${MAGENTA}🎵  MIDI Library System Launcher${NC}"
     echo -e "${MAGENTA}🎵 ==================================${NC}"
     echo ""
-    echo -e "${BLUE}📁 Project: $PROJECT_ROOT${NC}"
-    echo -e "${BLUE}📋 Logs: $LOGS_DIR${NC}"
-    echo ""
 
-    # Launch database first
+    # Launch services in order
     if ! launch_database; then
         print_error "Cannot continue without database"
         exit 1
     fi
 
     echo ""
-    print_status "Which application(s) to start?"
-    echo "  1) Pipeline only"
-    echo "  2) DAW only"
-    echo "  3) Both Pipeline and DAW"
-    echo "  4) Database only (already started)"
-    read -p "Choice [1-4] (default: 3): " choice
-    choice=${choice:-3}
 
-    case $choice in
-        1)
-            launch_pipeline || exit 1
-            ;;
-        2)
-            launch_daw || exit 1
-            ;;
-        3)
-            launch_pipeline || exit 1
-            echo ""
-            launch_daw || exit 1
-            ;;
-        4)
-            print_success "Database running"
-            ;;
-        *)
-            print_error "Invalid choice"
-            exit 1
-            ;;
-    esac
+    if ! launch_backend; then
+        print_error "Backend failed to start"
+        echo ""
+        print_status "Database is still running. Use ./scripts/stop-all.sh to stop all services."
+        exit 1
+    fi
+
+    echo ""
+
+    # Uncomment if you have a separate frontend
+    # if ! launch_frontend; then
+    #     print_error "Frontend failed to start"
+    #     echo ""
+    #     print_status "Database and backend are still running. Use ./scripts/stop-all.sh to stop all services."
+    #     exit 1
+    # fi
 
     # Summary
     echo ""
     echo -e "${MAGENTA}🎵 ==================================${NC}"
-    echo -e "${MAGENTA}🎵  Services Running${NC}"
+    echo -e "${MAGENTA}🎵  Startup Summary${NC}"
     echo -e "${MAGENTA}🎵 ==================================${NC}"
-    print_success "Database: postgresql://$DB_HOST:$DB_PORT/$DB_NAME"
+    print_success "Database: Running"
+    print_success "Backend: Running"
+    # print_success "Frontend: Running"  # Uncomment if separate frontend
 
-    [ "$choice" = "1" ] || [ "$choice" = "3" ] && print_success "Pipeline: http://localhost:5173"
-    [ "$choice" = "2" ] || [ "$choice" = "3" ] && print_success "DAW: http://localhost:5174"
+    show_urls
 
     echo ""
-    echo -e "${BLUE}🛑 Stop: ./scripts/launch/stop-all.sh${NC}"
-    echo -e "${BLUE}📊 Status: ./scripts/launch/status.sh${NC}"
+    echo -e "${BLUE}📝 Logs: $LOGS_DIR/${NC}"
+    echo -e "${BLUE}🛑 To stop: ./scripts/stop-all.sh${NC}"
+    echo -e "${BLUE}📊 Status check: ./scripts/status.sh${NC}"
+    echo ""
+    echo -e "${YELLOW}Press Ctrl+C to stop tailing logs (services will keep running)${NC}"
+    echo -e "${YELLOW}Or close this window to let services run in background${NC}"
     echo ""
 
-    if [ "$choice" != "4" ]; then
-        echo -e "${YELLOW}Press Ctrl+C to stop tailing (services continue running)${NC}"
-        echo ""
-        print_status "📋 Tailing logs..."
-        echo ""
-
-        case $choice in
-            1) tail -f "$LOGS_DIR/pipeline.log" ;;
-            2) tail -f "$LOGS_DIR/daw.log" ;;
-            3) tail -f "$LOGS_DIR/pipeline.log" "$LOGS_DIR/daw.log" ;;
-        esac
-    fi
+    # Keep terminal open and tail logs
+    print_status "📋 Tailing backend logs..."
+    echo ""
+    tail -f "$LOGS_DIR/backend.log"
 }
 
-# Cleanup handler
-cleanup() {
-    echo ""
-    print_status "Logs stopped. Services still running."
-    echo "Use ./scripts/launch/stop-all.sh to stop."
-    exit 0
-}
+# Trap Ctrl+C to provide exit message
+trap 'echo ""; echo ""; print_status "Logs stopped. Services are still running."; echo "Use ./scripts/stop-all.sh to stop all services."; exit 0' INT
 
-trap cleanup INT
+# Run main function
 main

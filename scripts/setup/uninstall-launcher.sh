@@ -83,12 +83,12 @@ main() {
         echo "  - Desktop"
         echo ""
         echo "Note: This does not remove:"
-        echo "  - The project files in ~/projects/midi-library-system/"
+        echo "  - The project files in ~/projects/midi-software-center/"
         echo "  - The launch scripts in scripts/"
         echo "  - Any running services"
         echo ""
         echo "To reinstall the launcher, run:"
-        echo "  ~/projects/midi-library-system/scripts/install-launcher.sh"
+        echo "  ~/projects/midi-software-center/scripts/install-launcher.sh"
     fi
     echo ""
 }

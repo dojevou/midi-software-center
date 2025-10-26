@@ -12,7 +12,7 @@ BLUE='\033[0;34m'
 NC='\033[0m'
 
 # Configuration
-PROJECT_ROOT="$HOME/projects/midi-library-system"
+PROJECT_ROOT="$HOME/projects/midi-software-center"
 DESKTOP_FILE="$PROJECT_ROOT/midi-launcher.desktop"
 INSTALL_DIR="$HOME/.local/share/applications"
 INSTALLED_FILE="$INSTALL_DIR/midi-launcher.desktop"
@@ -209,7 +209,7 @@ main() {
     mv "$TEMP_DESKTOP.new" "$TEMP_DESKTOP"
 
     # Replace any remaining ~/ with absolute path
-    sed -i "s|~/projects/midi-library-system|$PROJECT_ROOT|g" "$TEMP_DESKTOP"
+    sed -i "s|~/projects/midi-software-center|$PROJECT_ROOT|g" "$TEMP_DESKTOP"
 
     # Copy to applications directory
     print_status "📦 Installing launcher..."

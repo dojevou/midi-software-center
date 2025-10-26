@@ -2,7 +2,7 @@
 # MIDI Library System - Status Check Script
 
 # Configuration
-PROJECT_ROOT="$HOME/projects/midi-library-system"
+PROJECT_ROOT="$HOME/projects/midi-software-center"
 LOGS_DIR="$PROJECT_ROOT/logs"
 DB_HOST="localhost"
 DB_PORT="5433"

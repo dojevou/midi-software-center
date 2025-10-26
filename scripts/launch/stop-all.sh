@@ -4,7 +4,7 @@
 set -e  # Exit on error
 
 # Configuration
-PROJECT_ROOT="$HOME/projects/midi-library-system"
+PROJECT_ROOT="$HOME/projects/midi-software-center"
 DATABASE_DIR="$PROJECT_ROOT/database"
 
 # Colors for output
