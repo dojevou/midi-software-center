@@ -9,13 +9,13 @@ export default defineConfig({
 
   // Tauri expects a fixed port
   server: {
-    port: 5174,
+    port: 5173,
     strictPort: true,
     host: '0.0.0.0',
     hmr: {
       protocol: 'ws',
       host: '0.0.0.0',
-      port: 5184
+      port: 5183
     }
   },
 

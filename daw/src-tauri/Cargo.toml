@@ -75,7 +75,8 @@ instant = "0.1"                  # Cross-platform instant timing
 tokio-test = "0.4"
 criterion = "0.5"
 
-[[bin]]
-name = "test_midi"
-path = "src/bin/test_midi.rs"
+# Disabled - test binary not migrated yet
+# [[bin]]
+# name = "test_midi"
+# path = "src/bin/test_midi.rs"
 
