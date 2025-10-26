@@ -12,6 +12,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - ✅ **Original production code identified** - 222 files ready to migrate
 - ✅ Deduplication analysis complete
 - ✅ Component separation plan finalized
+- ✅ **MCP servers configured** - 12 servers (postgres, filesystem, docker, git, bash, rust, npm, vscode, web-search, anthropic, sentry, notion)
+- ✅ **Git repository initialized** - Commit be6f2ba (353 planning files)
+- ✅ **Source code extracted** - `/tmp/original-project/midi-library-system/` (240 production files verified)
 - ⏳ Ready to begin migration
 
 **Source Code Status:**
@@ -453,6 +456,105 @@ This project is currently in the **migration preparation phase**. The original c
 3. Phase 3: Frontend (both apps)
 4. Phase 4: Scripts (launch, verify, setup)
 5. Phase 5: Final verification and documentation
+
+## MCP Server Configuration
+
+**This project has a comprehensive MCP (Model Context Protocol) setup configured for optimal development workflow.**
+
+### Configured MCP Servers (12 Total)
+
+#### Core Development Infrastructure (stdio transport)
+- **postgres** - Database operations (schema inspection, migrations, queries)
+  - Connection: `postgresql://midiuser:145278963@localhost:5433/midi_library`
+  - Use: Query database, verify migrations, inspect schema
+
+- **filesystem** - File operations (migration, copying, verification)
+  - Paths: `/home/dojevou/projects/midi-software-center`, `/tmp/original-project`
+  - Use: Copy 240 source files systematically during migration
+
+- **docker** - Container management (monitoring, logs, health checks)
+  - Use: Monitor PostgreSQL/Meilisearch containers, view logs, restart services
+
+- **git** - Version control (commits, branches, history)
+  - Use: Track migration progress, create commits, manage branches
+
+- **bash** - Shell execution (automation, scripts, builds)
+  - Use: Run build scripts, execute tests, automation tasks
+
+#### Language & Framework Tooling (stdio transport)
+- **rust** - Rust development (cargo, analysis, builds)
+  - **CRITICAL** for this project (113 Rust files to migrate)
+  - Use: cargo build, cargo test, cargo clippy, workspace management
+
+- **npm** - Package management (dependencies, scripts)
+  - Use: pnpm install, run dev/build scripts for Svelte frontends
+
+- **vscode** - Editor integration (code navigation, file management)
+  - Use: Open files, navigate to definitions, workspace management
+
+#### Advanced Development (stdio transport)
+- **web-search** - Web search (documentation, research, solutions)
+  - Use: Look up Rust/Tauri/MIDI docs, find solutions to issues
+
+- **anthropic** - AI assistance (Claude API access)
+  - Use: Advanced AI-powered development tasks
+
+#### Cloud Services (HTTP transport)
+- **sentry** - Error monitoring (production error tracking)
+  - URL: https://sentry.io
+  - Use: Monitor runtime errors post-migration (requires OAuth setup)
+
+- **notion** - Project management (documentation, planning, tracking)
+  - URL: https://api.notion.com
+  - Use: Track migration progress, document decisions (requires OAuth setup)
+
+### MCP Benefits for Migration
+
+**Why this MCP setup is valuable:**
+
+1. **Database Access** - Direct PostgreSQL queries for verifying migrations and data
+2. **File Operations** - Structured copying of 240 files with verification
+3. **Container Management** - Monitor database health during migration
+4. **Version Control** - Track every migration step with proper git commits
+5. **Rust Tooling** - Essential for building/testing 113 Rust files
+6. **Package Management** - Handle frontend dependencies (Svelte/TypeScript)
+7. **Research** - Quick access to documentation for Rust/Tauri/MIDI
+8. **Project Tracking** - Document migration decisions and progress
+
+### Using MCP Servers
+
+MCP servers activate automatically when needed. Examples:
+
+```bash
+# Database queries (postgres MCP)
+"Show me all tables in the database"
+"What's the schema for the files table?"
+
+# File operations (filesystem MCP)
+"Copy all files from shared/rust to the new structure"
+"Verify that all source files were copied correctly"
+
+# Container management (docker MCP)
+"Show PostgreSQL container logs"
+"Check if Meilisearch is healthy"
+
+# Git operations (git MCP)
+"Create a commit for Phase 1 migration"
+"Show recent commit history"
+
+# Rust development (rust MCP)
+"Run cargo build for the workspace"
+"Check for compilation errors in shared library"
+```
+
+### MCP Configuration Location
+
+MCP servers are configured in: `~/.claude.json` (local scope for this project)
+
+To view all configured servers:
+```bash
+claude mcp list
+```
 
 ## Next Steps
 
