@@ -242,7 +242,15 @@ pub async fn import_directory(
 
             async move {
                 // Acquire semaphore permit (blocks if at limit)
-                let _permit = sem.acquire().await.unwrap();
+                // This should never fail unless semaphore is closed, which we never do
+                let _permit = match sem.acquire().await {
+                    Ok(permit) => permit,
+                    Err(_) => {
+                        // Semaphore closed - skip this file (should never happen)
+                        eprintln!("Warning: Semaphore closed during file import");
+                        return;
+                    }
+                };
 
                 let current = current_index.fetch_add(1, Ordering::SeqCst) + 1;
 
