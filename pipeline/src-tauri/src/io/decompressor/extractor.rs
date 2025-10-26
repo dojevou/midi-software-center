@@ -12,6 +12,7 @@ use std::path::{Path, PathBuf};
 use zip::ZipArchive;
 
 use crate::io::decompressor::{formats, temp_manager};
+use crate::io::{IoError, Result};
 
 /// Configuration for extraction
 #[derive(Debug, Clone)]
@@ -77,8 +78,11 @@ pub fn extract_archive(
     archive_path: &Path,
     output_dir: &Path,
     config: &ExtractionConfig,
-) -> Result<ExtractionResult, Box<dyn std::error::Error>> {
-    let format = formats::detect_format(archive_path).ok_or("Unsupported archive format")?;
+) -> Result<ExtractionResult> {
+    let format = formats::detect_format(archive_path)
+        .ok_or_else(|| IoError::UnsupportedFormat {
+            path: archive_path.to_path_buf(),
+        })?;
 
     let mut result = ExtractionResult {
         midi_files: Vec::new(),
@@ -99,7 +103,7 @@ fn extract_recursive(
     current_depth: usize,
     result: &mut ExtractionResult,
     format: formats::ArchiveFormat,
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> Result<()> {
     if current_depth >= config.max_depth {
         result
             .errors
@@ -130,7 +134,7 @@ fn extract_zip(
     config: &ExtractionConfig,
     current_depth: usize,
     result: &mut ExtractionResult,
-) -> Result<(), Box<dyn std::error::Error>> {
+) -> Result<()> {
     let file = File::open(archive_path)?;
     let mut archive = ZipArchive::new(file)?;
 
@@ -181,11 +185,13 @@ fn extract_zip(
 
 /// Checks if file has target extension
 fn is_target_file(path: &Path, target_extensions: &[String]) -> bool {
-    if let Some(ext) = path.extension() {
-        let ext_str = ext.to_str().unwrap_or("").to_lowercase();
-        return target_extensions.iter().any(|target| target == &ext_str);
-    }
-    false
+    path.extension()
+        .and_then(|ext| ext.to_str())
+        .map(|ext_str| {
+            let ext_lower = ext_str.to_lowercase();
+            target_extensions.iter().any(|target| target == &ext_lower)
+        })
+        .unwrap_or(false)
 }
 
 /// Convenience function for extracting to temporary directory
@@ -199,7 +205,7 @@ fn is_target_file(path: &Path, target_extensions: &[String]) -> bool {
 pub fn extract_to_temp(
     archive_path: &Path,
     config: &ExtractionConfig,
-) -> Result<(ExtractionResult, PathBuf), Box<dyn std::error::Error>> {
+) -> Result<(ExtractionResult, PathBuf)> {
     let mut temp_mgr = temp_manager::TempManager::new()?;
     let temp_dir = temp_mgr.create_temp_dir()?;
 

@@ -112,7 +112,10 @@ impl EventScheduler {
 
         while let Some(next) = events.peek() {
             if next.tick <= current_tick {
-                ready.push(events.pop().unwrap());
+                // Safe to unwrap here since peek() returned Some, but we use if let for safety
+                if let Some(event) = events.pop() {
+                    ready.push(event);
+                }
             } else {
                 break;
             }
