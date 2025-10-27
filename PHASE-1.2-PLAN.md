@@ -358,7 +358,12 @@ test result: ok. 30 passed; 0 failed; 0 ignored; 0 measured
 
 ### Step 7: Measure Coverage (5 minutes)
 
-**Command:**
+**Primary Method (Slash Command):**
+```bash
+/test-coverage-analyzer:analyze-coverage
+```
+
+**Alternative (Manual):**
 ```bash
 cargo tarpaulin --package midi-library-shared --lib --out Stdout --skip-clean 2>&1 | grep "error.rs"
 ```
@@ -368,14 +373,20 @@ cargo tarpaulin --package midi-library-shared --lib --out Stdout --skip-clean 2>
 shared/rust/src/core/midi/error.rs: 30/31 lines covered (96.8%)
 ```
 
+**Tools Used:**
+- Slash command: `/test-coverage-analyzer:analyze-coverage`
+- MCP server: `rust` (for cargo tarpaulin)
+- Plugin: `test-coverage-analyzer`
+
 **Uncovered Lines (Expected):**
 - Line 24: `#[from] std::io::Error` (attribute, not executable)
 - Line 27: `#[from] std::string::FromUtf8Error` (attribute, not executable)
 
 **If Coverage < 95%:**
-1. Check which lines are uncovered
-2. Add tests for those specific error paths
-3. Re-run coverage
+1. Use `/test-coverage-analyzer:analyze-coverage` to identify gaps
+2. Check which lines are uncovered
+3. Add tests for those specific error paths
+4. Re-run coverage
 
 ---
 
@@ -402,7 +413,19 @@ shared/rust/src/core/midi/error.rs: 30/31 lines covered (96.8%)
 
 ### Step 9: Commit Changes (5 minutes)
 
-**Commands:**
+**Primary Method (Slash Command):**
+```bash
+/git-commit-smart:commit-smart
+```
+
+**This will automatically:**
+- Stage the changed files
+- Analyze the changes
+- Generate a semantic commit message
+- Include coverage stats
+- Add co-authorship
+
+**Alternative (Manual):**
 ```bash
 # Stage changes
 git add shared/rust/src/core/midi/error.rs
@@ -535,22 +558,168 @@ EOF
 
 ## Tools & Agents
 
-### Claude Code Tools
+### 🛠️ Tool-Enhanced Workflow
+
+Phase 1.2 uses the **full Claude Code toolkit** for maximum efficiency and quality:
+
+### Slash Commands (3 used)
 ```bash
-/unit-test-generator:generate-tests    # Generate initial test boilerplate
+/unit-test-generator:generate-tests    # Step 2: Generate test boilerplate
+/test-coverage-analyzer:analyze-coverage # Step 7: Analyze coverage gaps
+/git-commit-smart:commit-smart         # Step 9: Create semantic commit
 ```
 
-### Specialized Agents
+### Specialized Agents (4 used)
+
+#### Primary Agent
 ```bash
-rust-backend agent                     # Review error types and tests
+rust-backend agent                     # Step 8: Review error types and tests
 ```
+**Use for:**
+- Validating error type design
+- Checking thiserror usage correctness
+- Reviewing error message clarity
+- Confirming Rust best practices
+
+#### Supporting Agents (Optional but Recommended)
+```bash
+security-sentinel agent                # Optional: Security review of error handling
+```
+**Use for:**
+- Check for information leakage in error messages
+- Validate no sensitive data in error output
+- Ensure error paths don't create DoS vectors
+
+```bash
+pattern-recognition-specialist agent   # Optional: Check error patterns
+```
+**Use for:**
+- Compare error patterns with rest of codebase
+- Identify inconsistent error handling
+- Suggest error taxonomy improvements
+
+```bash
+best-practices-researcher agent        # Optional: Research Rust error practices
+```
+**Use for:**
+- Look up latest thiserror patterns
+- Research Rust error handling best practices
+- Find examples from popular Rust projects
+
+### MCP Servers (4 active)
+
+#### Core Development
+```bash
+rust (MCP)                             # Cargo commands, analysis
+```
+**Used for:**
+- `cargo test` - Running error module tests
+- `cargo tarpaulin` - Coverage measurement
+- `cargo fmt` - Code formatting
+
+```bash
+git (MCP)                              # Version control
+```
+**Used for:**
+- `git add` - Stage test changes
+- `git commit` - Create semantic commit
+- `git status` - Check working tree
+
+#### Analysis & Documentation
+```bash
+filesystem (MCP)                       # File operations
+```
+**Used for:**
+- Read error.rs source code
+- Create/update test files
+- Manage test fixtures
+
+```bash
+web-search (MCP)                       # Research (if needed)
+```
+**Used for:**
+- Look up thiserror documentation
+- Research Rust error handling patterns
+- Find similar error type examples
+
+### Plugins (2 active)
+
+```bash
+unit-test-generator plugin             # Test generation
+```
+**Features:**
+- Auto-detect testing framework (cargo test)
+- Generate test structure
+- Create boilerplate for all error variants
+
+```bash
+git-commit-smart plugin                # Semantic commits
+```
+**Features:**
+- Generate conventional commit messages
+- Include coverage stats
+- Add co-authorship automatically
 
 ### Manual Tools
+
 ```bash
-cargo test                             # Run tests
-cargo tarpaulin                        # Measure coverage
-git commit                             # Commit changes
+cargo test                             # Run tests (via rust MCP)
+cargo tarpaulin                        # Measure coverage (via rust MCP)
+cargo nextest                          # Fast test runner (if needed)
 ```
+
+---
+
+### 📊 Tool Usage Matrix
+
+| Step | Slash Command | Agent | MCP Server | Plugin |
+|------|---------------|-------|------------|--------|
+| 1. Analyze | - | - | filesystem | - |
+| 2. Generate | /unit-test-generator | - | rust | unit-test-generator |
+| 3. Enhance | - | - | - | - |
+| 4. Edge Cases | - | - | - | - |
+| 5. Security | - | security-sentinel (opt) | - | - |
+| 6. Run Tests | - | - | rust | - |
+| 7. Coverage | /test-coverage-analyzer | - | rust | - |
+| 8. Review | - | rust-backend | - | - |
+| 9. Commit | /git-commit-smart | - | git | git-commit-smart |
+
+**Total Tool Usage:**
+- 3 slash commands
+- 1-4 agents (1 required, 3 optional)
+- 4 MCP servers
+- 2 plugins
+
+---
+
+### 🎯 Tool Selection Guidelines
+
+**When to use which tool:**
+
+#### Use /unit-test-generator when:
+- Starting from scratch (no existing tests)
+- Need comprehensive test boilerplate
+- Want framework-specific patterns
+
+#### Use rust-backend agent when:
+- Need expert Rust code review
+- Validating error type design
+- Checking idiomatic patterns
+
+#### Use security-sentinel agent when:
+- Error messages might leak sensitive data
+- Handling user-provided error contexts
+- Production error handling code
+
+#### Use /git-commit-smart when:
+- Ready to commit (all tests passing)
+- Want semantic commit message
+- Need coverage stats in commit
+
+#### Use /test-coverage-analyzer when:
+- Need detailed coverage breakdown
+- Want to identify specific uncovered lines
+- Planning next testing steps
 
 ---
 
