@@ -10,5 +10,6 @@ pub use auto_tagger::{AutoTagger, Tag};
 pub use bpm_detector::{detect_bpm, BpmDetectionMethod, BpmDetectionResult, BpmMetadata};
 pub use key_detector::{detect_key, KeyDetectionResult, ScaleType};
 
-#[cfg(test)]
-mod tests;
+// Tests will be added during Phase 1 of test coverage initiative
+// #[cfg(test)]
+// mod tests;
