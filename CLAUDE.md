@@ -13,6 +13,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - ✅ Deduplication analysis complete
 - ✅ Component separation plan finalized
 - ✅ **MCP servers configured** - 12 servers (postgres, filesystem, docker, git, bash, rust, npm, vscode, web-search, anthropic, sentry, notion)
+- ✅ **Claude Code extensions installed** - 10 plugins, 35+ agents, 16 slash commands (testing, database, code quality)
 - ✅ **Git repository initialized** - Commit 1e30f81 (Phase 1 complete)
 - ✅ **Phase 1 COMPLETE** - Database (7 files), Shared Library (24 files), Root configs (3 files)
 - ✅ **Phase 2 COMPLETE** - Pipeline backend (45+ files), DAW backend (53+ files), Import tool (2 files)
@@ -70,16 +71,29 @@ Total:   15 files, 28 fixes - ZERO remaining         ✅
 ```
 
 **Test Coverage Initiative - IN PROGRESS:**
-- 📊 **Current Coverage:** 38.1% (32/84 files have tests)
+- 📊 **Current Coverage:** 38.1% → 85% (MIDI types module)
 - 🎯 **Target Coverage:** 100% (80%+ required for Trusty Modules)
-- 📋 **8-Phase Plan Created** - 17 days / ~100 hours estimated
-- 🔴 **Critical Gap:** 20 core/ files without tests
-- ⏳ **Phase 1 Starting:** Shared library core modules
+- 📋 **8-Phase Plan Created** - 17 days / ~74 hours estimated (tool-enhanced)
+- ✅ **Phase 0 COMPLETE** - Testing tools, fixtures, baseline established
+- ✅ **Phase 1.1 COMPLETE** - MIDI types (50 tests, 85% coverage, 2 bugs found)
+- ⏳ **Phase 1.2 IN PROGRESS** - MIDI error.rs module
 - 📄 See `TEST-COVERAGE-PLAN.md` for complete roadmap
+
+**Phase 1.1 Achievement (2025-10-26):**
+```
+Module: shared/rust/src/core/midi/types.rs
+Tests:  50 passing (4 modules: midi_file, event, serialization, edge_case)
+Coverage: 85% (17/20 lines) - EXCEEDS 80% requirement ✅
+Reviews:
+  - midi-hardware: 75/100 (bug found in duration_seconds)
+  - security-sentinel: MEDIUM risk (4 critical issues identified)
+Commit: 702d77d (2,858 insertions, 14 files)
+Time: ~1 hour (tool-enhanced workflow)
+```
 
 **Coverage Gap Summary:**
 ```
-Shared:   9.1% (2/22 files)  - 🔴 CRITICAL
+Shared:   9.1% (2/22 files)  - 🔴 CRITICAL → Phase 1 in progress
 Pipeline: 57.1% (20/35 files) - 🟡 HIGH
 DAW:      37.0% (10/27 files) - 🟡 HIGH
 Overall:  38.1% (32/84 files) - Gap: 52 files need tests
@@ -703,6 +717,225 @@ MCP servers are configured in: `~/.claude.json` (local scope for this project)
 To view all configured servers:
 ```bash
 claude mcp list
+```
+
+## Claude Code Extensions & Tools
+
+**This project has an extensive suite of Claude Code plugins, agents, and slash commands configured to enhance development workflow, code quality, and testing.**
+
+### Installed Plugins (10 Total)
+
+**Testing & Coverage Suite:**
+- **test-coverage-analyzer** - Analyze code coverage metrics and identify untested code
+  - Command: `/test-coverage-analyzer:analyze-coverage`
+  - Use: Find coverage gaps, identify untested code paths, generate coverage reports
+
+- **unit-test-generator** - Generate comprehensive unit tests for source code files
+  - Command: `/unit-test-generator:generate-tests`
+  - Use: Auto-generate test cases for Rust/TypeScript code, improve coverage
+
+- **test-orchestrator** - Orchestrate complex test workflows with smart execution
+  - Command: `/test-orchestrator:orchestrate`
+  - Use: Run multi-component test suites, coordinate integration tests
+
+- **integration-test-runner** - Run integration test suites with proper setup/teardown
+  - Command: `/integration-test-runner:run-integration`
+  - Use: Execute end-to-end tests, verify component integration
+
+- **database-test-manager** - Database testing with test data setup and rollback
+  - Command: `/database-test-manager:db-test`
+  - Use: Test database operations, verify migrations, schema validation
+
+**Database Development Suite:**
+- **database-migration-manager** - Create and manage database migrations
+  - Command: `/database-migration-manager:migration`
+  - Use: Generate migrations, verify schema changes, rollback support
+
+- **query-performance-analyzer** - Analyze query patterns and recommend optimizations
+  - Command: Available via skill: `query-performance-analyzer:query-performance-analyzer`
+  - Use: Identify slow queries, suggest indexes, analyze execution plans
+
+- **database-index-advisor** - Recommend optimal database indexes
+  - Command: `/database-index-advisor:index-advisor`
+  - Use: Analyze query patterns, suggest index improvements
+
+**Code Quality & Git Suite:**
+- **git-commit-smart** - Generate conventional commits with AI-powered messages
+  - Command: `/git-commit-smart:commit-smart`
+  - Use: Create semantic commits, follow conventional commit format
+
+- **project-health-auditor** - Trigger full repository health analysis
+  - Command: `/project-health-auditor:analyze`
+  - Use: Code health metrics, identify refactoring opportunities
+
+**Meta-Plugin:**
+- **pi-pathfinder** - Universal skill chameleon that learns from other plugins
+  - Use: Analyzes existing plugins and adapts their capabilities to current task
+
+### Available Specialized Agents (35+ Total)
+
+**General Purpose Agents:**
+- **general-purpose** - Research complex questions, search code, multi-step tasks
+- **Explore** - Fast codebase exploration (glob patterns, keyword search, quick/medium/thorough)
+- **statusline-setup** - Configure Claude Code status line settings
+- **output-style-setup** - Create custom output styles
+
+**PR Review Toolkit Agents:**
+- **pr-review-toolkit:type-design-analyzer** - Analyze type design, encapsulation, invariants
+- **pr-review-toolkit:comment-analyzer** - Check comment accuracy, prevent comment rot
+- **pr-review-toolkit:code-reviewer** - Review for bugs, security, quality issues
+- **pr-review-toolkit:pr-test-analyzer** - Review PR test coverage and completeness
+- **pr-review-toolkit:silent-failure-hunter** - Identify silent failures, inadequate error handling
+- **pr-review-toolkit:code-simplifier** - Simplify code while preserving functionality
+
+**Feature Development Agents:**
+- **feature-dev:code-reviewer** - Review code for bugs, logic errors, security (confidence-based)
+- **feature-dev:code-architect** - Design feature architectures, implementation blueprints
+- **feature-dev:code-explorer** - Deep codebase analysis, trace execution paths
+
+**Compounding Engineering Agents:**
+- **compounding-engineering:feedback-codifier** - Analyze and codify feedback patterns
+- **compounding-engineering:security-sentinel** - Security audits, vulnerability assessment
+- **compounding-engineering:performance-oracle** - Performance analysis, bottleneck identification
+- **compounding-engineering:code-simplicity-reviewer** - Final simplicity pass before PR
+- **compounding-engineering:kieran-rails-reviewer** - Rails code review (strict quality bar)
+- **compounding-engineering:kieran-python-reviewer** - Python code review (strict quality bar)
+- **compounding-engineering:kieran-typescript-reviewer** - TypeScript code review (strict quality bar)
+- **compounding-engineering:framework-docs-researcher** - Gather framework/library documentation
+- **compounding-engineering:dhh-rails-reviewer** - Brutally honest Rails review (DHH perspective)
+- **compounding-engineering:pr-comment-resolver** - Address PR comments, implement fixes
+- **compounding-engineering:data-integrity-guardian** - Review migrations, data model safety
+- **compounding-engineering:git-history-analyzer** - Understand code evolution, trace origins
+- **compounding-engineering:architecture-strategist** - Analyze architectural decisions
+- **compounding-engineering:best-practices-researcher** - Research external best practices
+- **compounding-engineering:every-style-editor** - Review/edit text per Every's style guide
+- **compounding-engineering:pattern-recognition-specialist** - Analyze design patterns, anti-patterns
+- **compounding-engineering:repo-research-analyst** - Thorough repository structure analysis
+
+**Project-Specific Agents:**
+- **frontend** - Svelte/TypeScript expert (reactive stores, Tauri IPC, components)
+- **architecture-reviewer** - Three Archetypes compliance, file placement validation
+- **database** - PostgreSQL expert (schema, SQLx, migrations, repositories)
+- **midi-hardware** - MIDI parsing, hardware integration, ALSA, BPM detection
+- **rust-backend** - Rust/Tauri backend expert (async, error handling, MIDI)
+
+**SDK & Quality Agents:**
+- **agent-sdk-dev:agent-sdk-verifier-py** - Verify Python Agent SDK applications
+- **agent-sdk-dev:agent-sdk-verifier-ts** - Verify TypeScript Agent SDK applications
+- **query-performance-analyzer:performance-agent** - Analyze and optimize query performance
+- **project-health-auditor:reviewer** - Code health review, suggest high-impact refactors
+
+### Available Slash Commands (16 Total)
+
+**Development & Features:**
+- `/feature-dev:feature-dev [description]` - Guided feature development with architecture focus
+- `/code-review:code-review` - Code review a pull request
+
+**Testing Commands:**
+- `/test-coverage-analyzer:analyze-coverage` - Analyze code coverage, identify gaps
+- `/unit-test-generator:generate-tests` - Generate comprehensive unit tests
+- `/test-orchestrator:orchestrate` - Orchestrate complex test workflows
+- `/integration-test-runner:run-integration` - Run integration test suites
+- `/database-test-manager:db-test` - Database testing with setup/teardown
+
+**Database Commands:**
+- `/database-migration-manager:migration` - Create and manage database migrations
+- `/database-index-advisor:index-advisor` - Analyze queries, recommend indexes
+
+**Git & Commits:**
+- `/commit-commands:commit` - Create a git commit
+- `/commit-commands:commit-push-pr` - Commit, push, and open a PR
+- `/commit-commands:clean_gone` - Clean up deleted remote branches
+- `/git-commit-smart:commit-smart` - Generate conventional commits (AI-powered)
+
+**Project Management:**
+- `/project-health-auditor:analyze` - Full repository health analysis
+- `/pr-review-toolkit:review-pr [aspects]` - Comprehensive PR review (uses specialized agents)
+
+**Agent SDK:**
+- `/agent-sdk-dev:new-sdk-app [project-name]` - Create and setup new Claude Agent SDK app
+
+### How to Use Extensions
+
+**Plugins & Skills:**
+```bash
+# Invoke skills directly in conversation
+"Use the test-coverage-analyzer skill to find coverage gaps"
+"Run the unit-test-generator to create tests for midi/parser.rs"
+
+# Or use slash commands
+/test-coverage-analyzer:analyze-coverage
+/unit-test-generator:generate-tests
+```
+
+**Agents (invoked automatically or manually):**
+```bash
+# Automatic invocation (based on task)
+"Review this code for security issues"  # → security-sentinel agent
+"Analyze the architecture of this PR"   # → architecture-strategist agent
+
+# Manual invocation via Task tool
+"Use the frontend agent to review this Svelte component"
+"Use the database agent to design this schema"
+```
+
+**Slash Commands:**
+```bash
+# Feature development
+/feature-dev:feature-dev Add real-time MIDI recording
+
+# Testing workflow
+/test-coverage-analyzer:analyze-coverage
+/unit-test-generator:generate-tests
+
+# Database work
+/database-migration-manager:migration
+/database-index-advisor:index-advisor
+
+# Git operations
+/commit-commands:commit-push-pr
+/git-commit-smart:commit-smart
+```
+
+### Extension Benefits for This Project
+
+**For Test Coverage Initiative (38.1% → 100%):**
+1. **test-coverage-analyzer** - Identify the 52 files without tests
+2. **unit-test-generator** - Auto-generate test boilerplate for Rust/TypeScript
+3. **test-orchestrator** - Run comprehensive test suites across components
+4. **database-test-manager** - Test all 18 database tables and repositories
+
+**For Code Quality (Already 100% Compliant):**
+1. **code-reviewer** - Maintain zero unwrap/expect/panic standard
+2. **security-sentinel** - Ensure MIDI file parsing is safe from malicious input
+3. **performance-oracle** - Optimize for 3M+ file libraries
+4. **architecture-reviewer** - Enforce Three Archetypes Pattern compliance
+
+**For Development Workflow:**
+1. **frontend/database/rust-backend agents** - Project-specific expertise
+2. **feature-dev** - Guided feature implementation with architecture focus
+3. **git-commit-smart** - Semantic commit messages
+4. **pr-review-toolkit** - Comprehensive PR reviews before merging
+
+**For MIDI/Audio Work:**
+1. **midi-hardware agent** - Expert in MIDI parsing, hardware integration
+2. **rust-backend agent** - Tauri, async patterns, error handling
+3. **performance-oracle** - Real-time audio performance requirements
+
+### Extension Configuration
+
+Extensions are configured via:
+- **Plugins:** Installed via Claude Code plugin system
+- **Agents:** Built-in Claude Code agent framework
+- **Slash Commands:** Defined in `.claude/commands/` directory
+
+To view installed plugins:
+```bash
+# List all plugins
+ls ~/.claude/plugins/
+
+# Check plugin status
+# (plugins auto-activate when needed)
 ```
 
 ## Next Steps
