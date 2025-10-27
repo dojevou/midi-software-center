@@ -327,3 +327,610 @@ impl<'a> MidiReader<'a> {
         Ok(())
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ============================================================================
+    // MidiReader Tests
+    // ============================================================================
+
+    #[test]
+    fn test_midi_reader_read_u8_success() {
+        let data = vec![0x4D, 0x54, 0x68];
+        let mut reader = MidiReader::new(&data);
+
+        assert_eq!(reader.read_u8().unwrap(), 0x4D);
+        assert_eq!(reader.position(), 1);
+        assert_eq!(reader.read_u8().unwrap(), 0x54);
+        assert_eq!(reader.position(), 2);
+    }
+
+    #[test]
+    fn test_midi_reader_read_u8_incomplete() {
+        let data = vec![0x4D];
+        let mut reader = MidiReader::new(&data);
+
+        reader.read_u8().unwrap();
+        let result = reader.read_u8();
+        assert!(matches!(result, Err(ParseError::IncompleteData(1))));
+    }
+
+    #[test]
+    fn test_midi_reader_peek_u8() {
+        let data = vec![0x4D, 0x54];
+        let reader = MidiReader::new(&data);
+
+        // Peek doesn't advance position
+        assert_eq!(reader.peek_u8().unwrap(), 0x4D);
+        assert_eq!(reader.position(), 0);
+        assert_eq!(reader.peek_u8().unwrap(), 0x4D);
+        assert_eq!(reader.position(), 0);
+    }
+
+    #[test]
+    fn test_midi_reader_read_u16_big_endian() {
+        let data = vec![0x12, 0x34, 0xAB, 0xCD];
+        let mut reader = MidiReader::new(&data);
+
+        assert_eq!(reader.read_u16().unwrap(), 0x1234);
+        assert_eq!(reader.read_u16().unwrap(), 0xABCD);
+    }
+
+    #[test]
+    fn test_midi_reader_read_u32_big_endian() {
+        let data = vec![0x12, 0x34, 0x56, 0x78];
+        let mut reader = MidiReader::new(&data);
+
+        assert_eq!(reader.read_u32().unwrap(), 0x12345678);
+    }
+
+    #[test]
+    fn test_midi_reader_read_bytes() {
+        let data = vec![0x4D, 0x54, 0x68, 0x64];
+        let mut reader = MidiReader::new(&data);
+
+        let bytes = reader.read_bytes(4).unwrap();
+        assert_eq!(bytes, b"MThd");
+        assert_eq!(reader.position(), 4);
+    }
+
+    #[test]
+    fn test_midi_reader_read_variable_length_one_byte() {
+        let data = vec![0x00, 0x40, 0x7F];
+        let mut reader = MidiReader::new(&data);
+
+        assert_eq!(reader.read_variable_length().unwrap(), 0);
+        assert_eq!(reader.read_variable_length().unwrap(), 64);
+        assert_eq!(reader.read_variable_length().unwrap(), 127);
+    }
+
+    #[test]
+    fn test_midi_reader_read_variable_length_two_bytes() {
+        let data = vec![0x81, 0x00, 0xFF, 0x7F];
+        let mut reader = MidiReader::new(&data);
+
+        // 0x81 0x00 = (0x01 << 7) | 0x00 = 128
+        assert_eq!(reader.read_variable_length().unwrap(), 128);
+        // 0xFF 0x7F = (0x7F << 7) | 0x7F = 16383
+        assert_eq!(reader.read_variable_length().unwrap(), 16383);
+    }
+
+    #[test]
+    fn test_midi_reader_read_variable_length_three_bytes() {
+        let data = vec![0x81, 0x80, 0x00];
+        let mut reader = MidiReader::new(&data);
+
+        // 0x81 0x80 0x00 = (0x01 << 14) | (0x00 << 7) | 0x00 = 16384
+        assert_eq!(reader.read_variable_length().unwrap(), 16384);
+    }
+
+    #[test]
+    fn test_midi_reader_read_variable_length_four_bytes() {
+        let data = vec![0x81, 0x80, 0x80, 0x00];
+        let mut reader = MidiReader::new(&data);
+
+        // 0x81 0x80 0x80 0x00 = (0x01 << 21) | (0x00 << 14) | (0x00 << 7) | 0x00 = 2097152
+        assert_eq!(reader.read_variable_length().unwrap(), 2097152);
+    }
+
+    #[test]
+    fn test_midi_reader_skip() {
+        let data = vec![0x00, 0x01, 0x02, 0x03, 0x04];
+        let mut reader = MidiReader::new(&data);
+
+        reader.skip(2).unwrap();
+        assert_eq!(reader.position(), 2);
+        assert_eq!(reader.read_u8().unwrap(), 0x02);
+    }
+
+    #[test]
+    fn test_midi_reader_skip_incomplete() {
+        let data = vec![0x00, 0x01];
+        let mut reader = MidiReader::new(&data);
+
+        let result = reader.skip(10);
+        assert!(matches!(result, Err(ParseError::IncompleteData(0))));
+    }
+
+    // ============================================================================
+    // Header Parsing Tests
+    // ============================================================================
+
+    fn make_valid_header(format: u16, num_tracks: u16, ticks: u16) -> Vec<u8> {
+        let mut data = vec![];
+        data.extend_from_slice(b"MThd"); // Chunk type
+        data.extend_from_slice(&6u32.to_be_bytes()); // Length
+        data.extend_from_slice(&format.to_be_bytes()); // Format
+        data.extend_from_slice(&num_tracks.to_be_bytes()); // Tracks
+        data.extend_from_slice(&ticks.to_be_bytes()); // TPQN
+        data
+    }
+
+    #[test]
+    fn test_parse_header_format_0() {
+        let data = make_valid_header(0, 1, 480);
+        let mut reader = MidiReader::new(&data);
+
+        let header = parse_header(&mut reader).unwrap();
+        assert_eq!(header.num_tracks, 1);
+        assert_eq!(header.ticks_per_quarter_note, 480);
+    }
+
+    #[test]
+    fn test_parse_header_format_1() {
+        let data = make_valid_header(1, 4, 960);
+        let mut reader = MidiReader::new(&data);
+
+        let header = parse_header(&mut reader).unwrap();
+        assert_eq!(header.num_tracks, 4);
+        assert_eq!(header.ticks_per_quarter_note, 960);
+    }
+
+    #[test]
+    fn test_parse_header_format_2() {
+        let data = make_valid_header(2, 8, 240);
+        let mut reader = MidiReader::new(&data);
+
+        let header = parse_header(&mut reader).unwrap();
+        assert_eq!(header.num_tracks, 8);
+        assert_eq!(header.ticks_per_quarter_note, 240);
+    }
+
+    #[test]
+    fn test_parse_header_invalid_chunk_type() {
+        let mut data = vec![];
+        data.extend_from_slice(b"XXXX"); // Invalid
+        data.extend_from_slice(&6u32.to_be_bytes());
+
+        let mut reader = MidiReader::new(&data);
+        let result = parse_header(&mut reader);
+
+        assert!(matches!(result, Err(ParseError::InvalidFormat(_))));
+        if let Err(ParseError::InvalidFormat(msg)) = result {
+            assert!(msg.contains("MThd"));
+        }
+    }
+
+    #[test]
+    fn test_parse_header_invalid_length() {
+        let mut data = vec![];
+        data.extend_from_slice(b"MThd");
+        data.extend_from_slice(&10u32.to_be_bytes()); // Should be 6
+        data.extend_from_slice(&1u16.to_be_bytes());
+        data.extend_from_slice(&1u16.to_be_bytes());
+        data.extend_from_slice(&480u16.to_be_bytes());
+
+        let mut reader = MidiReader::new(&data);
+        let result = parse_header(&mut reader);
+
+        assert!(matches!(result, Err(ParseError::InvalidFormat(_))));
+    }
+
+    #[test]
+    fn test_parse_header_unsupported_format() {
+        let data = make_valid_header(3, 1, 480);
+        let mut reader = MidiReader::new(&data);
+
+        let result = parse_header(&mut reader);
+        assert!(matches!(result, Err(ParseError::UnsupportedFormat(_))));
+    }
+
+    #[test]
+    fn test_parse_header_incomplete_data() {
+        let data = vec![0x4D, 0x54]; // Only "MT"
+        let mut reader = MidiReader::new(&data);
+
+        let result = parse_header(&mut reader);
+        assert!(matches!(result, Err(ParseError::IncompleteData(_))));
+    }
+
+    // ============================================================================
+    // Track Parsing Tests
+    // ============================================================================
+
+    fn make_track_header(length: u32) -> Vec<u8> {
+        let mut data = vec![];
+        data.extend_from_slice(b"MTrk");
+        data.extend_from_slice(&length.to_be_bytes());
+        data
+    }
+
+    #[test]
+    fn test_parse_track_single_note_on() {
+        let mut data = make_track_header(4);
+        data.extend_from_slice(&[0x00, 0x90, 0x3C, 0x64]); // Delta=0, NoteOn C4, vel=100
+
+        let mut reader = MidiReader::new(&data);
+        let events = parse_track(&mut reader).unwrap();
+
+        assert_eq!(events.len(), 1);
+        assert_eq!(events[0].event_type, MidiEventType::NoteOn);
+        assert_eq!(events[0].tick, 0);
+        assert_eq!(events[0].channel, 0);
+        assert_eq!(events[0].note, Some(0x3C));
+        assert_eq!(events[0].velocity, Some(0x64));
+    }
+
+    #[test]
+    fn test_parse_track_note_off() {
+        let mut data = make_track_header(4);
+        data.extend_from_slice(&[0x00, 0x80, 0x3C, 0x00]); // NoteOff C4
+
+        let mut reader = MidiReader::new(&data);
+        let events = parse_track(&mut reader).unwrap();
+
+        assert_eq!(events.len(), 1);
+        assert_eq!(events[0].event_type, MidiEventType::NoteOff);
+        assert_eq!(events[0].note, Some(0x3C));
+        assert_eq!(events[0].velocity, Some(0));
+    }
+
+    #[test]
+    fn test_parse_track_control_change() {
+        let mut data = make_track_header(4);
+        data.extend_from_slice(&[0x00, 0xB0, 0x07, 0x7F]); // CC#7 (volume) = 127
+
+        let mut reader = MidiReader::new(&data);
+        let events = parse_track(&mut reader).unwrap();
+
+        assert_eq!(events.len(), 1);
+        assert_eq!(events[0].event_type, MidiEventType::ControlChange);
+        assert_eq!(events[0].controller, Some(0x07));
+        assert_eq!(events[0].value, Some(0x7F));
+    }
+
+    #[test]
+    fn test_parse_track_program_change() {
+        let mut data = make_track_header(3);
+        data.extend_from_slice(&[0x00, 0xC0, 0x05]); // Program #5
+
+        let mut reader = MidiReader::new(&data);
+        let events = parse_track(&mut reader).unwrap();
+
+        assert_eq!(events.len(), 1);
+        assert_eq!(events[0].event_type, MidiEventType::ProgramChange);
+        assert_eq!(events[0].program, Some(0x05));
+    }
+
+    #[test]
+    fn test_parse_track_pitch_bend() {
+        let mut data = make_track_header(4);
+        data.extend_from_slice(&[0x00, 0xE0, 0x00, 0x40]); // Pitch bend
+
+        let mut reader = MidiReader::new(&data);
+        let events = parse_track(&mut reader).unwrap();
+
+        assert_eq!(events.len(), 1);
+        assert_eq!(events[0].event_type, MidiEventType::PitchBend);
+    }
+
+    #[test]
+    fn test_parse_track_aftertouch() {
+        let mut data = make_track_header(3);
+        data.extend_from_slice(&[0x00, 0xD0, 0x40]); // Aftertouch
+
+        let mut reader = MidiReader::new(&data);
+        let events = parse_track(&mut reader).unwrap();
+
+        assert_eq!(events.len(), 1);
+        assert_eq!(events[0].event_type, MidiEventType::Aftertouch);
+    }
+
+    #[test]
+    fn test_parse_track_running_status() {
+        let mut data = make_track_header(10);
+        // NoteOn C4, then NoteOn D4 using running status
+        data.extend_from_slice(&[0x00, 0x90, 0x3C, 0x64]); // Delta=0, NoteOn C4
+        data.extend_from_slice(&[0x10, 0x3E, 0x64]); // Delta=16, D4 (running status)
+        data.extend_from_slice(&[0x10, 0x40, 0x64]); // Delta=16, E4 (running status)
+
+        let mut reader = MidiReader::new(&data);
+        let events = parse_track(&mut reader).unwrap();
+
+        assert_eq!(events.len(), 3);
+        assert_eq!(events[0].tick, 0);
+        assert_eq!(events[0].note, Some(0x3C));
+        assert_eq!(events[1].tick, 16);
+        assert_eq!(events[1].note, Some(0x3E));
+        assert_eq!(events[2].tick, 32);
+        assert_eq!(events[2].note, Some(0x40));
+    }
+
+    #[test]
+    fn test_parse_track_meta_event_skipped() {
+        let mut data = make_track_header(9);
+        // Meta event (tempo): FF 51 03 07 A1 20
+        data.extend_from_slice(&[0x00, 0xFF, 0x51, 0x03, 0x07, 0xA1, 0x20]);
+        // NoteOn after meta
+        data.extend_from_slice(&[0x00, 0x90, 0x3C, 0x64]);
+
+        let mut reader = MidiReader::new(&data);
+        let events = parse_track(&mut reader).unwrap();
+
+        // Meta event should be skipped, only NoteOn should appear
+        assert_eq!(events.len(), 1);
+        assert_eq!(events[0].event_type, MidiEventType::NoteOn);
+    }
+
+    #[test]
+    fn test_parse_track_sysex_event_skipped() {
+        let mut data = make_track_header(8);
+        // SysEx: F0 03 43 12 00
+        data.extend_from_slice(&[0x00, 0xF0, 0x03, 0x43, 0x12, 0x00]);
+        // NoteOn after SysEx
+        data.extend_from_slice(&[0x00, 0x90, 0x3C, 0x64]);
+
+        let mut reader = MidiReader::new(&data);
+        let events = parse_track(&mut reader).unwrap();
+
+        // SysEx should be skipped, only NoteOn should appear
+        assert_eq!(events.len(), 1);
+        assert_eq!(events[0].event_type, MidiEventType::NoteOn);
+    }
+
+    #[test]
+    fn test_parse_track_delta_time_accumulation() {
+        let mut data = make_track_header(8);
+        data.extend_from_slice(&[0x00, 0x90, 0x3C, 0x64]); // Delta=0, tick=0
+        data.extend_from_slice(&[0x10, 0x80, 0x3C, 0x00]); // Delta=16, tick=16
+
+        let mut reader = MidiReader::new(&data);
+        let events = parse_track(&mut reader).unwrap();
+
+        assert_eq!(events[0].tick, 0);
+        assert_eq!(events[1].tick, 16);
+    }
+
+    #[test]
+    fn test_parse_track_invalid_header() {
+        let mut data = vec![];
+        data.extend_from_slice(b"XXXX");
+        data.extend_from_slice(&0u32.to_be_bytes());
+
+        let mut reader = MidiReader::new(&data);
+        let result = parse_track(&mut reader);
+
+        assert!(matches!(result, Err(ParseError::InvalidTrack(_))));
+    }
+
+    #[test]
+    fn test_parse_track_missing_running_status() {
+        let mut data = make_track_header(3);
+        // Data byte without status byte and no running status
+        data.extend_from_slice(&[0x00, 0x3C, 0x64]); // Invalid: no status
+
+        let mut reader = MidiReader::new(&data);
+        let result = parse_track(&mut reader);
+
+        assert!(matches!(result, Err(ParseError::InvalidTrack(_))));
+    }
+
+    #[test]
+    fn test_parse_track_multiple_channels() {
+        let mut data = make_track_header(12);
+        data.extend_from_slice(&[0x00, 0x90, 0x3C, 0x64]); // Ch 0
+        data.extend_from_slice(&[0x00, 0x91, 0x3E, 0x64]); // Ch 1
+        data.extend_from_slice(&[0x00, 0x9F, 0x40, 0x64]); // Ch 15
+
+        let mut reader = MidiReader::new(&data);
+        let events = parse_track(&mut reader).unwrap();
+
+        assert_eq!(events.len(), 3);
+        assert_eq!(events[0].channel, 0);
+        assert_eq!(events[1].channel, 1);
+        assert_eq!(events[2].channel, 15);
+    }
+
+    // ============================================================================
+    // Full File Parsing Tests
+    // ============================================================================
+
+    fn make_simple_midi_file() -> Vec<u8> {
+        let mut data = vec![];
+
+        // Header: Format 1, 1 track, 480 TPQN
+        data.extend_from_slice(&make_valid_header(1, 1, 480));
+
+        // Track with 2 notes
+        let mut track = vec![];
+        track.extend_from_slice(&[0x00, 0x90, 0x3C, 0x64]); // NoteOn C4 at tick 0
+        track.extend_from_slice(&[0x60, 0x80, 0x3C, 0x00]); // NoteOff C4 at tick 96
+
+        data.extend_from_slice(&make_track_header(track.len() as u32));
+        data.extend_from_slice(&track);
+
+        data
+    }
+
+    #[test]
+    fn test_parse_midi_simple_file() {
+        let data = make_simple_midi_file();
+        let pattern = parse_midi(&data).unwrap();
+
+        assert_eq!(pattern.ticks_per_quarter_note, 480);
+        assert_eq!(pattern.events.len(), 2);
+        assert_eq!(pattern.total_ticks, 96);
+        assert_eq!(pattern.events[0].event_type, MidiEventType::NoteOn);
+        assert_eq!(pattern.events[1].event_type, MidiEventType::NoteOff);
+    }
+
+    #[test]
+    fn test_parse_midi_multi_track() {
+        let mut data = vec![];
+
+        // Header: Format 1, 2 tracks, 480 TPQN
+        data.extend_from_slice(&make_valid_header(1, 2, 480));
+
+        // Track 1
+        let mut track1 = vec![];
+        track1.extend_from_slice(&[0x00, 0x90, 0x3C, 0x64]); // Tick 0
+        data.extend_from_slice(&make_track_header(track1.len() as u32));
+        data.extend_from_slice(&track1);
+
+        // Track 2
+        let mut track2 = vec![];
+        track2.extend_from_slice(&[0x10, 0x90, 0x40, 0x64]); // Tick 16
+        data.extend_from_slice(&make_track_header(track2.len() as u32));
+        data.extend_from_slice(&track2);
+
+        let pattern = parse_midi(&data).unwrap();
+
+        assert_eq!(pattern.events.len(), 2);
+        // Events should be sorted by tick
+        assert_eq!(pattern.events[0].tick, 0);
+        assert_eq!(pattern.events[1].tick, 16);
+    }
+
+    #[test]
+    fn test_parse_midi_events_sorted_by_tick() {
+        let mut data = vec![];
+        data.extend_from_slice(&make_valid_header(1, 2, 480));
+
+        // Track 1 - event at tick 100
+        let mut track1 = vec![];
+        track1.extend_from_slice(&[0x64, 0x90, 0x3C, 0x64]); // Tick 100
+        data.extend_from_slice(&make_track_header(track1.len() as u32));
+        data.extend_from_slice(&track1);
+
+        // Track 2 - event at tick 50
+        let mut track2 = vec![];
+        track2.extend_from_slice(&[0x32, 0x90, 0x40, 0x64]); // Tick 50
+        data.extend_from_slice(&make_track_header(track2.len() as u32));
+        data.extend_from_slice(&track2);
+
+        let pattern = parse_midi(&data).unwrap();
+
+        // Events should be sorted: tick 50 before tick 100
+        assert_eq!(pattern.events[0].tick, 50);
+        assert_eq!(pattern.events[0].note, Some(0x40));
+        assert_eq!(pattern.events[1].tick, 100);
+        assert_eq!(pattern.events[1].note, Some(0x3C));
+    }
+
+    #[test]
+    fn test_parse_midi_empty_file() {
+        let data = vec![];
+        let result = parse_midi(&data);
+
+        assert!(matches!(result, Err(ParseError::IncompleteData(0))));
+    }
+
+    #[test]
+    fn test_parse_midi_incomplete_header() {
+        let data = vec![0x4D, 0x54]; // Just "MT"
+        let result = parse_midi(&data);
+
+        assert!(matches!(result, Err(ParseError::IncompleteData(_))));
+    }
+
+    #[test]
+    fn test_parse_midi_total_ticks_from_last_event() {
+        let mut data = vec![];
+        data.extend_from_slice(&make_valid_header(1, 1, 480));
+
+        let mut track = vec![];
+        track.extend_from_slice(&[0x00, 0x90, 0x3C, 0x64]); // Tick 0
+        track.extend_from_slice(&[0x81, 0x00, 0x80, 0x3C, 0x00]); // Tick 128 (VLQ)
+
+        data.extend_from_slice(&make_track_header(track.len() as u32));
+        data.extend_from_slice(&track);
+
+        let pattern = parse_midi(&data).unwrap();
+        assert_eq!(pattern.total_ticks, 128);
+    }
+
+    #[test]
+    fn test_parse_midi_empty_tracks() {
+        let mut data = vec![];
+        data.extend_from_slice(&make_valid_header(1, 1, 480));
+
+        // Empty track
+        data.extend_from_slice(&make_track_header(0));
+
+        let pattern = parse_midi(&data).unwrap();
+        assert_eq!(pattern.events.len(), 0);
+        assert_eq!(pattern.total_ticks, 0); // No events, so total_ticks = 0
+    }
+
+    // ============================================================================
+    // Edge Cases
+    // ============================================================================
+
+    #[test]
+    fn test_parse_track_with_only_meta_events() {
+        let mut data = make_track_header(7);
+        // Only meta events, no channel events
+        data.extend_from_slice(&[0x00, 0xFF, 0x51, 0x03, 0x07, 0xA1, 0x20]); // Tempo
+
+        let mut reader = MidiReader::new(&data);
+        let events = parse_track(&mut reader).unwrap();
+
+        // All meta events skipped
+        assert_eq!(events.len(), 0);
+    }
+
+    #[test]
+    fn test_parse_track_large_delta_time() {
+        let mut data = make_track_header(6);
+        // Large VLQ delta: 0x82 0x80 0x00 = (2 << 14) | (0 << 7) | 0 = 32768
+        data.extend_from_slice(&[0x82, 0x80, 0x00, 0x90, 0x3C, 0x64]);
+
+        let mut reader = MidiReader::new(&data);
+        let events = parse_track(&mut reader).unwrap();
+
+        assert_eq!(events.len(), 1);
+        assert_eq!(events[0].tick, 32768);
+    }
+
+    #[test]
+    fn test_parse_track_unknown_channel_event_ignored() {
+        let mut data = make_track_header(7);
+        // 0xA0 = Polyphonic Key Pressure (not supported)
+        data.extend_from_slice(&[0x00, 0xA0, 0x3C, 0x40]);
+        // Valid NoteOn after
+        data.extend_from_slice(&[0x00, 0x90, 0x3C, 0x64]);
+
+        let mut reader = MidiReader::new(&data);
+        let events = parse_track(&mut reader).unwrap();
+
+        // Unknown event ignored, only NoteOn should appear
+        assert_eq!(events.len(), 1);
+        assert_eq!(events[0].event_type, MidiEventType::NoteOn);
+    }
+
+    #[test]
+    fn test_midi_reader_position_tracking() {
+        let data = vec![0x00, 0x01, 0x02, 0x03, 0x04];
+        let mut reader = MidiReader::new(&data);
+
+        assert_eq!(reader.position(), 0);
+        reader.read_u8().unwrap();
+        assert_eq!(reader.position(), 1);
+        reader.read_u16().unwrap();
+        assert_eq!(reader.position(), 3);
+        reader.skip(2).unwrap();
+        assert_eq!(reader.position(), 5);
+    }
+}
