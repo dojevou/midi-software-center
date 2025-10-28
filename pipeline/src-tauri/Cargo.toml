@@ -94,6 +94,7 @@ tokio-test = "0.4"
 tempfile = "3"
 criterion = "0.5"                # Benchmarking
 proptest = "1.4"                 # Property-based testing
+rand = "0.8"                     # Random data generation for tests
 
 # Binary targets
 [[bin]]
