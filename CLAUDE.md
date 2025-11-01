@@ -12,7 +12,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - ✅ **Original production code identified** - 222 files ready to migrate
 - ✅ Deduplication analysis complete
 - ✅ Component separation plan finalized
-- ✅ **MCP servers configured** - 12 servers (postgres, filesystem, docker, git, bash, rust, npm, vscode, web-search, anthropic, sentry, notion)
+- ✅ **MCP servers configured** - 2 servers (postgres, filesystem) - *Additional servers available for setup as needed*
 - ✅ **Claude Code extensions installed** - 10 plugins, 35+ agents, 16 slash commands (testing, database, code quality)
 - ✅ **Git repository initialized** - Commit 1e30f81 (Phase 1 complete)
 - ✅ **Phase 1 COMPLETE** - Database (7 files), Shared Library (24 files), Root configs (3 files)
@@ -348,6 +348,17 @@ Overall:  51.2% (43/84 files) - Gap: 41 files need tests
 ```
 
 See `FINAL-FILE-SEPARATION.md` for complete migration plan with source→destination mapping.
+
+## 🧠 CodeMemory Integration
+
+**This project uses CodeMemory** - an automated knowledge management system that captures all Claude Code sessions, analyzes them with Grok-4 fast API, and builds a searchable knowledge base.
+
+- **Installation:** `~/codememory/` (system-wide tool)
+- **Usage:** Automatic capture of all `cc` commands
+- **Knowledge Base:** `~/codememory/knowledge/`
+- **Context:** Past sessions automatically inform future work
+
+See the [CodeMemory README](~/codememory/README.md) for details.
 
 ## 📚 Critical Architecture Documents (READ THESE FIRST)
 
@@ -740,54 +751,44 @@ make db-backup              # Create backup first
 
 ## MCP Server Configuration
 
-**This project has a comprehensive MCP (Model Context Protocol) setup configured for optimal development workflow.**
+**This project has MCP (Model Context Protocol) servers configured for database and file operations.**
 
-### Configured MCP Servers (12 Total)
+### Currently Configured MCP Servers (2 Active)
 
-#### Core Development Infrastructure (stdio transport)
+#### Core Development Infrastructure
 - **postgres** - Database operations (schema inspection, migrations, queries)
   - Connection: `postgresql://midiuser:145278963@localhost:5433/midi_library`
   - Use: Query database, verify migrations, inspect schema
+  - Status: ✅ Active
 
 - **filesystem** - File operations (migration, copying, verification)
   - Paths: `/home/dojevou/projects/midi-software-center`, `/tmp/original-project`
-  - Use: Copy 240 source files systematically during migration
+  - Use: Copy source files systematically, verify file operations
+  - Status: ✅ Active
 
+### Additional MCP Servers (Available for Setup)
+
+The following MCP servers can be configured as needed:
+
+**Development Infrastructure:**
 - **docker** - Container management (monitoring, logs, health checks)
-  - Use: Monitor PostgreSQL/Meilisearch containers, view logs, restart services
-
 - **git** - Version control (commits, branches, history)
-  - Use: Track migration progress, create commits, manage branches
-
 - **bash** - Shell execution (automation, scripts, builds)
-  - Use: Run build scripts, execute tests, automation tasks
 
-#### Language & Framework Tooling (stdio transport)
+**Language & Framework Tooling:**
 - **rust** - Rust development (cargo, analysis, builds)
-  - **CRITICAL** for this project (113 Rust files to migrate)
-  - Use: cargo build, cargo test, cargo clippy, workspace management
-
 - **npm** - Package management (dependencies, scripts)
-  - Use: pnpm install, run dev/build scripts for Svelte frontends
-
 - **vscode** - Editor integration (code navigation, file management)
-  - Use: Open files, navigate to definitions, workspace management
 
-#### Advanced Development (stdio transport)
+**Advanced Development:**
 - **web-search** - Web search (documentation, research, solutions)
-  - Use: Look up Rust/Tauri/MIDI docs, find solutions to issues
-
 - **anthropic** - AI assistance (Claude API access)
-  - Use: Advanced AI-powered development tasks
 
-#### Cloud Services (HTTP transport)
+**Cloud Services (require OAuth):**
 - **sentry** - Error monitoring (production error tracking)
-  - URL: https://sentry.io
-  - Use: Monitor runtime errors post-migration (requires OAuth setup)
-
 - **notion** - Project management (documentation, planning, tracking)
-  - URL: https://api.notion.com
-  - Use: Track migration progress, document decisions (requires OAuth setup)
+
+To add additional MCP servers, edit: `~/.config/Code/User/globalStorage/kilocode.kilo-code/settings/mcp_settings.json`
 
 ### MCP Benefits for Migration
 
@@ -830,11 +831,11 @@ MCP servers activate automatically when needed. Examples:
 
 ### MCP Configuration Location
 
-MCP servers are configured in: `~/.claude.json` (local scope for this project)
+MCP servers are configured in: `~/.config/Code/User/globalStorage/kilocode.kilo-code/settings/mcp_settings.json`
 
-To view all configured servers:
+To view current configuration:
 ```bash
-claude mcp list
+cat ~/.config/Code/User/globalStorage/kilocode.kilo-code/settings/mcp_settings.json
 ```
 
 ## Claude Code Extensions & Tools
