@@ -17,13 +17,28 @@ pub struct SearchQuery {
 }
 
 impl SearchRepository {
+    /// Normalize text query - treat whitespace-only as None
+    fn normalize_text_query(text: Option<String>) -> Option<String> {
+        text.and_then(|t| {
+            let trimmed = t.trim();
+            if trimmed.is_empty() {
+                None
+            } else {
+                Some(trimmed.to_string())
+            }
+        })
+    }
+
     /// Full-text search with filters
     pub async fn search(
         pool: &PgPool,
-        query: SearchQuery,
+        mut query: SearchQuery,
         limit: i64,
         offset: i64,
     ) -> Result<Vec<File>, sqlx::Error> {
+        // Normalize whitespace-only text to None
+        query.text = Self::normalize_text_query(query.text);
+
         let files = sqlx::query_as!(
             File,
             r#"
@@ -85,8 +100,11 @@ impl SearchRepository {
     /// Count search results
     pub async fn count_search_results(
         pool: &PgPool,
-        query: SearchQuery,
+        mut query: SearchQuery,
     ) -> Result<i64, sqlx::Error> {
+        // Normalize whitespace-only text to None
+        query.text = Self::normalize_text_query(query.text);
+
         let count = sqlx::query_scalar!(
             r#"
             SELECT COUNT(*) as "count!"
