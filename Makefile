@@ -1,7 +1,7 @@
 # MIDI Library System - Makefile
 # Common development commands
 
-.PHONY: help setup dev build test clean docker-up docker-down format lint
+.PHONY: help setup dev build test clean docker-up docker-down format lint cc codememory
 
 # Default target
 help:
@@ -37,6 +37,7 @@ help:
 	@echo "  make db-backup      - Backup database"
 	@echo ""
 	@echo "Knowledge Management:"
+	@echo "  make cc             - Launch Claude Code (unrestricted)"
 	@echo "  make codememory     - Populate CodeMemory knowledge base"
 	@echo ""
 	@echo "Cleanup:"
@@ -219,6 +220,15 @@ populate-knowledge:
 	This will serve as the foundation knowledge for future sessions."
 
 codememory: populate-knowledge
+
+# Launch Claude Code (unrestricted mode)
+# Note: Use 'make cc' instead of bare 'cc' to avoid conflict with C compiler
+# and CodeMemory's automatic 'cc' command capture
+cc:
+	@echo "🚀 Launching Claude Code in unrestricted mode..."
+	@echo "Project: ~/projects/midi-software-center"
+	@cd ~/projects/midi-software-center && claude-code --unrestricted || \
+		(echo "⚠️  Claude Code not found. Trying alternative..." && code . && echo "📝 Opened in VS Code instead")
 
 #=============================================================================
 # BENCHMARKS

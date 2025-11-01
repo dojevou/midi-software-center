@@ -721,10 +721,10 @@ Shift+Alt+Up/Down Copy line up/down
 ## 🔗 USEFUL RESOURCES
 
 ### **In-Project Resources**
-- [QUICK_REFERENCE.md](./QUICK_REFERENCE.md) - Daily operations
-- [README.md](./README.md) - Project overview
-- [SETUP.md](./SETUP.md) - Initial setup
-- [docs/DEVELOPMENT.md](./docs/DEVELOPMENT.md) - Dev guide
+- [QUICK_REFERENCE.md](../planning/QUICK_REFERENCE.md) - Daily operations
+- [README.md](../../README.md) - Project overview
+- [SETUP-INSTRUCTIONS.md](./SETUP-INSTRUCTIONS.md) - Initial setup
+- [DEVELOPMENT-WORKFLOW.md](../../DEVELOPMENT-WORKFLOW.md) - Dev guide
 
 ### **External Resources**
 - [VS Code Docs](https://code.visualstudio.com/docs)
