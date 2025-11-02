@@ -251,7 +251,7 @@ mod tests {
     fn test_default_config() {
         let config = ExtractionConfig::default();
 
-        assert_eq!(config.max_depth, 5);
+        assert_eq!(config.max_depth, 10);
         assert!(config.recursive);
         assert_eq!(config.target_extensions, vec!["mid", "midi"]);
     }

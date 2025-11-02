@@ -752,6 +752,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[ignore] // Requires specific test MIDI file at /tmp/midi_test_import/Vengeance_Deep_House_Kick_128_C.mid
     async fn test_auto_tagging_import() {
         println!("\n🧪 Starting auto-tagging integration test...");
 

@@ -1,5 +1,5 @@
-// Common test infrastructure for Pipeline command tests
-// Provides database mocks, Tauri mocks, fixtures, builders, and assertions
+//! Common test infrastructure for DAW command tests
+//! Provides database mocks, MIDI device mocks, fixtures, builders, and assertions
 
 pub mod database;
 pub mod mocks;
@@ -8,8 +8,8 @@ pub mod assertions;
 pub mod fixtures;
 
 pub use database::TestDatabase;
-pub use mocks::{MockWindow, MockAppHandle, EmittedEvent};
-pub use builders::{MidiFileBuilder, MetadataBuilder, TagBuilder};
+pub use mocks::{MockWindow, MockAppHandle, MockMidiDevice, EmittedEvent};
+pub use builders::{MidiFileBuilder, TrackBuilder, SequencerStateBuilder};
 pub use assertions::*;
 pub use fixtures::{TestFixtures, FileFixtures};
 

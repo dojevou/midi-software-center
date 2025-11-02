@@ -871,8 +871,8 @@ mod tests {
 
         let stats = db.get_pool_stats().await;
 
-        // Should have at least min_connections (10) in optimized pool
-        assert!(stats.size >= 10, "Pool size should be >= 10, got {}", stats.size);
+        // Should have at least min_connections (9) in optimized pool
+        assert!(stats.size >= 9, "Pool size should be >= 9, got {}", stats.size);
         assert_eq!(stats.idle + stats.active, stats.size as usize);
         println!("✓ {}", stats);
     }

@@ -74,6 +74,8 @@ instant = "0.1"                  # Cross-platform instant timing
 [dev-dependencies]
 tokio-test = "0.4"
 criterion = "0.5"
+tempfile = "3.8"
+midi-library-shared = { path = "../../shared/rust" }
 
 # Disabled - test binary not migrated yet
 # [[bin]]

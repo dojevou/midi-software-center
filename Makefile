@@ -25,6 +25,9 @@ help:
 	@echo "  make test           - Run all tests"
 	@echo "  make test-rust      - Run Rust tests only"
 	@echo "  make test-frontend  - Run frontend tests only"
+	@echo "  make test-baseline  - Run baseline library tests (Phases 0-4)"
+	@echo "  make test-coverage-baseline - Generate coverage report (baseline)"
+	@echo "  make test-quick     - Run quick smoke tests"
 	@echo ""
 	@echo "Code Quality:"
 	@echo "  make format         - Format all code"
@@ -122,6 +125,21 @@ test-frontend:
 test-coverage:
 	cd pipeline/src-tauri && cargo tarpaulin --out Html
 	cd daw/src-tauri && cargo tarpaulin --out Html
+
+# Phase 9: Baseline testing (library tests only - no integration tests)
+test-baseline:
+	@echo "Running baseline library tests (Phases 0-4)..."
+	cargo test --workspace --lib -- --test-threads=1
+
+# Phase 9: Baseline + coverage report
+test-coverage-baseline:
+	@echo "Generating coverage report for baseline tests..."
+	cargo tarpaulin --workspace --lib --out Html --timeout 300 --exclude-files "*/migrations/*"
+
+# Phase 9: Quick smoke tests
+test-quick:
+	@echo "Running quick smoke tests (library tests, excluding long tests)..."
+	cargo test --workspace --lib -- --test-threads=1 --skip "integration" --skip "performance" --skip "stress"
 
 #=============================================================================
 # CODE QUALITY
@@ -221,14 +239,13 @@ populate-knowledge:
 
 codememory: populate-knowledge
 
-# Launch Claude Code (unrestricted mode)
+# Launch Claude Code with updated CodeMemory knowledge base
 # Note: Use 'make cc' instead of bare 'cc' to avoid conflict with C compiler
-# and CodeMemory's automatic 'cc' command capture
-cc:
-	@echo "🚀 Launching Claude Code in unrestricted mode..."
+cc: codememory
+	@echo "🚀 Launching Claude Code with updated knowledge (unrestricted mode)..."
 	@echo "Project: ~/projects/midi-software-center"
-	@cd ~/projects/midi-software-center && claude-code --unrestricted || \
-		(echo "⚠️  Claude Code not found. Trying alternative..." && code . && echo "📝 Opened in VS Code instead")
+	@cd ~/projects/midi-software-center && cc --dangerously-skip-permissions || \
+		(echo "⚠️  Claude Code CLI not found. Installing..." && npm install -g @anthropic-ai/claude-code && cc --dangerously-skip-permissions)
 
 #=============================================================================
 # BENCHMARKS
