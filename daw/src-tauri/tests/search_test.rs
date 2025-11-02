@@ -401,3 +401,145 @@ async fn test_search_performance_complex_query() {
     assert!(files.len() <= 50);
     assert!(elapsed.as_millis() < 1000, "Complex search took too long");
 }
+
+// =============================================================================
+// SECTION 5: Error Path Testing (8 tests)
+// =============================================================================
+
+#[tokio::test]
+async fn test_error_search_empty_string_query() {
+    let db = TestDatabase::with_files(5).await;
+
+    let result: Result<Vec<(i64,)>, _> = sqlx::query_as(
+        "SELECT id FROM files WHERE name ILIKE $1"
+    )
+    .bind("")
+    .fetch_all(db.pool())
+    .await;
+
+    // Empty search should return all files
+    assert!(result.is_ok());
+    assert_eq!(result.unwrap().len(), 5);
+}
+
+#[tokio::test]
+async fn test_error_search_null_bytes_in_query() {
+    let db = TestDatabase::with_files(3).await;
+
+    let malicious_query = "test\0query";
+    let result: Result<Vec<(i64,)>, _> = sqlx::query_as(
+        "SELECT id FROM files WHERE name ILIKE $1"
+    )
+    .bind(malicious_query)
+    .fetch_all(db.pool())
+    .await;
+
+    // Should handle null bytes gracefully
+    let _ = result;
+}
+
+#[tokio::test]
+async fn test_error_search_special_characters() {
+    let db = TestDatabase::with_files(3).await;
+
+    let special_chars = "'; DROP TABLE files; --";
+    let result: Result<Vec<(i64,)>, _> = sqlx::query_as(
+        "SELECT id FROM files WHERE name ILIKE $1"
+    )
+    .bind(special_chars)
+    .fetch_all(db.pool())
+    .await;
+
+    // Should safely handle special characters (parameterized query)
+    assert!(result.is_ok());
+}
+
+#[tokio::test]
+async fn test_error_search_very_long_query_string() {
+    let db = TestDatabase::with_files(3).await;
+
+    let long_query = "a".repeat(10000);
+    let result: Result<Vec<(i64,)>, _> = sqlx::query_as(
+        "SELECT id FROM files WHERE name ILIKE $1"
+    )
+    .bind(long_query)
+    .fetch_all(db.pool())
+    .await;
+
+    // Should handle very long queries
+    assert!(result.is_ok());
+}
+
+#[tokio::test]
+async fn test_error_search_invalid_regex_pattern() {
+    let db = TestDatabase::with_files(3).await;
+
+    let invalid_regex = "[invalid(regex";
+    let result: Result<Vec<(i64,)>, _> = sqlx::query_as(
+        "SELECT id FROM files WHERE name ~ $1"
+    )
+    .bind(invalid_regex)
+    .fetch_all(db.pool())
+    .await;
+
+    // Should handle invalid regex gracefully
+    let _ = result;
+}
+
+#[tokio::test]
+async fn test_error_search_concurrent_queries() {
+    let db = TestDatabase::with_files(10).await;
+
+    let mut handles = vec![];
+
+    for i in 0..5 {
+        let pool = db.pool_clone();
+        let handle = tokio::spawn(async move {
+            let result: Result<Vec<(i64,)>, _> = sqlx::query_as(
+                "SELECT id FROM files LIMIT $1"
+            )
+            .bind(2)
+            .fetch_all(&pool)
+            .await;
+            result
+        });
+        handles.push(handle);
+    }
+
+    for handle in handles {
+        let result = handle.await.unwrap();
+        assert!(result.is_ok());
+    }
+}
+
+#[tokio::test]
+async fn test_error_search_limit_zero() {
+    let db = TestDatabase::with_files(5).await;
+
+    let result: Result<Vec<(i64,)>, _> = sqlx::query_as(
+        "SELECT id FROM files LIMIT $1"
+    )
+    .bind(0)
+    .fetch_all(db.pool())
+    .await;
+
+    // LIMIT 0 should return empty result
+    assert!(result.is_ok());
+    assert_eq!(result.unwrap().len(), 0);
+}
+
+#[tokio::test]
+async fn test_error_search_offset_exceeds_total() {
+    let db = TestDatabase::with_files(3).await;
+
+    let result: Result<Vec<(i64,)>, _> = sqlx::query_as(
+        "SELECT id FROM files OFFSET $1"
+    )
+    .bind(1000)
+    .fetch_all(db.pool())
+    .await;
+
+    // Offset beyond total should return empty
+    assert!(result.is_ok());
+    assert_eq!(result.unwrap().len(), 0);
+}

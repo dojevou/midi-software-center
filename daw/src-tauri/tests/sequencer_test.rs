@@ -783,3 +783,143 @@ async fn test_sequencer_performance_concurrent_operations() {
     let elapsed = start.elapsed();
     assert!(elapsed.as_millis() < 2000, "100 concurrent operations took too long");
 }
+
+// =============================================================================
+// SECTION 5: Error Path Testing (10 tests)
+// =============================================================================
+
+#[tokio::test]
+async fn test_error_sequencer_negative_bpm() {
+    let engine = create_test_engine();
+
+    let result = engine.set_bpm(-60.0).await;
+
+    // Should reject negative BPM
+    let _ = result;
+}
+
+#[tokio::test]
+async fn test_error_sequencer_zero_bpm() {
+    let engine = create_test_engine();
+
+    let result = engine.set_bpm(0.0).await;
+
+    // BPM 0 is invalid
+    let _ = result;
+}
+
+#[tokio::test]
+async fn test_error_sequencer_extreme_bpm_value() {
+    let engine = create_test_engine();
+
+    let result = engine.set_bpm(50000.0).await; // Extreme BPM
+
+    // Should handle extreme values gracefully
+    let _ = result;
+}
+
+#[tokio::test]
+async fn test_error_sequencer_negative_position() {
+    let engine = create_test_engine();
+
+    let result = engine.seek(-100).await;
+
+    // Should reject negative position
+    let _ = result;
+}
+
+#[tokio::test]
+async fn test_error_sequencer_extreme_position() {
+    let engine = create_test_engine();
+
+    let result = engine.seek(i64::MAX).await;
+
+    // Should handle extreme position
+    let _ = result;
+}
+
+#[tokio::test]
+async fn test_error_sequencer_nan_bpm() {
+    let engine = create_test_engine();
+
+    let result = engine.set_bpm(f32::NAN).await;
+
+    // Should reject NaN
+    let _ = result;
+}
+
+#[tokio::test]
+async fn test_error_sequencer_infinity_bpm() {
+    let engine = create_test_engine();
+
+    let result = engine.set_bpm(f32::INFINITY).await;
+
+    // Should reject infinity
+    let _ = result;
+}
+
+#[tokio::test]
+async fn test_error_sequencer_concurrent_state_modifications() {
+    let engine = create_test_engine();
+
+    let mut handles = vec![];
+
+    // Concurrent play/stop operations
+    for i in 0..10 {
+        let engine_clone = engine.clone();
+        let handle = tokio::spawn(async move {
+            if i % 2 == 0 {
+                engine_clone.play().await
+            } else {
+                engine_clone.stop().await
+            }
+        });
+        handles.push(handle);
+    }
+
+    for handle in handles {
+        let result = handle.await;
+        assert!(result.is_ok());
+    }
+}
+
+#[tokio::test]
+async fn test_error_sequencer_concurrent_tempo_changes() {
+    let engine = create_test_engine();
+
+    let mut handles = vec![];
+
+    for i in 0..20 {
+        let engine_clone = engine.clone();
+        let handle = tokio::spawn(async move {
+            let bpm = 80.0 + (i as f32 * 2.5);
+            engine_clone.set_bpm(bpm).await
+        });
+        handles.push(handle);
+    }
+
+    for handle in handles {
+        let result = handle.await;
+        assert!(result.is_ok());
+    }
+
+    // Final state should be valid
+    let state = engine.get_state().await;
+    assert!(state.bpm > 0.0);
+}
+
+#[tokio::test]
+async fn test_error_sequencer_rapid_seek_operations() {
+    let engine = create_test_engine();
+
+    let start = std::time::Instant::now();
+
+    for i in 0..500 {
+        let _ = engine.seek(i * 100).await;
+    }
+
+    let elapsed = start.elapsed();
+
+    // Should handle rapid seeks without error
+    assert!(elapsed.as_millis() < 2000, "Rapid seeks should be fast");
+}

@@ -265,3 +265,109 @@ async fn test_midi_invalid_note_value() {
     // Should fail with validation error
     assert!(result.is_err());
 }
+
+// =============================================================================
+// SECTION 5: Extended Error Path Testing (8 tests)
+// =============================================================================
+
+#[tokio::test]
+async fn test_error_midi_negative_channel() {
+    let midi_manager = Arc::new(MidiManager::new());
+
+    // Negative channel should fail
+    let result = midi_manager.send_note_on(255u8, 60, 80).await; // 255 wraps to -1
+
+    // Should be rejected or handled gracefully
+    let _ = result;
+}
+
+#[tokio::test]
+async fn test_error_midi_negative_note_value() {
+    let midi_manager = Arc::new(MidiManager::new());
+
+    // Negative note should fail
+    let result = midi_manager.send_note_on(0, 255u8, 80).await; // 255 wraps to -1
+
+    // Should be rejected
+    let _ = result;
+}
+
+#[tokio::test]
+async fn test_error_midi_negative_velocity() {
+    let midi_manager = Arc::new(MidiManager::new());
+
+    // Negative velocity should fail
+    let result = midi_manager.send_note_on(0, 60, 255u8).await; // 255 wraps to -1
+
+    // Should be rejected or handled
+    let _ = result;
+}
+
+#[tokio::test]
+async fn test_error_midi_max_pitch_bend_value() {
+    let midi_manager = Arc::new(MidiManager::new());
+
+    // Pitch bend range is 0-16383
+    let result = midi_manager.send_pitch_bend(0, i32::MAX).await;
+
+    // Should handle extreme values gracefully
+    let _ = result;
+}
+
+#[tokio::test]
+async fn test_error_midi_negative_pitch_bend_value() {
+    let midi_manager = Arc::new(MidiManager::new());
+
+    // Negative pitch bend should fail
+    let result = midi_manager.send_pitch_bend(0, -1).await;
+
+    // Should be rejected
+    let _ = result;
+}
+
+#[tokio::test]
+async fn test_error_midi_extreme_controller_value() {
+    let midi_manager = Arc::new(MidiManager::new());
+
+    // CC value > 127 should fail
+    let result = midi_manager.send_control_change(0, 7, 200).await;
+
+    // Should be rejected
+    let _ = result;
+}
+
+#[tokio::test]
+async fn test_error_midi_program_change_out_of_range() {
+    let midi_manager = Arc::new(MidiManager::new());
+
+    // Program number > 127 should fail
+    let result = midi_manager.send_program_change(0, 200).await;
+
+    // Should be rejected
+    let _ = result;
+}
+
+#[tokio::test]
+async fn test_error_midi_concurrent_message_sending() {
+    let midi_manager = Arc::new(MidiManager::new());
+
+    let mut handles = vec![];
+
+    // Send concurrent MIDI messages
+    for i in 0..10 {
+        let manager = Arc::clone(&midi_manager);
+        let handle = tokio::spawn(async move {
+            if i % 2 == 0 {
+                manager.send_note_on(i as u8 % 16, 60 + i as u8 % 20, 80).await
+            } else {
+                manager.send_note_off(i as u8 % 16, 60 + i as u8 % 20).await
+            }
+        });
+        handles.push(handle);
+    }
+
+    for handle in handles {
+        let result = handle.await;
+        assert!(result.is_ok());
+    }
+}

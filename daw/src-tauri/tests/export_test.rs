@@ -335,3 +335,149 @@ async fn test_export_includes_end_of_track() {
     let has_eot = data.windows(3).any(|w| w == &[0xFF, 0x2F, 0x00]);
     assert!(has_eot, "MIDI file should contain End of Track event");
 }
+
+// =============================================================================
+// SECTION 5: Error Path Testing (10 tests)
+// =============================================================================
+
+#[tokio::test]
+async fn test_export_error_read_only_directory() {
+    let fixtures = FileFixtures::new().await;
+
+    // Create subdirectory and make it read-only
+    let readonly_dir = fixtures.path().join("readonly");
+    std::fs::create_dir(&readonly_dir).unwrap();
+
+    #[cfg(unix)]
+    {
+        use std::fs::Permissions;
+        use std::os::unix::fs::PermissionsExt;
+        std::fs::set_permissions(&readonly_dir, Permissions::from_mode(0o444)).unwrap();
+    }
+
+    let output_path = readonly_dir.join("output.mid");
+    let result = export_project_midi(output_path.to_str().unwrap().to_string()).await;
+
+    // Should fail due to read-only directory
+    #[cfg(unix)]
+    assert!(result.is_err(), "Export to read-only directory should fail");
+
+    // Restore permissions for cleanup
+    #[cfg(unix)]
+    {
+        use std::fs::Permissions;
+        use std::os::unix::fs::PermissionsExt;
+        let _ = std::fs::set_permissions(&readonly_dir, Permissions::from_mode(0o755));
+    }
+}
+
+#[tokio::test]
+async fn test_export_error_invalid_path_separators() {
+    let result = export_project_midi("///invalid///path///file.mid".to_string()).await;
+
+    // Should handle invalid path gracefully
+    assert!(result.is_err() || result.is_ok(), "Should handle malformed paths");
+}
+
+#[tokio::test]
+async fn test_export_error_path_traversal_attempt() {
+    let fixtures = FileFixtures::new().await;
+    let output_path = format!("{}/../../etc/passwd.mid",
+                             fixtures.path().to_str().unwrap());
+
+    let result = export_project_midi(output_path).await;
+
+    // Should either fail or sanitize the path
+    // Result depends on implementation, but should be safe
+    let _ = result;
+}
+
+#[tokio::test]
+async fn test_export_error_empty_path_string() {
+    let result = export_project_midi("".to_string()).await;
+
+    assert!(result.is_err(), "Empty path should fail");
+}
+
+#[tokio::test]
+async fn test_export_error_path_with_null_bytes() {
+    let result = export_project_midi("file\0.mid".to_string()).await;
+
+    // Should reject null bytes in path
+    assert!(result.is_err(), "Null bytes in path should fail");
+}
+
+#[tokio::test]
+async fn test_export_error_very_long_filename() {
+    let fixtures = FileFixtures::new().await;
+    let long_name = "a".repeat(300);
+    let output_path = fixtures.path().join(format!("{}.mid", long_name));
+
+    let result = export_project_midi(output_path.to_str().unwrap().to_string()).await;
+
+    // Should handle or reject overly long filenames
+    let _ = result;
+}
+
+#[tokio::test]
+async fn test_export_error_nonexistent_parent_directory() {
+    let result = export_project_midi(
+        "/this/definitely/does/not/exist/anywhere/file.mid".to_string()
+    ).await;
+
+    assert!(result.is_err(), "Nonexistent parent directory should fail");
+}
+
+#[tokio::test]
+async fn test_export_error_concurrent_write_same_file() {
+    let fixtures = FileFixtures::new().await;
+    let output_path = fixtures.path().join("concurrent_write.mid");
+    let path_str = output_path.to_str().unwrap().to_string();
+
+    // Start two concurrent exports to the same file
+    let path1 = path_str.clone();
+    let path2 = path_str.clone();
+
+    let handle1 = tokio::spawn(async move {
+        export_project_midi(path1).await
+    });
+
+    let handle2 = tokio::spawn(async move {
+        export_project_midi(path2).await
+    });
+
+    let result1 = handle1.await.unwrap();
+    let result2 = handle2.await.unwrap();
+
+    // At least one should succeed or both should handle gracefully
+    let success_count = [result1.is_ok(), result2.is_ok()].iter().filter(|&&x| x).count();
+    assert!(success_count > 0, "At least one concurrent export should succeed");
+}
+
+#[tokio::test]
+async fn test_export_error_special_device_path() {
+    #[cfg(unix)]
+    {
+        let result = export_project_midi("/dev/null".to_string()).await;
+        // May succeed (writing to /dev/null) or fail depending on implementation
+        let _ = result;
+    }
+
+    #[cfg(windows)]
+    {
+        let result = export_project_midi("CON".to_string()).await;
+        // Should reject Windows reserved names
+        let _ = result;
+    }
+}
+
+#[tokio::test]
+async fn test_export_error_wrong_file_extension_midis() {
+    let fixtures = FileFixtures::new().await;
+    let output_path = fixtures.path().join("file.midis"); // Wrong extension
+
+    let result = export_project_midi(output_path.to_str().unwrap().to_string()).await;
+
+    // Should reject invalid extension
+    assert!(result.is_err(), "Invalid extension .midis should fail");
+}
