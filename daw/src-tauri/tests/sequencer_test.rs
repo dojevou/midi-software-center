@@ -29,13 +29,6 @@ fn create_test_engine() -> Arc<SequencerEngine> {
     Arc::new(SequencerEngine::new(midi_manager, 120.0, 480))
 }
 
-// Helper to create State wrapper
-fn wrap_state<T>(value: T) -> State<'static, T> {
-    // Note: In real tests, we'd use actual Tauri State
-    // This is a simplified mock for demonstration
-    unsafe { std::mem::transmute(value) }
-}
-
 // =============================================================================
 // Playback Control Tests (15 tests)
 // =============================================================================
