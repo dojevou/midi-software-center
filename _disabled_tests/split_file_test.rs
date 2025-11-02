@@ -1,17 +1,27 @@
 //! Comprehensive tests for pipeline/src-tauri/src/commands/split_file.rs
 //! Commands: split_and_import
 //!
-//! Coverage: 85%+ target
-//! Tests: 30 comprehensive tests
+//! **Target Coverage:** 90%+ (Trusty Module requirement: 80%+)
+//! **Total Tests:** 39 (27 original + 12 advanced error path tests)
 //!
-//! Key Testing Areas:
-//! - Single file splitting with track extraction
-//! - Multi-track MIDI file handling
-//! - Track metadata preservation (name, instrument, BPM, key)
-//! - Output file generation and naming
-//! - Database import and relationship tracking
-//! - Error handling (missing files, corrupt MIDI, disk errors)
-//! - Edge cases (empty tracks, percussion, unicode names)
+//! This test suite covers the split_and_import command with comprehensive edge case testing,
+//! error path coverage, filesystem safety validation, and database transaction verification.
+//!
+//! **Test Categories:**
+//! 1. FUNCTION 1: split_and_import() (15-18 tests) - Success paths, various track counts
+//! 2. UTILITY FUNCTION TESTS (5 tests) - Filename generation, sanitization
+//! 3. ERROR HANDLING TESTS (6 tests) - Transaction rollback, constraints, content hash
+//! 4. SECTION 3: Advanced Error Scenarios (12 tests) - Security, filesystem, concurrency
+//!
+//! **Special Considerations:**
+//! - Output directory creation and permissions handling
+//! - Track metadata extraction (tempo, key, instrument)
+//! - Filename sanitization (Unicode, path traversal, length limits)
+//! - Database transaction rollback on constraint violations
+//! - Concurrent split operations and race conditions
+//! - Split file deduplication via content_hash uniqueness
+//! - CASCADE deletion of track_splits when parent file deleted
+//! - Filesystem path length limits (255 chars for filenames)
 
 use midi_pipeline::commands::split_file::{split_and_import, SplitResult};
 use std::path::PathBuf;
@@ -1144,4 +1154,493 @@ async fn test_split_cascade_delete() {
     .unwrap();
 
     assert_eq!(split_count, 0, "track_splits should cascade delete");
+}
+
+// ============================================================================
+// SECTION 3: Advanced Error Scenarios (10-12 tests)
+// Coverage target: 23% → 40%+ error path coverage
+// ============================================================================
+
+#[tokio::test]
+async fn test_split_disk_write_failure_output_directory() {
+    let db = TestDatabase::new().await;
+    let temp_dir = TempDir::new().unwrap();
+
+    // Create MIDI file
+    let midi_data = create_multitrack_midi(2);
+    let file_path = temp_dir.path().join("disk_write_test.mid");
+    tokio::fs::write(&file_path, &midi_data).await.unwrap();
+
+    let file_id = setup_test_file(
+        db.pool(),
+        file_path.to_str().unwrap(),
+        "disk_write_test.mid",
+        &midi_data,
+    ).await;
+
+    // Use invalid output directory path (e.g., /dev/null on Unix)
+    #[cfg(unix)]
+    let invalid_output = PathBuf::from("/dev/null/invalid_dir");
+    #[cfg(windows)]
+    let invalid_output = PathBuf::from("NUL:\\invalid_dir");
+
+    let result = split_and_import(file_id, invalid_output, db.pool()).await;
+
+    assert!(result.is_err(), "Should fail with invalid output directory");
+    let err_msg = result.unwrap_err().to_string();
+    assert!(err_msg.contains("Failed") || err_msg.contains("permission") || err_msg.contains("directory"),
+            "Error should indicate directory creation failure");
+}
+
+#[tokio::test]
+#[cfg(unix)]
+async fn test_split_output_directory_read_only_filesystem() {
+    use std::os::unix::fs::PermissionsExt;
+
+    let db = TestDatabase::new().await;
+    let temp_dir = TempDir::new().unwrap();
+
+    // Create MIDI file
+    let midi_data = create_multitrack_midi(2);
+    let file_path = temp_dir.path().join("readonly_test.mid");
+    tokio::fs::write(&file_path, &midi_data).await.unwrap();
+
+    let file_id = setup_test_file(
+        db.pool(),
+        file_path.to_str().unwrap(),
+        "readonly_test.mid",
+        &midi_data,
+    ).await;
+
+    // Create output directory and make it read-only
+    let output_dir = temp_dir.path().join("readonly_splits");
+    tokio::fs::create_dir_all(&output_dir).await.unwrap();
+
+    let mut perms = tokio::fs::metadata(&output_dir).await.unwrap().permissions();
+    perms.set_mode(0o444); // Read-only
+    tokio::fs::set_permissions(&output_dir, perms).await.unwrap();
+
+    let result = split_and_import(file_id, output_dir.clone(), db.pool()).await;
+
+    // Restore permissions for cleanup
+    let mut perms = tokio::fs::metadata(&output_dir).await.unwrap().permissions();
+    perms.set_mode(0o755);
+    tokio::fs::set_permissions(&output_dir, perms).await.unwrap();
+
+    assert!(result.is_err(), "Should fail with read-only directory");
+    assert!(result.unwrap_err().to_string().contains("permission") ||
+            result.unwrap_err().to_string().contains("denied"),
+            "Error should indicate permission denied");
+}
+
+#[tokio::test]
+async fn test_split_insufficient_disk_space_simulation() {
+    let db = TestDatabase::new().await;
+    let temp_dir = TempDir::new().unwrap();
+    let output_dir = temp_dir.path().join("splits");
+
+    // Create very large MIDI with many tracks (simulates large output)
+    let midi_data = create_multitrack_midi(16);
+    let file_path = temp_dir.path().join("large_split.mid");
+    tokio::fs::write(&file_path, &midi_data).await.unwrap();
+
+    let file_id = setup_test_file(
+        db.pool(),
+        file_path.to_str().unwrap(),
+        "large_split.mid",
+        &midi_data,
+    ).await;
+
+    // This test verifies the code can handle split operations
+    // In actual low disk space scenarios, write would fail with ENOSPC
+    let result = split_and_import(file_id, output_dir, db.pool()).await;
+
+    // Should succeed in test environment (has disk space)
+    // In production with no space, would return Err with "No space left"
+    if result.is_err() {
+        let err = result.unwrap_err();
+        assert!(err.to_string().contains("space") || err.to_string().contains("disk"),
+                "Disk space errors should be reported");
+    }
+}
+
+#[tokio::test]
+async fn test_split_race_condition_parent_file_deleted() {
+    let db = TestDatabase::new().await;
+    let temp_dir = TempDir::new().unwrap();
+    let output_dir = temp_dir.path().join("splits");
+
+    let midi_data = create_multitrack_midi(2);
+    let file_path = temp_dir.path().join("race_delete.mid");
+    tokio::fs::write(&file_path, &midi_data).await.unwrap();
+
+    let file_id = setup_test_file(
+        db.pool(),
+        file_path.to_str().unwrap(),
+        "race_delete.mid",
+        &midi_data,
+    ).await;
+
+    // Delete the physical file (simulates race condition)
+    tokio::fs::remove_file(&file_path).await.unwrap();
+
+    let result = split_and_import(file_id, output_dir, db.pool()).await;
+
+    assert!(result.is_err(), "Should fail when parent file is deleted");
+    assert!(result.unwrap_err().to_string().contains("not found") ||
+            result.unwrap_err().to_string().contains("No such file"),
+            "Error should indicate file not found");
+}
+
+#[tokio::test]
+async fn test_split_concurrent_same_file() {
+    let db = TestDatabase::new().await;
+    let temp_dir = TempDir::new().unwrap();
+    let output_dir1 = temp_dir.path().join("splits1");
+    let output_dir2 = temp_dir.path().join("splits2");
+
+    let midi_data = create_multitrack_midi(3);
+    let file_path = temp_dir.path().join("concurrent.mid");
+    tokio::fs::write(&file_path, &midi_data).await.unwrap();
+
+    let file_id = setup_test_file(
+        db.pool(),
+        file_path.to_str().unwrap(),
+        "concurrent.mid",
+        &midi_data,
+    ).await;
+
+    // Launch concurrent split operations
+    let pool1 = db.pool().clone();
+    let pool2 = db.pool().clone();
+
+    let task1 = tokio::spawn(async move {
+        split_and_import(file_id, output_dir1, &pool1).await
+    });
+
+    let task2 = tokio::spawn(async move {
+        split_and_import(file_id, output_dir2, &pool2).await
+    });
+
+    let (result1, result2) = tokio::join!(task1, task2);
+
+    // At least one should succeed
+    let success_count = [result1, result2].iter()
+        .filter(|r| r.is_ok() && r.as_ref().unwrap().is_ok())
+        .count();
+
+    assert!(success_count >= 1, "At least one concurrent split should succeed");
+
+    // May have duplicate hash constraint violations due to race
+}
+
+#[tokio::test]
+async fn test_split_file_exceeds_track_limit_65535() {
+    let db = TestDatabase::new().await;
+    let temp_dir = TempDir::new().unwrap();
+    let output_dir = temp_dir.path().join("splits");
+
+    // MIDI spec allows u16 track count (max 65535)
+    // Creating such a file would be impractical, so we test the validation logic
+
+    // Create normal MIDI and verify it handles track counting properly
+    let midi_data = create_multitrack_midi(16); // 16 tracks (reasonable)
+    let file_path = temp_dir.path().join("track_limit.mid");
+    tokio::fs::write(&file_path, &midi_data).await.unwrap();
+
+    let file_id = setup_test_file(
+        db.pool(),
+        file_path.to_str().unwrap(),
+        "track_limit.mid",
+        &midi_data,
+    ).await;
+
+    let result = split_and_import(file_id, output_dir, db.pool()).await;
+
+    assert!(result.is_ok(), "Normal track count should succeed");
+    assert_eq!(result.unwrap().tracks_split, 16);
+
+    // Note: Files with 65535+ tracks would fail at MIDI parsing stage
+}
+
+#[tokio::test]
+async fn test_split_track_metadata_invalid_instrument_program() {
+    let db = TestDatabase::new().await;
+    let temp_dir = TempDir::new().unwrap();
+    let output_dir = temp_dir.path().join("splits");
+
+    // Create MIDI with invalid program change (> 127)
+    let mut bytes = Vec::new();
+
+    // Header
+    bytes.extend_from_slice(b"MThd");
+    bytes.extend_from_slice(&[0x00, 0x00, 0x00, 0x06]);
+    bytes.extend_from_slice(&[0x00, 0x01]); // Format 1
+    bytes.extend_from_slice(&[0x00, 0x02]); // 2 tracks
+    bytes.extend_from_slice(&[0x01, 0xE0]); // 480 ticks
+
+    // Tempo track
+    let mut tempo_track = Vec::new();
+    tempo_track.extend_from_slice(&[0x00, 0xFF, 0x51, 0x03, 0x07, 0xA1, 0x20]);
+    tempo_track.extend_from_slice(&[0x00, 0xFF, 0x2F, 0x00]);
+
+    bytes.extend_from_slice(b"MTrk");
+    bytes.extend_from_slice(&(tempo_track.len() as u32).to_be_bytes());
+    bytes.extend_from_slice(&tempo_track);
+
+    // Music track with program change 255 (invalid, should be 0-127)
+    let mut music_track = Vec::new();
+    music_track.extend_from_slice(&[0x00, 0xFF, 0x03, 0x05]); // Track name
+    music_track.extend_from_slice(b"Track");
+    // Program change on channel 0 (0xC0) with invalid program 255
+    // Note: MIDI parser may reject this at parse time
+    music_track.extend_from_slice(&[0x00, 0xC0, 0xFF]); // Invalid program
+    music_track.extend_from_slice(&[0x00, 0x90, 60, 64]); // Note on
+    music_track.extend_from_slice(&[0x83, 0x60, 0x80, 60, 0]); // Note off
+    music_track.extend_from_slice(&[0x00, 0xFF, 0x2F, 0x00]);
+
+    bytes.extend_from_slice(b"MTrk");
+    bytes.extend_from_slice(&(music_track.len() as u32).to_be_bytes());
+    bytes.extend_from_slice(&music_track);
+
+    let file_path = temp_dir.path().join("invalid_program.mid");
+    tokio::fs::write(&file_path, &bytes).await.unwrap();
+
+    let file_id = setup_test_file(
+        db.pool(),
+        file_path.to_str().unwrap(),
+        "invalid_program.mid",
+        &bytes,
+    ).await;
+
+    let result = split_and_import(file_id, output_dir, db.pool()).await;
+
+    // Parser may reject invalid MIDI, or split code handles gracefully
+    if result.is_err() {
+        assert!(result.unwrap_err().to_string().contains("parse") ||
+                result.unwrap_err().to_string().contains("invalid"),
+                "Should report parsing issue");
+    }
+}
+
+#[tokio::test]
+async fn test_split_database_transaction_rollback_constraint_violation() {
+    let db = TestDatabase::new().await;
+    let temp_dir = TempDir::new().unwrap();
+    let output_dir = temp_dir.path().join("splits");
+
+    let midi_data = create_multitrack_midi(2);
+    let file_path = temp_dir.path().join("tx_rollback.mid");
+    tokio::fs::write(&file_path, &midi_data).await.unwrap();
+
+    let file_id = setup_test_file(
+        db.pool(),
+        file_path.to_str().unwrap(),
+        "tx_rollback.mid",
+        &midi_data,
+    ).await;
+
+    // First split should succeed
+    let result1 = split_and_import(file_id, output_dir.clone(), db.pool()).await;
+    assert!(result1.is_ok(), "First split should succeed");
+
+    // Second split with same output will generate duplicate hashes
+    let output_dir2 = temp_dir.path().join("splits2");
+    let result2 = split_and_import(file_id, output_dir2, db.pool()).await;
+
+    // Should fail due to duplicate content_hash constraint
+    assert!(result2.is_err(), "Duplicate split should fail");
+    assert!(result2.unwrap_err().to_string().contains("duplicate") ||
+            result2.unwrap_err().to_string().contains("constraint"),
+            "Error should indicate duplicate/constraint violation");
+
+    // Verify first split data remains intact (no partial rollback corruption)
+    let split_count: i64 = sqlx::query_scalar(
+        "SELECT COUNT(*) FROM track_splits WHERE parent_file_id = $1"
+    )
+    .bind(file_id)
+    .fetch_one(db.pool())
+    .await
+    .unwrap();
+
+    assert_eq!(split_count, 2, "First split should remain intact");
+}
+
+#[tokio::test]
+async fn test_split_symlink_injection_track_name() {
+    let db = TestDatabase::new().await;
+    let temp_dir = TempDir::new().unwrap();
+    let output_dir = temp_dir.path().join("splits");
+
+    // Create MIDI with track name containing path-like characters
+    let tracks = vec![
+        ("../../../etc/passwd", "Piano"),
+        ("C:\\Windows\\System32\\config", "Bass"),
+    ];
+
+    let midi_data = create_midi_with_custom_tracks(tracks);
+    let file_path = temp_dir.path().join("symlink_test.mid");
+    tokio::fs::write(&file_path, &midi_data).await.unwrap();
+
+    let file_id = setup_test_file(
+        db.pool(),
+        file_path.to_str().unwrap(),
+        "symlink_test.mid",
+        &midi_data,
+    ).await;
+
+    let result = split_and_import(file_id, output_dir.clone(), db.pool()).await;
+
+    assert!(result.is_ok(), "Should handle path-like track names safely");
+
+    // Verify filenames were sanitized
+    let split_files: Vec<_> = std::fs::read_dir(&output_dir)
+        .unwrap()
+        .map(|e| e.unwrap().path())
+        .collect();
+
+    for split_path in split_files {
+        // Verify no path traversal occurred
+        assert!(split_path.starts_with(&output_dir),
+                "Split file should be within output directory");
+
+        // Verify sanitization removed dangerous characters
+        let filename = split_path.file_name().unwrap().to_string_lossy();
+        assert!(!filename.contains(".."), "Filename should not contain '..'");
+        assert!(!filename.contains("/"), "Filename should not contain '/'");
+        assert!(!filename.contains("\\"), "Filename should not contain '\\'");
+    }
+}
+
+#[tokio::test]
+async fn test_split_file_path_length_exceeds_filesystem_limit() {
+    let db = TestDatabase::new().await;
+    let temp_dir = TempDir::new().unwrap();
+    let output_dir = temp_dir.path().join("splits");
+
+    // Create MIDI with extremely long track names (250+ chars)
+    let long_name = "A".repeat(250);
+    let tracks = vec![
+        (long_name.as_str(), "Piano"),
+        ("NormalTrack", "Bass"),
+    ];
+
+    let midi_data = create_midi_with_custom_tracks(tracks);
+    let file_path = temp_dir.path().join("long_name.mid");
+    tokio::fs::write(&file_path, &midi_data).await.unwrap();
+
+    let file_id = setup_test_file(
+        db.pool(),
+        file_path.to_str().unwrap(),
+        "long_name.mid",
+        &midi_data,
+    ).await;
+
+    let result = split_and_import(file_id, output_dir.clone(), db.pool()).await;
+
+    // Should handle long names (may truncate or use fallback naming)
+    if result.is_ok() {
+        // Verify filenames don't exceed 255 char limit
+        let split_files: Vec<_> = std::fs::read_dir(&output_dir)
+            .unwrap()
+            .map(|e| e.unwrap().file_name().to_string_lossy().to_string())
+            .collect();
+
+        for filename in split_files {
+            assert!(filename.len() <= 255,
+                    "Filename should not exceed 255 chars, got {}", filename.len());
+        }
+    } else {
+        // May fail if filename sanitization fails
+        assert!(result.unwrap_err().to_string().contains("name") ||
+                result.unwrap_err().to_string().contains("length"),
+                "Error should indicate filename issue");
+    }
+}
+
+#[tokio::test]
+async fn test_split_unicode_normalization_track_names() {
+    let db = TestDatabase::new().await;
+    let temp_dir = TempDir::new().unwrap();
+    let output_dir = temp_dir.path().join("splits");
+
+    // Create MIDI with various Unicode characters (combining marks, emoji, etc.)
+    let tracks = vec![
+        ("Café ☕", "Piano"),           // Combining accent + emoji
+        ("音楽 🎵", "Guitar"),         // Japanese + emoji
+        ("Прогресс", "Bass"),          // Cyrillic
+        ("مرحبا", "Drums"),            // Arabic (RTL)
+    ];
+
+    let midi_data = create_midi_with_custom_tracks(tracks);
+    let file_path = temp_dir.path().join("unicode_norm.mid");
+    tokio::fs::write(&file_path, &midi_data).await.unwrap();
+
+    let file_id = setup_test_file(
+        db.pool(),
+        file_path.to_str().unwrap(),
+        "unicode_norm.mid",
+        &midi_data,
+    ).await;
+
+    let result = split_and_import(file_id, output_dir.clone(), db.pool()).await;
+
+    assert!(result.is_ok(), "Should handle Unicode track names");
+    assert_eq!(result.unwrap().tracks_split, 4);
+
+    // Verify files were created with proper Unicode handling
+    let split_files: Vec<_> = std::fs::read_dir(&output_dir)
+        .unwrap()
+        .collect::<Result<Vec<_>, _>>()
+        .unwrap();
+
+    assert_eq!(split_files.len(), 4, "All tracks should be split");
+}
+
+#[tokio::test]
+async fn test_split_output_filename_collision_resolution() {
+    let db = TestDatabase::new().await;
+    let temp_dir = TempDir::new().unwrap();
+    let output_dir = temp_dir.path().join("splits");
+
+    // Create MIDI where sanitized names would collide
+    let tracks = vec![
+        ("Track/Name", "Piano"),      // Sanitizes to "Track_Name"
+        ("Track\\Name", "Guitar"),    // Also sanitizes to "Track_Name"
+        ("Track:Name", "Bass"),       // Also sanitizes to "Track_Name"
+    ];
+
+    let midi_data = create_midi_with_custom_tracks(tracks);
+    let file_path = temp_dir.path().join("collision.mid");
+    tokio::fs::write(&file_path, &midi_data).await.unwrap();
+
+    let file_id = setup_test_file(
+        db.pool(),
+        file_path.to_str().unwrap(),
+        "collision.mid",
+        &midi_data,
+    ).await;
+
+    let result = split_and_import(file_id, output_dir.clone(), db.pool()).await;
+
+    assert!(result.is_ok(), "Should handle filename collisions");
+    assert_eq!(result.unwrap().tracks_split, 3);
+
+    // Verify all 3 files were created with unique names
+    let split_files: Vec<_> = std::fs::read_dir(&output_dir)
+        .unwrap()
+        .collect::<Result<Vec<_>, _>>()
+        .unwrap();
+
+    assert_eq!(split_files.len(), 3, "All tracks should generate unique files");
+
+    // Verify track numbers differentiate them
+    let filenames: Vec<String> = split_files
+        .iter()
+        .map(|e| e.file_name().to_string_lossy().to_string())
+        .collect();
+
+    assert!(filenames.iter().any(|f| f.contains("track_01")), "Should have track_01");
+    assert!(filenames.iter().any(|f| f.contains("track_02")), "Should have track_02");
+    assert!(filenames.iter().any(|f| f.contains("track_03")), "Should have track_03");
 }

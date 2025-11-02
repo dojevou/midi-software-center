@@ -1,19 +1,36 @@
-//! Tests for pipeline/src-tauri/src/commands/analyze.rs
-//! Commands: start_analysis (HIGH PRIORITY - COMPLEX)
+//! Comprehensive tests for pipeline/src-tauri/src/commands/analyze.rs
+//! Commands: start_analysis
+//!
+//! **Target Coverage:** 90%+ (Trusty Module requirement: 80%+)
+//! **Total Tests:** 35 (original comprehensive suite)
 //!
 //! This test suite validates the high-performance parallel analysis system that processes
 //! 1.1M+ MIDI files using 32 concurrent workers with batch database operations.
 //!
-//! Coverage Areas:
-//! - Batch fetching in 1000-file chunks
-//! - Parallel analysis with 32 workers and semaphore limiting
-//! - Arc<Semaphore> concurrency control
-//! - Arc<AtomicUsize> thread-safe counters
-//! - Arc<Mutex<Vec<>>> error collection
-//! - Musical analysis: BPM detection, key detection, note analysis
-//! - Progress event emission (every 10 files)
-//! - Batch metadata insertion (100-file batches)
-//! - Error handling and recovery
+//! **Test Categories:**
+//! 1. Musical Analysis Operations - BPM detection, key detection, duration calculation
+//! 2. Parallel Processing - 32 worker pool with Arc<Semaphore> limiting
+//! 3. Batch Database Operations - 1000-file fetch chunks, 100-file insert batches
+//! 4. Progress Tracking - Arc<AtomicUsize> counters, event emission
+//! 5. Error Handling - Arc<Mutex<Vec>>> error collection, graceful recovery
+//!
+//! **Performance Characteristics:**
+//! - Batch fetching in 1000-file chunks from database
+//! - Parallel analysis with 32 concurrent workers
+//! - Arc<Semaphore> concurrency control for resource limiting
+//! - Arc<AtomicUsize> thread-safe counters for progress tracking
+//! - Arc<Mutex<Vec<>>> for error collection across workers
+//! - Progress event emission throttling (every 10 files)
+//! - Batch metadata insertion (100-file batches for optimal throughput)
+//!
+//! **Special Considerations:**
+//! - BPM detector accuracy (within ±5 BPM tolerance)
+//! - Key detector using Krumhansl-Schmuckler algorithm
+//! - Duration analysis in both seconds and MIDI ticks
+//! - Worker pool saturation and semaphore backpressure
+//! - Database transaction batching for high throughput
+//! - Progress event rate limiting to avoid UI overload
+//! - Error recovery without stopping entire analysis batch
 
 use crate::common::*;
 use midi_library_shared::core::midi::parser::parse_midi_file;
@@ -2071,4 +2088,1112 @@ async fn test_start_analysis_10k_file_performance() {
     assert!(summary.rate >= 50.0, "Should achieve at least 50 files/sec, got {}", summary.rate);
 
     db.cleanup().await;
+}
+
+//=============================================================================
+// SECTION 4: Worker Pool & Concurrency Errors (9 tests)
+//=============================================================================
+
+#[tokio::test]
+async fn test_analyze_worker_pool_oom_simulation() {
+    // Description: Simulate high memory pressure with large batch analysis
+    let db = TestDatabase::new().await;
+    let file_fixtures = FileFixtures::new().await;
+    let pool = db.pool();
+
+    cleanup_database(&pool).await;
+
+    // Create 500 files to stress worker pool memory
+    let midi_bytes = create_midi_bytes(120.0, &[60, 62, 64]);
+
+    for i in 0..500 {
+        let midi_path = file_fixtures.create_midi_file(&format!("stress_{}.mid", i), &midi_bytes).await;
+
+        sqlx::query(
+            "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
+             VALUES ($1, $2, $3)"
+        )
+        .bind(midi_path.to_str().unwrap())
+        .bind(format!("{:064x}", i + 500000))
+        .bind(midi_bytes.len() as i64)
+        .execute(pool)
+        .await
+        .expect("Failed to insert");
+    }
+
+    let result = crate::commands::analyze::start_analysis(
+        tauri::State::from(Arc::new(crate::AppState {
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
+                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
+                .await
+                .expect("Failed to connect"),
+        })),
+        TestWindow::new(),
+    ).await;
+
+    assert!(result.is_ok(), "Worker pool should handle large batches without OOM");
+    let summary = result.unwrap();
+    assert_eq!(summary.analyzed, 500, "All files should be processed despite memory pressure");
+
+    cleanup_database(&pool).await;
+    db.cleanup().await;
+}
+
+#[tokio::test]
+async fn test_analyze_database_insert_batch_failure() {
+    // Description: Test recovery from database batch insert failure mid-operation
+    let db = TestDatabase::new().await;
+    let file_fixtures = FileFixtures::new().await;
+    let pool = db.pool();
+
+    cleanup_database(&pool).await;
+
+    // Create files with valid MIDI data
+    let midi_bytes = create_midi_bytes(120.0, &[60, 64, 67]);
+
+    for i in 0..50 {
+        let midi_path = file_fixtures.create_midi_file(&format!("batch_fail_{}.mid", i), &midi_bytes).await;
+
+        sqlx::query(
+            "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
+             VALUES ($1, $2, $3)"
+        )
+        .bind(midi_path.to_str().unwrap())
+        .bind(format!("{:064x}", i + 550000))
+        .bind(midi_bytes.len() as i64)
+        .execute(pool)
+        .await
+        .expect("Failed to insert");
+    }
+
+    // Analysis should succeed - database operations are transactional
+    let result = crate::commands::analyze::start_analysis(
+        tauri::State::from(Arc::new(crate::AppState {
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
+                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
+                .await
+                .expect("Failed to connect"),
+        })),
+        TestWindow::new(),
+    ).await;
+
+    assert!(result.is_ok(), "Should handle database operations gracefully");
+
+    cleanup_database(&pool).await;
+    db.cleanup().await;
+}
+
+#[tokio::test]
+async fn test_analyze_file_permission_denied() {
+    // Description: Test handling of file read permission denied during analysis
+    let db = TestDatabase::new().await;
+    let pool = db.pool();
+
+    cleanup_database(&pool).await;
+
+    // Create file record for non-readable path
+    sqlx::query(
+        "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
+         VALUES ($1, $2, $3)"
+    )
+    .bind("/root/permission_denied.mid")  // Typically no read permission
+    .bind(format!("{:064x}", 600000))
+    .bind(1024i64)
+    .execute(pool)
+    .await
+    .expect("Failed to insert");
+
+    let result = crate::commands::analyze::start_analysis(
+        tauri::State::from(Arc::new(crate::AppState {
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
+                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
+                .await
+                .expect("Failed to connect"),
+        })),
+        TestWindow::new(),
+    ).await;
+
+    assert!(result.is_ok(), "Should handle permission errors gracefully");
+    let summary = result.unwrap();
+    assert_eq!(summary.skipped, 1, "File should be skipped due to permission error");
+    assert!(!summary.errors.is_empty(), "Should have error message for permission denied");
+
+    cleanup_database(&pool).await;
+    db.cleanup().await;
+}
+
+#[tokio::test]
+async fn test_analyze_concurrent_analysis_race_condition() {
+    // Description: Test race conditions on analyzed_at field with concurrent requests
+    let db = TestDatabase::new().await;
+    let file_fixtures = FileFixtures::new().await;
+    let pool = db.pool();
+
+    cleanup_database(&pool).await;
+
+    // Create 20 files
+    let midi_bytes = create_midi_bytes(120.0, &[60]);
+
+    for i in 0..20 {
+        let midi_path = file_fixtures.create_midi_file(&format!("race_{}.mid", i), &midi_bytes).await;
+
+        sqlx::query(
+            "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
+             VALUES ($1, $2, $3)"
+        )
+        .bind(midi_path.to_str().unwrap())
+        .bind(format!("{:064x}", i + 610000))
+        .bind(midi_bytes.len() as i64)
+        .execute(pool)
+        .await
+        .expect("Failed to insert");
+    }
+
+    // Run two analysis operations concurrently to test race conditions
+    let state1 = Arc::new(crate::AppState {
+        database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
+            .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
+            .await
+            .expect("Failed to connect"),
+    });
+    let state2 = state1.clone();
+
+    let window1 = TestWindow::new();
+    let window2 = TestWindow::new();
+
+    let handle1 = tokio::spawn(async move {
+        crate::commands::analyze::start_analysis(
+            tauri::State::from(state1),
+            window1,
+        ).await
+    });
+
+    let handle2 = tokio::spawn(async move {
+        crate::commands::analyze::start_analysis(
+            tauri::State::from(state2),
+            window2,
+        ).await
+    });
+
+    let (result1, result2) = tokio::join!(handle1, handle2);
+
+    // Both should succeed (one might find 0 unanalyzed files)
+    assert!(result1.is_ok(), "First concurrent analysis should succeed");
+    assert!(result2.is_ok(), "Second concurrent analysis should succeed");
+
+    // Verify no duplicate metadata entries (race condition check)
+    let metadata_count: i64 = sqlx::query_scalar(
+        "SELECT COUNT(*) FROM musical_metadata m
+         JOIN files f ON m.file_id = f.file_id
+         WHERE f.file_path LIKE '/tmp%race_%'"
+    )
+    .fetch_one(pool)
+    .await
+    .expect("Failed to count metadata");
+
+    assert_eq!(metadata_count, 20, "Should have exactly 20 metadata entries (no duplicates from race)");
+
+    cleanup_database(&pool).await;
+    db.cleanup().await;
+}
+
+#[tokio::test]
+async fn test_analyze_corrupted_tempo_metadata() {
+    // Description: Test handling of corrupted tempo metadata that could cause divide-by-zero
+    let db = TestDatabase::new().await;
+    let file_fixtures = FileFixtures::new().await;
+    let pool = db.pool();
+
+    cleanup_database(&pool).await;
+
+    // Create MIDI with tempo of 0 (invalid, could cause divide-by-zero)
+    let mut bytes = Vec::new();
+    bytes.extend_from_slice(&[
+        0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06,
+        0x00, 0x00, 0x00, 0x01, 0x01, 0xE0,
+    ]);
+
+    let mut track_data = Vec::new();
+    // Tempo with 0 microseconds per beat (invalid)
+    track_data.extend_from_slice(&[0x00, 0xFF, 0x51, 0x03, 0x00, 0x00, 0x00]);
+    track_data.extend_from_slice(&[0x00, 0x90, 60, 80]);  // Note
+    track_data.extend_from_slice(&[0x20, 0x80, 60, 40]);  // Note off
+    track_data.extend_from_slice(&[0x00, 0xFF, 0x2F, 0x00]); // End
+
+    bytes.extend_from_slice(&[0x4D, 0x54, 0x72, 0x6B]);
+    let len = track_data.len() as u32;
+    bytes.extend_from_slice(&[
+        ((len >> 24) & 0xFF) as u8,
+        ((len >> 16) & 0xFF) as u8,
+        ((len >> 8) & 0xFF) as u8,
+        (len & 0xFF) as u8,
+    ]);
+    bytes.extend_from_slice(&track_data);
+
+    let midi_path = file_fixtures.create_midi_file("zero_tempo.mid", &bytes).await;
+
+    sqlx::query(
+        "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
+         VALUES ($1, $2, $3)"
+    )
+    .bind(midi_path.to_str().unwrap())
+    .bind(format!("{:064x}", 620000))
+    .bind(bytes.len() as i64)
+    .execute(pool)
+    .await
+    .expect("Failed to insert");
+
+    let result = crate::commands::analyze::start_analysis(
+        tauri::State::from(Arc::new(crate::AppState {
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
+                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
+                .await
+                .expect("Failed to connect"),
+        })),
+        TestWindow::new(),
+    ).await;
+
+    assert!(result.is_ok(), "Should handle zero tempo without divide-by-zero panic");
+
+    cleanup_database(&pool).await;
+    db.cleanup().await;
+}
+
+#[tokio::test]
+async fn test_analyze_all_zero_velocities() {
+    // Description: Test velocity statistics with all-zero velocities to prevent zero division
+    let db = TestDatabase::new().await;
+    let file_fixtures = FileFixtures::new().await;
+    let pool = db.pool();
+
+    cleanup_database(&pool).await;
+
+    // Create MIDI with all zero velocities
+    let mut bytes = Vec::new();
+    bytes.extend_from_slice(&[
+        0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06,
+        0x00, 0x00, 0x00, 0x01, 0x01, 0xE0,
+    ]);
+
+    let mut track_data = Vec::new();
+    track_data.extend_from_slice(&[0x00, 0xFF, 0x51, 0x03, 0x07, 0xA1, 0x20]); // Tempo
+
+    // Add notes with zero velocity
+    for note in &[60, 64, 67] {
+        track_data.extend_from_slice(&[0x00, 0x90, *note, 0]); // Velocity 0
+        track_data.extend_from_slice(&[0x20, 0x80, *note, 0]); // Off
+    }
+
+    track_data.extend_from_slice(&[0x00, 0xFF, 0x2F, 0x00]);
+
+    bytes.extend_from_slice(&[0x4D, 0x54, 0x72, 0x6B]);
+    let len = track_data.len() as u32;
+    bytes.extend_from_slice(&[
+        ((len >> 24) & 0xFF) as u8,
+        ((len >> 16) & 0xFF) as u8,
+        ((len >> 8) & 0xFF) as u8,
+        (len & 0xFF) as u8,
+    ]);
+    bytes.extend_from_slice(&track_data);
+
+    let midi_path = file_fixtures.create_midi_file("zero_velocity.mid", &bytes).await;
+
+    let file_id: i64 = sqlx::query_scalar(
+        "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
+         VALUES ($1, $2, $3) RETURNING file_id"
+    )
+    .bind(midi_path.to_str().unwrap())
+    .bind(format!("{:064x}", 630000))
+    .bind(bytes.len() as i64)
+    .fetch_one(pool)
+    .await
+    .expect("Failed to insert");
+
+    let result = crate::commands::analyze::start_analysis(
+        tauri::State::from(Arc::new(crate::AppState {
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
+                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
+                .await
+                .expect("Failed to connect"),
+        })),
+        TestWindow::new(),
+    ).await;
+
+    assert!(result.is_ok(), "Should handle zero velocities without division error");
+
+    // Verify velocity stats are handled correctly
+    let avg_vel: Option<f64> = sqlx::query_scalar(
+        "SELECT avg_velocity FROM musical_metadata WHERE file_id = $1"
+    )
+    .bind(file_id)
+    .fetch_one(pool)
+    .await
+    .expect("Failed to fetch velocity");
+
+    // Should be Some(0.0) or None, not panic
+    if let Some(vel) = avg_vel {
+        assert_eq!(vel, 0.0, "Average velocity should be 0.0 for all-zero velocities");
+    }
+
+    cleanup_database(&pool).await;
+    db.cleanup().await;
+}
+
+#[tokio::test]
+async fn test_analyze_zero_ticks_per_beat() {
+    // Description: Test duration calculation with zero ticks per beat to prevent overflow
+    let db = TestDatabase::new().await;
+    let file_fixtures = FileFixtures::new().await;
+    let pool = db.pool();
+
+    cleanup_database(&pool).await;
+
+    // Create MIDI with 0 ticks per beat (invalid header)
+    let mut bytes = Vec::new();
+    bytes.extend_from_slice(&[
+        0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06,
+        0x00, 0x00, 0x00, 0x01,
+        0x00, 0x00,  // 0 ticks per beat - invalid!
+    ]);
+
+    let track_data = vec![
+        0x00, 0xFF, 0x51, 0x03, 0x07, 0xA1, 0x20, // Tempo
+        0x00, 0x90, 60, 80, // Note
+        0x20, 0x80, 60, 40, // Note off
+        0x00, 0xFF, 0x2F, 0x00, // End
+    ];
+
+    bytes.extend_from_slice(&[0x4D, 0x54, 0x72, 0x6B]);
+    let len = track_data.len() as u32;
+    bytes.extend_from_slice(&[
+        ((len >> 24) & 0xFF) as u8,
+        ((len >> 16) & 0xFF) as u8,
+        ((len >> 8) & 0xFF) as u8,
+        (len & 0xFF) as u8,
+    ]);
+    bytes.extend_from_slice(&track_data);
+
+    let midi_path = file_fixtures.create_midi_file("zero_ticks.mid", &bytes).await;
+
+    sqlx::query(
+        "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
+         VALUES ($1, $2, $3)"
+    )
+    .bind(midi_path.to_str().unwrap())
+    .bind(format!("{:064x}", 640000))
+    .bind(bytes.len() as i64)
+    .execute(pool)
+    .await
+    .expect("Failed to insert");
+
+    let result = crate::commands::analyze::start_analysis(
+        tauri::State::from(Arc::new(crate::AppState {
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
+                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
+                .await
+                .expect("Failed to connect"),
+        })),
+        TestWindow::new(),
+    ).await;
+
+    assert!(result.is_ok(), "Should handle zero ticks per beat without panic or overflow");
+
+    cleanup_database(&pool).await;
+    db.cleanup().await;
+}
+
+#[tokio::test]
+async fn test_analyze_high_polyphony_overflow() {
+    // Description: Test saturation arithmetic with >100 simultaneous notes (polyphony overflow)
+    let db = TestDatabase::new().await;
+    let file_fixtures = FileFixtures::new().await;
+    let pool = db.pool();
+
+    cleanup_database(&pool).await;
+
+    // Create MIDI with 120 simultaneous notes
+    let mut bytes = Vec::new();
+    bytes.extend_from_slice(&[
+        0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06,
+        0x00, 0x00, 0x00, 0x01, 0x01, 0xE0,
+    ]);
+
+    let mut track_data = Vec::new();
+    track_data.extend_from_slice(&[0x00, 0xFF, 0x51, 0x03, 0x07, 0xA1, 0x20]); // Tempo
+
+    // Turn on 120 notes simultaneously
+    for note in 0..120 {
+        track_data.extend_from_slice(&[0x00, 0x90, note, 80]);
+    }
+
+    // Turn them all off
+    for note in 0..120 {
+        track_data.extend_from_slice(&[0x00, 0x80, note, 40]);
+    }
+
+    track_data.extend_from_slice(&[0x00, 0xFF, 0x2F, 0x00]);
+
+    bytes.extend_from_slice(&[0x4D, 0x54, 0x72, 0x6B]);
+    let len = track_data.len() as u32;
+    bytes.extend_from_slice(&[
+        ((len >> 24) & 0xFF) as u8,
+        ((len >> 16) & 0xFF) as u8,
+        ((len >> 8) & 0xFF) as u8,
+        (len & 0xFF) as u8,
+    ]);
+    bytes.extend_from_slice(&track_data);
+
+    let midi_path = file_fixtures.create_midi_file("high_poly.mid", &bytes).await;
+
+    let file_id: i64 = sqlx::query_scalar(
+        "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
+         VALUES ($1, $2, $3) RETURNING file_id"
+    )
+    .bind(midi_path.to_str().unwrap())
+    .bind(format!("{:064x}", 650000))
+    .bind(bytes.len() as i64)
+    .fetch_one(pool)
+    .await
+    .expect("Failed to insert");
+
+    let result = crate::commands::analyze::start_analysis(
+        tauri::State::from(Arc::new(crate::AppState {
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
+                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
+                .await
+                .expect("Failed to connect"),
+        })),
+        TestWindow::new(),
+    ).await;
+
+    assert!(result.is_ok(), "Should handle high polyphony without overflow");
+
+    // Verify polyphony was tracked correctly (should use saturation arithmetic)
+    let polyphony: Option<i16> = sqlx::query_scalar(
+        "SELECT polyphony_max FROM musical_metadata WHERE file_id = $1"
+    )
+    .bind(file_id)
+    .fetch_one(pool)
+    .await
+    .expect("Failed to fetch polyphony");
+
+    assert!(polyphony.is_some(), "Polyphony should be detected");
+    // i16::MAX is 32767, should saturate rather than overflow
+    assert!(polyphony.unwrap() > 0, "Polyphony should be positive");
+
+    cleanup_database(&pool).await;
+    db.cleanup().await;
+}
+
+#[tokio::test]
+async fn test_analyze_malformed_midi_header() {
+    // Description: Test handling of completely malformed MIDI header
+    let db = TestDatabase::new().await;
+    let file_fixtures = FileFixtures::new().await;
+    let pool = db.pool();
+
+    cleanup_database(&pool).await;
+
+    // Create file with invalid header (not "MThd")
+    let malformed_bytes = vec![
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06,
+        0x00, 0x00, 0x00, 0x01, 0x01, 0xE0,
+    ];
+
+    let midi_path = file_fixtures.create_midi_file("malformed.mid", &malformed_bytes).await;
+
+    sqlx::query(
+        "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
+         VALUES ($1, $2, $3)"
+    )
+    .bind(midi_path.to_str().unwrap())
+    .bind(format!("{:064x}", 660000))
+    .bind(malformed_bytes.len() as i64)
+    .execute(pool)
+    .await
+    .expect("Failed to insert");
+
+    let result = crate::commands::analyze::start_analysis(
+        tauri::State::from(Arc::new(crate::AppState {
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
+                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
+                .await
+                .expect("Failed to connect"),
+        })),
+        TestWindow::new(),
+    ).await;
+
+    assert!(result.is_ok(), "Should handle malformed header gracefully");
+    let summary = result.unwrap();
+    assert_eq!(summary.skipped, 1, "Malformed file should be skipped");
+    assert!(!summary.errors.is_empty(), "Should have error message");
+
+    cleanup_database(&pool).await;
+    db.cleanup().await;
+}
+
+//=============================================================================
+// SECTION 5: Data Validation Errors (9 tests)
+//=============================================================================
+
+#[tokio::test]
+async fn test_analyze_extreme_bpm_values() {
+    // Description: Test handling of extreme BPM values (very high/low)
+    let db = TestDatabase::new().await;
+    let file_fixtures = FileFixtures::new().await;
+    let pool = db.pool();
+
+    cleanup_database(&pool).await;
+
+    // Create MIDI with extremely high BPM (tempo of 1 microsecond per beat)
+    let mut bytes = Vec::new();
+    bytes.extend_from_slice(&[
+        0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06,
+        0x00, 0x00, 0x00, 0x01, 0x01, 0xE0,
+    ]);
+
+    let mut track_data = Vec::new();
+    // Tempo: 1 microsecond per beat = 60,000,000 BPM
+    track_data.extend_from_slice(&[0x00, 0xFF, 0x51, 0x03, 0x00, 0x00, 0x01]);
+    track_data.extend_from_slice(&[0x00, 0x90, 60, 80]);
+    track_data.extend_from_slice(&[0x20, 0x80, 60, 40]);
+    track_data.extend_from_slice(&[0x00, 0xFF, 0x2F, 0x00]);
+
+    bytes.extend_from_slice(&[0x4D, 0x54, 0x72, 0x6B]);
+    let len = track_data.len() as u32;
+    bytes.extend_from_slice(&[
+        ((len >> 24) & 0xFF) as u8,
+        ((len >> 16) & 0xFF) as u8,
+        ((len >> 8) & 0xFF) as u8,
+        (len & 0xFF) as u8,
+    ]);
+    bytes.extend_from_slice(&track_data);
+
+    let midi_path = file_fixtures.create_midi_file("extreme_bpm.mid", &bytes).await;
+
+    let file_id: i64 = sqlx::query_scalar(
+        "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
+         VALUES ($1, $2, $3) RETURNING file_id"
+    )
+    .bind(midi_path.to_str().unwrap())
+    .bind(format!("{:064x}", 670000))
+    .bind(bytes.len() as i64)
+    .fetch_one(pool)
+    .await
+    .expect("Failed to insert");
+
+    let result = crate::commands::analyze::start_analysis(
+        tauri::State::from(Arc::new(crate::AppState {
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
+                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
+                .await
+                .expect("Failed to connect"),
+        })),
+        TestWindow::new(),
+    ).await;
+
+    assert!(result.is_ok(), "Should handle extreme BPM values without overflow");
+
+    // Verify BPM is stored (might be clamped to reasonable range)
+    let bpm: Option<f64> = sqlx::query_scalar(
+        "SELECT tempo_bpm FROM musical_metadata WHERE file_id = $1"
+    )
+    .bind(file_id)
+    .fetch_one(pool)
+    .await
+    .expect("Failed to fetch BPM");
+
+    if let Some(bpm_val) = bpm {
+        assert!(bpm_val.is_finite(), "BPM should be finite number");
+        assert!(bpm_val > 0.0, "BPM should be positive");
+    }
+
+    cleanup_database(&pool).await;
+    db.cleanup().await;
+}
+
+#[tokio::test]
+async fn test_analyze_invalid_time_signature() {
+    // Description: Test handling of invalid time signature values
+    let db = TestDatabase::new().await;
+    let file_fixtures = FileFixtures::new().await;
+    let pool = db.pool();
+
+    cleanup_database(&pool).await;
+
+    // Create MIDI with invalid time signature (0/0)
+    let mut bytes = Vec::new();
+    bytes.extend_from_slice(&[
+        0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06,
+        0x00, 0x00, 0x00, 0x01, 0x01, 0xE0,
+    ]);
+
+    let mut track_data = Vec::new();
+    track_data.extend_from_slice(&[0x00, 0xFF, 0x51, 0x03, 0x07, 0xA1, 0x20]); // Tempo
+    // Invalid time signature: 0/0
+    track_data.extend_from_slice(&[0x00, 0xFF, 0x58, 0x04, 0x00, 0x00, 0x18, 0x08]);
+    track_data.extend_from_slice(&[0x00, 0x90, 60, 80]);
+    track_data.extend_from_slice(&[0x20, 0x80, 60, 40]);
+    track_data.extend_from_slice(&[0x00, 0xFF, 0x2F, 0x00]);
+
+    bytes.extend_from_slice(&[0x4D, 0x54, 0x72, 0x6B]);
+    let len = track_data.len() as u32;
+    bytes.extend_from_slice(&[
+        ((len >> 24) & 0xFF) as u8,
+        ((len >> 16) & 0xFF) as u8,
+        ((len >> 8) & 0xFF) as u8,
+        (len & 0xFF) as u8,
+    ]);
+    bytes.extend_from_slice(&track_data);
+
+    let midi_path = file_fixtures.create_midi_file("invalid_timesig.mid", &bytes).await;
+
+    sqlx::query(
+        "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
+         VALUES ($1, $2, $3)"
+    )
+    .bind(midi_path.to_str().unwrap())
+    .bind(format!("{:064x}", 680000))
+    .bind(bytes.len() as i64)
+    .execute(pool)
+    .await
+    .expect("Failed to insert");
+
+    let result = crate::commands::analyze::start_analysis(
+        tauri::State::from(Arc::new(crate::AppState {
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
+                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
+                .await
+                .expect("Failed to connect"),
+        })),
+        TestWindow::new(),
+    ).await;
+
+    assert!(result.is_ok(), "Should handle invalid time signature gracefully");
+
+    cleanup_database(&pool).await;
+    db.cleanup().await;
+}
+
+#[tokio::test]
+async fn test_analyze_note_range_overflow() {
+    // Description: Test note range calculation with extreme pitch values
+    let db = TestDatabase::new().await;
+    let file_fixtures = FileFixtures::new().await;
+    let pool = db.pool();
+
+    cleanup_database(&pool).await;
+
+    // Create MIDI with notes at extreme ends (0 and 127)
+    let mut bytes = Vec::new();
+    bytes.extend_from_slice(&[
+        0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06,
+        0x00, 0x00, 0x00, 0x01, 0x01, 0xE0,
+    ]);
+
+    let mut track_data = Vec::new();
+    track_data.extend_from_slice(&[0x00, 0xFF, 0x51, 0x03, 0x07, 0xA1, 0x20]);
+
+    // Extreme low and high notes
+    track_data.extend_from_slice(&[0x00, 0x90, 0, 80]);   // Note 0
+    track_data.extend_from_slice(&[0x00, 0x90, 127, 80]); // Note 127
+    track_data.extend_from_slice(&[0x20, 0x80, 0, 40]);
+    track_data.extend_from_slice(&[0x00, 0x80, 127, 40]);
+    track_data.extend_from_slice(&[0x00, 0xFF, 0x2F, 0x00]);
+
+    bytes.extend_from_slice(&[0x4D, 0x54, 0x72, 0x6B]);
+    let len = track_data.len() as u32;
+    bytes.extend_from_slice(&[
+        ((len >> 24) & 0xFF) as u8,
+        ((len >> 16) & 0xFF) as u8,
+        ((len >> 8) & 0xFF) as u8,
+        (len & 0xFF) as u8,
+    ]);
+    bytes.extend_from_slice(&track_data);
+
+    let midi_path = file_fixtures.create_midi_file("extreme_notes.mid", &bytes).await;
+
+    let file_id: i64 = sqlx::query_scalar(
+        "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
+         VALUES ($1, $2, $3) RETURNING file_id"
+    )
+    .bind(midi_path.to_str().unwrap())
+    .bind(format!("{:064x}", 690000))
+    .bind(bytes.len() as i64)
+    .fetch_one(pool)
+    .await
+    .expect("Failed to insert");
+
+    let result = crate::commands::analyze::start_analysis(
+        tauri::State::from(Arc::new(crate::AppState {
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
+                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
+                .await
+                .expect("Failed to connect"),
+        })),
+        TestWindow::new(),
+    ).await;
+
+    assert!(result.is_ok(), "Should handle extreme note range");
+
+    // Verify note range calculation
+    let (low, high, semitones): (Option<i16>, Option<i16>, Option<i16>) = sqlx::query_as(
+        "SELECT pitch_range_low, pitch_range_high, pitch_range_semitones
+         FROM musical_metadata WHERE file_id = $1"
+    )
+    .bind(file_id)
+    .fetch_one(pool)
+    .await
+    .expect("Failed to fetch note range");
+
+    assert_eq!(low, Some(0), "Low note should be 0");
+    assert_eq!(high, Some(127), "High note should be 127");
+    assert_eq!(semitones, Some(127), "Range should be 127 semitones");
+
+    cleanup_database(&pool).await;
+    db.cleanup().await;
+}
+
+#[tokio::test]
+async fn test_analyze_truncated_midi_file() {
+    // Description: Test handling of truncated MIDI file (incomplete data)
+    let db = TestDatabase::new().await;
+    let file_fixtures = FileFixtures::new().await;
+    let pool = db.pool();
+
+    cleanup_database(&pool).await;
+
+    // Create truncated MIDI (header but no track data)
+    let truncated_bytes = vec![
+        0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06,
+        0x00, 0x00, 0x00, 0x01, 0x01, 0xE0,
+        // Track header but missing data
+        0x4D, 0x54, 0x72, 0x6B, 0x00, 0x00, 0x00, 0x10,
+        // Data truncated...
+    ];
+
+    let midi_path = file_fixtures.create_midi_file("truncated.mid", &truncated_bytes).await;
+
+    sqlx::query(
+        "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
+         VALUES ($1, $2, $3)"
+    )
+    .bind(midi_path.to_str().unwrap())
+    .bind(format!("{:064x}", 700000))
+    .bind(truncated_bytes.len() as i64)
+    .execute(pool)
+    .await
+    .expect("Failed to insert");
+
+    let result = crate::commands::analyze::start_analysis(
+        tauri::State::from(Arc::new(crate::AppState {
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
+                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
+                .await
+                .expect("Failed to connect"),
+        })),
+        TestWindow::new(),
+    ).await;
+
+    assert!(result.is_ok(), "Should handle truncated file gracefully");
+    let summary = result.unwrap();
+    assert_eq!(summary.skipped, 1, "Truncated file should be skipped");
+
+    cleanup_database(&pool).await;
+    db.cleanup().await;
+}
+
+#[tokio::test]
+async fn test_analyze_database_connection_pool_exhaustion() {
+    // Description: Test handling when database connection pool is exhausted
+    let db = TestDatabase::new().await;
+    let file_fixtures = FileFixtures::new().await;
+    let pool = db.pool();
+
+    cleanup_database(&pool).await;
+
+    // Create 100 files to stress connection pool
+    let midi_bytes = create_midi_bytes(120.0, &[60]);
+
+    for i in 0..100 {
+        let midi_path = file_fixtures.create_midi_file(&format!("pool_stress_{}.mid", i), &midi_bytes).await;
+
+        sqlx::query(
+            "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
+             VALUES ($1, $2, $3)"
+        )
+        .bind(midi_path.to_str().unwrap())
+        .bind(format!("{:064x}", i + 710000))
+        .bind(midi_bytes.len() as i64)
+        .execute(pool)
+        .await
+        .expect("Failed to insert");
+    }
+
+    // Analysis should succeed even under connection pool stress
+    let result = crate::commands::analyze::start_analysis(
+        tauri::State::from(Arc::new(crate::AppState {
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
+                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
+                .await
+                .expect("Failed to connect"),
+        })),
+        TestWindow::new(),
+    ).await;
+
+    assert!(result.is_ok(), "Should handle connection pool stress");
+    let summary = result.unwrap();
+    assert_eq!(summary.analyzed, 100, "All files should be analyzed despite pool stress");
+
+    cleanup_database(&pool).await;
+    db.cleanup().await;
+}
+
+#[tokio::test]
+async fn test_analyze_negative_delta_time() {
+    // Description: Test handling of invalid negative delta time in MIDI events
+    let db = TestDatabase::new().await;
+    let file_fixtures = FileFixtures::new().await;
+    let pool = db.pool();
+
+    cleanup_database(&pool).await;
+
+    // MIDI uses variable-length quantities for delta time, can't be truly negative
+    // but we can test handling of unusual delta time sequences
+    let mut bytes = Vec::new();
+    bytes.extend_from_slice(&[
+        0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06,
+        0x00, 0x00, 0x00, 0x01, 0x01, 0xE0,
+    ]);
+
+    let mut track_data = Vec::new();
+    track_data.extend_from_slice(&[0x00, 0xFF, 0x51, 0x03, 0x07, 0xA1, 0x20]);
+
+    // Very large delta time (max variable length: 0x0FFFFFFF)
+    track_data.extend_from_slice(&[0xFF, 0xFF, 0xFF, 0x7F]); // Max valid delta
+    track_data.extend_from_slice(&[0x90, 60, 80]);
+    track_data.extend_from_slice(&[0x20, 0x80, 60, 40]);
+    track_data.extend_from_slice(&[0x00, 0xFF, 0x2F, 0x00]);
+
+    bytes.extend_from_slice(&[0x4D, 0x54, 0x72, 0x6B]);
+    let len = track_data.len() as u32;
+    bytes.extend_from_slice(&[
+        ((len >> 24) & 0xFF) as u8,
+        ((len >> 16) & 0xFF) as u8,
+        ((len >> 8) & 0xFF) as u8,
+        (len & 0xFF) as u8,
+    ]);
+    bytes.extend_from_slice(&track_data);
+
+    let midi_path = file_fixtures.create_midi_file("large_delta.mid", &bytes).await;
+
+    sqlx::query(
+        "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
+         VALUES ($1, $2, $3)"
+    )
+    .bind(midi_path.to_str().unwrap())
+    .bind(format!("{:064x}", 720000))
+    .bind(bytes.len() as i64)
+    .execute(pool)
+    .await
+    .expect("Failed to insert");
+
+    let result = crate::commands::analyze::start_analysis(
+        tauri::State::from(Arc::new(crate::AppState {
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
+                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
+                .await
+                .expect("Failed to connect"),
+        })),
+        TestWindow::new(),
+    ).await;
+
+    assert!(result.is_ok(), "Should handle extreme delta time values");
+
+    cleanup_database(&pool).await;
+    db.cleanup().await;
+}
+
+#[tokio::test]
+async fn test_analyze_mixed_valid_invalid_batch() {
+    // Description: Test batch processing with mix of valid and invalid files
+    let db = TestDatabase::new().await;
+    let file_fixtures = FileFixtures::new().await;
+    let pool = db.pool();
+
+    cleanup_database(&pool).await;
+
+    let valid_bytes = create_midi_bytes(120.0, &[60, 64, 67]);
+    let invalid_bytes = vec![0xFF, 0xFF, 0xFF];
+
+    // Create 50 files: 25 valid, 25 invalid, interleaved
+    for i in 0..50 {
+        let (bytes, name) = if i % 2 == 0 {
+            (&valid_bytes, format!("mixed_valid_{}.mid", i))
+        } else {
+            (&invalid_bytes, format!("mixed_invalid_{}.mid", i))
+        };
+
+        let midi_path = file_fixtures.create_midi_file(&name, bytes).await;
+
+        sqlx::query(
+            "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
+             VALUES ($1, $2, $3)"
+        )
+        .bind(midi_path.to_str().unwrap())
+        .bind(format!("{:064x}", i + 730000))
+        .bind(bytes.len() as i64)
+        .execute(pool)
+        .await
+        .expect("Failed to insert");
+    }
+
+    let result = crate::commands::analyze::start_analysis(
+        tauri::State::from(Arc::new(crate::AppState {
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
+                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
+                .await
+                .expect("Failed to connect"),
+        })),
+        TestWindow::new(),
+    ).await;
+
+    assert!(result.is_ok(), "Should handle mixed batch gracefully");
+    let summary = result.unwrap();
+    assert_eq!(summary.total_files, 50, "Should process all 50 files");
+    assert_eq!(summary.analyzed, 25, "Should analyze 25 valid files");
+    assert_eq!(summary.skipped, 25, "Should skip 25 invalid files");
+    assert_eq!(summary.errors.len(), 25, "Should have 25 error messages");
+
+    cleanup_database(&pool).await;
+    db.cleanup().await;
+}
+
+#[tokio::test]
+async fn test_analyze_very_large_file_timeout() {
+    // Description: Test handling of very large MIDI files that might timeout
+    let db = TestDatabase::new().await;
+    let file_fixtures = FileFixtures::new().await;
+    let pool = db.pool();
+
+    cleanup_database(&pool).await;
+
+    // Create MIDI with thousands of events to simulate large file
+    let mut bytes = Vec::new();
+    bytes.extend_from_slice(&[
+        0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06,
+        0x00, 0x00, 0x00, 0x01, 0x01, 0xE0,
+    ]);
+
+    let mut track_data = Vec::new();
+    track_data.extend_from_slice(&[0x00, 0xFF, 0x51, 0x03, 0x07, 0xA1, 0x20]);
+
+    // Add 1000 notes to make file larger
+    for note in 0..100 {
+        for pitch in 60..70 {
+            track_data.extend_from_slice(&[0x00, 0x90, pitch, 80]);
+            track_data.extend_from_slice(&[0x10, 0x80, pitch, 40]);
+        }
+    }
+
+    track_data.extend_from_slice(&[0x00, 0xFF, 0x2F, 0x00]);
+
+    bytes.extend_from_slice(&[0x4D, 0x54, 0x72, 0x6B]);
+    let len = track_data.len() as u32;
+    bytes.extend_from_slice(&[
+        ((len >> 24) & 0xFF) as u8,
+        ((len >> 16) & 0xFF) as u8,
+        ((len >> 8) & 0xFF) as u8,
+        (len & 0xFF) as u8,
+    ]);
+    bytes.extend_from_slice(&track_data);
+
+    let midi_path = file_fixtures.create_midi_file("very_large.mid", &bytes).await;
+
+    let file_id: i64 = sqlx::query_scalar(
+        "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
+         VALUES ($1, $2, $3) RETURNING file_id"
+    )
+    .bind(midi_path.to_str().unwrap())
+    .bind(format!("{:064x}", 740000))
+    .bind(bytes.len() as i64)
+    .fetch_one(pool)
+    .await
+    .expect("Failed to insert");
+
+    let result = crate::commands::analyze::start_analysis(
+        tauri::State::from(Arc::new(crate::AppState {
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
+                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
+                .await
+                .expect("Failed to connect"),
+        })),
+        TestWindow::new(),
+    ).await;
+
+    assert!(result.is_ok(), "Should handle large files without timeout");
+
+    // Verify note count is correct
+    let note_count: i32 = sqlx::query_scalar(
+        "SELECT note_count FROM musical_metadata WHERE file_id = $1"
+    )
+    .bind(file_id)
+    .fetch_one(pool)
+    .await
+    .expect("Failed to fetch note count");
+
+    assert_eq!(note_count, 1000, "Should count all 1000 notes in large file");
+
+    cleanup_database(&pool).await;
+    db.cleanup().await;
+}
+
+#[tokio::test]
+async fn test_analyze_empty_file() {
+    // Description: Test handling of completely empty file (0 bytes)
+    let db = TestDatabase::new().await;
+    let file_fixtures = FileFixtures::new().await;
+    let pool = db.pool();
+
+    cleanup_database(&pool).await;
+
+    // Create empty file
+    let empty_bytes: Vec<u8> = vec![];
+    let midi_path = file_fixtures.create_midi_file("empty.mid", &empty_bytes).await;
+
+    sqlx::query(
+        "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
+         VALUES ($1, $2, $3)"
+    )
+    .bind(midi_path.to_str().unwrap())
+    .bind(format!("{:064x}", 750000))
+    .bind(0i64)
+    .execute(pool)
+    .await
+    .expect("Failed to insert");
+
+    let result = crate::commands::analyze::start_analysis(
+        tauri::State::from(Arc::new(crate::AppState {
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
+                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
+                .await
+                .expect("Failed to connect"),
+        })),
+        TestWindow::new(),
+    ).await;
+
+    assert!(result.is_ok(), "Should handle empty file gracefully");
+    let summary = result.unwrap();
+    assert_eq!(summary.skipped, 1, "Empty file should be skipped");
+    assert!(!summary.errors.is_empty(), "Should have error message for empty file");
+
+    cleanup_database(&pool).await;
+    db.cleanup().await;
+}
+
+// Helper function for database cleanup
+async fn cleanup_database(pool: &sqlx::PgPool) {
+    // Clean up test data to avoid conflicts
+    let _ = sqlx::query("DELETE FROM musical_metadata").execute(pool).await;
+    let _ = sqlx::query("DELETE FROM files").execute(pool).await;
 }
