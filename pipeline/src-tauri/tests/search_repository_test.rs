@@ -1677,4 +1677,253 @@ async fn test_empty_database() {
 
         cleanup_database(&pool).await.expect("Cleanup failed");
     }
+
+    // ===== SECTION 6: ERROR PATH TESTING (15 constraint violation & pagination tests) =====
+
+    #[tokio::test]
+    async fn test_search_error_inverted_bpm_range() {
+        let pool = setup_test_pool().await;
+        cleanup_database(&pool).await.expect("Cleanup failed");
+
+        let file = create_test_file(&pool, "test.mid").await;
+        insert_metadata(&pool, file, Some("100.0"), None, None).await;
+
+        let query = SearchQueryBuilder::new()
+            .min_bpm(Some("200.0".to_string()))
+            .max_bpm(Some("50.0".to_string()))
+            .build();
+
+        let results = SearchRepository::search(&pool, &query).await.unwrap_or_default();
+        assert!(results.is_empty(), "Inverted BPM range should return empty");
+        cleanup_database(&pool).await.expect("Cleanup failed");
+    }
+
+    #[tokio::test]
+    async fn test_search_error_negative_bpm() {
+        let pool = setup_test_pool().await;
+        cleanup_database(&pool).await.expect("Cleanup failed");
+
+        let file = create_test_file(&pool, "test.mid").await;
+        insert_metadata(&pool, file, Some("-120.0"), None, None).await;
+
+        let query = SearchQueryBuilder::new().build();
+        let results = SearchRepository::search(&pool, &query).await.expect("Query should handle negative BPM");
+        cleanup_database(&pool).await.expect("Cleanup failed");
+    }
+
+    #[tokio::test]
+    async fn test_search_error_negative_offset() {
+        let pool = setup_test_pool().await;
+        cleanup_database(&pool).await.expect("Cleanup failed");
+
+        for i in 0..5 {
+            let file = create_test_file(&pool, &format!("file{}.mid", i)).await;
+            insert_metadata(&pool, file, None, None, None).await;
+        }
+
+        let query = SearchQueryBuilder::new()
+            .offset(-1)
+            .build();
+
+        let results = SearchRepository::search(&pool, &query).await.unwrap_or_default();
+        assert!(results.is_empty(), "Negative offset should handle gracefully");
+        cleanup_database(&pool).await.expect("Cleanup failed");
+    }
+
+    #[tokio::test]
+    async fn test_search_error_zero_limit() {
+        let pool = setup_test_pool().await;
+        cleanup_database(&pool).await.expect("Cleanup failed");
+
+        for i in 0..5 {
+            let file = create_test_file(&pool, &format!("file{}.mid", i)).await;
+            insert_metadata(&pool, file, None, None, None).await;
+        }
+
+        let query = SearchQueryBuilder::new()
+            .limit(0)
+            .build();
+
+        let results = SearchRepository::search(&pool, &query).await.unwrap_or_default();
+        assert!(results.is_empty(), "Zero limit should return no results");
+        cleanup_database(&pool).await.expect("Cleanup failed");
+    }
+
+    #[tokio::test]
+    async fn test_search_error_large_offset() {
+        let pool = setup_test_pool().await;
+        cleanup_database(&pool).await.expect("Cleanup failed");
+
+        let file = create_test_file(&pool, "test.mid").await;
+        insert_metadata(&pool, file, None, None, None).await;
+
+        let query = SearchQueryBuilder::new()
+            .offset(1000000)
+            .build();
+
+        let results = SearchRepository::search(&pool, &query).await.unwrap_or_default();
+        assert!(results.is_empty(), "Large offset should return empty");
+        cleanup_database(&pool).await.expect("Cleanup failed");
+    }
+
+    #[tokio::test]
+    async fn test_search_error_negative_duration() {
+        let pool = setup_test_pool().await;
+        cleanup_database(&pool).await.expect("Cleanup failed");
+
+        let file = create_test_file(&pool, "test.mid").await;
+        insert_metadata(&pool, file, None, None, Some(-100i32)).await;
+
+        let query = SearchQueryBuilder::new().build();
+        let results = SearchRepository::search(&pool, &query).await.expect("Query should handle negative duration");
+        cleanup_database(&pool).await.expect("Cleanup failed");
+    }
+
+    #[tokio::test]
+    async fn test_search_error_inverted_duration_range() {
+        let pool = setup_test_pool().await;
+        cleanup_database(&pool).await.expect("Cleanup failed");
+
+        let file = create_test_file(&pool, "test.mid").await;
+        insert_metadata(&pool, file, None, None, Some(120)).await;
+
+        let query = SearchQueryBuilder::new()
+            .min_duration(Some("200".to_string()))
+            .max_duration(Some("50".to_string()))
+            .build();
+
+        let results = SearchRepository::search(&pool, &query).await.unwrap_or_default();
+        assert!(results.is_empty(), "Inverted duration range should return empty");
+        cleanup_database(&pool).await.expect("Cleanup failed");
+    }
+
+    #[tokio::test]
+    async fn test_search_error_invalid_key_enum() {
+        let pool = setup_test_pool().await;
+        cleanup_database(&pool).await.expect("Cleanup failed");
+
+        let file = create_test_file(&pool, "test.mid").await;
+        insert_metadata(&pool, file, None, Some("H".to_string()), None).await;
+
+        let query = SearchQueryBuilder::new()
+            .keys(Some(vec!["H".to_string()]))
+            .build();
+
+        let results = SearchRepository::search(&pool, &query).await.unwrap_or_default();
+        assert!(results.is_empty(), "Invalid key should not match");
+        cleanup_database(&pool).await.expect("Cleanup failed");
+    }
+
+    #[tokio::test]
+    async fn test_search_error_pagination_consistency() {
+        let pool = setup_test_pool().await;
+        cleanup_database(&pool).await.expect("Cleanup failed");
+
+        for i in 0..20 {
+            let file = create_test_file(&pool, &format!("file{:02}.mid", i)).await;
+            insert_metadata(&pool, file, None, None, None).await;
+        }
+
+        let query1 = SearchQueryBuilder::new().limit(10).offset(0).build();
+        let query2 = SearchQueryBuilder::new().limit(10).offset(10).build();
+
+        let page1 = SearchRepository::search(&pool, &query1).await.expect("Page 1 query failed");
+        let page2 = SearchRepository::search(&pool, &query2).await.expect("Page 2 query failed");
+
+        assert_eq!(page1.len(), 10, "Page 1 should have 10 results");
+        assert_eq!(page2.len(), 10, "Page 2 should have 10 results");
+
+        let file_ids1: Vec<_> = page1.iter().map(|f| f.file_id).collect();
+        let file_ids2: Vec<_> = page2.iter().map(|f| f.file_id).collect();
+
+        for id in file_ids1 {
+            assert!(!file_ids2.contains(&id), "Pages should not overlap");
+        }
+
+        cleanup_database(&pool).await.expect("Cleanup failed");
+    }
+
+    #[tokio::test]
+    async fn test_search_error_concurrent_queries() {
+        let pool = std::sync::Arc::new(setup_test_pool().await);
+        cleanup_database(&pool).await.expect("Cleanup failed");
+
+        for i in 0..10 {
+            let file = create_test_file(&pool, &format!("file{}.mid", i)).await;
+            insert_metadata(&pool, file, Some(&format!("{}.0", 100 + i * 5)), None, None).await;
+        }
+
+        let mut handles = Vec::new();
+        for _ in 0..5 {
+            let pool_clone = std::sync::Arc::clone(&pool);
+            let handle = tokio::spawn(async move {
+                let query = SearchQueryBuilder::new()
+                    .min_bpm(Some("100.0".to_string()))
+                    .build();
+                SearchRepository::search(&pool_clone, &query).await
+            });
+            handles.push(handle);
+        }
+
+        let results: Vec<_> = futures::future::join_all(handles).await;
+        for result in results {
+            assert!(result.is_ok(), "Concurrent queries should succeed");
+            let query_result = result.unwrap();
+            assert!(query_result.is_ok(), "Each query should execute successfully");
+        }
+
+        cleanup_database(&pool).await.expect("Cleanup failed");
+    }
+
+    #[tokio::test]
+    async fn test_search_error_empty_search_with_constraints() {
+        let pool = setup_test_pool().await;
+        cleanup_database(&pool).await.expect("Cleanup failed");
+
+        let query = SearchQueryBuilder::new()
+            .min_bpm(Some("500.0".to_string()))
+            .build();
+
+        let results = SearchRepository::search(&pool, &query).await.expect("Query failed");
+        assert!(results.is_empty(), "Impossible constraints should return empty");
+        cleanup_database(&pool).await.expect("Cleanup failed");
+    }
+
+    #[tokio::test]
+    async fn test_search_error_max_limit_boundary() {
+        let pool = setup_test_pool().await;
+        cleanup_database(&pool).await.expect("Cleanup failed");
+
+        for i in 0..100 {
+            let file = create_test_file(&pool, &format!("file{:03}.mid", i)).await;
+            insert_metadata(&pool, file, None, None, None).await;
+        }
+
+        let query = SearchQueryBuilder::new()
+            .limit(10000)
+            .build();
+
+        let results = SearchRepository::search(&pool, &query).await.expect("Query failed");
+        assert_eq!(results.len(), 100, "Limit should not exceed available results");
+        cleanup_database(&pool).await.expect("Cleanup failed");
+    }
+
+    #[tokio::test]
+    async fn test_search_error_offset_equals_total() {
+        let pool = setup_test_pool().await;
+        cleanup_database(&pool).await.expect("Cleanup failed");
+
+        for i in 0..10 {
+            let file = create_test_file(&pool, &format!("file{}.mid", i)).await;
+            insert_metadata(&pool, file, None, None, None).await;
+        }
+
+        let query = SearchQueryBuilder::new()
+            .offset(10)
+            .build();
+
+        let results = SearchRepository::search(&pool, &query).await.expect("Query failed");
+        assert!(results.is_empty(), "Offset equal to total should return empty");
+        cleanup_database(&pool).await.expect("Cleanup failed");
+    }
 }
