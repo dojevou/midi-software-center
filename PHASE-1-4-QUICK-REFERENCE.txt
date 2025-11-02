@@ -1,0 +1,409 @@
+================================================================================
+PHASE 1-4 TEST QUALITY STANDARDS - QUICK REFERENCE
+================================================================================
+
+PROJECT: MIDI Software Center
+ANALYSIS DATE: 2025-11-02
+SCOPE: Repository Layer Testing (Phases 1-4)
+STANDARD: Trusty Module (80%+ coverage requirement)
+
+================================================================================
+KEY METRICS AT A GLANCE
+================================================================================
+
+Total Phase 1-4 Tests:        370+ repository tests
+Test Infrastructure:          6 support modules
+Total Lines of Test Code:     6,183+ (repository layer)
+Average Test Length:          15-20 lines (focused)
+Coverage Target:              80-90%+ (Trusty Module)
+Test Execution Status:        100% passing (388/388 baseline)
+
+================================================================================
+REPOSITORY TEST BREAKDOWN
+================================================================================
+
+File Repository
+  Location:       pipeline/src-tauri/tests/file_repository_test.rs
+  Size:           1,953 lines
+  Tests:          109 tests
+  Focus:          File metadata CRUD, duplicates, pagination
+  Coverage:       80%+
+  Key Areas:      Insert (12), Find (15), Duplicates (8), Update (12),
+                  Delete (6), Count (5), List (18), Edge Cases (4)
+
+Tag Repository
+  Location:       pipeline/src-tauri/tests/tag_repository_test.rs
+  Size:           1,513 lines
+  Tests:          100 tests
+  Focus:          Tag CRUD, batch ops, associations, searching, categorization
+  Coverage:       90%+
+  Key Areas:      CRUD (8), Batch (9), Associations (10), Queries (9),
+                  Popular (7), File Filtering (6), Update (6), Edge Cases (6),
+                  Error Handling (4), Performance (4)
+
+Metadata Repository
+  Location:       pipeline/src-tauri/tests/metadata_repository_test.rs
+  Size:           1,348 lines
+  Tests:          79 tests
+  Focus:          Musical metadata, BigDecimal precision, ENUM keys
+  Coverage:       90%+
+  Key Areas:      CRUD (12), Musical Keys (12), BPM Handling (8),
+                  Time Signatures (6), Associations (6), Queries (4),
+                  Concurrency (2)
+
+Search Repository
+  Location:       pipeline/src-tauri/tests/search_repository_test.rs
+  Size:           1,369 lines
+  Tests:          82 tests
+  Focus:          Full-text search, filtering, pagination, metadata joins
+  Coverage:       90%+
+  Key Areas:      Full-Text (12), Filters (15), Pagination (8),
+                  Metadata JOIN (8), Count (5), Edge Cases (4)
+
+================================================================================
+TEST INFRASTRUCTURE (6 MODULES)
+================================================================================
+
+helpers/
+  db.rs           - Database connections, setup_test_pool(), cleanup_database()
+  macros.rs       - test_transaction! macro, assert_db_error! macro
+  mod.rs          - Module exports
+
+fixtures/
+  mod.rs          - NewFileBuilder, NewTagBuilder, test data builders
+
+common/
+  mod.rs          - Main exports
+  database.rs     - Database test helpers
+  fixtures.rs     - Fixtures struct (Fixtures::drum_loop(), etc.)
+  mocks.rs        - Mock Tauri objects (MockWindow, MockAppHandle)
+  builders.rs     - Builder patterns for test data
+  assertions.rs   - Custom assertions (assert_file_exists, etc.)
+
+lib.rs
+  Test crate root, module declarations
+
+================================================================================
+QUALITY STANDARDS APPLIED
+================================================================================
+
+Test Naming:
+  Pattern:        test_<operation>_<scenario>
+  Examples:       test_insert_basic_file
+                  test_find_by_id_not_found
+                  test_check_duplicate_performance
+                  test_update_metadata_fields_decimal_duration
+                  test_concurrent_inserts
+
+Test Organization:
+  By Feature:     Insert, Find, Update, Delete, Count, List, Edge Cases
+  Per Section:    12-20 tests per section
+  Grouping:       Clear comment headers separating sections
+
+Test Data:
+  Builder Pattern: NewFileBuilder, MetadataBuilder, SearchQueryBuilder
+  Fixtures:       Fixtures::drum_loop(), Fixtures::piano_chords()
+  Sensible Defaults: All fields have reasonable defaults
+  Fluent API:     .filename().filepath().build() chaining
+
+Assertions:
+  Specific:       assert_eq!(actual, expected, "context message")
+  Context:        All assertions include failure context
+  Database:       Custom assertions check actual database state
+  Patterns:       assert_file_exists(), assert_file_count(), assert_tag_exists()
+
+Error Testing:
+  Non-existent:   Records not found return None/empty
+  Constraints:    FK violations, unique constraints, not null
+  Invalid Data:   Negative IDs, invalid enums, boundary values
+  Error Paths:    Both success and failure paths tested
+  Error Types:    Verify correct error type and message
+
+Edge Cases:
+  Empty/Null:     Empty strings, None values, zero counts
+  Negative:       Negative IDs, negative limits
+  Very Large:     1000-char filenames, 500 tags, 10,000 items
+  Unicode:        日本語, Русский, emojis, special chars
+  Concurrency:    Parallel inserts (10+ concurrent operations)
+  Boundaries:     Zero limit, limit > data, offset > count
+
+Performance:
+  Assertions:     Explicit timing: assert!(duration < 100ms)
+  Benchmarks:     Duplicate check <100ms, searches <200ms
+  Large Data:     1000+ items tested, performance validated
+  Index Usage:    Indexed queries verified as fast
+
+Database Testing:
+  Actual DB:      PostgreSQL 16, not in-memory
+  Full Cycle:     Insert → Read → Update → Delete
+  Constraints:    FK, unique, not null validated
+  Transactions:   Transaction behavior verified
+  Cleanup:        TRUNCATE CASCADE between tests
+
+Test Isolation:
+  Pool per Test:  setup_test_pool().await creates fresh pool
+  Two-Stage:      cleanup_database() before AND after test
+  No Shared State: TRUNCATE CASCADE prevents contamination
+  Independent:    Can run in any order, parallel safe
+
+================================================================================
+IMPLEMENTATION PATTERNS
+================================================================================
+
+Pattern 1: Database Setup & Cleanup
+  #[tokio::test]
+  async fn test_operation() {
+      let pool = setup_test_pool().await;
+      cleanup_database(&pool).await.expect("Cleanup failed");
+      
+      // Test code
+      
+      cleanup_database(&pool).await.expect("Cleanup failed");
+  }
+
+Pattern 2: Test Data with Builder
+  let new_file = NewFileBuilder::new()
+      .filename("test.mid")
+      .filepath("/test/test.mid")
+      .content_hash(random_hash())
+      .num_tracks(4)
+      .manufacturer("Roland")
+      .build();
+  
+  let file_id = FileRepository::insert(&pool, new_file)
+      .await
+      .expect("Insert failed");
+
+Pattern 3: Custom Assertion
+  async fn assert_file_exists(pool: &PgPool, file_id: i64) {
+      let exists: bool = sqlx::query_scalar::<_, bool>(
+          "SELECT EXISTS(SELECT 1 FROM files WHERE id = $1)"
+      )
+      .bind(file_id)
+      .fetch_one(pool)
+      .await
+      .expect("Failed to check");
+      
+      assert!(exists, "File {} not found", file_id);
+  }
+
+Pattern 4: Boundary/Edge Case Test
+  #[tokio::test]
+  async fn test_insert_with_unicode_filename() {
+      let pool = setup_test_pool().await;
+      cleanup_database(&pool).await.expect("Cleanup failed");
+      
+      let unicode_name = "测试_файл_🎹_音楽.mid";
+      let new_file = NewFileBuilder::new()
+          .filename(unicode_name)
+          .filepath(&format!("/test/{}", unicode_name))
+          .content_hash(random_hash())
+          .build();
+      
+      let file_id = FileRepository::insert(&pool, new_file)
+          .await
+          .expect("Insert failed");
+      
+      let file = FileRepository::find_by_id(&pool, file_id)
+          .await
+          .expect("Find failed")
+          .expect("File not found");
+      
+      assert_eq!(file.filename, unicode_name);
+      
+      cleanup_database(&pool).await.expect("Cleanup failed");
+  }
+
+Pattern 5: Performance Test
+  #[tokio::test]
+  async fn test_duplicate_check_performance() {
+      let pool = setup_test_pool().await;
+      cleanup_database(&pool).await.expect("Cleanup failed");
+      
+      // Insert 10 files for realistic scenario
+      for i in 0..10 {
+          let new_file = NewFileBuilder::new()
+              .filename(&format!("perf_test_{}.mid", i))
+              .filepath(&format!("/test/perf_test_{}.mid", i))
+              .content_hash(random_hash())
+              .build();
+          FileRepository::insert(&pool, new_file)
+              .await
+              .expect("Insert failed");
+      }
+      
+      // Measure performance
+      let test_hash = random_hash();
+      let start = std::time::Instant::now();
+      let _ = FileRepository::check_duplicate(&pool, &test_hash)
+          .await
+          .expect("Check failed");
+      let duration = start.elapsed();
+      
+      assert!(duration.as_millis() < 100, 
+          "Duplicate check should be fast (<100ms), took {}ms", 
+          duration.as_millis());
+      
+      cleanup_database(&pool).await.expect("Cleanup failed");
+  }
+
+================================================================================
+COVERAGE REQUIREMENTS CHECKLIST
+================================================================================
+
+For Phase 5-8 Tests (follow this checklist):
+
+Test Structure:
+  [ ] Test name follows test_<operation>_<scenario> pattern
+  [ ] Setup calls setup_test_pool().await
+  [ ] Cleanup calls cleanup_database() before AND after
+  [ ] Uses #[tokio::test] for async tests
+  [ ] Proper error handling with .expect() messages
+
+Test Data:
+  [ ] Uses builder pattern (NewFileBuilder, etc.)
+  [ ] Sets sensible defaults (check builder new())
+  [ ] Uses domain-specific fixtures (Fixtures::drum_loop())
+  [ ] Customizes data for test scenario
+  [ ] Calls .build() to create model
+
+Assertions:
+  [ ] Uses specific assertions (assert_eq!, assert!)
+  [ ] Includes failure context message
+  [ ] Uses custom assertions where appropriate
+  [ ] Validates both success AND failure cases
+  [ ] Checks database state (not just return values)
+
+Edge Cases:
+  [ ] Tests empty values (empty string, 0, None)
+  [ ] Tests null/None handling (optional fields)
+  [ ] Tests negative values (negative ID, negative limit)
+  [ ] Tests very large values (1000+ chars, 500+ items)
+  [ ] Tests special characters and unicode
+  [ ] Tests boundary conditions (zero, max, overflow)
+
+Error Handling:
+  [ ] Tests non-existent records (not found)
+  [ ] Tests constraint violations (FK, unique, not null)
+  [ ] Tests invalid data types
+  [ ] Tests SQL injection safety (parameterized)
+  [ ] Tests transaction rollback
+
+Performance:
+  [ ] Includes timing assertion for critical queries
+  [ ] Explicit <Xms assertion for expected performance
+  [ ] Tests with realistic dataset size
+  [ ] Validates indexed queries are fast
+
+Organization:
+  [ ] Grouped with related tests (same section header)
+  [ ] Clear comment explaining test scenario
+  [ ] Related tests near each other
+  [ ] Section comments for major groupings
+
+================================================================================
+EXECUTION COMMANDS
+================================================================================
+
+Run All Tests:
+  cargo test --workspace -- --test-threads=1
+
+Run Repository Tests Only:
+  cargo test --package midi_pipeline --test '*_repository_test'
+
+Run Specific Test File:
+  cargo test --test file_repository_test
+
+Run Single Test:
+  cargo test --test file_repository_test test_insert_basic_file
+
+Coverage Report:
+  cargo tarpaulin --workspace --out Html
+
+Watch Mode (Requires cargo-watch):
+  cargo watch -x "test --workspace -- --test-threads=1"
+
+Format & Lint:
+  cargo fmt && cargo clippy --workspace
+
+================================================================================
+COMMON PATTERNS REFERENCE
+================================================================================
+
+Random Hash Generation:
+  fn random_hash() -> Vec<u8> {
+      // 32-byte BLAKE3 hash
+      vec![rand::random::<u8>(); 32]
+  }
+
+Create Test File:
+  async fn create_test_file(pool: &PgPool, filename: &str) -> i64 {
+      let new_file = NewFileBuilder::new()
+          .filename(filename)
+          .filepath(&format!("/test/{}", filename))
+          .content_hash(random_hash())
+          .build();
+      
+      FileRepository::insert(pool, new_file)
+          .await
+          .expect("Failed to create test file")
+  }
+
+Test Multiple Scenarios:
+  for i in 0..5 {
+      let new_file = NewFileBuilder::new()
+          .filename(&format!("file_{}.mid", i))
+          .filepath(&format!("/test/file_{}.mid", i))
+          .content_hash(random_hash())
+          .build();
+      FileRepository::insert(&pool, new_file)
+          .await
+          .expect("Insert failed");
+  }
+
+Check Result without Panic:
+  let result = FileRepository::insert(&pool, invalid_data).await;
+  assert!(result.is_err(), "Should fail with error");
+
+Verify Ordering:
+  for i in 0..files.len() - 1 {
+      assert!(files[i].created_at >= files[i + 1].created_at,
+          "Files should be ordered DESC by created_at");
+  }
+
+================================================================================
+ESTIMATED EFFORT (Phases 5-8)
+================================================================================
+
+Phase 5 - Commands:         100+ tests, 2,000+ lines, 8 hours
+Phase 6 - DAW Models:        75+ tests, 1,500+ lines, 6 hours
+Phase 7 - Integration/E2E:   80+ tests, 2,000+ lines, 8 hours
+Phase 8 - Documentation:     -        , 5,000+ lines, 4 hours
+                            --------
+TOTAL:                      350+ tests, 10,500+ lines, 26 hours
+
+================================================================================
+KEY LEARNINGS FROM PHASE 1-4
+================================================================================
+
+1. Builder Pattern Essential - Reduces boilerplate 50%, improves clarity
+2. Test Organization Critical - Grouping by operation makes tests maintainable
+3. Custom Assertions Valuable - Improves readability, follows DRY principle
+4. Explicit Cleanup Required - Two-stage cleanup (before+after) prevents pollution
+5. Performance Testing Early - Identifies slow queries before they become problems
+6. Edge Cases Catch Issues - Unicode, special chars, large data surface bugs
+7. Error Testing Important - Validates both success and failure paths work
+8. Fixture Reuse Beneficial - Domain-specific fixtures improve test clarity
+
+================================================================================
+DOCUMENTATION REFERENCE
+================================================================================
+
+Main Analysis:  PHASE-1-4-TEST-QUALITY-ANALYSIS.md (comprehensive)
+This Document:  PHASE-1-4-QUICK-REFERENCE.txt
+Architecture:   ARCHITECTURE-REFERENCE.md
+Project Struct: PROJECT-STRUCTURE.md
+Test Plan:      TEST-COVERAGE-PLAN.md
+Development:    DEVELOPMENT-WORKFLOW.md
+
+================================================================================

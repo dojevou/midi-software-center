@@ -1,11 +1,11 @@
 //! Comprehensive tests for MetadataRepository
 //!
 //! **Target Coverage:** 90%+ (Trusty Module requirement: 80%+)
-//! **Total Tests:** 50+
+//! **Total Tests:** 68 (48 original + 20 error path tests)
 //!
 //! This test suite covers all 7 public methods of MetadataRepository with comprehensive
 //! edge case testing, BigDecimal precision validation, PostgreSQL ENUM handling, and
-//! performance verification.
+//! comprehensive error path coverage for constraint violations.
 //!
 //! **Test Categories:**
 //! 1. CRUD Operations (12 tests) - Insert, find, update, delete
@@ -15,6 +15,8 @@
 //! 5. File Associations (6 tests) - FK constraints, CASCADE
 //! 6. Query Patterns (4 tests) - Complex queries, aggregations
 //! 7. Edge Cases (2 tests) - Concurrency, errors
+//! 8. Error Path Tests - BigDecimal Constraints (12 tests) - Overflow, validation
+//! 9. Error Path Tests - Data Validation (8 tests) - Duplicate, FK, boundary
 //!
 //! **Special Considerations:**
 //! - BigDecimal precision (BPM, avg_velocity, note_density, polyphony_avg)
@@ -34,9 +36,12 @@ mod fixtures;
 mod helpers;
 mod common;
 
-use fixtures::{NewFileBuilder, Fixtures};
+use fixtures::{NewFileBuilder, Fixtures, random_hash};
 use helpers::db::*;
-use common::*;
+use common::assertions::{
+    assert_metadata_exists, assert_file_has_tag, assert_bpm_set,
+    assert_file_not_exists as assert_file_path_not_exists,
+};
 
     // ============================================================================
     // Test Helpers
@@ -290,7 +295,9 @@ use common::*;
     }
 
 // ============================================================================
-// Category 1: CRUD Operations (12 tests)
+// ============================================================================
+// SECTION 1: CRUD Operations (12 tests)
+// ============================================================================
 // ============================================================================
 
 #[tokio::test]
@@ -325,7 +332,7 @@ async fn test_insert_new_metadata() {
         assert!(found.is_some(), "Should find metadata");
 
         let meta = found.unwrap();
-        assert_eq!(meta.total_notes, 100);
+        assert_eq!(meta.total_notes, 100, "Expected {100}, found {meta.total_notes}");
         assert!(meta.bpm.is_none(), "BPM should be NULL");
         assert!(meta.key_signature.is_none(), "Key should be NULL");
 
@@ -379,7 +386,7 @@ async fn test_insert_new_metadata() {
         let meta = found.unwrap();
         assert_bigdecimal_exact(&meta.bpm, "140.0");
         assert_eq!(meta.key_signature.as_deref(), Some("D"));
-        assert_eq!(meta.total_notes, 2000);
+        assert_eq!(meta.total_notes, 2000, "Expected {2000}, found {meta.total_notes}");
 
         cleanup_database(&pool).await.expect("Cleanup failed");
     }
@@ -397,7 +404,7 @@ async fn test_insert_new_metadata() {
         assert!(found.is_some(), "Should find metadata");
 
         let meta = found.unwrap();
-        assert_eq!(meta.file_id, file_id);
+        assert_eq!(meta.file_id, file_id, "Expected {file_id}, found {meta.file_id}");
         assert_bigdecimal_exact(&meta.bpm, "128.5");
         assert_eq!(meta.key_signature.as_deref(), Some("Am"));
 
@@ -479,7 +486,7 @@ async fn test_insert_new_metadata() {
 
         let found = MetadataRepository::find_by_file_id(&pool, file_id).await.expect("Find failed");
         let meta = found.unwrap();
-        assert_eq!(meta.total_notes, 2500);
+        assert_eq!(meta.total_notes, 2500, "Expected {2500}, found {meta.total_notes}");
         assert_eq!(meta.unique_pitches, Some(15));
         assert_eq!(meta.pitch_range_min, Some(48));
         assert_eq!(meta.pitch_range_max, Some(96));
@@ -539,7 +546,9 @@ async fn test_insert_new_metadata() {
     }
 
 // ============================================================================
-// Category 2: Musical Key ENUM (12 tests)
+// ============================================================================
+// SECTION 2: Musical Key ENUM (12 tests)
+// ============================================================================
 // ============================================================================
 
 #[tokio::test]
@@ -627,7 +636,9 @@ async fn test_insert_all_major_keys() {
     }
 
     // ============================================================================
-    // Category 3: BPM BigDecimal Precision Tests (8 tests)
+    // ============================================================================
+// SECTION 3: BPM BigDecimal Precision Tests (8 tests)
+// ============================================================================
     // ============================================================================
 
     #[tokio::test]
@@ -740,7 +751,7 @@ async fn test_insert_all_major_keys() {
 
         let found = MetadataRepository::find_by_file_id(&pool, file_id).await.expect("Find failed").unwrap();
         assert_bigdecimal_exact(&found.bpm, "150.00");
-        assert_eq!(found.bpm_confidence, None);
+        assert_eq!(found.bpm_confidence, None, "Expected {None}, found {found.bpm_confidence}");
 
         cleanup_database(&pool).await.expect("Cleanup failed");
     }
@@ -788,7 +799,9 @@ async fn test_insert_all_major_keys() {
     }
 
     // ============================================================================
-    // Category 4: Key ENUM Advanced Tests (8 tests)
+    // ============================================================================
+// SECTION 4: Key ENUM Advanced Tests (8 tests)
+// ============================================================================
     // ============================================================================
 
     #[tokio::test]
@@ -822,7 +835,7 @@ async fn test_insert_all_major_keys() {
 
         let found = MetadataRepository::find_by_file_id(&pool, file_id).await.expect("Find failed").unwrap();
         assert_eq!(found.key_signature.as_deref(), Some("Em"));
-        assert_eq!(found.key_confidence, None);
+        assert_eq!(found.key_confidence, None, "Expected {None}, found {found.key_confidence}");
 
         cleanup_database(&pool).await.expect("Cleanup failed");
     }
@@ -840,7 +853,7 @@ async fn test_insert_all_major_keys() {
         MetadataRepository::insert(&pool, metadata).await.expect("Insert with NULL key should succeed");
 
         let found = MetadataRepository::find_by_file_id(&pool, file_id).await.expect("Find failed").unwrap();
-        assert_eq!(found.key_signature, None);
+        assert_eq!(found.key_signature, None, "Expected {None}, found {found.key_signature}");
 
         cleanup_database(&pool).await.expect("Cleanup failed");
     }
@@ -960,7 +973,9 @@ async fn test_insert_all_major_keys() {
     }
 
     // ============================================================================
-    // Category 5: Time Signature Tests (6 tests)
+    // ============================================================================
+// SECTION 5: Time Signature Tests (6 tests)
+// ============================================================================
     // ============================================================================
 
     #[tokio::test]
@@ -1073,14 +1088,16 @@ async fn test_insert_all_major_keys() {
         MetadataRepository::insert(&pool, metadata).await.expect("Insert failed");
 
         let found = MetadataRepository::find_by_file_id(&pool, file_id).await.expect("Find failed").unwrap();
-        assert_eq!(found.time_signature_numerator, None);
-        assert_eq!(found.time_signature_denominator, None);
+        assert_eq!(found.time_signature_numerator, None, "Expected {None}, found {found.time_signature_numerator}");
+        assert_eq!(found.time_signature_denominator, None, "Expected {None}, found {found.time_signature_denominator}");
 
         cleanup_database(&pool).await.expect("Cleanup failed");
     }
 
     // ============================================================================
-    // Category 6: File Association and CASCADE Tests (6 tests)
+    // ============================================================================
+// SECTION 6: File Association and CASCADE Tests (6 tests)
+// ============================================================================
     // ============================================================================
 
     #[tokio::test]
@@ -1094,7 +1111,7 @@ async fn test_insert_all_major_keys() {
 
         // Verify metadata exists
         let found = MetadataRepository::find_by_file_id(&pool, file_id).await.expect("Find failed");
-        assert!(found.is_some());
+        assert!(found.is_some(), "Expected to find record, got None");
 
         // Delete file (should CASCADE to metadata)
         sqlx::query!("DELETE FROM files WHERE id = $1", file_id)
@@ -1104,7 +1121,7 @@ async fn test_insert_all_major_keys() {
 
         // Verify metadata was deleted
         let found_after = MetadataRepository::find_by_file_id(&pool, file_id).await.expect("Find failed");
-        assert!(found_after.is_none());
+        assert!(found_after.is_none(), "Expected record not to exist");
 
         cleanup_database(&pool).await.expect("Cleanup failed");
     }
@@ -1134,12 +1151,12 @@ async fn test_insert_all_major_keys() {
 
         // Verify only one row exists with updated values
         let count = MetadataRepository::count(&pool).await.expect("Count failed");
-        assert_eq!(count, 1);
+        assert_eq!(count, 1, "Expected {1}, found {count}");
 
         let found = MetadataRepository::find_by_file_id(&pool, file_id).await.expect("Find failed").unwrap();
         assert_bigdecimal_exact(&found.bpm, "140.0");
         assert_eq!(found.key_signature.as_deref(), Some("D"));
-        assert_eq!(found.total_notes, 200);
+        assert_eq!(found.total_notes, 200, "Expected {200}, found {found.total_notes}");
 
         cleanup_database(&pool).await.expect("Cleanup failed");
     }
@@ -1204,7 +1221,7 @@ async fn test_insert_all_major_keys() {
         }
 
         let count = MetadataRepository::count(&pool).await.expect("Count failed");
-        assert_eq!(count, 10);
+        assert_eq!(count, 10, "Expected {10}, found {count}");
 
         cleanup_database(&pool).await.expect("Cleanup failed");
     }
@@ -1223,20 +1240,22 @@ async fn test_insert_all_major_keys() {
 
         // Verify metadata deleted
         let found_metadata = MetadataRepository::find_by_file_id(&pool, file_id).await.expect("Find failed");
-        assert!(found_metadata.is_none());
+        assert!(found_metadata.is_none(), "Expected record not to exist");
 
         // Verify file still exists
         let file_exists: Option<i64> = sqlx::query_scalar!("SELECT id FROM files WHERE id = $1", file_id)
             .fetch_optional(&pool)
             .await
             .expect("Query failed");
-        assert!(file_exists.is_some());
+        assert!(file_exists.is_some(), "Expected to find record, got None");
 
         cleanup_database(&pool).await.expect("Cleanup failed");
     }
 
     // ============================================================================
-    // Category 7: Edge Cases and Complex Scenarios (4 tests)
+    // ============================================================================
+// SECTION 7: Edge Cases and Complex Scenarios (4 tests)
+// ============================================================================
     // ============================================================================
 
     #[tokio::test]
@@ -1273,7 +1292,7 @@ async fn test_insert_all_major_keys() {
         assert_eq!(found.key_confidence, Some(0.92));
         assert_eq!(found.time_signature_numerator, Some(4));
         assert_eq!(found.time_signature_denominator, Some(4));
-        assert_eq!(found.total_notes, 2000);
+        assert_eq!(found.total_notes, 2000, "Expected {2000}, found {found.total_notes}");
         assert_eq!(found.unique_pitches, Some(24));
         assert_eq!(found.pitch_range_min, Some(48));
         assert_eq!(found.pitch_range_max, Some(96));
@@ -1299,7 +1318,7 @@ async fn test_insert_all_major_keys() {
             .expect("Update failed");
 
         let found = MetadataRepository::find_by_file_id(&pool, file_id).await.expect("Find failed").unwrap();
-        assert_eq!(found.total_notes, 5000);
+        assert_eq!(found.total_notes, 5000, "Expected {5000}, found {found.total_notes}");
         assert_eq!(found.unique_pitches, Some(36));
         assert_eq!(found.pitch_range_min, Some(21));
         assert_eq!(found.pitch_range_max, Some(108));
@@ -1342,7 +1361,452 @@ async fn test_insert_all_major_keys() {
         MetadataRepository::insert(&pool, metadata).await.expect("Insert failed");
 
         let found = MetadataRepository::find_by_file_id(&pool, file_id).await.expect("Find failed").unwrap();
-        assert_eq!(found.total_notes, 1_000_000);
+        assert_eq!(found.total_notes, 1_000_000, "Expected {1_000_000}, found {found.total_notes}");
 
         cleanup_database(&pool).await.expect("Cleanup failed");
     }
+
+    // ============================================================================
+    // ============================================================================
+    // SECTION 8: Error Path Tests - BigDecimal & Constraints (12 tests)
+    // ============================================================================
+    // ============================================================================
+
+    #[tokio::test]
+    async fn test_bpm_overflow_exceeds_numeric_precision() {
+        // Description: BPM exceeding NUMERIC(6,2) max value (9999.99) should fail
+        let pool = setup_test_pool().await;
+        cleanup_database(&pool).await.expect("Cleanup failed");
+
+        let file_id = create_metadata_test_file(&pool, "bpm_overflow.mid").await;
+
+        // Try to insert BPM > 9999.99 (violates NUMERIC(6,2) constraint)
+        let metadata = NewMusicalMetadata {
+            file_id,
+            bpm: Some(BigDecimal::from_str("10000.00").unwrap()),
+            bpm_confidence: Some(0.95),
+            key_signature: None,
+            key_confidence: None,
+            time_signature_numerator: None,
+            time_signature_denominator: None,
+            total_notes: 100,
+            unique_pitches: None,
+            pitch_range_min: None,
+            pitch_range_max: None,
+            avg_velocity: None,
+            note_density: None,
+            polyphony_max: None,
+            polyphony_avg: None,
+            is_percussive: None,
+        };
+
+        let result = MetadataRepository::insert(&pool, metadata).await;
+        assert!(result.is_err(), "BPM overflow should fail with database constraint error");
+
+        cleanup_database(&pool).await.expect("Cleanup failed");
+    }
+
+    #[tokio::test]
+    async fn test_bpm_negative_value_rejected() {
+        // Description: Negative BPM should fail
+        let pool = setup_test_pool().await;
+        cleanup_database(&pool).await.expect("Cleanup failed");
+
+        let file_id = create_metadata_test_file(&pool, "bpm_negative.mid").await;
+
+        let metadata = MetadataBuilder::new(file_id)
+            .bpm_str("-120.0")
+            .total_notes(100)
+            .build();
+
+        let result = MetadataRepository::insert(&pool, metadata).await;
+        assert!(result.is_err(), "Negative BPM should fail with check constraint");
+
+        cleanup_database(&pool).await.expect("Cleanup failed");
+    }
+
+    #[tokio::test]
+    async fn test_bpm_confidence_exceeds_bounds() {
+        // Description: Confidence > 1.0 should fail
+        let pool = setup_test_pool().await;
+        cleanup_database(&pool).await.expect("Cleanup failed");
+
+        let file_id = create_metadata_test_file(&pool, "conf_over.mid").await;
+
+        let metadata = NewMusicalMetadata {
+            file_id,
+            bpm: Some(BigDecimal::from_str("120.0").unwrap()),
+            bpm_confidence: Some(1.5), // > 1.0
+            key_signature: None,
+            key_confidence: None,
+            time_signature_numerator: None,
+            time_signature_denominator: None,
+            total_notes: 100,
+            unique_pitches: None,
+            pitch_range_min: None,
+            pitch_range_max: None,
+            avg_velocity: None,
+            note_density: None,
+            polyphony_max: None,
+            polyphony_avg: None,
+            is_percussive: None,
+        };
+
+        let result = MetadataRepository::insert(&pool, metadata).await;
+        assert!(result.is_err(), "Confidence > 1.0 should fail with check constraint");
+
+        cleanup_database(&pool).await.expect("Cleanup failed");
+    }
+
+    #[tokio::test]
+    async fn test_key_confidence_negative_rejected() {
+        // Description: Negative confidence should fail
+        let pool = setup_test_pool().await;
+        cleanup_database(&pool).await.expect("Cleanup failed");
+
+        let file_id = create_metadata_test_file(&pool, "key_conf_neg.mid").await;
+
+        let metadata = NewMusicalMetadata {
+            file_id,
+            bpm: None,
+            bpm_confidence: None,
+            key_signature: Some("C".to_string()),
+            key_confidence: Some(-0.5), // < 0.0
+            time_signature_numerator: None,
+            time_signature_denominator: None,
+            total_notes: 100,
+            unique_pitches: None,
+            pitch_range_min: None,
+            pitch_range_max: None,
+            avg_velocity: None,
+            note_density: None,
+            polyphony_max: None,
+            polyphony_avg: None,
+            is_percussive: None,
+        };
+
+        let result = MetadataRepository::insert(&pool, metadata).await;
+        assert!(result.is_err(), "Negative confidence should fail");
+
+        cleanup_database(&pool).await.expect("Cleanup failed");
+    }
+
+    #[tokio::test]
+    async fn test_invalid_musical_key_enum_rejected() {
+        // Description: Invalid key value (not in 24-key ENUM) should fail
+        let pool = setup_test_pool().await;
+        cleanup_database(&pool).await.expect("Cleanup failed");
+
+        let file_id = create_metadata_test_file(&pool, "invalid_key.mid").await;
+
+        let metadata = MetadataBuilder::new(file_id)
+            .key("H") // Invalid - not in ENUM (0-11 major + 0-11 minor)
+            .total_notes(100)
+            .build();
+
+        let result = MetadataRepository::insert(&pool, metadata).await;
+        assert!(result.is_err(), "Invalid key should fail with ENUM constraint");
+
+        cleanup_database(&pool).await.expect("Cleanup failed");
+    }
+
+    #[tokio::test]
+    async fn test_pitch_range_min_greater_than_max() {
+        // Description: Pitch min > max should fail validation
+        let pool = setup_test_pool().await;
+        cleanup_database(&pool).await.expect("Cleanup failed");
+
+        let file_id = create_metadata_test_file(&pool, "pitch_inverted.mid").await;
+        let metadata = MetadataBuilder::preset_minimal(file_id);
+        MetadataRepository::insert(&pool, metadata).await.expect("Insert failed");
+
+        // Try to update with inverted pitch range
+        let result = MetadataRepository::update_note_stats(&pool, file_id, 100, Some(10), Some(80), Some(20), None)
+            .await;
+
+        assert!(result.is_err(), "Pitch min > max should fail check constraint");
+
+        cleanup_database(&pool).await.expect("Cleanup failed");
+    }
+
+    #[tokio::test]
+    async fn test_pitch_exceeds_midi_range_max() {
+        // Description: Pitch > 127 (MIDI max) should fail
+        let pool = setup_test_pool().await;
+        cleanup_database(&pool).await.expect("Cleanup failed");
+
+        let file_id = create_metadata_test_file(&pool, "pitch_over.mid").await;
+        let metadata = MetadataBuilder::preset_minimal(file_id);
+        MetadataRepository::insert(&pool, metadata).await.expect("Insert failed");
+
+        // Try to set pitch_max > 127
+        let result = MetadataRepository::update_note_stats(&pool, file_id, 100, Some(10), Some(60), Some(128), None)
+            .await;
+
+        assert!(result.is_err(), "Pitch > 127 should fail check constraint");
+
+        cleanup_database(&pool).await.expect("Cleanup failed");
+    }
+
+    #[tokio::test]
+    async fn test_pitch_negative_rejected() {
+        // Description: Negative pitch should fail
+        let pool = setup_test_pool().await;
+        cleanup_database(&pool).await.expect("Cleanup failed");
+
+        let file_id = create_metadata_test_file(&pool, "pitch_neg.mid").await;
+        let metadata = MetadataBuilder::preset_minimal(file_id);
+        MetadataRepository::insert(&pool, metadata).await.expect("Insert failed");
+
+        // Try to set pitch_min < 0
+        let result = MetadataRepository::update_note_stats(&pool, file_id, 100, Some(10), Some(-1), Some(60), None)
+            .await;
+
+        assert!(result.is_err(), "Negative pitch should fail check constraint");
+
+        cleanup_database(&pool).await.expect("Cleanup failed");
+    }
+
+    #[tokio::test]
+    async fn test_time_signature_zero_numerator_rejected() {
+        // Description: Time signature with 0 numerator should fail
+        let pool = setup_test_pool().await;
+        cleanup_database(&pool).await.expect("Cleanup failed");
+
+        let file_id = create_metadata_test_file(&pool, "time_zero_num.mid").await;
+
+        let metadata = MetadataBuilder::new(file_id)
+            .time_signature(0, 4) // Invalid: numerator cannot be 0
+            .total_notes(100)
+            .build();
+
+        let result = MetadataRepository::insert(&pool, metadata).await;
+        assert!(result.is_err(), "Time signature with 0 numerator should fail");
+
+        cleanup_database(&pool).await.expect("Cleanup failed");
+    }
+
+    #[tokio::test]
+    async fn test_time_signature_zero_denominator_rejected() {
+        // Description: Time signature with 0 denominator should fail
+        let pool = setup_test_pool().await;
+        cleanup_database(&pool).await.expect("Cleanup failed");
+
+        let file_id = create_metadata_test_file(&pool, "time_zero_den.mid").await;
+
+        let metadata = MetadataBuilder::new(file_id)
+            .time_signature(4, 0) // Invalid: denominator cannot be 0
+            .total_notes(100)
+            .build();
+
+        let result = MetadataRepository::insert(&pool, metadata).await;
+        assert!(result.is_err(), "Time signature with 0 denominator should fail");
+
+        cleanup_database(&pool).await.expect("Cleanup failed");
+    }
+
+    #[tokio::test]
+    async fn test_time_signature_numerator_exceeds_limit() {
+        // Description: Time signature numerator > 32 should fail
+        let pool = setup_test_pool().await;
+        cleanup_database(&pool).await.expect("Cleanup failed");
+
+        let file_id = create_metadata_test_file(&pool, "time_num_over.mid").await;
+
+        let metadata = MetadataBuilder::new(file_id)
+            .time_signature(33, 4) // > 32 limit
+            .total_notes(100)
+            .build();
+
+        let result = MetadataRepository::insert(&pool, metadata).await;
+        assert!(result.is_err(), "Numerator > 32 should fail check constraint");
+
+        cleanup_database(&pool).await.expect("Cleanup failed");
+    }
+
+    #[tokio::test]
+    async fn test_negative_total_notes_rejected() {
+        // Description: Negative total_notes should fail
+        let pool = setup_test_pool().await;
+        cleanup_database(&pool).await.expect("Cleanup failed");
+
+        let file_id = create_metadata_test_file(&pool, "notes_neg.mid").await;
+
+        let metadata = MetadataBuilder::new(file_id)
+            .total_notes(-100) // Negative
+            .build();
+
+        let result = MetadataRepository::insert(&pool, metadata).await;
+        assert!(result.is_err(), "Negative total_notes should fail check constraint");
+
+        cleanup_database(&pool).await.expect("Cleanup failed");
+    }
+
+    // ============================================================================
+    // ============================================================================
+    // SECTION 9: Error Path Tests - Data Validation (8 tests)
+    // ============================================================================
+    // ============================================================================
+
+    #[tokio::test]
+    async fn test_duplicate_metadata_for_same_file_fails() {
+        // Description: Inserting metadata twice for same file should fail (unique constraint)
+        let pool = setup_test_pool().await;
+        cleanup_database(&pool).await.expect("Cleanup failed");
+
+        let file_id = create_metadata_test_file(&pool, "dup_meta.mid").await;
+        let metadata = MetadataBuilder::preset_minimal(file_id);
+
+        // First insert should succeed
+        MetadataRepository::insert(&pool, metadata.clone()).await.expect("First insert failed");
+
+        // Second insert with same file_id should fail
+        let result = MetadataRepository::insert(&pool, metadata).await;
+        assert!(result.is_err(), "Duplicate metadata insert should fail with unique constraint");
+
+        cleanup_database(&pool).await.expect("Cleanup failed");
+    }
+
+    #[tokio::test]
+    async fn test_find_nonexistent_metadata_returns_none() {
+        // Description: Finding metadata for non-existent file returns None (not error)
+        let pool = setup_test_pool().await;
+        cleanup_database(&pool).await.expect("Cleanup failed");
+
+        let result = MetadataRepository::find_by_file_id(&pool, 999999).await;
+        assert!(result.is_ok(), "Find should not error on non-existent file");
+        assert!(result.unwrap().is_none(), "Result should be None for non-existent file");
+
+        cleanup_database(&pool).await.expect("Cleanup failed");
+    }
+
+    #[tokio::test]
+    async fn test_update_nonexistent_metadata_fails() {
+        // Description: Updating metadata for non-existent file should fail
+        let pool = setup_test_pool().await;
+        cleanup_database(&pool).await.expect("Cleanup failed");
+
+        let result = MetadataRepository::update_note_stats(&pool, 999999, 100, Some(10), Some(40), Some(80), None)
+            .await;
+
+        assert!(result.is_err(), "Update on non-existent metadata should fail");
+
+        cleanup_database(&pool).await.expect("Cleanup failed");
+    }
+
+    #[tokio::test]
+    async fn test_avg_velocity_overflow_numeric_constraint() {
+        // Description: Avg velocity exceeding NUMERIC(5,2) max should fail
+        let pool = setup_test_pool().await;
+        cleanup_database(&pool).await.expect("Cleanup failed");
+
+        let file_id = create_metadata_test_file(&pool, "vel_over.mid").await;
+
+        let metadata = MetadataBuilder::new(file_id)
+            .avg_velocity_str("1000.0") // > NUMERIC(5,2) max = 999.99
+            .total_notes(100)
+            .build();
+
+        let result = MetadataRepository::insert(&pool, metadata).await;
+        assert!(result.is_err(), "Avg velocity > 999.99 should fail NUMERIC constraint");
+
+        cleanup_database(&pool).await.expect("Cleanup failed");
+    }
+
+    #[tokio::test]
+    async fn test_note_density_negative_rejected() {
+        // Description: Negative note density should fail
+        let pool = setup_test_pool().await;
+        cleanup_database(&pool).await.expect("Cleanup failed");
+
+        let file_id = create_metadata_test_file(&pool, "density_neg.mid").await;
+
+        let metadata = MetadataBuilder::new(file_id)
+            .note_density_f64(-5.5)
+            .total_notes(100)
+            .build();
+
+        let result = MetadataRepository::insert(&pool, metadata).await;
+        assert!(result.is_err(), "Negative note_density should fail check constraint");
+
+        cleanup_database(&pool).await.expect("Cleanup failed");
+    }
+
+    #[tokio::test]
+    async fn test_polyphony_max_exceeds_midi_voices() {
+        // Description: Polyphony > 128 (max MIDI voices) should fail
+        let pool = setup_test_pool().await;
+        cleanup_database(&pool).await.expect("Cleanup failed");
+
+        let file_id = create_metadata_test_file(&pool, "poly_over.mid").await;
+
+        let metadata = NewMusicalMetadata {
+            file_id,
+            bpm: None,
+            bpm_confidence: None,
+            key_signature: None,
+            key_confidence: None,
+            time_signature_numerator: None,
+            time_signature_denominator: None,
+            total_notes: 100,
+            unique_pitches: None,
+            pitch_range_min: None,
+            pitch_range_max: None,
+            avg_velocity: None,
+            note_density: None,
+            polyphony_max: Some(129), // > 128
+            polyphony_avg: Some(BigDecimal::from_str("64.0").unwrap()),
+            is_percussive: None,
+        };
+
+        let result = MetadataRepository::insert(&pool, metadata).await;
+        assert!(result.is_err(), "Polyphony > 128 should fail check constraint");
+
+        cleanup_database(&pool).await.expect("Cleanup failed");
+    }
+
+    #[tokio::test]
+    async fn test_polyphony_avg_exceeds_max() {
+        // Description: Polyphony avg > polyphony max should fail
+        let pool = setup_test_pool().await;
+        cleanup_database(&pool).await.expect("Cleanup failed");
+
+        let file_id = create_metadata_test_file(&pool, "poly_avg_over.mid").await;
+
+        let metadata = NewMusicalMetadata {
+            file_id,
+            bpm: None,
+            bpm_confidence: None,
+            key_signature: None,
+            key_confidence: None,
+            time_signature_numerator: None,
+            time_signature_denominator: None,
+            total_notes: 100,
+            unique_pitches: None,
+            pitch_range_min: None,
+            pitch_range_max: None,
+            avg_velocity: None,
+            note_density: None,
+            polyphony_max: Some(4),
+            polyphony_avg: Some(BigDecimal::from_str("5.0").unwrap()), // > polyphony_max
+            is_percussive: None,
+        };
+
+        let result = MetadataRepository::insert(&pool, metadata).await;
+        assert!(result.is_err(), "Polyphony avg > max should fail check constraint");
+
+        cleanup_database(&pool).await.expect("Cleanup failed");
+    }
+
+    #[tokio::test]
+    async fn test_delete_nonexistent_metadata_idempotent() {
+        // Description: Deleting non-existent metadata should be idempotent (not error)
+        let pool = setup_test_pool().await;
+        cleanup_database(&pool).await.expect("Cleanup failed");
+
+        let result = MetadataRepository::delete(&pool, 999999).await;
+        assert!(result.is_ok(), "Delete non-existent should not error (idempotent)");
+
+        cleanup_database(&pool).await.expect("Cleanup failed");
+    }
+}

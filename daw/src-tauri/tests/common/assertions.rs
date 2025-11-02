@@ -1,6 +1,8 @@
 //! Custom assertions for DAW command tests
 
 use sqlx::PgPool;
+use sqlx::types::BigDecimal;
+use std::str::FromStr;
 
 /// Assert file exists in database
 pub async fn assert_file_exists(pool: &PgPool, file_id: i64) {
@@ -30,11 +32,22 @@ pub async fn assert_file_has_metadata(pool: &PgPool, file_id: i64, expected_bpm:
         assert!(result.is_some(), "Expected metadata for file {}", file_id);
         let actual = result.unwrap().bpm;
         assert!(actual.is_some(), "Expected BPM for file {}", file_id);
+
+        // Convert BigDecimal to f64 for comparison
+        let actual_val = actual.unwrap();
+        let expected_bd = BigDecimal::from_str(&expected.to_string())
+            .unwrap_or_else(|_| BigDecimal::from_str("0").unwrap());
+        let diff = if actual_val > expected_bd {
+            (&actual_val - &expected_bd).to_string().parse::<f64>().unwrap_or(0.0)
+        } else {
+            (&expected_bd - &actual_val).to_string().parse::<f64>().unwrap_or(0.0)
+        };
+
         assert!(
-            (actual.unwrap() - expected).abs() < 0.01,
+            diff < 0.01,
             "Expected BPM {}, got {}",
             expected,
-            actual.unwrap()
+            actual_val
         );
     }
 }

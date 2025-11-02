@@ -1,13 +1,13 @@
 //! Test data builders for fluent test construction
 
-use midi_library_shared::models::midi::{MidiEvent, MidiEventType};
+use midi_daw::models::{MidiEvent, MidiEventType};
 
 /// Builder for MIDI files in database
 pub struct MidiFileBuilder {
     filepath: String,
     filename: String,
     file_size_bytes: i64,
-    num_tracks: i32,
+    num_tracks: i16,
     bpm: Option<f64>,
     key_signature: Option<String>,
 }
@@ -34,19 +34,22 @@ impl MidiFileBuilder {
         self
     }
 
-    pub fn with_tracks(mut self, count: i32) -> Self {
+    pub fn with_tracks(mut self, count: i16) -> Self {
         self.num_tracks = count;
         self
     }
 
     pub async fn insert(self, pool: &sqlx::PgPool) -> i64 {
+        // Generate a simple hash based on timestamp and thread ID
+        let hash_str = generate_test_hash();
+
         let result = sqlx::query!(
             "INSERT INTO files (filepath, filename, content_hash, file_size_bytes, num_tracks)
              VALUES ($1, $2, $3, $4, $5)
              RETURNING id",
             self.filepath,
             self.filename,
-            format!("{:064x}", rand::random::<u64>()),
+            hash_str.as_bytes(),
             self.file_size_bytes,
             self.num_tracks
         )
@@ -205,4 +208,21 @@ impl Default for SequencerStateBuilder {
     fn default() -> Self {
         Self::new()
     }
+}
+
+/// Generate a simple deterministic hash for testing
+///
+/// Uses system time and thread ID to create a pseudo-random but deterministic hash string.
+fn generate_test_hash() -> String {
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    let timestamp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_nanos() as u64)
+        .unwrap_or(0);
+
+    let thread_id = std::thread::current().id();
+    let id_val = format!("{:?}", thread_id);
+
+    format!("{:064x}", timestamp ^ id_val.len() as u64)
 }

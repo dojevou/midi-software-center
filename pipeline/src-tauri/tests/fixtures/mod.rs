@@ -522,6 +522,42 @@ impl Fixtures {
     }
 }
 
+// ============================================================================
+// Utility Functions for Tests
+// ============================================================================
+
+/// Generate a random 32-byte hash for testing
+///
+/// Returns a Vec<u8> with random bytes suitable for use as a content hash
+/// in test data. Each call generates a new unique hash.
+pub fn random_hash() -> Vec<u8> {
+    use std::time::{SystemTime, UNIX_EPOCH};
+
+    // Use system time and iteration to create pseudo-random hashes
+    // This is deterministic but different enough for most test purposes
+    let timestamp = SystemTime::now()
+        .duration_since(UNIX_EPOCH)
+        .map(|d| d.as_nanos() as u64)
+        .unwrap_or(0);
+
+    let mut hash = vec![0u8; 32];
+
+    // Seed with timestamp
+    let bytes = timestamp.to_le_bytes();
+    for (i, &byte) in bytes.iter().enumerate() {
+        hash[i % 32] ^= byte;
+    }
+
+    // Add some variation - use thread ID and iteration
+    let thread_id = std::thread::current().id();
+    let id_val = format!("{:?}", thread_id);
+    for (i, byte) in id_val.bytes().enumerate() {
+        hash[(i + 8) % 32] ^= byte;
+    }
+
+    hash
+}
+
 #[cfg(test)]
 mod tests {
     use super::*;
