@@ -39,11 +39,11 @@ mod tests {
     use sqlx::PgPool;
 
     // Import command functions
-    use pipeline::commands::archive_import::{
-        import_archive_collection, process_single_archive, ArchiveImportSummary, ArchiveStatus,
+    use midi_pipeline::commands::archive_import::{
+        import_archive_collection, ArchiveImportSummary, ArchiveStatus,
     };
-    use pipeline::io::decompressor::extractor::{extract_archive, ExtractionConfig, ExtractionResult};
-    use pipeline::{AppState, Database};
+    use midi_pipeline::io::decompressor::extractor::{extract_archive, ExtractionConfig, ExtractionResult};
+    use midi_pipeline::{AppState, Database};
 
     // Import test infrastructure
     mod common;

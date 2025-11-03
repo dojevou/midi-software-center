@@ -1,0 +1,15 @@
+[package]
+name = "test-midi-files"
+version = "0.1.0"
+edition = "2021"
+
+[[bin]]
+name = "test-midi-files"
+path = "src/main.rs"
+
+[dependencies]
+midi-library-shared = { path = "../../shared/rust" }
+anyhow = "1.0"
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+walkdir = "2.4"

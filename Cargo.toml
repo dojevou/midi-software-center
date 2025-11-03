@@ -24,6 +24,7 @@ members = [
     # "studio/src-tauri",        # Removed - incomplete, may add later
     "shared/rust",               # Shared MIDI parsing & analysis
     "scripts/import-tool",       # CLI utilities
+    "scripts/test-midi-files",   # MIDI testing tool
 ]
 
 # Shared dependencies across all workspace members
