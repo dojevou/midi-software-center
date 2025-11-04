@@ -7,11 +7,16 @@
     windows_subsystem = "windows"
 )]
 
+use std::sync::Arc;
+use tokio::sync::Mutex;
 use tracing::{info};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 // Import from lib
 use midi_pipeline::{AppState, Database};
+
+// Window management module
+mod windows;
 
 #[tokio::main]
 async fn main() -> Result<(), Box<dyn std::error::Error>> {
@@ -47,9 +52,13 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         database,
     };
 
+    // Create window manager
+    let window_manager = Arc::new(Mutex::new(windows::WindowManager::new()));
+
     // Build and run Tauri application
     tauri::Builder::default()
         .manage(state)
+        .manage(window_manager)
         .invoke_handler(tauri::generate_handler![
             // File commands
             midi_pipeline::commands::files::test_db_connection,
@@ -108,9 +117,27 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
 
             // System commands
             midi_pipeline::commands::system::get_system_info,
+
+            // Window management commands
+            windows::commands::show_window,
+            windows::commands::hide_window,
+            windows::commands::toggle_window,
+            windows::commands::save_layout,
+            windows::commands::load_layout,
+            windows::commands::get_layout_list,
+            windows::commands::delete_layout,
+            windows::commands::arrange_windows,
+            windows::commands::get_all_windows,
+            windows::commands::get_visible_windows,
+            windows::commands::get_window_count,
+            windows::commands::get_focused_window,
+            windows::commands::set_focused_window,
+            windows::commands::get_current_layout,
         ])
-        .setup(|_app| {
+        .setup(|app| {
             info!("Application setup complete");
+            // Setup window shortcuts
+            windows::shortcuts::setup_window_shortcuts(app.handle())?;
             Ok(())
         })
         .run(tauri::generate_context!())?;
