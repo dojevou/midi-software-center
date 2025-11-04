@@ -10,6 +10,7 @@ pub mod core;
 pub mod editors;
 pub mod midi;
 pub mod models;
+pub mod profiling;
 pub mod sequencer;
 pub mod settings;
 pub mod undo_redo;

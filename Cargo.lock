@@ -3087,6 +3087,7 @@ dependencies = [
  "alsa 0.8.1",
  "anyhow",
  "chrono",
+ "clap",
  "config",
  "cpal",
  "criterion",

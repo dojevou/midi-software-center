@@ -72,11 +72,23 @@ indexmap = "2.0"
 instant = "0.1"                  # Cross-platform instant timing
 dirs = "6.0.0"
 
+# CLI tools
+clap = { version = "4.4", features = ["derive"] }
+
+[lib]
+name = "daw_lib"
+path = "src/lib.rs"
+
 [dev-dependencies]
 tokio-test = "0.4"
 criterion = "0.5"
 tempfile = "3.8"
 midi-library-shared = { path = "../../shared/rust" }
+
+# Profiling CLI tool
+[[bin]]
+name = "profile_queries"
+path = "src/bin/profile_queries.rs"
 
 # Disabled - test binary not migrated yet
 # [[bin]]
