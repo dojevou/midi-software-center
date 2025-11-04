@@ -763,7 +763,7 @@ async fn test_import_single_file_with_category() {
         "SELECT EXISTS(
             SELECT 1 FROM file_categories fc
             JOIN categories c ON fc.category_id = c.id
-            WHERE fc.file_id = $1 AND c.name = $2
+            WHERE fc.id = $1 AND c.name = $2
         )"
     )
     .bind(file_meta.id)

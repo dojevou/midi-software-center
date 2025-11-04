@@ -290,7 +290,7 @@ async fn test_workflow_arrange_for_live() {
     for file in files.iter().take(4) {
         add_tags_to_file(
             tauri::State(&state),
-            file.id,
+            file.file_id,
             vec!["live".to_string(), "arrangement".to_string()],
         ).await.unwrap();
     }
@@ -383,7 +383,7 @@ async fn test_workflow_music_theory_analysis() {
 
     // Step 4: Verify analysis metadata
     let file_info = details.unwrap();
-    assert!(file_info.filepath.contains("analyze_me.mid"));
+    assert!(file_info.file_path.contains("analyze_me.mid"));
 
     cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }

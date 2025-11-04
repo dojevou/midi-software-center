@@ -103,23 +103,23 @@ async fn test_journey_first_time_user() {
         first_file.to_str().unwrap().to_string(),
     ).await.unwrap();
 
-    println!("  ✓ Imported file ID: {}", import_result.file_id);
+    println!("  ✓ Imported file ID: {}", import_result.id);
 
     // Step 3: User explores file details
     println!("Step 3: Viewing file details...");
-    let details = get_file_details(tauri::State(&state), import_result.file_id).await.unwrap();
-    println!("  File: {}", details.file_path);
+    let details = get_file_details(tauri::State(&state), import_result.id).await.unwrap();
+    println!("  File: {}", details.filepath);
     println!("  Size: {} bytes", details.file_size_bytes);
 
     // Step 4: User adds first tags
     println!("Step 4: Adding tags...");
     add_tags_to_file(
         tauri::State(&state),
-        import_result.file_id,
+        import_result.id,
         vec!["my_music".to_string(), "favorite".to_string()],
     ).await.unwrap();
 
-    let tags = get_file_tags(tauri::State(&state), import_result.file_id).await.unwrap();
+    let tags = get_file_tags(tauri::State(&state), import_result.id).await.unwrap();
     println!("  Tags: {:?}", tags);
 
     // Step 5: User imports more files
@@ -298,7 +298,7 @@ async fn test_journey_music_producer() {
 
     add_tags_to_file(
         tauri::State(&state),
-        arrangement_result.file_id,
+        arrangement_result.id,
         vec!["production".to_string(), "arrangement".to_string(), "master".to_string()],
     ).await.unwrap();
 
@@ -313,11 +313,11 @@ async fn test_journey_music_producer() {
     println!("Step 6: Archiving project...");
     add_tags_to_file(
         tauri::State(&state),
-        arrangement_result.file_id,
+        arrangement_result.id,
         vec!["archived".to_string(), "completed".to_string()],
     ).await.unwrap();
 
-    let tags = get_file_tags(tauri::State(&state), arrangement_result.file_id).await.unwrap();
+    let tags = get_file_tags(tauri::State(&state), arrangement_result.id).await.unwrap();
 
     // Assertions
     assert_eq!(idea_ids.len(), 3, "Should have 3 initial ideas");
@@ -376,7 +376,7 @@ async fn test_journey_music_educator() {
     println!("Step 2: Analyzing examples...");
     for file_id in &example_ids {
         let details = get_file_details(tauri::State(&state), *file_id).await.unwrap();
-        println!("  Analyzed: {}", details.file_path);
+        println!("  Analyzed: {}", details.filepath);
     }
 
     // Step 3: Add annotations
@@ -657,7 +657,7 @@ async fn test_journey_power_user() {
     for (i, file) in files.iter().take(20).enumerate() {
         add_tags_to_file(
             tauri::State(&state),
-            file.file_id,
+            file.id,
             vec![format!("batch_{}", i / 5)],
         ).await.unwrap();
     }

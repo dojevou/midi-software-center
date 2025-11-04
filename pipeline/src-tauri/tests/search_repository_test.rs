@@ -1926,4 +1926,3 @@ async fn test_empty_database() {
         assert!(results.is_empty(), "Offset equal to total should return empty");
         cleanup_database(&pool).await.expect("Cleanup failed");
     }
-}

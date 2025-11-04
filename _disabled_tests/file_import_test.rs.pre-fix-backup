@@ -307,7 +307,7 @@ impl MockWindow {
     }
 }
 
-impl<R: tauri::Runtime> Emitter<R> for MockWindow {
+impl Emitter for MockWindow {
     fn emit<S: serde::Serialize + Clone>(&self, event: &str, payload: S) -> tauri::Result<()> {
         let payload_json = serde_json::to_string(&payload)
             .map_err(|e| tauri::Error::Emit(e.to_string()))?;

@@ -171,7 +171,7 @@ async fn test_workflow_load_template_customize() {
         template_path.to_str().unwrap().to_string(),
     ).await;
     assert!(result.is_ok());
-    let file_id = result.unwrap().file_id;
+    let file_id = result.unwrap().id;
 
     // Step 3: Tag as template
     let tag_result = add_tags_to_file(
@@ -215,7 +215,7 @@ async fn test_workflow_jam_session() {
         backing_path.to_str().unwrap().to_string(),
     ).await;
     assert!(backing_result.is_ok());
-    let backing_id = backing_result.unwrap().file_id;
+    let backing_id = backing_result.unwrap().id;
 
     // Step 2: Tag as backing track
     add_tags_to_file(
@@ -290,7 +290,7 @@ async fn test_workflow_arrange_for_live() {
     for file in files.iter().take(4) {
         add_tags_to_file(
             tauri::State(&state),
-            file.file_id,
+            file.id,
             vec!["live".to_string(), "arrangement".to_string()],
         ).await.unwrap();
     }
@@ -314,7 +314,7 @@ async fn test_workflow_remix_existing() {
         original_path.to_str().unwrap().to_string(),
     ).await;
     assert!(original_result.is_ok());
-    let original_id = original_result.unwrap().file_id;
+    let original_id = original_result.unwrap().id;
 
     // Step 2: Tag as original
     add_tags_to_file(
@@ -333,7 +333,7 @@ async fn test_workflow_remix_existing() {
         remix_path.to_str().unwrap().to_string(),
     ).await;
     assert!(remix_result.is_ok());
-    let remix_id = remix_result.unwrap().file_id;
+    let remix_id = remix_result.unwrap().id;
 
     // Step 4: Tag as remix
     add_tags_to_file(
@@ -368,7 +368,7 @@ async fn test_workflow_music_theory_analysis() {
         file_path.to_str().unwrap().to_string(),
     ).await;
     assert!(import_result.is_ok());
-    let file_id = import_result.unwrap().file_id;
+    let file_id = import_result.unwrap().id;
 
     // Step 2: Get file details (includes analysis)
     let details = get_file_details(tauri::State(&state), file_id).await;
@@ -383,7 +383,7 @@ async fn test_workflow_music_theory_analysis() {
 
     // Step 4: Verify analysis metadata
     let file_info = details.unwrap();
-    assert!(file_info.file_path.contains("analyze_me.mid"));
+    assert!(file_info.filepath.contains("analyze_me.mid"));
 
     cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
@@ -416,7 +416,7 @@ async fn test_workflow_performance_preparation() {
             tauri::State(&state),
             path.to_str().unwrap().to_string(),
         ).await.unwrap();
-        file_ids.push(result.file_id);
+        file_ids.push(result.id);
     }
 
     // Step 2: Tag all as setlist
@@ -450,7 +450,7 @@ async fn test_workflow_publishing_workflow() {
         master_path.to_str().unwrap().to_string(),
     ).await;
     assert!(master_result.is_ok());
-    let file_id = master_result.unwrap().file_id;
+    let file_id = master_result.unwrap().id;
 
     // Step 2: Add comprehensive metadata via tags
     let publishing_tags = vec![
@@ -513,7 +513,7 @@ async fn test_workflow_organize_library() {
 
         add_tags_to_file(
             tauri::State(&state),
-            result.file_id,
+            result.id,
             tags.iter().map(|s| s.to_string()).collect(),
         ).await.unwrap();
     }
@@ -560,7 +560,7 @@ async fn test_workflow_duplicate_cleanup() {
     // Step 4: Delete duplicate
     let delete_result = delete_file(
         tauri::State(&state),
-        original_result.file_id,
+        original_result.id,
     ).await;
     assert!(delete_result.is_ok());
 
@@ -608,7 +608,7 @@ async fn test_workflow_key_transposition() {
     // Step 4: Tag as transposed
     add_tags_to_file(
         tauri::State(&state),
-        result.file_id,
+        result.id,
         vec!["transposed".to_string()],
     ).await.unwrap();
 
@@ -649,7 +649,7 @@ async fn test_workflow_tempo_matching() {
 
         add_tags_to_file(
             tauri::State(&state),
-            result.file_id,
+            result.id,
             vec!["tempo_synced".to_string()],
         ).await.unwrap();
     }
@@ -690,7 +690,7 @@ async fn test_workflow_create_sample_pack() {
             path.to_str().unwrap().to_string(),
         ).await.unwrap();
 
-        sample_ids.push(result.file_id);
+        sample_ids.push(result.id);
     }
 
     // Step 2: Tag all as sample pack
@@ -769,7 +769,7 @@ async fn test_workflow_collaborative_project() {
 
     add_tags_to_file(
         tauri::State(&state),
-        user1_result.file_id,
+        user1_result.id,
         vec!["collaboration".to_string(), "user1".to_string()],
     ).await.unwrap();
 
@@ -787,7 +787,7 @@ async fn test_workflow_collaborative_project() {
 
     add_tags_to_file(
         tauri::State(&state),
-        user2_result.file_id,
+        user2_result.id,
         vec!["collaboration".to_string(), "user2".to_string()],
     ).await.unwrap();
 
@@ -823,7 +823,7 @@ async fn test_workflow_session_sharing() {
 
         add_tags_to_file(
             tauri::State(&state),
-            result.file_id,
+            result.id,
             vec!["session".to_string()],
         ).await.unwrap();
     }
@@ -862,7 +862,7 @@ async fn test_workflow_feedback_incorporation() {
 
     add_tags_to_file(
         tauri::State(&state),
-        v1_result.file_id,
+        v1_result.id,
         vec!["v1".to_string(), "needs_revision".to_string()],
     ).await.unwrap();
 
@@ -877,13 +877,13 @@ async fn test_workflow_feedback_incorporation() {
 
     add_tags_to_file(
         tauri::State(&state),
-        v2_result.file_id,
+        v2_result.id,
         vec!["v2".to_string(), "feedback_applied".to_string()],
     ).await.unwrap();
 
     // Step 3: Verify iterations
-    let v1_tags = get_file_tags(tauri::State(&state), v1_result.file_id).await.unwrap();
-    let v2_tags = get_file_tags(tauri::State(&state), v2_result.file_id).await.unwrap();
+    let v1_tags = get_file_tags(tauri::State(&state), v1_result.id).await.unwrap();
+    let v2_tags = get_file_tags(tauri::State(&state), v2_result.id).await.unwrap();
 
     assert!(v1_tags.contains(&"v1".to_string()));
     assert!(v2_tags.contains(&"v2".to_string()));
@@ -908,7 +908,7 @@ async fn test_workflow_version_control() {
 
     add_tags_to_file(
         tauri::State(&state),
-        v1_result.file_id,
+        v1_result.id,
         vec!["checkpoint".to_string(), "v1".to_string()],
     ).await.unwrap();
 
@@ -923,7 +923,7 @@ async fn test_workflow_version_control() {
 
     add_tags_to_file(
         tauri::State(&state),
-        v2_result.file_id,
+        v2_result.id,
         vec!["checkpoint".to_string(), "v2".to_string()],
     ).await.unwrap();
 
@@ -938,7 +938,7 @@ async fn test_workflow_version_control() {
 
     add_tags_to_file(
         tauri::State(&state),
-        final_result.file_id,
+        final_result.id,
         vec!["final".to_string(), "approved".to_string()],
     ).await.unwrap();
 
@@ -970,7 +970,7 @@ async fn test_workflow_multi_format_delivery() {
     // Step 2: Tag as multi-format deliverable
     add_tags_to_file(
         tauri::State(&state),
-        result.file_id,
+        result.id,
         vec!["deliverable".to_string(), "multi_format".to_string()],
     ).await.unwrap();
 
@@ -1008,7 +1008,7 @@ async fn test_workflow_archive_preservation() {
 
         add_tags_to_file(
             tauri::State(&state),
-            result.file_id,
+            result.id,
             vec!["archive".to_string(), "preserved".to_string()],
         ).await.unwrap();
     }
@@ -1041,7 +1041,7 @@ async fn test_workflow_data_migration() {
 
     add_tags_to_file(
         tauri::State(&state),
-        old_result.file_id,
+        old_result.id,
         vec!["old_format".to_string(), "migration_pending".to_string()],
     ).await.unwrap();
 
@@ -1056,13 +1056,13 @@ async fn test_workflow_data_migration() {
 
     add_tags_to_file(
         tauri::State(&state),
-        new_result.file_id,
+        new_result.id,
         vec!["new_format".to_string(), "migrated".to_string()],
     ).await.unwrap();
 
     // Step 3: Verify migration
-    let old_tags = get_file_tags(tauri::State(&state), old_result.file_id).await.unwrap();
-    let new_tags = get_file_tags(tauri::State(&state), new_result.file_id).await.unwrap();
+    let old_tags = get_file_tags(tauri::State(&state), old_result.id).await.unwrap();
+    let new_tags = get_file_tags(tauri::State(&state), new_result.id).await.unwrap();
 
     assert!(old_tags.contains(&"old_format".to_string()));
     assert!(new_tags.contains(&"migrated".to_string()));
@@ -1097,7 +1097,7 @@ async fn test_workflow_empty_tag_list() {
     fs::write(&file_path, &create_midi_bytes(120, "C_MAJOR")).await.unwrap();
 
     let result = import_single_file(tauri::State(&state), file_path.to_str().unwrap().to_string()).await.unwrap();
-    let tags = add_tags_to_file(tauri::State(&state), result.file_id, vec![]).await;
+    let tags = add_tags_to_file(tauri::State(&state), result.id, vec![]).await;
 
     assert!(tags.is_ok(), "Empty tag list should be handled gracefully");
     cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
@@ -1111,9 +1111,9 @@ async fn test_workflow_delete_with_tags() {
     fs::write(&file_path, &create_midi_bytes(120, "C_MAJOR")).await.unwrap();
 
     let result = import_single_file(tauri::State(&state), file_path.to_str().unwrap().to_string()).await.unwrap();
-    add_tags_to_file(tauri::State(&state), result.file_id, vec!["test".to_string()]).await.unwrap();
+    add_tags_to_file(tauri::State(&state), result.id, vec!["test".to_string()]).await.unwrap();
 
-    let delete_result = delete_file(tauri::State(&state), result.file_id).await;
+    let delete_result = delete_file(tauri::State(&state), result.id).await;
     assert!(delete_result.is_ok(), "Delete with tags should succeed");
     cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
@@ -1140,7 +1140,7 @@ async fn test_workflow_duplicate_tag_deduplication() {
     fs::write(&file_path, &create_midi_bytes(120, "C_MAJOR")).await.unwrap();
 
     let result = import_single_file(tauri::State(&state), file_path.to_str().unwrap().to_string()).await.unwrap();
-    let tags = add_tags_to_file(tauri::State(&state), result.file_id, vec!["tag".to_string(), "tag".to_string()]).await.unwrap();
+    let tags = add_tags_to_file(tauri::State(&state), result.id, vec!["tag".to_string(), "tag".to_string()]).await.unwrap();
 
     assert_eq!(tags.len(), 1, "Duplicate tags should be deduplicated");
     cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;

@@ -290,7 +290,7 @@ async fn test_workflow_arrange_for_live() {
     for file in files.iter().take(4) {
         add_tags_to_file(
             tauri::State(&state),
-            file.id,
+            file.file_id,
             vec!["live".to_string(), "arrangement".to_string()],
         ).await.unwrap();
     }
@@ -383,7 +383,7 @@ async fn test_workflow_music_theory_analysis() {
 
     // Step 4: Verify analysis metadata
     let file_info = details.unwrap();
-    assert!(file_info.filepath.contains("analyze_me.mid"));
+    assert!(file_info.file_path.contains("analyze_me.mid"));
 
     cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
@@ -1070,6 +1070,156 @@ async fn test_workflow_data_migration() {
     cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
 
-// Continue in next file due to length...
-// This file contains 21 comprehensive workflow tests so far.
-// The remaining workflow categories will be in the continuation.
+// ===== SECTION 4: EDGE CASE WORKFLOWS (10 additional edge case tests) =====
+
+#[tokio::test]
+async fn test_workflow_concurrent_import_same_file() {
+    let state = setup_test_state().await;
+    let temp_dir = TempDir::new().unwrap();
+    let file_path = temp_dir.path().join("concurrent.mid");
+    fs::write(&file_path, &create_midi_bytes(120, "C_MAJOR")).await.unwrap();
+
+    let path_str = file_path.to_str().unwrap().to_string();
+    let r1 = import_single_file(tauri::State(&state), path_str.clone());
+    let r2 = import_single_file(tauri::State(&state), path_str.clone());
+
+    let (result1, result2) = tokio::join!(r1, r2);
+
+    assert!(result1.is_ok() || result2.is_ok(), "At least one concurrent import should succeed");
+    cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+}
+
+#[tokio::test]
+async fn test_workflow_empty_tag_list() {
+    let state = setup_test_state().await;
+    let temp_dir = TempDir::new().unwrap();
+    let file_path = temp_dir.path().join("empty_tags.mid");
+    fs::write(&file_path, &create_midi_bytes(120, "C_MAJOR")).await.unwrap();
+
+    let result = import_single_file(tauri::State(&state), file_path.to_str().unwrap().to_string()).await.unwrap();
+    let tags = add_tags_to_file(tauri::State(&state), result.file_id, vec![]).await;
+
+    assert!(tags.is_ok(), "Empty tag list should be handled gracefully");
+    cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+}
+
+#[tokio::test]
+async fn test_workflow_delete_with_tags() {
+    let state = setup_test_state().await;
+    let temp_dir = TempDir::new().unwrap();
+    let file_path = temp_dir.path().join("delete_tagged.mid");
+    fs::write(&file_path, &create_midi_bytes(120, "C_MAJOR")).await.unwrap();
+
+    let result = import_single_file(tauri::State(&state), file_path.to_str().unwrap().to_string()).await.unwrap();
+    add_tags_to_file(tauri::State(&state), result.file_id, vec!["test".to_string()]).await.unwrap();
+
+    let delete_result = delete_file(tauri::State(&state), result.file_id).await;
+    assert!(delete_result.is_ok(), "Delete with tags should succeed");
+    cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+}
+
+#[tokio::test]
+async fn test_workflow_search_after_analysis() {
+    let state = setup_test_state().await;
+    let temp_dir = TempDir::new().unwrap();
+    let file_path = temp_dir.path().join("search_test.mid");
+    fs::write(&file_path, &create_midi_bytes(140, "G_MAJOR")).await.unwrap();
+
+    let _ = import_and_analyze_file(tauri::State(&state), file_path.to_str().unwrap().to_string()).await;
+    let search_results = search_files(tauri::State(&state), "".to_string(), Some(120), Some(160), None).await;
+
+    assert!(search_results.is_ok(), "Search after analysis should succeed");
+    cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+}
+
+#[tokio::test]
+async fn test_workflow_duplicate_tag_deduplication() {
+    let state = setup_test_state().await;
+    let temp_dir = TempDir::new().unwrap();
+    let file_path = temp_dir.path().join("dup_tags.mid");
+    fs::write(&file_path, &create_midi_bytes(120, "C_MAJOR")).await.unwrap();
+
+    let result = import_single_file(tauri::State(&state), file_path.to_str().unwrap().to_string()).await.unwrap();
+    let tags = add_tags_to_file(tauri::State(&state), result.file_id, vec!["tag".to_string(), "tag".to_string()]).await.unwrap();
+
+    assert_eq!(tags.len(), 1, "Duplicate tags should be deduplicated");
+    cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+}
+
+#[tokio::test]
+async fn test_workflow_analysis_on_corrupted() {
+    let state = setup_test_state().await;
+    let temp_dir = TempDir::new().unwrap();
+    let file_path = temp_dir.path().join("corrupt.mid");
+    fs::write(&file_path, b"NOT_VALID_MIDI").await.unwrap();
+
+    let import_result = import_single_file(tauri::State(&state), file_path.to_str().unwrap().to_string()).await;
+
+    assert!(import_result.is_err(), "Corrupted file should fail gracefully");
+    cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+}
+
+#[tokio::test]
+async fn test_workflow_rapid_fire_operations() {
+    let state = setup_test_state().await;
+    let temp_dir = TempDir::new().unwrap();
+
+    let mut handles = Vec::new();
+    for i in 0..5 {
+        let state_clone = state.clone();
+        let temp_path = temp_dir.path().join(format!("rapid{}.mid", i));
+        let handle = tokio::spawn(async move {
+            let _ = fs::write(&temp_path, &create_midi_bytes(100 + i * 10, "C_MAJOR")).await;
+            import_single_file(tauri::State(&state_clone), temp_path.to_str().unwrap().to_string()).await
+        });
+        handles.push(handle);
+    }
+
+    let results: Vec<_> = futures::future::join_all(handles).await;
+    let success = results.iter().filter(|r| r.is_ok() && r.as_ref().unwrap().is_ok()).count();
+    assert!(success > 0, "Some rapid operations should succeed");
+    cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+}
+
+#[tokio::test]
+async fn test_workflow_large_batch_consistency() {
+    let state = setup_test_state().await;
+    let temp_dir = TempDir::new().unwrap();
+
+    for i in 0..10 {
+        let file_path = temp_dir.path().join(format!("batch{:02}.mid", i));
+        fs::write(&file_path, &create_midi_bytes(100 + i as u32 * 5, "C_MAJOR")).await.unwrap();
+    }
+
+    let batch_result = import_directory(
+        tauri::State(&state),
+        temp_dir.path().to_str().unwrap().to_string(),
+        false,
+    ).await;
+
+    assert!(batch_result.is_ok(), "Batch import should complete");
+    let summary = batch_result.unwrap();
+    assert!(summary.total_files >= 10, "Batch should process all files");
+    cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+}
+
+#[tokio::test]
+async fn test_workflow_search_filter_combination() {
+    let state = setup_test_state().await;
+    let temp_dir = TempDir::new().unwrap();
+
+    for i in 0..5 {
+        let file_path = temp_dir.path().join(format!("multi{}.mid", i));
+        let key = match i % 3 {
+            0 => "C_MAJOR",
+            1 => "G_MAJOR",
+            _ => "D_MAJOR",
+        };
+        fs::write(&file_path, &create_midi_bytes(100 + i as u32 * 20, key)).await.unwrap();
+        let _ = import_and_analyze_file(tauri::State(&state), file_path.to_str().unwrap().to_string()).await;
+    }
+
+    let results = search_files(tauri::State(&state), "".to_string(), Some(120), Some(160), Some(vec!["C_MAJOR".to_string()])).await;
+    assert!(results.is_ok(), "Complex filter search should succeed");
+    cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+}

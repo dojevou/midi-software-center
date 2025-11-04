@@ -332,7 +332,7 @@ async fn test_insert_new_metadata() {
         assert!(found.is_some(), "Should find metadata");
 
         let meta = found.unwrap();
-        assert_eq!(meta.total_notes, 100, "Expected 100, found {}", meta.total_notes);
+        assert_eq!(meta.total_notes, 100, "Expected {100}, found {meta.total_notes}");
         assert!(meta.bpm.is_none(), "BPM should be NULL");
         assert!(meta.key_signature.is_none(), "Key should be NULL");
 
@@ -386,7 +386,7 @@ async fn test_insert_new_metadata() {
         let meta = found.unwrap();
         assert_bigdecimal_exact(&meta.bpm, "140.0");
         assert_eq!(meta.key_signature.as_deref(), Some("D"));
-        assert_eq!(meta.total_notes, 2000, "Expected 2000, found {}", meta.total_notes);
+        assert_eq!(meta.total_notes, 2000, "Expected {2000}, found {meta.total_notes}");
 
         cleanup_database(&pool).await.expect("Cleanup failed");
     }
@@ -404,7 +404,7 @@ async fn test_insert_new_metadata() {
         assert!(found.is_some(), "Should find metadata");
 
         let meta = found.unwrap();
-        assert_eq!(meta.file_id, file_id, "Expected {}, found {}", file_id, meta.file_id);
+        assert_eq!(meta.file_id, file_id, "Expected {file_id}, found {meta.file_id}");
         assert_bigdecimal_exact(&meta.bpm, "128.5");
         assert_eq!(meta.key_signature.as_deref(), Some("Am"));
 
@@ -486,7 +486,7 @@ async fn test_insert_new_metadata() {
 
         let found = MetadataRepository::find_by_file_id(&pool, file_id).await.expect("Find failed");
         let meta = found.unwrap();
-        assert_eq!(meta.total_notes, 2500, "Expected 2500, found {}", meta.total_notes);
+        assert_eq!(meta.total_notes, 2500, "Expected {2500}, found {meta.total_notes}");
         assert_eq!(meta.unique_pitches, Some(15));
         assert_eq!(meta.pitch_range_min, Some(48));
         assert_eq!(meta.pitch_range_max, Some(96));
@@ -751,7 +751,7 @@ async fn test_insert_all_major_keys() {
 
         let found = MetadataRepository::find_by_file_id(&pool, file_id).await.expect("Find failed").unwrap();
         assert_bigdecimal_exact(&found.bpm, "150.00");
-        assert_eq!(found.bpm_confidence, None, "Expected None, found {:?}", found.bpm_confidence);
+        assert_eq!(found.bpm_confidence, None, "Expected {None}, found {found.bpm_confidence}");
 
         cleanup_database(&pool).await.expect("Cleanup failed");
     }
@@ -835,7 +835,7 @@ async fn test_insert_all_major_keys() {
 
         let found = MetadataRepository::find_by_file_id(&pool, file_id).await.expect("Find failed").unwrap();
         assert_eq!(found.key_signature.as_deref(), Some("Em"));
-        assert_eq!(found.key_confidence, None, "Expected None, found {:?}", found.key_confidence);
+        assert_eq!(found.key_confidence, None, "Expected {None}, found {found.key_confidence}");
 
         cleanup_database(&pool).await.expect("Cleanup failed");
     }
@@ -853,7 +853,7 @@ async fn test_insert_all_major_keys() {
         MetadataRepository::insert(&pool, metadata).await.expect("Insert with NULL key should succeed");
 
         let found = MetadataRepository::find_by_file_id(&pool, file_id).await.expect("Find failed").unwrap();
-        assert_eq!(found.key_signature, None, "Expected None, found {:?}", found.key_signature);
+        assert_eq!(found.key_signature, None, "Expected {None}, found {found.key_signature}");
 
         cleanup_database(&pool).await.expect("Cleanup failed");
     }
@@ -1088,8 +1088,8 @@ async fn test_insert_all_major_keys() {
         MetadataRepository::insert(&pool, metadata).await.expect("Insert failed");
 
         let found = MetadataRepository::find_by_file_id(&pool, file_id).await.expect("Find failed").unwrap();
-        assert_eq!(found.time_signature_numerator, None, "Expected None, found {:?}", found.time_signature_numerator);
-        assert_eq!(found.time_signature_denominator, None, "Expected None, found {:?}", found.time_signature_denominator);
+        assert_eq!(found.time_signature_numerator, None, "Expected {None}, found {found.time_signature_numerator}");
+        assert_eq!(found.time_signature_denominator, None, "Expected {None}, found {found.time_signature_denominator}");
 
         cleanup_database(&pool).await.expect("Cleanup failed");
     }

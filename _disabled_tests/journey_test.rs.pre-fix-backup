@@ -103,23 +103,23 @@ async fn test_journey_first_time_user() {
         first_file.to_str().unwrap().to_string(),
     ).await.unwrap();
 
-    println!("  ✓ Imported file ID: {}", import_result.id);
+    println!("  ✓ Imported file ID: {}", import_result.file_id);
 
     // Step 3: User explores file details
     println!("Step 3: Viewing file details...");
-    let details = get_file_details(tauri::State(&state), import_result.id).await.unwrap();
-    println!("  File: {}", details.filepath);
+    let details = get_file_details(tauri::State(&state), import_result.file_id).await.unwrap();
+    println!("  File: {}", details.file_path);
     println!("  Size: {} bytes", details.file_size_bytes);
 
     // Step 4: User adds first tags
     println!("Step 4: Adding tags...");
     add_tags_to_file(
         tauri::State(&state),
-        import_result.id,
+        import_result.file_id,
         vec!["my_music".to_string(), "favorite".to_string()],
     ).await.unwrap();
 
-    let tags = get_file_tags(tauri::State(&state), import_result.id).await.unwrap();
+    let tags = get_file_tags(tauri::State(&state), import_result.file_id).await.unwrap();
     println!("  Tags: {:?}", tags);
 
     // Step 5: User imports more files
@@ -181,11 +181,11 @@ async fn test_journey_professional_dj() {
 
             add_tags_to_file(
                 tauri::State(&state),
-                result.id,
+                result.file_id,
                 vec![genre.to_string(), "dj_library".to_string()],
             ).await.unwrap();
 
-            track_ids.push((result.id, *genre, *bpm));
+            track_ids.push((result.file_id, *genre, *bpm));
         }
     }
 
@@ -267,11 +267,11 @@ async fn test_journey_music_producer() {
 
         add_tags_to_file(
             tauri::State(&state),
-            result.id,
+            result.file_id,
             vec!["production".to_string(), category.to_string(), "v1".to_string()],
         ).await.unwrap();
 
-        idea_ids.push(result.id);
+        idea_ids.push(result.file_id);
     }
 
     println!("  ✓ Created {} initial ideas", idea_ids.len());
@@ -298,7 +298,7 @@ async fn test_journey_music_producer() {
 
     add_tags_to_file(
         tauri::State(&state),
-        arrangement_result.id,
+        arrangement_result.file_id,
         vec!["production".to_string(), "arrangement".to_string(), "master".to_string()],
     ).await.unwrap();
 
@@ -313,11 +313,11 @@ async fn test_journey_music_producer() {
     println!("Step 6: Archiving project...");
     add_tags_to_file(
         tauri::State(&state),
-        arrangement_result.id,
+        arrangement_result.file_id,
         vec!["archived".to_string(), "completed".to_string()],
     ).await.unwrap();
 
-    let tags = get_file_tags(tauri::State(&state), arrangement_result.id).await.unwrap();
+    let tags = get_file_tags(tauri::State(&state), arrangement_result.file_id).await.unwrap();
 
     // Assertions
     assert_eq!(idea_ids.len(), 3, "Should have 3 initial ideas");
@@ -359,7 +359,7 @@ async fn test_journey_music_educator() {
 
         add_tags_to_file(
             tauri::State(&state),
-            result.id,
+            result.file_id,
             vec![
                 "education".to_string(),
                 topic.to_string(),
@@ -367,7 +367,7 @@ async fn test_journey_music_educator() {
             ],
         ).await.unwrap();
 
-        example_ids.push(result.id);
+        example_ids.push(result.file_id);
     }
 
     println!("  ✓ Imported {} teaching examples", example_ids.len());
@@ -376,7 +376,7 @@ async fn test_journey_music_educator() {
     println!("Step 2: Analyzing examples...");
     for file_id in &example_ids {
         let details = get_file_details(tauri::State(&state), *file_id).await.unwrap();
-        println!("  Analyzed: {}", details.filepath);
+        println!("  Analyzed: {}", details.file_path);
     }
 
     // Step 3: Add annotations
@@ -437,11 +437,11 @@ async fn test_journey_sample_digger() {
 
             add_tags_to_file(
                 tauri::State(&state),
-                result.id,
+                result.file_id,
                 vec!["sample".to_string(), sample_type.to_string()],
             ).await.unwrap();
 
-            sample_ids.push((result.id, sample_type));
+            sample_ids.push((result.file_id, sample_type));
         }
     }
 
@@ -525,7 +525,7 @@ async fn test_journey_music_publisher() {
 
         add_tags_to_file(
             tauri::State(&state),
-            result.id,
+            result.file_id,
             vec![
                 "catalog".to_string(),
                 artist.to_string(),
@@ -533,7 +533,7 @@ async fn test_journey_music_publisher() {
             ],
         ).await.unwrap();
 
-        catalog_ids.push(result.id);
+        catalog_ids.push(result.file_id);
     }
 
     println!("  ✓ Imported {} catalog items", catalog_ids.len());
@@ -657,7 +657,7 @@ async fn test_journey_power_user() {
     for (i, file) in files.iter().take(20).enumerate() {
         add_tags_to_file(
             tauri::State(&state),
-            file.id,
+            file.file_id,
             vec![format!("batch_{}", i / 5)],
         ).await.unwrap();
     }
@@ -700,7 +700,7 @@ async fn test_journey_mobile_user() {
 
     add_tags_to_file(
         tauri::State(&state),
-        result.id,
+        result.file_id,
         vec!["mobile".to_string(), "on_the_go".to_string()],
     ).await.unwrap();
 
@@ -721,14 +721,14 @@ async fn test_journey_mobile_user() {
 
     add_tags_to_file(
         tauri::State(&state),
-        sync_result.id,
+        sync_result.file_id,
         vec!["synced".to_string()],
     ).await.unwrap();
 
     println!("  ✓ Sync complete");
 
     // Assertions
-    let tags = get_file_tags(tauri::State(&state), sync_result.id).await.unwrap();
+    let tags = get_file_tags(tauri::State(&state), sync_result.file_id).await.unwrap();
     assert!(tags.contains(&"synced".to_string()), "Should be synced");
 
     println!("✓ Mobile user journey complete!\n");
@@ -758,7 +758,7 @@ async fn test_journey_enterprise_user() {
 
             add_tags_to_file(
                 tauri::State(&state),
-                result.id,
+                result.file_id,
                 vec!["enterprise".to_string(), dept.to_string()],
             ).await.unwrap();
         }
@@ -809,7 +809,7 @@ async fn test_journey_collaboration_workflow() {
 
     add_tags_to_file(
         tauri::State(&state),
-        member_a_result.id,
+        member_a_result.file_id,
         vec!["collaboration".to_string(), "member_a".to_string(), "draft".to_string()],
     ).await.unwrap();
 
@@ -825,7 +825,7 @@ async fn test_journey_collaboration_workflow() {
 
     add_tags_to_file(
         tauri::State(&state),
-        member_b_result.id,
+        member_b_result.file_id,
         vec!["collaboration".to_string(), "member_b".to_string(), "draft".to_string()],
     ).await.unwrap();
 
@@ -833,7 +833,7 @@ async fn test_journey_collaboration_workflow() {
     println!("Step 3: Team lead reviewing...");
     add_tags_to_file(
         tauri::State(&state),
-        member_a_result.id,
+        member_a_result.file_id,
         vec!["reviewed".to_string(), "approved".to_string()],
     ).await.unwrap();
 
@@ -849,12 +849,12 @@ async fn test_journey_collaboration_workflow() {
 
     add_tags_to_file(
         tauri::State(&state),
-        final_result.id,
+        final_result.file_id,
         vec!["collaboration".to_string(), "final".to_string(), "published".to_string()],
     ).await.unwrap();
 
     // Assertions
-    let final_tags = get_file_tags(tauri::State(&state), final_result.id).await.unwrap();
+    let final_tags = get_file_tags(tauri::State(&state), final_result.file_id).await.unwrap();
     assert!(final_tags.contains(&"final".to_string()), "Should be finalized");
     assert!(final_tags.contains(&"published".to_string()), "Should be published");
 
@@ -884,7 +884,7 @@ async fn test_journey_learning_path() {
 
         add_tags_to_file(
             tauri::State(&state),
-            result.id,
+            result.file_id,
             vec!["learning".to_string(), "tutorial".to_string(), format!("lesson_{}", i)],
         ).await.unwrap();
     }
@@ -903,7 +903,7 @@ async fn test_journey_learning_path() {
 
     add_tags_to_file(
         tauri::State(&state),
-        template_result.id,
+        template_result.file_id,
         vec!["learning".to_string(), "template".to_string()],
     ).await.unwrap();
 
@@ -919,7 +919,7 @@ async fn test_journey_learning_path() {
 
     add_tags_to_file(
         tauri::State(&state),
-        practice_result.id,
+        practice_result.file_id,
         vec!["learning".to_string(), "guided".to_string()],
     ).await.unwrap();
 
@@ -935,12 +935,12 @@ async fn test_journey_learning_path() {
 
     add_tags_to_file(
         tauri::State(&state),
-        independent_result.id,
+        independent_result.file_id,
         vec!["learning".to_string(), "independent".to_string(), "achievement".to_string()],
     ).await.unwrap();
 
     // Assertions
-    let final_tags = get_file_tags(tauri::State(&state), independent_result.id).await.unwrap();
+    let final_tags = get_file_tags(tauri::State(&state), independent_result.file_id).await.unwrap();
     assert!(final_tags.contains(&"achievement".to_string()), "Learning milestone achieved");
 
     println!("✓ Learning path journey complete!\n");
