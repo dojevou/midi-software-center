@@ -17,7 +17,7 @@ mod midi;
 mod sequencer;
 mod windows;
 
-use commands::{AppState, DAWState};
+use commands::{AppState, DAWState, AutomationState};
 use midi::MidiManager;
 use sequencer::SequencerEngine;
 use std::sync::Arc;
@@ -62,12 +62,16 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create DAW window state
     let daw_state = DAWState::new();
 
+    // Create automation state
+    let automation_state = AutomationState::new();
+
     // Build and run Tauri application
     tauri::Builder::default()
         .manage(state)
         .manage(midi_manager)
         .manage(sequencer_engine)
         .manage(daw_state)
+        .manage(automation_state)
         .invoke_handler(tauri::generate_handler![
             // Database commands
             commands::initialize_database,
@@ -137,6 +141,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             commands::window::set_channel_solo,
             commands::window::get_daw_state,
             commands::window::reset_daw_state,
+            // Automation commands
+            commands::automation::create_automation_lane,
+            commands::automation::delete_automation_lane,
+            commands::automation::add_automation_point,
+            commands::automation::remove_automation_point,
+            commands::automation::move_automation_point,
+            commands::automation::set_automation_curve_type,
+            commands::automation::get_automation_lane,
+            commands::automation::get_track_automation,
+            commands::automation::get_automation_value,
+            commands::automation::clear_track_automation,
+            commands::automation::clear_all_automation,
         ])
         .run(tauri::generate_context!())?;
 

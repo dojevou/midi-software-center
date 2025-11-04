@@ -2,6 +2,7 @@
 //!
 //! Core library for DAW functionality including MIDI playback, sequencing, and search.
 
+pub mod automation;
 pub mod browsers;
 pub mod command_palette;
 pub mod commands;
@@ -11,6 +12,7 @@ pub mod midi;
 pub mod models;
 pub mod sequencer;
 pub mod settings;
+pub mod undo_redo;
 pub mod windows;
 
 // Re-export commonly used types
