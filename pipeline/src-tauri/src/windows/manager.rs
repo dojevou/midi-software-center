@@ -125,10 +125,13 @@ impl WindowManager {
         let window_width = 1920 / window_count as u32; // Assume 1920 width screen
         let window_height = 1080;
 
-        for (index, window) in visible_windows.iter().enumerate() {
+        // Collect labels to avoid borrow checker issues
+        let labels: Vec<String> = visible_windows.iter().map(|w| w.label.clone()).collect();
+
+        for (index, label) in labels.iter().enumerate() {
             let x = (index as u32 * window_width) as i32;
             let position = Position::new(x, 0, window_width, window_height);
-            self.set_position(&window.label, position)?;
+            self.set_position(label, position)?;
         }
 
         Ok(())
@@ -145,10 +148,13 @@ impl WindowManager {
         let window_width = 1920;
         let window_height = 1080 / window_count as u32;
 
-        for (index, window) in visible_windows.iter().enumerate() {
+        // Collect labels to avoid borrow checker issues
+        let labels: Vec<String> = visible_windows.iter().map(|w| w.label.clone()).collect();
+
+        for (index, label) in labels.iter().enumerate() {
             let y = (index as u32 * window_height) as i32;
             let position = Position::new(0, y, window_width, window_height);
-            self.set_position(&window.label, position)?;
+            self.set_position(label, position)?;
         }
 
         Ok(())
@@ -159,11 +165,14 @@ impl WindowManager {
         let visible_windows = self.state.get_visible_windows();
         let offset = 30;
 
-        for (index, window) in visible_windows.iter().enumerate() {
+        // Collect labels to avoid borrow checker issues
+        let labels: Vec<String> = visible_windows.iter().map(|w| w.label.clone()).collect();
+
+        for (index, label) in labels.iter().enumerate() {
             let x = (index as i32 * offset) + 100;
             let y = (index as i32 * offset) + 100;
             let position = Position::new(x, y, 800, 600);
-            self.set_position(&window.label, position)?;
+            self.set_position(label, position)?;
         }
 
         Ok(())
@@ -249,8 +258,8 @@ impl WindowManager {
 
         let layout = storage.load_layout(name)?;
 
-        for (label, position) in layout.windows {
-            self.set_position(&label, position)?;
+        for (label, position) in &layout.windows {
+            self.set_position(label, position.clone())?;
         }
 
         self.state.current_layout = name.to_string();

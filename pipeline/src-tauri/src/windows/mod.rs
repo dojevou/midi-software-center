@@ -15,12 +15,13 @@
 pub mod manager;
 pub mod state;
 pub mod commands;
-pub mod menu;
-pub mod shortcuts;
+// TODO: Fix Tauri 2.x API compatibility
+// pub mod menu;
+// pub mod shortcuts;
 pub mod layout;
 
 pub use manager::WindowManager;
-pub use state::{WindowState, WindowInfo, WindowType, Position, Docking};
+pub use state::{WindowState, WindowInfo, WindowType, Position, Docking, DockSide};
 pub use layout::Layout;
 
 #[cfg(test)]

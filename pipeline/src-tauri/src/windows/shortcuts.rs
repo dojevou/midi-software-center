@@ -68,7 +68,7 @@ pub fn setup_window_shortcuts(app: &AppHandle) -> Result<(), String> {
         let app_handle = app.clone();
         manager
             .register("CmdOrCtrl+b", move || {
-                let _ = app_handle.emit_all("command:toggle-sidebar", ());
+                let _ = app_handle.emit("command:toggle-sidebar", ());
             })
             .map_err(|e| format!("Failed to register Cmd+B: {}", e))?;
     }
@@ -78,7 +78,7 @@ pub fn setup_window_shortcuts(app: &AppHandle) -> Result<(), String> {
         let app_handle = app.clone();
         manager
             .register("CmdOrCtrl+Alt+i", move || {
-                let _ = app_handle.emit_all("command:toggle-inspector", ());
+                let _ = app_handle.emit("command:toggle-inspector", ());
             })
             .map_err(|e| format!("Failed to register Cmd+Alt+I: {}", e))?;
     }
