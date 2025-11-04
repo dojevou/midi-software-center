@@ -23,6 +23,9 @@
 // Batch insert module for high-performance bulk operations
 pub mod batch_insert;
 
+// Database window state structures
+pub mod window_state;
+
 use crate::core::performance::concurrency::calculate_all_settings;
 use sqlx::postgres::{PgPool, PgPoolOptions, PgConnectOptions};
 use std::time::{Duration, Instant};

@@ -7,6 +7,7 @@ pub mod core;
 pub mod midi;
 pub mod models;
 pub mod sequencer;
+pub mod windows;
 
 // Re-export commonly used types
 pub use models::{MidiFile, FileDetails, AppError, AppResult};

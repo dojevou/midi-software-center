@@ -136,8 +136,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         ])
         .setup(|app| {
             info!("Application setup complete");
-            // Setup window shortcuts
-            windows::shortcuts::setup_window_shortcuts(app.handle())?;
+            // TODO: Setup window shortcuts (disabled until Tauri 2.x API compatibility fixed)
+            // windows::shortcuts::setup_window_shortcuts(app.handle())?;
             Ok(())
         })
         .run(tauri::generate_context!())?;

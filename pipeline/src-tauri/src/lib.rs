@@ -13,13 +13,17 @@ pub mod database;
 // Error handling module
 pub mod error;
 
-use std::sync::Arc;
-use tokio::sync::RwLock;
+// Window management system
+pub mod windows;
 
 // Re-export commonly used types
 pub use database::Database;
+pub use database::window_state::{
+    DatabaseWindowState, SearchFilters, SearchResult, PaginationInfo, ViewMode,
+    SortField, SortOrder,
+};
 pub use error::{AppError, AppResult, TauriResult};
-pub use db::models::{File, MusicalMetadata, SearchFilters};
+pub use db::models::{File, MusicalMetadata};
 
 /// Application state shared across all Tauri commands
 pub struct AppState {

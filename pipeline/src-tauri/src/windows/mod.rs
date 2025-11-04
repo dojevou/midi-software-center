@@ -11,6 +11,7 @@
 //! - `menu`: Menu creation functions
 //! - `shortcuts`: Global shortcut registration
 //! - `layout`: Layout persistence
+//! - `pipeline_state`: Pipeline window-specific state (processing, progress)
 
 pub mod manager;
 pub mod state;
@@ -19,10 +20,15 @@ pub mod commands;
 // pub mod menu;
 // pub mod shortcuts;
 pub mod layout;
+pub mod pipeline_state;
 
 pub use manager::WindowManager;
 pub use state::{WindowState, WindowInfo, WindowType, Position, Docking, DockSide};
 pub use layout::Layout;
+pub use pipeline_state::{
+    PipelineWindowState, ProcessingStatus, ProcessingStats, OperationType,
+    LogMessage, LogLevel,
+};
 
 #[cfg(test)]
 mod tests {

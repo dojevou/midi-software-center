@@ -1,0 +1,24 @@
+Phase 5A Frontend Implementation - File List
+=============================================
+
+STORES (1,767 lines total)
+--------------------------
+/home/dojevou/projects/midi-software-center/pipeline/src/lib/stores/index.ts (24 lines)
+/home/dojevou/projects/midi-software-center/pipeline/src/lib/stores/playbackStore.ts (439 lines)
+/home/dojevou/projects/midi-software-center/pipeline/src/lib/stores/projectStore.ts (466 lines)
+/home/dojevou/projects/midi-software-center/pipeline/src/lib/stores/databaseStore.ts (406 lines)
+/home/dojevou/projects/midi-software-center/pipeline/src/lib/stores/uiStore.ts (432 lines)
+
+COMPONENTS (741 lines total)
+-----------------------------
+/home/dojevou/projects/midi-software-center/pipeline/src/lib/components/WindowBase.svelte (303 lines)
+/home/dojevou/projects/midi-software-center/pipeline/src/lib/components/MenuBar.svelte (438 lines)
+
+WINDOWS (2,983 lines total)
+----------------------------
+/home/dojevou/projects/midi-software-center/pipeline/src/lib/windows/DAWWindow.svelte (753 lines)
+/home/dojevou/projects/midi-software-center/pipeline/src/lib/windows/MixerWindow.svelte (602 lines)
+/home/dojevou/projects/midi-software-center/pipeline/src/lib/windows/DatabaseWindow.svelte (821 lines)
+/home/dojevou/projects/midi-software-center/pipeline/src/lib/windows/PipelineWindow.svelte (807 lines)
+
+TOTAL: 5,491 lines across 11 files

@@ -9,6 +9,7 @@ pub mod search;
 pub mod analysis;
 pub mod export;
 pub mod project;
+pub mod window;
 
 /// Shared application state across all commands
 ///
@@ -67,4 +68,20 @@ pub use export::{
 #[allow(unused_imports)]
 pub use project::{
     load_multiple_tracks, clear_all_tracks, get_track_details,
+};
+
+// Window commands
+#[allow(unused_imports)]
+pub use window::{
+    DAWState,
+    play_transport, stop_transport, pause_transport,
+    set_playback_position, get_playback_state,
+    set_bpm, get_bpm, set_time_signature, get_time_signature,
+    set_key_signature, get_key_signature,
+    add_window_track, remove_window_track, get_all_window_tracks,
+    set_track_visible, set_track_muted, set_track_soloed,
+    get_track_info, update_track_label,
+    get_mixer_state, set_channel_volume, set_channel_pan,
+    set_channel_mute, set_channel_solo,
+    get_daw_state, reset_daw_state,
 };

@@ -15,8 +15,9 @@ mod models;
 mod core;
 mod midi;
 mod sequencer;
+mod windows;
 
-use commands::AppState;
+use commands::{AppState, DAWState};
 use midi::MidiManager;
 use sequencer::SequencerEngine;
 use std::sync::Arc;
@@ -58,11 +59,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         db_pool,
     };
 
+    // Create DAW window state
+    let daw_state = DAWState::new();
+
     // Build and run Tauri application
     tauri::Builder::default()
         .manage(state)
         .manage(midi_manager)
         .manage(sequencer_engine)
+        .manage(daw_state)
         .invoke_handler(tauri::generate_handler![
             // Database commands
             commands::initialize_database,
@@ -105,6 +110,33 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             commands::project::get_track_details,
             // Export commands
             commands::export::export_project_midi,
+            // Window commands
+            commands::window::play_transport,
+            commands::window::stop_transport,
+            commands::window::pause_transport,
+            commands::window::set_playback_position,
+            commands::window::get_playback_state,
+            commands::window::set_bpm,
+            commands::window::get_bpm,
+            commands::window::set_time_signature,
+            commands::window::get_time_signature,
+            commands::window::set_key_signature,
+            commands::window::get_key_signature,
+            commands::window::add_window_track,
+            commands::window::remove_window_track,
+            commands::window::get_all_window_tracks,
+            commands::window::set_track_visible,
+            commands::window::set_track_muted,
+            commands::window::set_track_soloed,
+            commands::window::get_track_info,
+            commands::window::update_track_label,
+            commands::window::get_mixer_state,
+            commands::window::set_channel_volume,
+            commands::window::set_channel_pan,
+            commands::window::set_channel_mute,
+            commands::window::set_channel_solo,
+            commands::window::get_daw_state,
+            commands::window::reset_daw_state,
         ])
         .run(tauri::generate_context!())?;
 
