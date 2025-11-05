@@ -356,12 +356,7 @@ async fn test_import_single_file_success() {
             .expect("Failed to connect to database"),
     };
 
-    let result = import_single_file(
-        file_path.to_str().unwrap().to_string(),
-        None,
-        state,
-        window.clone(),
-    )
+    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state)
     .await;
 
     assert!(result.is_ok(), "Import should succeed: {:?}", result);
@@ -393,23 +388,13 @@ async fn test_import_single_file_duplicate_detection() {
     };
 
     // First import
-    let result1 = import_single_file(
-        file_path.to_str().unwrap().to_string(),
-        None,
-        state,
-        window.clone(),
-    )
+    let result1 = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state)
     .await;
 
     assert!(result1.is_ok(), "First import should succeed");
 
     // Second import (same file, same hash)
-    let result2 = import_single_file(
-        file_path.to_str().unwrap().to_string(),
-        None,
-        state,
-        window.clone(),
-    )
+    let result2 = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state)
     .await;
 
     assert!(result2.is_err(), "Duplicate import should fail");
@@ -433,12 +418,7 @@ async fn test_import_single_file_metadata_extraction() {
             .expect("Failed to connect to database"),
     };
 
-    let result = import_single_file(
-        file_path.to_str().unwrap().to_string(),
-        None,
-        state,
-        window.clone(),
-    )
+    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state)
     .await;
 
     assert!(result.is_ok(), "Import should succeed");
@@ -471,12 +451,7 @@ async fn test_import_single_file_tag_auto_extraction() {
             .expect("Failed to connect to database"),
     };
 
-    let result = import_single_file(
-        file_path.to_str().unwrap().to_string(),
-        Some("drum".to_string()),
-        state,
-        window.clone(),
-    )
+    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), Some("drum".to_string()), &state)
     .await;
 
     assert!(result.is_ok(), "Import should succeed");
@@ -509,12 +484,7 @@ async fn test_import_single_file_not_found() {
             .expect("Failed to connect to database"),
     };
 
-    let result = import_single_file(
-        "/nonexistent/path/to/file.mid".to_string(),
-        None,
-        state,
-        window.clone(),
-    )
+    let result = import_single_file_impl("/nonexistent/path/to/file.mid".to_string(), None, &state)
     .await;
 
     assert!(result.is_err(), "Import should fail for nonexistent file");
@@ -537,12 +507,7 @@ async fn test_import_single_file_invalid_midi_format() {
             .expect("Failed to connect to database"),
     };
 
-    let result = import_single_file(
-        file_path.to_str().unwrap().to_string(),
-        None,
-        state,
-        window.clone(),
-    )
+    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state)
     .await;
 
     assert!(result.is_err(), "Import should fail for invalid MIDI");
@@ -566,23 +531,13 @@ async fn test_import_single_file_database_constraint_violation() {
     };
 
     // Import once
-    let result1 = import_single_file(
-        file_path.to_str().unwrap().to_string(),
-        None,
-        state,
-        window.clone(),
-    )
+    let result1 = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state)
     .await;
 
     assert!(result1.is_ok());
 
     // Try again - should trigger constraint violation
-    let result2 = import_single_file(
-        file_path.to_str().unwrap().to_string(),
-        None,
-        state,
-        window.clone(),
-    )
+    let result2 = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state)
     .await;
 
     assert!(result2.is_err(), "Should fail on duplicate hash constraint");
@@ -604,12 +559,7 @@ async fn test_import_single_file_edge_case_zero_byte() {
             .expect("Failed to connect to database"),
     };
 
-    let result = import_single_file(
-        file_path.to_str().unwrap().to_string(),
-        None,
-        state,
-        window.clone(),
-    )
+    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state)
     .await;
 
     assert!(result.is_err(), "Empty file should be rejected");
@@ -642,12 +592,7 @@ async fn test_import_single_file_edge_case_large_file() {
             .expect("Failed to connect to database"),
     };
 
-    let result = import_single_file(
-        file_path.to_str().unwrap().to_string(),
-        None,
-        state,
-        window.clone(),
-    )
+    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state)
     .await;
 
     // Large files should still import successfully
@@ -674,12 +619,7 @@ async fn test_import_single_file_edge_case_special_chars() {
             .expect("Failed to connect to database"),
     };
 
-    let result = import_single_file(
-        file_path.to_str().unwrap().to_string(),
-        None,
-        state,
-        window.clone(),
-    )
+    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state)
     .await;
 
     assert!(result.is_ok(), "Special characters should be handled");
@@ -745,12 +685,7 @@ async fn test_import_single_file_with_category() {
             .expect("Failed to connect to database"),
     };
 
-    let result = import_single_file(
-        file_path.to_str().unwrap().to_string(),
-        Some("drums".to_string()),
-        state,
-        window.clone(),
-    )
+    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), Some("drums".to_string()), &state)
     .await;
 
     assert!(result.is_ok(), "Import with category should succeed");
@@ -1535,12 +1470,7 @@ async fn test_import_single_file_unicode_filename() {
             .expect("Failed to connect to database"),
     };
 
-    let result = import_single_file(
-        file_path.to_str().unwrap().to_string(),
-        None,
-        state,
-        window.clone(),
-    )
+    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state)
     .await;
 
     assert!(result.is_ok(), "Unicode filename should be handled");
@@ -1634,12 +1564,7 @@ async fn test_import_single_file_filepath_stored_correctly() {
             .expect("Failed to connect to database"),
     };
 
-    let result = import_single_file(
-        file_path.to_str().unwrap().to_string(),
-        None,
-        state,
-        window.clone(),
-    )
+    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state)
     .await;
 
     assert!(result.is_ok());
@@ -1709,24 +1634,14 @@ async fn test_import_single_file_hash_uniqueness() {
             .expect("Failed to connect to database"),
     };
 
-    let result1 = import_single_file(
-        file_path1.to_str().unwrap().to_string(),
-        None,
-        state,
-        window.clone(),
-    )
+    let result1 = import_single_file_impl(file_path1.to_str().unwrap().to_string(), None, &state)
     .await;
 
     assert!(result1.is_ok());
     let hash1 = result1.unwrap().content_hash;
 
     // Same content = same hash = should be rejected
-    let result2 = import_single_file(
-        file_path2.to_str().unwrap().to_string(),
-        None,
-        state,
-        window.clone(),
-    )
+    let result2 = import_single_file_impl(file_path2.to_str().unwrap().to_string(), None, &state)
     .await;
 
     assert!(result2.is_err(), "Identical content should trigger duplicate detection");
@@ -1787,12 +1702,7 @@ async fn test_import_single_file_content_hash_format() {
             .expect("Failed to connect to database"),
     };
 
-    let result = import_single_file(
-        file_path.to_str().unwrap().to_string(),
-        None,
-        state,
-        window.clone(),
-    )
+    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state)
     .await;
 
     assert!(result.is_ok());
@@ -1846,12 +1756,7 @@ async fn test_import_single_file_original_filename_preserved() {
             .expect("Failed to connect to database"),
     };
 
-    let result = import_single_file(
-        file_path.to_str().unwrap().to_string(),
-        None,
-        state,
-        window.clone(),
-    )
+    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state)
     .await;
 
     assert!(result.is_ok());
@@ -1938,12 +1843,7 @@ async fn test_import_single_file_race_condition_deleted() {
         .await
         .expect("Failed to delete file");
 
-    let result = import_single_file(
-        file_path.to_str().unwrap().to_string(),
-        None,
-        state,
-        window.clone(),
-    )
+    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state)
     .await;
 
     assert!(result.is_err(), "Should fail when file is deleted during import");
@@ -1987,12 +1887,7 @@ async fn test_import_single_file_malformed_track_data() {
             .expect("Failed to connect to database"),
     };
 
-    let result = import_single_file(
-        file_path.to_str().unwrap().to_string(),
-        None,
-        state,
-        window.clone(),
-    )
+    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state)
     .await;
 
     assert!(result.is_err(), "Should fail with corrupted track data");
@@ -2021,12 +1916,7 @@ async fn test_import_single_file_tag_extraction_crash() {
             .expect("Failed to connect to database"),
     };
 
-    let result = import_single_file(
-        file_path.to_str().unwrap().to_string(),
-        Some("test".to_string()),
-        state,
-        window.clone(),
-    )
+    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), Some("test".to_string()), &state)
     .await;
 
     // Should handle long filenames gracefully
@@ -2061,12 +1951,7 @@ async fn test_import_single_file_path_traversal_attack() {
     ];
 
     for path in malicious_paths {
-        let result = import_single_file(
-            path.to_string(),
-            None,
-            state,
-            window.clone(),
-        )
+        let result = import_single_file_impl(path.to_string(), None, &state)
         .await;
 
         assert!(result.is_err(), "Path traversal should be rejected: {}", path);
@@ -2097,12 +1982,7 @@ async fn test_import_single_file_invalid_chars_db_insertion() {
 
     // Try to import with artificially created path containing problematic chars
     // This tests the DB layer's handling of edge case characters
-    let result = import_single_file(
-        file_path.to_str().unwrap().to_string(),
-        None,
-        state,
-        window.clone(),
-    )
+    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state)
     .await;
 
     // Should either succeed with sanitization or fail gracefully
@@ -2140,12 +2020,7 @@ async fn test_import_single_file_size_overflow_2gb() {
 
     // In production, files > 2GB should be handled
     // This test verifies the code path exists
-    let result = import_single_file(
-        large_file.to_str().unwrap().to_string(),
-        None,
-        state,
-        window.clone(),
-    )
+    let result = import_single_file_impl(large_file.to_str().unwrap().to_string(), None, &state)
     .await;
 
     // Normal file should succeed
@@ -2237,12 +2112,7 @@ async fn test_import_single_file_invalid_permissions() {
             .expect("Failed to connect to database"),
     };
 
-    let result = import_single_file(
-        file_path.to_str().unwrap().to_string(),
-        None,
-        state,
-        window.clone(),
-    )
+    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state)
     .await;
 
     #[cfg(unix)]
@@ -2278,12 +2148,7 @@ async fn test_import_single_file_symlink_broken() {
         std::os::unix::fs::symlink(&target_path, &symlink_path)
             .expect("Failed to create symlink");
 
-        let result = import_single_file(
-            symlink_path.to_str().unwrap().to_string(),
-            None,
-            state,
-            window.clone(),
-        )
+        let result = import_single_file_impl(symlink_path.to_str().unwrap().to_string(), None, &state)
         .await;
 
         assert!(result.is_err(), "Broken symlink should fail");
@@ -2362,12 +2227,7 @@ async fn test_import_single_file_database_transaction_rollback() {
     };
 
     // First import should succeed
-    let result1 = import_single_file(
-        file_path.to_str().unwrap().to_string(),
-        None,
-        state,
-        window.clone(),
-    )
+    let result1 = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state)
     .await;
 
     assert!(result1.is_ok(), "First import should succeed");
@@ -2384,12 +2244,7 @@ async fn test_import_single_file_database_transaction_rollback() {
     assert!(exists, "File should exist in database after successful import");
 
     // Second import should fail (duplicate) and NOT leave partial data
-    let result2 = import_single_file(
-        file_path.to_str().unwrap().to_string(),
-        None,
-        state,
-        window.clone(),
-    )
+    let result2 = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state)
     .await;
 
     assert!(result2.is_err(), "Duplicate import should fail");
@@ -2471,7 +2326,7 @@ async fn test_error_file_not_found() {
     let state = AppState {
         database: Database::new(&db.database_url()).await.expect("DB"),
     };
-    let result = import_single_file("/nonexistent/path/file.mid".to_string(), None, state, window).await;
+    let result = import_single_file_impl("/nonexistent/path/file.mid".to_string(), None, state, window).await;
     assert!(result.is_err());
     db.cleanup().await;
 }
@@ -2497,7 +2352,7 @@ async fn test_error_corrupted_midi() {
     let file_path = fixtures.temp_dir.path().join("corrupt.mid");
     tokio::fs::write(&file_path, corrupt_bytes).await.expect("Write");
     let state = AppState { database: Database::new(&db.database_url()).await.expect("DB") };
-    let result = import_single_file(file_path.to_str().unwrap().to_string(), None, state, MockWindow::new()).await;
+    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, state, MockWindow::new()).await;
     assert!(result.is_err());
     db.cleanup().await;
 }
@@ -2510,7 +2365,7 @@ async fn test_error_truncated_file() {
     let file_path = fixtures.temp_dir.path().join("truncated.mid");
     tokio::fs::write(&file_path, truncated).await.expect("Write");
     let state = AppState { database: Database::new(&db.database_url()).await.expect("DB") };
-    let result = import_single_file(file_path.to_str().unwrap().to_string(), None, state, MockWindow::new()).await;
+    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, state, MockWindow::new()).await;
     assert!(result.is_err());
     db.cleanup().await;
 }
@@ -2544,7 +2399,7 @@ async fn test_error_metadata_graceful() {
     let file_path = fixtures.temp_dir.path().join("minimal.mid");
     tokio::fs::write(&file_path, minimal).await.expect("Write");
     let state = AppState { database: Database::new(&db.database_url()).await.expect("DB") };
-    let result = import_single_file(file_path.to_str().unwrap().to_string(), None, state, MockWindow::new()).await;
+    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, state, MockWindow::new()).await;
     assert!(result.is_ok() || result.is_err());
     db.cleanup().await;
 }
@@ -2555,7 +2410,7 @@ async fn test_error_unicode_filename() {
     let fixtures = MidiFixtures::new().await;
     let file_path = fixtures.create_simple_midi("音楽_файл_🎵.mid").await;
     let state = AppState { database: Database::new(&db.database_url()).await.expect("DB") };
-    let result = import_single_file(file_path.to_str().unwrap().to_string(), None, state, MockWindow::new()).await;
+    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, state, MockWindow::new()).await;
     assert!(result.is_ok());
     db.cleanup().await;
 }
@@ -2596,7 +2451,7 @@ async fn test_error_file_size_limits() {
     let state = AppState { database: Database::new(&db.database_url()).await.expect("DB") };
     let meta = tokio::fs::metadata(&file_path).await.expect("Meta");
     assert!(meta.len() < 2_147_483_648);
-    let result = import_single_file(file_path.to_str().unwrap().to_string(), None, state, MockWindow::new()).await;
+    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, state, MockWindow::new()).await;
     assert!(result.is_ok());
     db.cleanup().await;
 }
@@ -2623,7 +2478,7 @@ async fn test_error_large_file() {
     let file_path = fixtures.temp_dir.path().join("large.mid");
     tokio::fs::write(&file_path, large).await.expect("Write");
     let state = AppState { database: Database::new(&db.database_url()).await.expect("DB") };
-    let result = import_single_file(file_path.to_str().unwrap().to_string(), None, state, MockWindow::new()).await;
+    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, state, MockWindow::new()).await;
     assert!(result.is_ok());
     db.cleanup().await;
 }
@@ -2635,7 +2490,7 @@ async fn test_error_directory_not_file() {
     let dir = fixtures.temp_dir.path().join("dir");
     tokio::fs::create_dir(&dir).await.expect("Mkdir");
     let state = AppState { database: Database::new(&db.database_url()).await.expect("DB") };
-    let result = import_single_file(dir.to_str().unwrap().to_string(), None, state, MockWindow::new()).await;
+    let result = import_single_file_impl(dir.to_str().unwrap().to_string(), None, state, MockWindow::new()).await;
     assert!(result.is_err());
     db.cleanup().await;
 }

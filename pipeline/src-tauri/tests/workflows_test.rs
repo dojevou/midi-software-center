@@ -120,7 +120,7 @@ async fn test_workflow_compose_new_song() {
     fs::write(&track1_path, &midi_data).await.unwrap();
 
     // Step 2: Import first track
-    let result1 = import_single_file(
+    let result1 = import_single_file_impl(
         &state,
         track1_path.to_str().unwrap().to_string(),
     ).await;
@@ -130,7 +130,7 @@ async fn test_workflow_compose_new_song() {
     let track2_path = project_path.join("bass.mid");
     fs::write(&track2_path, &midi_data).await.unwrap();
 
-    let result2 = import_single_file(
+    let result2 = import_single_file_impl(
         &state,
         track2_path.to_str().unwrap().to_string(),
     ).await;
@@ -140,7 +140,7 @@ async fn test_workflow_compose_new_song() {
     let track3_path = project_path.join("drums.mid");
     fs::write(&track3_path, &midi_data).await.unwrap();
 
-    let result3 = import_single_file(
+    let result3 = import_single_file_impl(
         &state,
         track3_path.to_str().unwrap().to_string(),
     ).await;
@@ -166,7 +166,7 @@ async fn test_workflow_load_template_customize() {
     fs::write(&template_path, &template_data).await.unwrap();
 
     // Step 2: Import template
-    let result = import_single_file(
+    let result = import_single_file_impl(
         &state,
         template_path.to_str().unwrap().to_string(),
     ).await;
@@ -190,7 +190,7 @@ async fn test_workflow_load_template_customize() {
     let custom_data = create_midi_bytes(140, "G_MAJOR");
     fs::write(&custom_path, &custom_data).await.unwrap();
 
-    let custom_result = import_single_file(
+    let custom_result = import_single_file_impl(
         &state,
         custom_path.to_str().unwrap().to_string(),
     ).await;
@@ -210,7 +210,7 @@ async fn test_workflow_jam_session() {
     let backing_data = create_midi_bytes(100, "E_MAJOR");
     fs::write(&backing_path, &backing_data).await.unwrap();
 
-    let backing_result = import_single_file(
+    let backing_result = import_single_file_impl(
         &state,
         backing_path.to_str().unwrap().to_string(),
     ).await;
@@ -229,7 +229,7 @@ async fn test_workflow_jam_session() {
     let improv_data = create_midi_bytes(100, "E_MAJOR");
     fs::write(&improv_path, &improv_data).await.unwrap();
 
-    let improv_result = import_single_file(
+    let improv_result = import_single_file_impl(
         &state,
         improv_path.to_str().unwrap().to_string(),
     ).await;
@@ -269,7 +269,7 @@ async fn test_workflow_arrange_for_live() {
 
     for (name, _, _) in &stems {
         let path = stems_dir.join(name);
-        import_single_file(
+        import_single_file_impl(
             &state,
             path.to_str().unwrap().to_string(),
         ).await.unwrap();
@@ -309,7 +309,7 @@ async fn test_workflow_remix_existing() {
     let original_data = create_midi_bytes(128, "D_MAJOR");
     fs::write(&original_path, &original_data).await.unwrap();
 
-    let original_result = import_single_file(
+    let original_result = import_single_file_impl(
         &state,
         original_path.to_str().unwrap().to_string(),
     ).await;
@@ -328,7 +328,7 @@ async fn test_workflow_remix_existing() {
     let remix_data = create_midi_bytes(140, "D_MAJOR"); // Faster tempo
     fs::write(&remix_path, &remix_data).await.unwrap();
 
-    let remix_result = import_single_file(
+    let remix_result = import_single_file_impl(
         &state,
         remix_path.to_str().unwrap().to_string(),
     ).await;
@@ -363,7 +363,7 @@ async fn test_workflow_music_theory_analysis() {
     let file_data = create_midi_bytes(120, "G_MAJOR");
     fs::write(&file_path, &file_data).await.unwrap();
 
-    let import_result = import_single_file(
+    let import_result = import_single_file_impl(
         &state,
         file_path.to_str().unwrap().to_string(),
     ).await;
@@ -412,7 +412,7 @@ async fn test_workflow_performance_preparation() {
         let data = create_midi_bytes(*bpm, key);
         fs::write(&path, &data).await.unwrap();
 
-        let result = import_single_file(
+        let result = import_single_file_impl(
             &state,
             path.to_str().unwrap().to_string(),
         ).await.unwrap();
@@ -445,7 +445,7 @@ async fn test_workflow_publishing_workflow() {
     let master_data = create_midi_bytes(120, "C_MAJOR");
     fs::write(&master_path, &master_data).await.unwrap();
 
-    let master_result = import_single_file(
+    let master_result = import_single_file_impl(
         &state,
         master_path.to_str().unwrap().to_string(),
     ).await;
@@ -506,7 +506,7 @@ async fn test_workflow_organize_library() {
         let data = create_midi_bytes(*bpm, key);
         fs::write(&path, &data).await.unwrap();
 
-        let result = import_single_file(
+        let result = import_single_file_impl(
             &state,
             path.to_str().unwrap().to_string(),
         ).await.unwrap();
@@ -540,7 +540,7 @@ async fn test_workflow_duplicate_cleanup() {
     let midi_data = create_midi_bytes(120, "C_MAJOR");
     fs::write(&original_path, &midi_data).await.unwrap();
 
-    let original_result = import_single_file(
+    let original_result = import_single_file_impl(
         &state,
         original_path.to_str().unwrap().to_string(),
     ).await.unwrap();
@@ -549,7 +549,7 @@ async fn test_workflow_duplicate_cleanup() {
     let duplicate_path = temp_dir.path().join("duplicate.mid");
     fs::write(&duplicate_path, &midi_data).await.unwrap();
 
-    let duplicate_result = import_single_file(
+    let duplicate_result = import_single_file_impl(
         &state,
         duplicate_path.to_str().unwrap().to_string(),
     ).await;
@@ -585,7 +585,7 @@ async fn test_workflow_key_transposition() {
         let data = create_midi_bytes(120, key);
         fs::write(&path, &data).await.unwrap();
 
-        import_single_file(
+        import_single_file_impl(
             &state,
             path.to_str().unwrap().to_string(),
         ).await.unwrap();
@@ -600,7 +600,7 @@ async fn test_workflow_key_transposition() {
     let transposed_data = create_midi_bytes(120, "G_MAJOR");
     fs::write(&transposed_path, &transposed_data).await.unwrap();
 
-    let result = import_single_file(
+    let result = import_single_file_impl(
         &state,
         transposed_path.to_str().unwrap().to_string(),
     ).await.unwrap();
@@ -630,7 +630,7 @@ async fn test_workflow_tempo_matching() {
         let data = create_midi_bytes(*tempo, "C_MAJOR");
         fs::write(&path, &data).await.unwrap();
 
-        import_single_file(
+        import_single_file_impl(
             &state,
             path.to_str().unwrap().to_string(),
         ).await.unwrap();
@@ -642,7 +642,7 @@ async fn test_workflow_tempo_matching() {
         let data = create_midi_bytes(target_tempo, "C_MAJOR");
         fs::write(&path, &data).await.unwrap();
 
-        let result = import_single_file(
+        let result = import_single_file_impl(
             &state,
             path.to_str().unwrap().to_string(),
         ).await.unwrap();
@@ -685,7 +685,7 @@ async fn test_workflow_create_sample_pack() {
         let data = create_midi_bytes(128, "C_MAJOR");
         fs::write(&path, &data).await.unwrap();
 
-        let result = import_single_file(
+        let result = import_single_file_impl(
             &state,
             path.to_str().unwrap().to_string(),
         ).await.unwrap();
@@ -726,7 +726,7 @@ async fn test_workflow_backup_and_restore() {
         let data = create_midi_bytes(120, "C_MAJOR");
         fs::write(&path, &data).await.unwrap();
 
-        import_single_file(
+        import_single_file_impl(
             &state,
             path.to_str().unwrap().to_string(),
         ).await.unwrap();
@@ -762,7 +762,7 @@ async fn test_workflow_collaborative_project() {
     let user1_path = user1_dir.join("contribution1.mid");
     fs::write(&user1_path, &create_midi_bytes(128, "C_MAJOR")).await.unwrap();
 
-    let user1_result = import_single_file(
+    let user1_result = import_single_file_impl(
         &state,
         user1_path.to_str().unwrap().to_string(),
     ).await.unwrap();
@@ -780,7 +780,7 @@ async fn test_workflow_collaborative_project() {
     let user2_path = user2_dir.join("contribution2.mid");
     fs::write(&user2_path, &create_midi_bytes(128, "C_MAJOR")).await.unwrap();
 
-    let user2_result = import_single_file(
+    let user2_result = import_single_file_impl(
         &state,
         user2_path.to_str().unwrap().to_string(),
     ).await.unwrap();
@@ -816,7 +816,7 @@ async fn test_workflow_session_sharing() {
         let path = session_dir.join(format!("track_{}.mid", i));
         fs::write(&path, &create_midi_bytes(120, "C_MAJOR")).await.unwrap();
 
-        let result = import_single_file(
+        let result = import_single_file_impl(
             &state,
             path.to_str().unwrap().to_string(),
         ).await.unwrap();
@@ -855,7 +855,7 @@ async fn test_workflow_feedback_incorporation() {
     let v1_path = temp_dir.path().join("track_v1.mid");
     fs::write(&v1_path, &create_midi_bytes(128, "C_MAJOR")).await.unwrap();
 
-    let v1_result = import_single_file(
+    let v1_result = import_single_file_impl(
         &state,
         v1_path.to_str().unwrap().to_string(),
     ).await.unwrap();
@@ -870,7 +870,7 @@ async fn test_workflow_feedback_incorporation() {
     let v2_path = temp_dir.path().join("track_v2.mid");
     fs::write(&v2_path, &create_midi_bytes(132, "C_MAJOR")).await.unwrap();
 
-    let v2_result = import_single_file(
+    let v2_result = import_single_file_impl(
         &state,
         v2_path.to_str().unwrap().to_string(),
     ).await.unwrap();
@@ -901,7 +901,7 @@ async fn test_workflow_version_control() {
     let v1_path = temp_dir.path().join("checkpoint_v1.mid");
     fs::write(&v1_path, &create_midi_bytes(120, "C_MAJOR")).await.unwrap();
 
-    let v1_result = import_single_file(
+    let v1_result = import_single_file_impl(
         &state,
         v1_path.to_str().unwrap().to_string(),
     ).await.unwrap();
@@ -916,7 +916,7 @@ async fn test_workflow_version_control() {
     let v2_path = temp_dir.path().join("checkpoint_v2.mid");
     fs::write(&v2_path, &create_midi_bytes(125, "C_MAJOR")).await.unwrap();
 
-    let v2_result = import_single_file(
+    let v2_result = import_single_file_impl(
         &state,
         v2_path.to_str().unwrap().to_string(),
     ).await.unwrap();
@@ -931,7 +931,7 @@ async fn test_workflow_version_control() {
     let final_path = temp_dir.path().join("final.mid");
     fs::write(&final_path, &create_midi_bytes(128, "C_MAJOR")).await.unwrap();
 
-    let final_result = import_single_file(
+    let final_result = import_single_file_impl(
         &state,
         final_path.to_str().unwrap().to_string(),
     ).await.unwrap();
@@ -962,7 +962,7 @@ async fn test_workflow_multi_format_delivery() {
     let master_path = delivery_dir.join("master.mid");
     fs::write(&master_path, &create_midi_bytes(128, "C_MAJOR")).await.unwrap();
 
-    let result = import_single_file(
+    let result = import_single_file_impl(
         &state,
         master_path.to_str().unwrap().to_string(),
     ).await.unwrap();
@@ -1001,7 +1001,7 @@ async fn test_workflow_archive_preservation() {
         let path = archive_dir.join(format!("archive_{}.mid", i));
         fs::write(&path, &create_midi_bytes(120, "C_MAJOR")).await.unwrap();
 
-        let result = import_single_file(
+        let result = import_single_file_impl(
             &state,
             path.to_str().unwrap().to_string(),
         ).await.unwrap();
@@ -1034,7 +1034,7 @@ async fn test_workflow_data_migration() {
     let old_format_path = temp_dir.path().join("old_format.mid");
     fs::write(&old_format_path, &create_midi_bytes(110, "D_MAJOR")).await.unwrap();
 
-    let old_result = import_single_file(
+    let old_result = import_single_file_impl(
         &state,
         old_format_path.to_str().unwrap().to_string(),
     ).await.unwrap();
@@ -1049,7 +1049,7 @@ async fn test_workflow_data_migration() {
     let new_format_path = temp_dir.path().join("new_format.mid");
     fs::write(&new_format_path, &create_midi_bytes(110, "D_MAJOR")).await.unwrap();
 
-    let new_result = import_single_file(
+    let new_result = import_single_file_impl(
         &state,
         new_format_path.to_str().unwrap().to_string(),
     ).await.unwrap();
@@ -1170,7 +1170,7 @@ async fn test_workflow_rapid_fire_operations() {
         let temp_path = temp_dir.path().join(format!("rapid{}.mid", i));
         let handle = tokio::spawn(async move {
             let _ = fs::write(&temp_path, &create_midi_bytes(100 + i * 10, "C_MAJOR")).await;
-            import_single_file(tauri::State(&state_clone), temp_path.to_str().unwrap().to_string()).await
+            import_single_file_impl(tauri::State(&state_clone), temp_path.to_str().unwrap().to_string()).await
         });
         handles.push(handle);
     }
