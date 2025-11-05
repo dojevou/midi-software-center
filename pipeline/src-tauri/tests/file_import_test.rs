@@ -398,7 +398,8 @@ async fn test_import_single_file_duplicate_detection() {
     .await;
 
     assert!(result2.is_err(), "Duplicate import should fail");
-    assert!(result2.unwrap_err().contains("duplicate") || result2.unwrap_err().contains("already exists"));
+    let err = result2.unwrap_err();
+    assert!(err.contains("duplicate") || err.contains("already exists"));
 
     db.cleanup().await;
 }
@@ -488,7 +489,8 @@ async fn test_import_single_file_not_found() {
     .await;
 
     assert!(result.is_err(), "Import should fail for nonexistent file");
-    assert!(result.unwrap_err().contains("not found") || result.unwrap_err().contains("File not found"));
+    let err = result.unwrap_err();
+    assert!(err.contains("not found") || err.contains("File not found"));
 
     db.cleanup().await;
 }
@@ -511,7 +513,8 @@ async fn test_import_single_file_invalid_midi_format() {
     .await;
 
     assert!(result.is_err(), "Import should fail for invalid MIDI");
-    assert!(result.unwrap_err().contains("process") || result.unwrap_err().contains("parse") || result.unwrap_err().contains("Failed"));
+    let err = result.unwrap_err();
+    assert!(err.contains("process") || err.contains("parse") || result.unwrap_err().contains("Failed"));
 
     db.cleanup().await;
 }
@@ -1709,7 +1712,8 @@ async fn test_import_directory_not_found() {
     .await;
 
     assert!(result.is_err(), "Should fail for nonexistent directory");
-    assert!(result.unwrap_err().contains("not found") || result.unwrap_err().contains("Directory not found"));
+    let err = result.unwrap_err();
+    assert!(err.contains("not found") || err.contains("Directory not found"));
 
     db.cleanup().await;
 }
