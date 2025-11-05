@@ -1,10 +1,6 @@
 {
   "analysis_stages": [
     {
-      "stage": "predictive_analysis",
-      "result": "['\ud83d\udd27 Misconfigured dependencies in pipeline/src-tauri/Cargo.toml', '\ud83d\udd27 Misconfigured dependencies in scripts/test-midi-files/Cargo.toml']"
-    },
-    {
       "stage": "historical_patterns",
       "result": "[]"
     },
@@ -15,6 +11,28 @@
     {
       "stage": "applied_fixes",
       "result": "['rust_dead_code']"
+    },
+    {
+      "timestamp": "2025-11-04T20:42:07.478115",
+      "data": {
+        "error_count": 0,
+        "applied_fixes": [
+          "cargo_clean",
+          "cargo_update"
+        ],
+        "predictions": []
+      }
+    },
+    {
+      "timestamp": "2025-11-04T20:50:03.995778",
+      "data": {
+        "error_count": 0,
+        "applied_fixes": [
+          "cargo_clean",
+          "cargo_update"
+        ],
+        "predictions": []
+      }
     }
   ],
   "last_updated": "2025-11-04T17:23:27.601504"
