@@ -1453,8 +1453,8 @@ async fn test_empty_database() {
 
         // Query with min > max (logical error)
         let query = SearchQueryBuilder::new()
-            .min_bpm(Some("150.0".to_string()))
-            .max_bpm(Some("100.0".to_string()))
+            .min_bpm(Some(150.0))
+            .max_bpm(Some(100.0))
             .build();
 
         let results = SearchRepository::search(&pool, query, 100, 0).await.expect("Query should not error");
@@ -1668,7 +1668,7 @@ async fn test_empty_database() {
 
         // Query: BPM > 130 AND key = C
         let query = SearchQueryBuilder::new()
-            .min_bpm(Some("130.0".to_string()))
+            .min_bpm(Some(130.0))
             .key(Some(vec!["C".to_string()]))
             .build();
 
@@ -1690,8 +1690,8 @@ async fn test_empty_database() {
         insert_metadata(&pool, file, Some("100.0"), None, None).await;
 
         let query = SearchQueryBuilder::new()
-            .min_bpm(Some("200.0".to_string()))
-            .max_bpm(Some("50.0".to_string()))
+            .min_bpm(Some(200.0))
+            .max_bpm(Some(50.0))
             .build();
 
         let results = SearchRepository::search(&pool, query, 100, 0).await.unwrap_or_default();
@@ -1789,7 +1789,7 @@ async fn test_empty_database() {
         insert_metadata(&pool, file, None, None, Some(120)).await;
 
         let query = SearchQueryBuilder::new()
-            .max_duration(Some("50".to_string()))
+            .max_duration(Some(50))
             .build();
 
         let results = SearchRepository::search(&pool, query, 100, 0).await.unwrap_or_default();
@@ -1858,7 +1858,7 @@ async fn test_empty_database() {
             let pool_clone = std::sync::Arc::clone(&pool);
             let handle = tokio::spawn(async move {
                 let query = SearchQueryBuilder::new()
-                    .min_bpm(Some("100.0".to_string()))
+                    .min_bpm(Some(100.0))
                     .build();
                 SearchRepository::search(&pool_clone, query, 100, 0).await
             });
@@ -1881,7 +1881,7 @@ async fn test_empty_database() {
         cleanup_database(&pool).await.expect("Cleanup failed");
 
         let query = SearchQueryBuilder::new()
-            .min_bpm(Some("500.0".to_string()))
+            .min_bpm(Some(500.0))
             .build();
 
         let results = SearchRepository::search(&pool, query, 100, 0).await.expect("Query failed");
