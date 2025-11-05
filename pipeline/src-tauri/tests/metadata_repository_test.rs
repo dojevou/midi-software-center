@@ -34,8 +34,6 @@ use std::str::FromStr;
 
 mod fixtures;
 mod helpers;
-mod common;
-
 use fixtures::{NewFileBuilder, Fixtures, random_hash};
 use helpers::db::*;
 use common::assertions::{
@@ -1156,7 +1154,7 @@ async fn test_insert_all_major_keys() {
         let found = MetadataRepository::find_by_file_id(&pool, file_id).await.expect("Find failed").unwrap();
         assert_bigdecimal_exact(&found.bpm, "140.0");
         assert_eq!(found.key_signature.as_deref(), Some("D"));
-        assert_eq!(found.total_notes, 200, "Expected {200}, found {found.total_notes}");
+        assert_eq!(found.total_notes, 200);
 
         cleanup_database(&pool).await.expect("Cleanup failed");
     }
@@ -1292,7 +1290,7 @@ async fn test_insert_all_major_keys() {
         assert_eq!(found.key_confidence, Some(0.92));
         assert_eq!(found.time_signature_numerator, Some(4));
         assert_eq!(found.time_signature_denominator, Some(4));
-        assert_eq!(found.total_notes, 2000, "Expected {2000}, found {found.total_notes}");
+        assert_eq!(found.total_notes, 2000);
         assert_eq!(found.unique_pitches, Some(24));
         assert_eq!(found.pitch_range_min, Some(48));
         assert_eq!(found.pitch_range_max, Some(96));
@@ -1318,7 +1316,7 @@ async fn test_insert_all_major_keys() {
             .expect("Update failed");
 
         let found = MetadataRepository::find_by_file_id(&pool, file_id).await.expect("Find failed").unwrap();
-        assert_eq!(found.total_notes, 5000, "Expected {5000}, found {found.total_notes}");
+        assert_eq!(found.total_notes, 5000);
         assert_eq!(found.unique_pitches, Some(36));
         assert_eq!(found.pitch_range_min, Some(21));
         assert_eq!(found.pitch_range_max, Some(108));
@@ -1361,7 +1359,7 @@ async fn test_insert_all_major_keys() {
         MetadataRepository::insert(&pool, metadata).await.expect("Insert failed");
 
         let found = MetadataRepository::find_by_file_id(&pool, file_id).await.expect("Find failed").unwrap();
-        assert_eq!(found.total_notes, 1_000_000, "Expected {1_000_000}, found {found.total_notes}");
+        assert_eq!(found.total_notes, 1_000_000);
 
         cleanup_database(&pool).await.expect("Cleanup failed");
     }

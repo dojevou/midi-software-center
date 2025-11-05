@@ -20,7 +20,6 @@
 //!
 //! Total Tests: 18 production-ready integration test scenarios
 
-mod common;
 use common::{TestDatabase, FileFixtures};
 use sqlx::PgPool;
 

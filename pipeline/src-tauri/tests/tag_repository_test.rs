@@ -35,8 +35,6 @@ use sqlx::PgPool;
 
 mod fixtures;
 mod helpers;
-mod common;
-
 use fixtures::{NewFileBuilder, NewTagBuilder, Fixtures, random_hash};
 use helpers::db::*;
 use common::assertions::{
@@ -347,7 +345,7 @@ async fn test_get_or_create_tags_batch_large_batch() {
     assert!(tag_ids.iter().all(|&id| id > 0));
 
     let count = count_tags(&pool).await.expect("Failed");
-    assert_eq!(count, 100, "Expected {100}, found {count}");
+    assert_eq!(count, 100, "Expected 100, found {}");
 
     cleanup_database(&pool).await.expect("Cleanup failed");
 }
@@ -909,7 +907,7 @@ async fn test_get_tag_file_count_existing_tag() {
     }
 
     let count = repo.get_tag_file_count(tag_id).await.expect("Failed");
-    assert_eq!(count, 5, "Expected {5}, found {count}");
+    assert_eq!(count, 5, "Expected 5, found {}");
 
     cleanup_database(&pool).await.expect("Cleanup failed");
 }
@@ -923,7 +921,7 @@ async fn test_get_tag_file_count_no_files() {
     let tag_id = repo.get_or_create_tag("drums", None).await.expect("Failed");
 
     let count = repo.get_tag_file_count(tag_id).await.expect("Failed");
-    assert_eq!(count, 0, "Expected {0}, found {count}");
+    assert_eq!(count, 0, "Expected 0, found {}");
 
     cleanup_database(&pool).await.expect("Cleanup failed");
 }
@@ -1276,7 +1274,7 @@ async fn test_tag_name_special_characters() {
     for name in special_names {
         let tag_id = repo.get_or_create_tag(name, None).await.expect("Special chars should work");
         let tag = get_tag_by_id(&pool, tag_id).await.expect("Failed");
-        assert_eq!(tag.name, name, "Expected {name}, found {tag.name}");
+        assert_eq!(tag.name, name);
     }
 
     cleanup_database(&pool).await.expect("Cleanup failed");
@@ -1294,7 +1292,7 @@ async fn test_tag_name_unicode() {
     for name in unicode_names {
         let tag_id = repo.get_or_create_tag(name, None).await.expect("Unicode should work");
         let tag = get_tag_by_id(&pool, tag_id).await.expect("Failed");
-        assert_eq!(tag.name, name, "Expected {name}, found {tag.name}");
+        assert_eq!(tag.name, name);
     }
 
     cleanup_database(&pool).await.expect("Cleanup failed");

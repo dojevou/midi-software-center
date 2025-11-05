@@ -88,30 +88,13 @@ async fn count_search_results(
 // TAURI COMMANDS
 // =============================================================================
 
-/// Search files with filters and pagination
-///
-/// # Manager Archetype
-/// - ✅ Performs I/O (complex database query)
-/// - ✅ Has side effects (reads from database)
-/// - ✅ Handles errors properly
-///
-/// # Arguments
-///
-/// * `query` - Text search query (searches filename and filepath)
-/// * `filters` - Search filters (category, BPM range, key)
-/// * `page` - Page number (1-indexed)
-/// * `page_size` - Items per page (1-100)
-///
-/// # Returns
-///
-/// Paginated search results with total count
-#[tauri::command]
-pub async fn search_files(
+/// Search files with filters and pagination (implementation for tests and reuse)
+pub async fn search_files_impl(
     query: String,
     filters: SearchFilters,
     page: i32,
     page_size: i32,
-    state: State<'_, AppState>,
+    state: &AppState,
 ) -> Result<SearchResults, String> {
     let pool = state.database.pool().await;
 
@@ -174,6 +157,50 @@ pub async fn search_files(
     })
 }
 
+/// Search files with filters and pagination
+///
+/// # Manager Archetype
+/// - ✅ Performs I/O (complex database query)
+/// - ✅ Has side effects (reads from database)
+/// - ✅ Handles errors properly
+///
+/// # Arguments
+///
+/// * `query` - Text search query (searches filename and filepath)
+/// * `filters` - Search filters (category, BPM range, key)
+/// * `page` - Page number (1-indexed)
+/// * `page_size` - Items per page (1-100)
+///
+/// # Returns
+///
+/// Paginated search results with total count
+#[tauri::command]
+pub async fn search_files(
+    query: String,
+    filters: SearchFilters,
+    page: i32,
+    page_size: i32,
+    state: State<'_, AppState>,
+) -> Result<SearchResults, String> {
+    search_files_impl(query, filters, page, page_size, &*state).await
+}
+
+/// Get all unique tags from database (implementation for tests and reuse)
+pub async fn get_all_tags_impl(state: &AppState) -> Result<Vec<String>, String> {
+    let tags: Vec<(String,)> = sqlx::query_as(
+        r#"
+        SELECT DISTINCT tag_name
+        FROM file_tags
+        ORDER BY tag_name ASC
+        "#
+    )
+    .fetch_all(&state.database.pool().await)
+    .await
+    .map_err(|e| format!("Failed to get tags: {}", e))?;
+
+    Ok(tags.into_iter().map(|(tag,)| tag).collect())
+}
+
 /// Get all unique tags from database
 ///
 /// Returns a list of all unique tag names used in the database.
@@ -187,18 +214,7 @@ pub async fn search_files(
 pub async fn get_all_tags(
     state: State<'_, AppState>,
 ) -> Result<Vec<String>, String> {
-    let tags: Vec<(String,)> = sqlx::query_as(
-        r#"
-        SELECT DISTINCT tag_name
-        FROM file_tags
-        ORDER BY tag_name ASC
-        "#
-    )
-    .fetch_all(&state.database.pool().await)
-    .await
-    .map_err(|e| format!("Failed to get tags: {}", e))?;
-
-    Ok(tags.into_iter().map(|(tag,)| tag).collect())
+    get_all_tags_impl(&*state).await
 }
 
 /// Get files by tag
@@ -245,19 +261,8 @@ pub async fn get_files_by_tag(
     Ok(files)
 }
 
-/// Get BPM range from database
-///
-/// Returns the minimum and maximum BPM values in the database.
-///
-/// # Frontend Usage
-///
-/// ```typescript
-/// const range = await invoke<{min: number, max: number}>('get_bpm_range');
-/// ```
-#[tauri::command]
-pub async fn get_bpm_range(
-    state: State<'_, AppState>,
-) -> Result<BpmRange, String> {
+/// Get BPM range from database (implementation for tests and reuse)
+pub async fn get_bpm_range_impl(state: &AppState) -> Result<BpmRange, String> {
     let pool = state.database.pool().await;
     let result: Option<(Option<f64>, Option<f64>)> = sqlx::query_as(
         r#"
@@ -274,6 +279,22 @@ pub async fn get_bpm_range(
         Some((Some(min), Some(max))) => Ok(BpmRange { min, max }),
         _ => Ok(BpmRange { min: 0.0, max: 300.0 }), // Default range if no data
     }
+}
+
+/// Get BPM range from database
+///
+/// Returns the minimum and maximum BPM values in the database.
+///
+/// # Frontend Usage
+///
+/// ```typescript
+/// const range = await invoke<{min: number, max: number}>('get_bpm_range');
+/// ```
+#[tauri::command]
+pub async fn get_bpm_range(
+    state: State<'_, AppState>,
+) -> Result<BpmRange, String> {
+    get_bpm_range_impl(&*state).await
 }
 
 /// Get all unique key signatures from database

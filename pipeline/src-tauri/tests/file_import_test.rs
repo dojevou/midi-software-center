@@ -359,7 +359,7 @@ async fn test_import_single_file_success() {
     let result = import_single_file(
         file_path.to_str().unwrap().to_string(),
         None,
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -396,7 +396,7 @@ async fn test_import_single_file_duplicate_detection() {
     let result1 = import_single_file(
         file_path.to_str().unwrap().to_string(),
         None,
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -407,7 +407,7 @@ async fn test_import_single_file_duplicate_detection() {
     let result2 = import_single_file(
         file_path.to_str().unwrap().to_string(),
         None,
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -436,7 +436,7 @@ async fn test_import_single_file_metadata_extraction() {
     let result = import_single_file(
         file_path.to_str().unwrap().to_string(),
         None,
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -474,7 +474,7 @@ async fn test_import_single_file_tag_auto_extraction() {
     let result = import_single_file(
         file_path.to_str().unwrap().to_string(),
         Some("drum".to_string()),
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -512,7 +512,7 @@ async fn test_import_single_file_not_found() {
     let result = import_single_file(
         "/nonexistent/path/to/file.mid".to_string(),
         None,
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -540,7 +540,7 @@ async fn test_import_single_file_invalid_midi_format() {
     let result = import_single_file(
         file_path.to_str().unwrap().to_string(),
         None,
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -569,7 +569,7 @@ async fn test_import_single_file_database_constraint_violation() {
     let result1 = import_single_file(
         file_path.to_str().unwrap().to_string(),
         None,
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -580,7 +580,7 @@ async fn test_import_single_file_database_constraint_violation() {
     let result2 = import_single_file(
         file_path.to_str().unwrap().to_string(),
         None,
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -607,7 +607,7 @@ async fn test_import_single_file_edge_case_zero_byte() {
     let result = import_single_file(
         file_path.to_str().unwrap().to_string(),
         None,
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -645,7 +645,7 @@ async fn test_import_single_file_edge_case_large_file() {
     let result = import_single_file(
         file_path.to_str().unwrap().to_string(),
         None,
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -677,7 +677,7 @@ async fn test_import_single_file_edge_case_special_chars() {
     let result = import_single_file(
         file_path.to_str().unwrap().to_string(),
         None,
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -748,7 +748,7 @@ async fn test_import_single_file_with_category() {
     let result = import_single_file(
         file_path.to_str().unwrap().to_string(),
         Some("drums".to_string()),
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -799,7 +799,7 @@ async fn test_import_directory_single_file() {
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -833,7 +833,7 @@ async fn test_import_directory_multiple_files_10() {
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -870,7 +870,7 @@ async fn test_import_directory_batch_100() {
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -907,7 +907,7 @@ async fn test_import_directory_batch_1000() {
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -943,7 +943,7 @@ async fn test_import_directory_ignore_non_midi_files() {
         dir.to_str().unwrap().to_string(),
         false,
         None,
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -976,7 +976,7 @@ async fn test_import_directory_concurrency_semaphore_limit() {
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -1010,7 +1010,7 @@ async fn test_import_directory_arc_atomic_counter_accuracy() {
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -1044,7 +1044,7 @@ async fn test_import_directory_progress_events_emitted() {
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -1078,7 +1078,7 @@ async fn test_import_directory_progress_event_data() {
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -1123,7 +1123,7 @@ async fn test_import_directory_duplicate_detection_50_percent() {
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -1146,7 +1146,7 @@ async fn test_import_directory_duplicate_detection_50_percent() {
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -1185,7 +1185,7 @@ async fn test_import_directory_error_collection_continues() {
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -1222,7 +1222,7 @@ async fn test_import_directory_file_errors_dont_stop_import() {
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -1256,7 +1256,7 @@ async fn test_import_directory_database_errors_collected() {
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -1268,7 +1268,7 @@ async fn test_import_directory_database_errors_collected() {
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -1304,7 +1304,7 @@ async fn test_import_directory_edge_case_10k_files() {
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -1345,7 +1345,7 @@ async fn test_import_directory_edge_case_nested_subdirectories() {
         root_dir.to_str().unwrap().to_string(),
         true, // recursive
         None,
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -1375,7 +1375,7 @@ async fn test_import_directory_edge_case_permission_denied() {
         "/root/nonexistent".to_string(),
         false,
         None,
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -1402,7 +1402,7 @@ async fn test_import_directory_empty_directory() {
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -1437,7 +1437,7 @@ async fn test_import_directory_nonrecursive_ignores_subdirs() {
         root_dir.to_str().unwrap().to_string(),
         false, // NOT recursive
         None,
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -1474,7 +1474,7 @@ async fn test_import_directory_batch_insert_boundary() {
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -1507,7 +1507,7 @@ async fn test_import_directory_batch_insert_overflow() {
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -1538,7 +1538,7 @@ async fn test_import_single_file_unicode_filename() {
     let result = import_single_file(
         file_path.to_str().unwrap().to_string(),
         None,
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -1569,7 +1569,7 @@ async fn test_import_directory_rate_calculation() {
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -1603,7 +1603,7 @@ async fn test_import_directory_progress_throttling() {
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -1637,7 +1637,7 @@ async fn test_import_single_file_filepath_stored_correctly() {
     let result = import_single_file(
         file_path.to_str().unwrap().to_string(),
         None,
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -1669,7 +1669,7 @@ async fn test_import_directory_with_category() {
         fixtures.path().to_str().unwrap().to_string(),
         false,
         Some("test_category".to_string()),
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -1712,7 +1712,7 @@ async fn test_import_single_file_hash_uniqueness() {
     let result1 = import_single_file(
         file_path1.to_str().unwrap().to_string(),
         None,
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -1724,7 +1724,7 @@ async fn test_import_single_file_hash_uniqueness() {
     let result2 = import_single_file(
         file_path2.to_str().unwrap().to_string(),
         None,
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -1756,7 +1756,7 @@ async fn test_import_directory_summary_accuracy() {
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -1790,7 +1790,7 @@ async fn test_import_single_file_content_hash_format() {
     let result = import_single_file(
         file_path.to_str().unwrap().to_string(),
         None,
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -1821,7 +1821,7 @@ async fn test_import_directory_not_found() {
         "/nonexistent/directory/path".to_string(),
         false,
         None,
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -1849,7 +1849,7 @@ async fn test_import_single_file_original_filename_preserved() {
     let result = import_single_file(
         file_path.to_str().unwrap().to_string(),
         None,
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -1941,7 +1941,7 @@ async fn test_import_single_file_race_condition_deleted() {
     let result = import_single_file(
         file_path.to_str().unwrap().to_string(),
         None,
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -1990,7 +1990,7 @@ async fn test_import_single_file_malformed_track_data() {
     let result = import_single_file(
         file_path.to_str().unwrap().to_string(),
         None,
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -2024,7 +2024,7 @@ async fn test_import_single_file_tag_extraction_crash() {
     let result = import_single_file(
         file_path.to_str().unwrap().to_string(),
         Some("test".to_string()),
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -2064,7 +2064,7 @@ async fn test_import_single_file_path_traversal_attack() {
         let result = import_single_file(
             path.to_string(),
             None,
-            tauri::State::from(&state),
+            state,
             window.clone(),
         )
         .await;
@@ -2100,7 +2100,7 @@ async fn test_import_single_file_invalid_chars_db_insertion() {
     let result = import_single_file(
         file_path.to_str().unwrap().to_string(),
         None,
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -2143,7 +2143,7 @@ async fn test_import_single_file_size_overflow_2gb() {
     let result = import_single_file(
         large_file.to_str().unwrap().to_string(),
         None,
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -2240,7 +2240,7 @@ async fn test_import_single_file_invalid_permissions() {
     let result = import_single_file(
         file_path.to_str().unwrap().to_string(),
         None,
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -2281,7 +2281,7 @@ async fn test_import_single_file_symlink_broken() {
         let result = import_single_file(
             symlink_path.to_str().unwrap().to_string(),
             None,
-            tauri::State::from(&state),
+            state,
             window.clone(),
         )
         .await;
@@ -2365,7 +2365,7 @@ async fn test_import_single_file_database_transaction_rollback() {
     let result1 = import_single_file(
         file_path.to_str().unwrap().to_string(),
         None,
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -2387,7 +2387,7 @@ async fn test_import_single_file_database_transaction_rollback() {
     let result2 = import_single_file(
         file_path.to_str().unwrap().to_string(),
         None,
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -2446,7 +2446,7 @@ async fn test_import_directory_metadata_extraction_partial_failure() {
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
-        tauri::State::from(&state),
+        state,
         window.clone(),
     )
     .await;
@@ -2471,7 +2471,7 @@ async fn test_error_file_not_found() {
     let state = AppState {
         database: Database::new(&db.database_url()).await.expect("DB"),
     };
-    let result = import_single_file("/nonexistent/path/file.mid".to_string(), None, tauri::State::from(&state), window).await;
+    let result = import_single_file("/nonexistent/path/file.mid".to_string(), None, state, window).await;
     assert!(result.is_err());
     db.cleanup().await;
 }
@@ -2482,9 +2482,9 @@ async fn test_error_duplicate_file() {
     let fixtures = MidiFixtures::new().await;
     let file_path = fixtures.create_simple_midi("duplicate.mid").await;
     let state = AppState { database: Database::new(&db.database_url()).await.expect("DB") };
-    let r1 = import_single_file(file_path.to_str().unwrap().to_string(), None, tauri::State::from(&state), MockWindow::new()).await;
+    let r1 = import_single_file(file_path.to_str().unwrap().to_string(), None, state, MockWindow::new()).await;
     assert!(r1.is_ok());
-    let r2 = import_single_file(file_path.to_str().unwrap().to_string(), None, tauri::State::from(&state), MockWindow::new()).await;
+    let r2 = import_single_file(file_path.to_str().unwrap().to_string(), None, state, MockWindow::new()).await;
     assert!(r2.is_err());
     db.cleanup().await;
 }
@@ -2497,7 +2497,7 @@ async fn test_error_corrupted_midi() {
     let file_path = fixtures.temp_dir.path().join("corrupt.mid");
     tokio::fs::write(&file_path, corrupt_bytes).await.expect("Write");
     let state = AppState { database: Database::new(&db.database_url()).await.expect("DB") };
-    let result = import_single_file(file_path.to_str().unwrap().to_string(), None, tauri::State::from(&state), MockWindow::new()).await;
+    let result = import_single_file(file_path.to_str().unwrap().to_string(), None, state, MockWindow::new()).await;
     assert!(result.is_err());
     db.cleanup().await;
 }
@@ -2510,7 +2510,7 @@ async fn test_error_truncated_file() {
     let file_path = fixtures.temp_dir.path().join("truncated.mid");
     tokio::fs::write(&file_path, truncated).await.expect("Write");
     let state = AppState { database: Database::new(&db.database_url()).await.expect("DB") };
-    let result = import_single_file(file_path.to_str().unwrap().to_string(), None, tauri::State::from(&state), MockWindow::new()).await;
+    let result = import_single_file(file_path.to_str().unwrap().to_string(), None, state, MockWindow::new()).await;
     assert!(result.is_err());
     db.cleanup().await;
 }
@@ -2544,7 +2544,7 @@ async fn test_error_metadata_graceful() {
     let file_path = fixtures.temp_dir.path().join("minimal.mid");
     tokio::fs::write(&file_path, minimal).await.expect("Write");
     let state = AppState { database: Database::new(&db.database_url()).await.expect("DB") };
-    let result = import_single_file(file_path.to_str().unwrap().to_string(), None, tauri::State::from(&state), MockWindow::new()).await;
+    let result = import_single_file(file_path.to_str().unwrap().to_string(), None, state, MockWindow::new()).await;
     assert!(result.is_ok() || result.is_err());
     db.cleanup().await;
 }
@@ -2555,7 +2555,7 @@ async fn test_error_unicode_filename() {
     let fixtures = MidiFixtures::new().await;
     let file_path = fixtures.create_simple_midi("音楽_файл_🎵.mid").await;
     let state = AppState { database: Database::new(&db.database_url()).await.expect("DB") };
-    let result = import_single_file(file_path.to_str().unwrap().to_string(), None, tauri::State::from(&state), MockWindow::new()).await;
+    let result = import_single_file(file_path.to_str().unwrap().to_string(), None, state, MockWindow::new()).await;
     assert!(result.is_ok());
     db.cleanup().await;
 }
@@ -2566,7 +2566,7 @@ async fn test_error_path_traversal() {
     let state = AppState { database: Database::new(&db.database_url()).await.expect("DB") };
     let paths = vec!["../../../etc/passwd", "..\\..\\..\\windows\\system32"];
     for path in paths {
-        let r = import_single_file(path.to_string(), None, tauri::State::from(&state), MockWindow::new()).await;
+        let r = import_single_file(path.to_string(), None, state, MockWindow::new()).await;
         assert!(r.is_err());
     }
     db.cleanup().await;
@@ -2579,7 +2579,7 @@ async fn test_error_batch_partial_failure() {
     for i in 0..8 { fixtures.create_simple_midi(&format!("v_{}.mid", i)).await; }
     for i in 0..4 { fixtures.create_invalid_midi(&format!("inv_{}.mid", i)).await; }
     let state = AppState { database: Database::new(&db.database_url()).await.expect("DB") };
-    let result = import_directory(fixtures.path().to_str().unwrap().to_string(), false, None, tauri::State::from(&state), MockWindow::new()).await;
+    let result = import_directory(fixtures.path().to_str().unwrap().to_string(), false, None, state, MockWindow::new()).await;
     assert!(result.is_ok());
     let summary = result.unwrap();
     assert_eq!(summary.total_files, 12);
@@ -2596,7 +2596,7 @@ async fn test_error_file_size_limits() {
     let state = AppState { database: Database::new(&db.database_url()).await.expect("DB") };
     let meta = tokio::fs::metadata(&file_path).await.expect("Meta");
     assert!(meta.len() < 2_147_483_648);
-    let result = import_single_file(file_path.to_str().unwrap().to_string(), None, tauri::State::from(&state), MockWindow::new()).await;
+    let result = import_single_file(file_path.to_str().unwrap().to_string(), None, state, MockWindow::new()).await;
     assert!(result.is_ok());
     db.cleanup().await;
 }
@@ -2608,7 +2608,7 @@ async fn test_error_progress_events() {
     fixtures.create_midi_files(50).await;
     let window = MockWindow::new();
     let state = AppState { database: Database::new(&db.database_url()).await.expect("DB") };
-    let result = import_directory(fixtures.path().to_str().unwrap().to_string(), false, None, tauri::State::from(&state), window.clone()).await;
+    let result = import_directory(fixtures.path().to_str().unwrap().to_string(), false, None, state, window.clone()).await;
     assert!(result.is_ok());
     assert!(window.event_count("import-progress").await >= 2);
     db.cleanup().await;
@@ -2623,7 +2623,7 @@ async fn test_error_large_file() {
     let file_path = fixtures.temp_dir.path().join("large.mid");
     tokio::fs::write(&file_path, large).await.expect("Write");
     let state = AppState { database: Database::new(&db.database_url()).await.expect("DB") };
-    let result = import_single_file(file_path.to_str().unwrap().to_string(), None, tauri::State::from(&state), MockWindow::new()).await;
+    let result = import_single_file(file_path.to_str().unwrap().to_string(), None, state, MockWindow::new()).await;
     assert!(result.is_ok());
     db.cleanup().await;
 }
@@ -2635,7 +2635,7 @@ async fn test_error_directory_not_file() {
     let dir = fixtures.temp_dir.path().join("dir");
     tokio::fs::create_dir(&dir).await.expect("Mkdir");
     let state = AppState { database: Database::new(&db.database_url()).await.expect("DB") };
-    let result = import_single_file(dir.to_str().unwrap().to_string(), None, tauri::State::from(&state), MockWindow::new()).await;
+    let result = import_single_file(dir.to_str().unwrap().to_string(), None, state, MockWindow::new()).await;
     assert!(result.is_err());
     db.cleanup().await;
 }

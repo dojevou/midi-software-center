@@ -111,6 +111,25 @@ pub async fn test_db_connection(state: State<'_, AppState>) -> Result<bool, Stri
         .map_err(|e| format!("Database connection failed: {}", e))
 }
 
+/// Get total count of files in database (implementation for tests and reuse)
+///
+/// Internal implementation that accepts &AppState for testing without Tauri context.
+///
+/// # Arguments
+/// * `state` - Application state containing database connection
+///
+/// # Returns
+/// * `Result<i64, String>` - Total file count or error message
+pub async fn get_file_count_impl(state: &AppState) -> Result<i64, String> {
+    let pool = state.database.pool().await;
+    let count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM files")
+        .fetch_one(&pool)
+        .await
+        .map_err(|e| format!("Failed to get file count: {}", e))?;
+
+    Ok(count)
+}
+
 /// Get total count of files in database
 ///
 /// Returns the number of MIDI files currently stored.
@@ -133,13 +152,45 @@ pub async fn test_db_connection(state: State<'_, AppState>) -> Result<bool, Stri
 /// ```
 #[tauri::command]
 pub async fn get_file_count(state: State<'_, AppState>) -> Result<i64, String> {
-    let pool = state.database.pool().await;
-    let count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM files")
-        .fetch_one(&pool)
-        .await
-        .map_err(|e| format!("Failed to get file count: {}", e))?;
+    get_file_count_impl(&*state).await
+}
 
-    Ok(count)
+/// Get file details by ID (implementation for tests and reuse)
+///
+/// Internal implementation that accepts &AppState for testing without Tauri context.
+pub async fn get_file_details_impl(
+    file_id: i64,
+    state: &AppState,
+) -> Result<MidiFile, String> {
+    let pool = state.database.pool().await;
+    let file = sqlx::query_as::<_, MidiFile>(
+        r#"
+        SELECT
+            f.id,
+            f.filename,
+            f.filepath,
+            f.original_filename,
+            COALESCE(fc.primary_category::text, 'UNKNOWN') as category,
+            f.parent_folder,
+            f.file_size_bytes as file_size,
+            CAST(f.duration_seconds AS DOUBLE PRECISION) as duration_seconds,
+            f.created_at,
+            f.updated_at,
+            CAST(mm.bpm AS DOUBLE PRECISION) as bpm,
+            mm.key_signature::text as key_signature
+        FROM files f
+        LEFT JOIN musical_metadata mm ON f.id = mm.file_id
+        LEFT JOIN file_categories fc ON f.id = fc.file_id
+        WHERE f.id = $1
+        "#,
+    )
+    .bind(file_id)
+    .fetch_optional(&pool)
+    .await
+    .map_err(|e| format!("Failed to fetch file details: {}", e))?
+    .ok_or_else(|| format!("File with ID {} not found", file_id))?;
+
+    Ok(file)
 }
 
 /// Get file details by ID
@@ -175,35 +226,7 @@ pub async fn get_file_details(
     file_id: i64,
     state: State<'_, AppState>,
 ) -> Result<MidiFile, String> {
-    let pool = state.database.pool().await;
-    let file = sqlx::query_as::<_, MidiFile>(
-        r#"
-        SELECT
-            f.id,
-            f.filename,
-            f.filepath,
-            f.original_filename,
-            COALESCE(fc.primary_category::text, 'UNKNOWN') as category,
-            f.parent_folder,
-            f.file_size_bytes as file_size,
-            CAST(f.duration_seconds AS DOUBLE PRECISION) as duration_seconds,
-            f.created_at,
-            f.updated_at,
-            CAST(mm.bpm AS DOUBLE PRECISION) as bpm,
-            mm.key_signature::text as key_signature
-        FROM files f
-        LEFT JOIN musical_metadata mm ON f.id = mm.file_id
-        LEFT JOIN file_categories fc ON f.id = fc.file_id
-        WHERE f.id = $1
-        "#,
-    )
-    .bind(file_id)
-    .fetch_optional(&pool)
-    .await
-    .map_err(|e| format!("Failed to fetch file details: {}", e))?
-    .ok_or_else(|| format!("File with ID {} not found", file_id))?;
-
-    Ok(file)
+    get_file_details_impl(file_id, &*state).await
 }
 
 /// Get file by ID (alias for get_file_details for frontend compatibility)
@@ -221,30 +244,13 @@ pub async fn get_file(
     get_file_details(file_id, state).await
 }
 
-/// List files with pagination
+/// List files with pagination (implementation for tests and reuse)
 ///
-/// Returns a paginated list of files ordered by creation date (newest first).
-///
-/// # Manager Archetype
-/// - ✅ Performs I/O (database query)
-/// - ✅ Has side effects (reads from database)
-/// - ✅ Handles errors properly
-///
-/// # Arguments
-///
-/// * `limit` - Maximum number of files to return (default: 50)
-/// * `offset` - Number of files to skip (default: 0)
-///
-/// # Frontend Usage
-///
-/// ```typescript
-/// const files = await invoke<MidiFile[]>('list_files', { limit: 50, offset: 0 });
-/// ```
-#[tauri::command]
-pub async fn list_files(
+/// Internal implementation that accepts &AppState for testing without Tauri context.
+pub async fn list_files_impl(
     limit: Option<i64>,
     offset: Option<i64>,
-    state: State<'_, AppState>,
+    state: &AppState,
 ) -> Result<Vec<MidiFile>, String> {
     let limit = limit.unwrap_or(50);
     let offset = offset.unwrap_or(0);
@@ -286,6 +292,34 @@ pub async fn list_files(
     );
 
     Ok(files)
+}
+
+/// List files with pagination
+///
+/// Returns a paginated list of files ordered by creation date (newest first).
+///
+/// # Manager Archetype
+/// - ✅ Performs I/O (database query)
+/// - ✅ Has side effects (reads from database)
+/// - ✅ Handles errors properly
+///
+/// # Arguments
+///
+/// * `limit` - Maximum number of files to return (default: 50)
+/// * `offset` - Number of files to skip (default: 0)
+///
+/// # Frontend Usage
+///
+/// ```typescript
+/// const files = await invoke<MidiFile[]>('list_files', { limit: 50, offset: 0 });
+/// ```
+#[tauri::command]
+pub async fn list_files(
+    limit: Option<i64>,
+    offset: Option<i64>,
+    state: State<'_, AppState>,
+) -> Result<Vec<MidiFile>, String> {
+    list_files_impl(limit, offset, &*state).await
 }
 
 /// Get files by category

@@ -32,8 +32,6 @@ use sqlx::PgPool;
 // Import test infrastructure
 mod fixtures;
 mod helpers;
-mod common;
-
 use fixtures::*;
 use helpers::db::*;
 use helpers::macros::*;
@@ -100,7 +98,7 @@ async fn test_insert_with_all_fields() {
         .expect("File not found");
 
     assert_eq!(file.filename, "complete_test.mid");
-    assert_eq!(file.num_tracks, 4, "Expected {4}, found {file.num_tracks}");
+    assert_eq!(file.num_tracks, 4);
     assert_eq!(file.manufacturer, Some("Roland".to_string()));
     assert_eq!(file.collection_name, Some("Test Collection".to_string()));
     assert_eq!(file.folder_tags, Some(vec!["drums".to_string(), "loops".to_string()]));
@@ -124,7 +122,7 @@ async fn test_insert_drum_loop_preset() {
         .expect("File not found");
 
     assert_eq!(file.manufacturer, Some("Ableton".to_string()));
-    assert_eq!(file.num_tracks, 1, "Expected {1}, found {file.num_tracks}");
+    assert_eq!(file.num_tracks, 1);
     assert!(file.filename.contains("Drum"));
 
     cleanup_database(&pool).await.expect("Cleanup failed");
@@ -212,9 +210,9 @@ async fn test_insert_with_empty_optional_fields() {
         .expect("Find failed")
         .expect("File not found");
 
-    assert_eq!(file.manufacturer, None, "Expected {None}, found {file.manufacturer}");
-    assert_eq!(file.collection_name, None, "Expected {None}, found {file.collection_name}");
-    assert_eq!(file.folder_tags, None, "Expected {None}, found {file.folder_tags}");
+    assert_eq!(file.manufacturer, None);
+    assert_eq!(file.collection_name, None);
+    assert_eq!(file.folder_tags, None);
 
     cleanup_database(&pool).await.expect("Cleanup failed");
 }
@@ -267,7 +265,7 @@ async fn test_insert_with_unicode_filename() {
         .expect("Find failed")
         .expect("File not found");
 
-    assert_eq!(file.filename, unicode_name, "Expected {unicode_name}, found {file.filename}");
+    assert_eq!(file.filename, unicode_name);
 
     cleanup_database(&pool).await.expect("Cleanup failed");
 }
@@ -293,7 +291,7 @@ async fn test_insert_with_special_characters() {
         .expect("Find failed")
         .expect("File not found");
 
-    assert_eq!(file.filename, special_name, "Expected {special_name}, found {file.filename}");
+    assert_eq!(file.filename, special_name);
 
     cleanup_database(&pool).await.expect("Cleanup failed");
 }
@@ -366,7 +364,7 @@ async fn test_find_by_id_existing() {
 
     assert!(found.is_some(), "File should be found");
     let file = found.unwrap();
-    assert_eq!(file.id, file_id, "Expected {file_id}, found {file.id}");
+    assert_eq!(file.id, file_id);
 
     cleanup_database(&pool).await.expect("Cleanup failed");
 }
@@ -433,7 +431,7 @@ async fn test_find_by_hash_existing() {
 
     assert!(found.is_some(), "File should be found by hash");
     let file = found.unwrap();
-    assert_eq!(file.content_hash, hash, "Expected {hash}, found {file.content_hash}");
+    assert_eq!(file.content_hash, hash);
 
     cleanup_database(&pool).await.expect("Cleanup failed");
 }
@@ -488,7 +486,7 @@ async fn test_find_by_path_existing() {
 
     assert!(found.is_some(), "File should be found by path");
     let file = found.unwrap();
-    assert_eq!(file.filepath, filepath, "Expected {filepath}, found {file.filepath}");
+    assert_eq!(file.filepath, filepath);
 
     cleanup_database(&pool).await.expect("Cleanup failed");
 }
@@ -603,7 +601,7 @@ async fn test_find_operations_return_complete_data() {
         .expect("Find failed")
         .expect("File not found");
 
-    assert_eq!(by_id.num_tracks, 4, "Expected {4}, found {by_id.num_tracks}");
+    assert_eq!(by_id.num_tracks, 4);
     assert_eq!(by_id.manufacturer, Some("Roland".to_string()));
 
     // Test find_by_hash returns all fields
@@ -612,7 +610,7 @@ async fn test_find_operations_return_complete_data() {
         .expect("Find failed")
         .expect("File not found");
 
-    assert_eq!(by_hash.num_tracks, 4, "Expected {4}, found {by_hash.num_tracks}");
+    assert_eq!(by_hash.num_tracks, 4);
     assert_eq!(by_hash.manufacturer, Some("Roland".to_string()));
 
     cleanup_database(&pool).await.expect("Cleanup failed");
@@ -844,7 +842,7 @@ async fn test_mark_analyzed_success() {
         .await
         .expect("Find failed")
         .expect("File not found");
-    assert_eq!(before.analyzed_at, None, "Expected {None}, found {before.analyzed_at}");
+    assert_eq!(before.analyzed_at, None);
 
     // Mark as analyzed
     FileRepository::mark_analyzed(&pool, file_id)
@@ -963,7 +961,7 @@ async fn test_update_metadata_fields_all() {
         .expect("File not found");
 
     assert_eq!(file.format, Some(1));
-    assert_eq!(file.num_tracks, 8, "Expected {8}, found {file.num_tracks}");
+    assert_eq!(file.num_tracks, 8);
     assert_eq!(file.ticks_per_quarter_note, Some(480));
     assert_eq!(file.duration_seconds, Some(sqlx::types::BigDecimal::from(180)));
     assert_eq!(file.duration_ticks, Some(86400));
@@ -997,7 +995,7 @@ async fn test_update_metadata_fields_partial() {
         .expect("Find failed")
         .expect("File not found");
 
-    assert_eq!(file.num_tracks, 16, "Expected {16}, found {file.num_tracks}");
+    assert_eq!(file.num_tracks, 16);
 
     cleanup_database(&pool).await.expect("Cleanup failed");
 }
@@ -1036,7 +1034,7 @@ async fn test_update_metadata_fields_format0_to_format1() {
         .expect("File not found");
 
     assert_eq!(file.format, Some(1));
-    assert_eq!(file.num_tracks, 4, "Expected {4}, found {file.num_tracks}");
+    assert_eq!(file.num_tracks, 4);
 
     cleanup_database(&pool).await.expect("Cleanup failed");
 }
@@ -1161,7 +1159,7 @@ async fn test_update_metadata_fields_zero_tracks() {
         .expect("Find failed")
         .expect("File not found");
 
-    assert_eq!(file.num_tracks, 0, "Expected {0}, found {file.num_tracks}");
+    assert_eq!(file.num_tracks, 0);
 
     cleanup_database(&pool).await.expect("Cleanup failed");
 }
@@ -1192,7 +1190,7 @@ async fn test_update_metadata_fields_large_values() {
         .expect("Find failed")
         .expect("File not found");
 
-    assert_eq!(file.num_tracks, 128, "Expected {128}, found {file.num_tracks}");
+    assert_eq!(file.num_tracks, 128);
     assert_eq!(file.duration_ticks, Some(3456000));
 
     cleanup_database(&pool).await.expect("Cleanup failed");
@@ -1912,7 +1910,7 @@ async fn test_very_long_filepath() {
         .expect("Find failed")
         .expect("File not found");
 
-    assert_eq!(file.filepath, long_path, "Expected {long_path}, found {file.filepath}");
+    assert_eq!(file.filepath, long_path);
 
     cleanup_database(&pool).await.expect("Cleanup failed");
 }

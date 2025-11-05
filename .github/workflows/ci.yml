@@ -1,0 +1,33 @@
+name: CI with AI Analysis
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - uses: actions/checkout@v3
+    
+    - name: Setup Rust
+      uses: actions-rs/toolchain@v1
+      with:
+        toolchain: stable
+    
+    - name: Build
+      run: cargo build --verbose
+    
+    - name: Run Tests
+      run: cargo test --verbose
+    
+    - name: AI Code Analysis
+      run: |
+        pip3 install httpx
+        python3 midi_grok_reviewer.py ci-check
+        if [ -f "grok_analysis_report.json" ]; then
+          echo "📊 AI analysis completed"
+        fi

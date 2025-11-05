@@ -71,6 +71,7 @@ use midi_pipeline::database::Database;
 #[derive(Parser, Debug)]
 #[command(name = "import-unified")]
 #[command(about = "Unified MIDI import pipeline with full analysis in single pass")]
+#[allow(dead_code)]
 struct Args {
     /// Path to archive directory or single archive file
     #[arg(help = "Directory containing .zip/.rar/.7z archives, or single archive file")]
@@ -95,6 +96,7 @@ struct Args {
 
 /// Fully analyzed MIDI file ready for database insertion
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct AnalyzedMidiFile {
     // File metadata
     filename: String,
@@ -148,6 +150,7 @@ struct AnalyzedMidiFile {
 
 /// Statistics for the import operation
 #[derive(Debug, Default)]
+#[allow(dead_code)]
 struct ImportStats {
     archives_processed: AtomicUsize,
     archives_total: AtomicUsize,
@@ -690,6 +693,7 @@ async fn insert_batch(pool: &sqlx::PgPool, files: &[AnalyzedMidiFile]) -> anyhow
 //=============================================================================
 
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct NoteStats {
     note_count: i32,
     pitch_range_low: Option<i16>,

@@ -50,11 +50,10 @@ impl From<TagWithCount> for TagResponse {
 // TAURI COMMANDS
 // =============================================================================
 
-/// Get all tags for a specific file
-#[tauri::command]
-pub async fn get_file_tags(
+/// Get all tags for a specific file (implementation for tests and reuse)
+pub async fn get_file_tags_impl(
     file_id: i64,
-    state: State<'_, AppState>,
+    state: &AppState,
 ) -> Result<Vec<TagResponse>, String> {
     let pool = state.database.pool().await;
     let repo = TagRepository::new(pool);
@@ -63,6 +62,33 @@ pub async fn get_file_tags(
         .get_file_tags(file_id)
         .await
         .map_err(|e| format!("Failed to get file tags: {}", e))?;
+
+    Ok(tags.into_iter().map(TagResponse::from).collect())
+}
+
+/// Get all tags for a specific file
+#[tauri::command]
+pub async fn get_file_tags(
+    file_id: i64,
+    state: State<'_, AppState>,
+) -> Result<Vec<TagResponse>, String> {
+    get_file_tags_impl(file_id, &*state).await
+}
+
+/// Get popular tags with usage counts (implementation for tests and reuse)
+pub async fn get_popular_tags_impl(
+    limit: Option<i32>,
+    state: &AppState,
+) -> Result<Vec<TagResponse>, String> {
+    let pool = state.database.pool().await;
+    let repo = TagRepository::new(pool);
+
+    let limit = limit.unwrap_or(50);
+
+    let tags = repo
+        .get_popular_tags(limit)
+        .await
+        .map_err(|e| format!("Failed to get popular tags: {}", e))?;
 
     Ok(tags.into_iter().map(TagResponse::from).collect())
 }
@@ -76,15 +102,24 @@ pub async fn get_popular_tags(
     limit: Option<i32>,
     state: State<'_, AppState>,
 ) -> Result<Vec<TagResponse>, String> {
+    get_popular_tags_impl(limit, &*state).await
+}
+
+/// Search tags by name prefix (implementation for tests and reuse)
+pub async fn search_tags_impl(
+    query: String,
+    limit: Option<i32>,
+    state: &AppState,
+) -> Result<Vec<TagResponse>, String> {
     let pool = state.database.pool().await;
     let repo = TagRepository::new(pool);
 
-    let limit = limit.unwrap_or(50);
+    let limit = limit.unwrap_or(10);
 
     let tags = repo
-        .get_popular_tags(limit)
+        .search_tags(&query, limit)
         .await
-        .map_err(|e| format!("Failed to get popular tags: {}", e))?;
+        .map_err(|e| format!("Failed to search tags: {}", e))?;
 
     Ok(tags.into_iter().map(TagResponse::from).collect())
 }
@@ -100,17 +135,7 @@ pub async fn search_tags(
     limit: Option<i32>,
     state: State<'_, AppState>,
 ) -> Result<Vec<TagResponse>, String> {
-    let pool = state.database.pool().await;
-    let repo = TagRepository::new(pool);
-
-    let limit = limit.unwrap_or(10);
-
-    let tags = repo
-        .search_tags(&query, limit)
-        .await
-        .map_err(|e| format!("Failed to search tags: {}", e))?;
-
-    Ok(tags.into_iter().map(TagResponse::from).collect())
+    search_tags_impl(query, limit, &*state).await
 }
 
 /// Get all unique tag categories
@@ -179,12 +204,11 @@ pub async fn update_file_tags(
     Ok(())
 }
 
-/// Add tags to a file (without removing existing tags)
-#[tauri::command]
-pub async fn add_tags_to_file(
+/// Add tags to a file (implementation for tests and reuse)
+pub async fn add_tags_to_file_impl(
     file_id: i64,
     tag_names: Vec<String>,
-    state: State<'_, AppState>,
+    state: &AppState,
 ) -> Result<(), String> {
     let pool = state.database.pool().await;
     let repo = TagRepository::new(pool);
@@ -206,6 +230,16 @@ pub async fn add_tags_to_file(
         .map_err(|e| format!("Failed to add tags to file: {}", e))?;
 
     Ok(())
+}
+
+/// Add tags to a file (without removing existing tags)
+#[tauri::command]
+pub async fn add_tags_to_file(
+    file_id: i64,
+    tag_names: Vec<String>,
+    state: State<'_, AppState>,
+) -> Result<(), String> {
+    add_tags_to_file_impl(file_id, tag_names, &*state).await
 }
 
 /// Remove a specific tag from a file

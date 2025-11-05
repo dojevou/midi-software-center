@@ -31,7 +31,6 @@ use tempfile::TempDir;
 use tokio::fs;
 use tokio::task::JoinSet;
 
-mod common;
 use common::{TestDatabase, FileFixtures};
 
 // ============================================================================
@@ -118,13 +117,13 @@ async fn test_stress_import_5000_files() {
 
     // Import all files
     let start = Instant::now();
-    let initial_count = get_file_count(tauri::State(&state)).await.unwrap();
+    let initial_count = get_file_count_impl(&state).await.unwrap();
     let mut success_count = 0;
     let mut error_count = 0;
 
     for (i, path) in paths.iter().enumerate() {
         match import_single_file(
-            tauri::State(&state),
+            &state,
             path.to_str().unwrap().to_string(),
         ).await {
             Ok(_) => success_count += 1,
@@ -137,7 +136,7 @@ async fn test_stress_import_5000_files() {
     }
 
     let duration = start.elapsed();
-    let final_count = get_file_count(tauri::State(&state)).await.unwrap();
+    let final_count = get_file_count_impl(&state).await.unwrap();
 
     // Assertions
     assert_eq!(success_count, 5000, "All 5000 files should import successfully");
@@ -184,7 +183,7 @@ async fn test_stress_import_malformed_batch() {
 
     for path in &paths {
         match import_single_file(
-            tauri::State(&state),
+            &state,
             path.to_str().unwrap().to_string(),
         ).await {
             Ok(_) => success_count += 1,
@@ -234,7 +233,7 @@ async fn test_stress_concurrent_imports_10() {
 
     for (_stream, path) in &all_paths {
         let result = import_single_file(
-            tauri::State(&state),
+            &state,
             path.to_str().unwrap().to_string(),
         ).await;
 
@@ -283,7 +282,7 @@ async fn test_stress_search_complex_10_filters() {
         fs::write(&path, &create_midi_bytes(bpm, key)).await.unwrap();
 
         let result = import_single_file(
-            tauri::State(&state),
+            &state,
             path.to_str().unwrap().to_string(),
         ).await.unwrap();
 
@@ -295,7 +294,7 @@ async fn test_stress_search_complex_10_filters() {
         ];
 
         add_tags_to_file(
-            tauri::State(&state),
+            &state,
             result.file_id,
             tags,
         ).await.unwrap();
@@ -307,7 +306,7 @@ async fn test_stress_search_complex_10_filters() {
     // Multiple filter operations
     for _ in 0..10 {
         let _files = list_files(
-            tauri::State(&state),
+            &state,
             Some(1),
             Some(20),
             None,
@@ -345,15 +344,15 @@ async fn test_stress_memory_leak_repeated_operations() {
 
         // Import
         let result = import_single_file(
-            tauri::State(&state),
+            &state,
             test_path.to_str().unwrap().to_string(),
         ).await.unwrap();
 
         // Query
-        let _ = get_file_count(tauri::State(&state)).await.unwrap();
+        let _ = get_file_count_impl(&state).await.unwrap();
 
         // Delete
-        let _ = delete_file(tauri::State(&state), result.file_id).await;
+        let _ = delete_file(&state, result.file_id).await;
 
         let iter_duration = iter_start.elapsed();
         iteration_times.push(iter_duration);
@@ -414,7 +413,7 @@ async fn test_stress_file_system_limits() {
         match fs::write(&path, &create_midi_bytes(120, "C_MAJOR")).await {
             Ok(_) => {
                 match import_single_file(
-                    tauri::State(&state),
+                    &state,
                     path.to_str().unwrap().to_string(),
                 ).await {
                     Ok(_) => {
@@ -456,7 +455,7 @@ async fn test_stress_database_connection_pool() {
 
     // Simulate 100 concurrent database queries
     for _ in 0..100 {
-        let result = get_file_count(tauri::State(&state)).await;
+        let result = get_file_count_impl(&state).await;
 
         if result.is_ok() {
             success_count.fetch_add(1, Ordering::SeqCst);
@@ -493,7 +492,7 @@ async fn test_stress_rapid_user_input() {
 
     // Rapid queries simulating user input
     for _ in 0..1000 {
-        let result = get_file_count(tauri::State(&state)).await;
+        let result = get_file_count_impl(&state).await;
         if result.is_ok() {
             success_count += 1;
         }
@@ -536,12 +535,12 @@ async fn test_stress_long_running_analysis() {
         fs::write(&path, &create_midi_bytes(120, "C_MAJOR")).await.unwrap();
 
         import_single_file(
-            tauri::State(&state),
+            &state,
             path.to_str().unwrap().to_string(),
         ).await.unwrap();
 
         // Verify system health
-        let count = get_file_count(tauri::State(&state)).await.unwrap();
+        let count = get_file_count_impl(&state).await.unwrap();
         assert!(count > 0, "System should remain operational");
 
         checkpoints.push(checkpoint_start.elapsed());
@@ -591,7 +590,7 @@ async fn test_stress_recovery_from_multiple_failures() {
         fs::write(&error_path, data).await.unwrap();
 
         let error_result = import_single_file(
-            tauri::State(&state),
+            &state,
             error_path.to_str().unwrap().to_string(),
         ).await;
 
@@ -603,7 +602,7 @@ async fn test_stress_recovery_from_multiple_failures() {
             fs::write(&recovery_path, &create_midi_bytes(120, "C_MAJOR")).await.unwrap();
 
             let recovery_result = import_single_file(
-                tauri::State(&state),
+                &state,
                 recovery_path.to_str().unwrap().to_string(),
             ).await;
 

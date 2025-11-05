@@ -31,8 +31,6 @@ use std::str::FromStr;
 
 mod fixtures;
 mod helpers;
-mod common;
-
 use fixtures::random_hash;
 use helpers::db::*;
 use common::assertions::{

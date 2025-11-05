@@ -32,6 +32,7 @@ use tokio::sync::Mutex;
 
 /// Progress event for real-time UI updates
 #[derive(Debug, Clone, Serialize)]
+#[allow(dead_code)]
 pub struct AnalysisProgress {
     pub current: usize,
     pub total: usize,
@@ -42,6 +43,7 @@ pub struct AnalysisProgress {
 
 /// Summary of analysis operation results
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[allow(dead_code)]
 pub struct AnalysisSummary {
     pub total_files: usize,
     pub analyzed: usize,
@@ -53,6 +55,7 @@ pub struct AnalysisSummary {
 
 /// File record from database
 #[derive(Debug, Clone, sqlx::FromRow)]
+#[allow(dead_code)]
 struct FileRecord {
     id: i64,
     filepath: String,
@@ -61,6 +64,7 @@ struct FileRecord {
 
 /// Analyzed file data ready for database insertion
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct AnalyzedFile {
     file_id: i64,
 
@@ -508,6 +512,7 @@ async fn batch_insert_analyzed_files(
 
 /// Note statistics
 #[derive(Debug, Clone)]
+#[allow(dead_code)]
 struct NoteStats {
     note_count: i32,
     pitch_range_low: Option<i16>,

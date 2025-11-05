@@ -15,6 +15,7 @@ pub mod window;
 /// Shared application state across all commands
 ///
 /// Contains database pool for read-only access to MIDI file metadata.
+#[allow(dead_code)]
 pub struct AppState {
     pub db_pool: Option<sqlx::PgPool>,
 }

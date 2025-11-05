@@ -16,19 +16,9 @@ use std::collections::HashMap;
 // TAURI COMMANDS
 // =============================================================================
 
-/// Get file count breakdown by category
-///
-/// Returns a map of category names to file counts.
-///
-/// # Frontend Usage
-///
-/// ```typescript
-/// const stats = await invoke<Record<string, number>>('get_category_stats');
-/// // { "bass": 150, "drums": 200, "melody": 100 }
-/// ```
-#[tauri::command]
-pub async fn get_category_stats(
-    state: State<'_, AppState>,
+/// Get file count breakdown by category (implementation for tests and reuse)
+pub async fn get_category_stats_impl(
+    state: &AppState,
 ) -> Result<HashMap<String, i64>, String> {
     let results: Vec<(Option<String>, i64)> = sqlx::query_as(
         r#"
@@ -50,6 +40,23 @@ pub async fn get_category_stats(
     }
 
     Ok(stats)
+}
+
+/// Get file count breakdown by category
+///
+/// Returns a map of category names to file counts.
+///
+/// # Frontend Usage
+///
+/// ```typescript
+/// const stats = await invoke<Record<string, number>>('get_category_stats');
+/// // { "bass": 150, "drums": 200, "melody": 100 }
+/// ```
+#[tauri::command]
+pub async fn get_category_stats(
+    state: State<'_, AppState>,
+) -> Result<HashMap<String, i64>, String> {
+    get_category_stats_impl(&*state).await
 }
 
 /// Get file count breakdown by manufacturer
@@ -182,6 +189,20 @@ pub async fn get_duplicate_count(
     Ok(count.0)
 }
 
+/// Get database size as formatted string (implementation for tests and reuse)
+pub async fn get_database_size_impl(state: &AppState) -> Result<String, String> {
+    let size: (Option<String>,) = sqlx::query_as(
+        r#"
+        SELECT pg_size_pretty(pg_database_size(current_database()))
+        "#
+    )
+    .fetch_one(&state.database.pool().await)
+    .await
+    .map_err(|e| format!("Failed to get database size: {}", e))?;
+
+    Ok(size.0.unwrap_or_else(|| "Unknown".to_string()))
+}
+
 /// Get database size as formatted string
 ///
 /// Returns the total size of the database in a human-readable format.
@@ -196,16 +217,7 @@ pub async fn get_duplicate_count(
 pub async fn get_database_size(
     state: State<'_, AppState>,
 ) -> Result<String, String> {
-    let size: (Option<String>,) = sqlx::query_as(
-        r#"
-        SELECT pg_size_pretty(pg_database_size(current_database()))
-        "#
-    )
-    .fetch_one(&state.database.pool().await)
-    .await
-    .map_err(|e| format!("Failed to get database size: {}", e))?;
-
-    Ok(size.0.unwrap_or_else(|| "Unknown".to_string()))
+    get_database_size_impl(&*state).await
 }
 
 /// Check database health status

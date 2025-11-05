@@ -32,7 +32,7 @@
 //! - Progress event rate limiting to avoid UI overload
 //! - Error recovery without stopping entire analysis batch
 
-use crate::common::*;
+use common::*;
 use midi_library_shared::core::midi::parser::parse_midi_file;
 use midi_library_shared::core::midi::types::{Event, MidiFile, Header, Track, TimedEvent, TextType};
 use tauri::{Emitter, Manager};
