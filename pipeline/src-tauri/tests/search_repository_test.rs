@@ -1457,7 +1457,7 @@ async fn test_empty_database() {
             .max_bpm(Some("100.0".to_string()))
             .build();
 
-        let results = SearchRepository::search(&pool, &query).await.expect("Query should not error");
+        let results = SearchRepository::search(&pool, query, 100, 0).await.expect("Query should not error");
         assert!(results.is_empty(), "Query with min > max should return empty results");
 
         cleanup_database(&pool).await.expect("Cleanup failed");
@@ -1477,7 +1477,7 @@ async fn test_empty_database() {
             .min_bpm(Some("-50.0".to_string()))
             .build();
 
-        let results = SearchRepository::search(&pool, &query).await.expect("Query should not error");
+        let results = SearchRepository::search(&pool, query, 100, 0).await.expect("Query should not error");
         // Negative BPM should be treated as invalid and match nothing
         assert!(results.is_empty(), "Negative BPM should not match");
 
@@ -1498,7 +1498,7 @@ async fn test_empty_database() {
             .key(Some(vec!["H".to_string()])) // Invalid key
             .build();
 
-        let results = SearchRepository::search(&pool, &query).await;
+        let results = SearchRepository::search(&pool, query, 100, 0).await;
         // Should either error or return empty
         if let Ok(results) = results {
             assert!(results.is_empty(), "Invalid key should not match");
@@ -1521,7 +1521,7 @@ async fn test_empty_database() {
             
             .build();
 
-        let results = SearchRepository::search(&pool, &query).await;
+        let results = SearchRepository::search(&pool, query, 100, 0).await;
         // Should either error or treat as 0
         if let Ok(results) = results {
             assert_eq!(results.len(), 1, "Negative offset should be treated as 0");
@@ -1544,7 +1544,7 @@ async fn test_empty_database() {
             .limit(-10)
             .build();
 
-        let results = SearchRepository::search(&pool, &query).await;
+        let results = SearchRepository::search(&pool, query, 100, 0).await;
         // Should either error or treat as unlimited
         if let Ok(results) = results {
             assert_eq!(results.len(), 1, "Negative limit should be treated as unlimited");
@@ -1568,7 +1568,7 @@ async fn test_empty_database() {
         // Query with no filters
         let query = SearchQueryBuilder::new().build();
 
-        let results = SearchRepository::search(&pool, &query).await.expect("Query failed");
+        let results = SearchRepository::search(&pool, query, 100, 0).await.expect("Query failed");
         assert_eq!(results.len(), 3, "Empty query should return all files");
 
         cleanup_database(&pool).await.expect("Cleanup failed");
@@ -1605,7 +1605,7 @@ async fn test_empty_database() {
             
             .build();
 
-        let results = SearchRepository::search(&pool, &query).await.expect("Query failed");
+        let results = SearchRepository::search(&pool, query, 100, 0).await.expect("Query failed");
         assert!(results.is_empty(), "Zero limit should return empty");
 
         cleanup_database(&pool).await.expect("Cleanup failed");
@@ -1627,7 +1627,7 @@ async fn test_empty_database() {
             .limit(1_000_000)
             .build();
 
-        let results = SearchRepository::search(&pool, &query).await.expect("Query failed");
+        let results = SearchRepository::search(&pool, query, 100, 0).await.expect("Query failed");
         assert_eq!(results.len(), 3, "Large limit should return all available");
 
         cleanup_database(&pool).await.expect("Cleanup failed");
@@ -1646,7 +1646,7 @@ async fn test_empty_database() {
             
             .build();
 
-        let results = SearchRepository::search(&pool, &query).await.expect("Query failed");
+        let results = SearchRepository::search(&pool, query, 100, 0).await.expect("Query failed");
         assert!(results.is_empty(), "Offset beyond results should return empty");
 
         cleanup_database(&pool).await.expect("Cleanup failed");
@@ -1672,7 +1672,7 @@ async fn test_empty_database() {
             .key(Some(vec!["C".to_string()]))
             .build();
 
-        let results = SearchRepository::search(&pool, &query).await.expect("Query failed");
+        let results = SearchRepository::search(&pool, query, 100, 0).await.expect("Query failed");
         assert_eq!(results.len(), 1, "Should match only file2 (140 BPM in C)");
         assert_eq!(results[0].file_id, file2, "Should be file2");
 
@@ -1694,7 +1694,7 @@ async fn test_empty_database() {
             .max_bpm(Some("50.0".to_string()))
             .build();
 
-        let results = SearchRepository::search(&pool, &query).await.unwrap_or_default();
+        let results = SearchRepository::search(&pool, query, 100, 0).await.unwrap_or_default();
         assert!(results.is_empty(), "Inverted BPM range should return empty");
         cleanup_database(&pool).await.expect("Cleanup failed");
     }
@@ -1708,7 +1708,7 @@ async fn test_empty_database() {
         insert_metadata(&pool, file, Some("-120.0"), None, None).await;
 
         let query = SearchQueryBuilder::new().build();
-        let results = SearchRepository::search(&pool, &query).await.expect("Query should handle negative BPM");
+        let results = SearchRepository::search(&pool, query, 100, 0).await.expect("Query should handle negative BPM");
         cleanup_database(&pool).await.expect("Cleanup failed");
     }
 
@@ -1726,7 +1726,7 @@ async fn test_empty_database() {
             
             .build();
 
-        let results = SearchRepository::search(&pool, &query).await.unwrap_or_default();
+        let results = SearchRepository::search(&pool, query, 100, 0).await.unwrap_or_default();
         assert!(results.is_empty(), "Negative offset should handle gracefully");
         cleanup_database(&pool).await.expect("Cleanup failed");
     }
@@ -1745,7 +1745,7 @@ async fn test_empty_database() {
             
             .build();
 
-        let results = SearchRepository::search(&pool, &query).await.unwrap_or_default();
+        let results = SearchRepository::search(&pool, query, 100, 0).await.unwrap_or_default();
         assert!(results.is_empty(), "Zero limit should return no results");
         cleanup_database(&pool).await.expect("Cleanup failed");
     }
@@ -1762,7 +1762,7 @@ async fn test_empty_database() {
             
             .build();
 
-        let results = SearchRepository::search(&pool, &query).await.unwrap_or_default();
+        let results = SearchRepository::search(&pool, query, 100, 0).await.unwrap_or_default();
         assert!(results.is_empty(), "Large offset should return empty");
         cleanup_database(&pool).await.expect("Cleanup failed");
     }
@@ -1776,7 +1776,7 @@ async fn test_empty_database() {
         insert_metadata(&pool, file, None, None, Some(-100i32)).await;
 
         let query = SearchQueryBuilder::new().build();
-        let results = SearchRepository::search(&pool, &query).await.expect("Query should handle negative duration");
+        let results = SearchRepository::search(&pool, query, 100, 0).await.expect("Query should handle negative duration");
         cleanup_database(&pool).await.expect("Cleanup failed");
     }
 
@@ -1792,7 +1792,7 @@ async fn test_empty_database() {
             .max_duration(Some("50".to_string()))
             .build();
 
-        let results = SearchRepository::search(&pool, &query).await.unwrap_or_default();
+        let results = SearchRepository::search(&pool, query, 100, 0).await.unwrap_or_default();
         assert!(results.is_empty(), "Inverted duration range should return empty");
         cleanup_database(&pool).await.expect("Cleanup failed");
     }
@@ -1809,7 +1809,7 @@ async fn test_empty_database() {
             .key(Some(vec!["H".to_string()]))
             .build();
 
-        let results = SearchRepository::search(&pool, &query).await.unwrap_or_default();
+        let results = SearchRepository::search(&pool, query, 100, 0).await.unwrap_or_default();
         assert!(results.is_empty(), "Invalid key should not match");
         cleanup_database(&pool).await.expect("Cleanup failed");
     }
@@ -1827,8 +1827,8 @@ async fn test_empty_database() {
         let query1 = SearchQueryBuilder::new().build();
         let query2 = SearchQueryBuilder::new().build();
 
-        let page1 = SearchRepository::search(&pool, &query1).await.expect("Page 1 query failed");
-        let page2 = SearchRepository::search(&pool, &query2).await.expect("Page 2 query failed");
+        let page1 = SearchRepository::search(&pool, query1, 10, 0).await.expect("Page 1 query failed");
+        let page2 = SearchRepository::search(&pool, query2, 10, 10).await.expect("Page 2 query failed");
 
         assert_eq!(page1.len(), 10, "Page 1 should have 10 results");
         assert_eq!(page2.len(), 10, "Page 2 should have 10 results");
@@ -1860,7 +1860,7 @@ async fn test_empty_database() {
                 let query = SearchQueryBuilder::new()
                     .min_bpm(Some("100.0".to_string()))
                     .build();
-                SearchRepository::search(&pool_clone, &query).await
+                SearchRepository::search(&pool_clone, query, 100, 0).await
             });
             handles.push(handle);
         }
@@ -1884,7 +1884,7 @@ async fn test_empty_database() {
             .min_bpm(Some("500.0".to_string()))
             .build();
 
-        let results = SearchRepository::search(&pool, &query).await.expect("Query failed");
+        let results = SearchRepository::search(&pool, query, 100, 0).await.expect("Query failed");
         assert!(results.is_empty(), "Impossible constraints should return empty");
         cleanup_database(&pool).await.expect("Cleanup failed");
     }
@@ -1903,7 +1903,7 @@ async fn test_empty_database() {
             
             .build();
 
-        let results = SearchRepository::search(&pool, &query).await.expect("Query failed");
+        let results = SearchRepository::search(&pool, query, 100, 0).await.expect("Query failed");
         assert_eq!(results.len(), 100, "Limit should not exceed available results");
         cleanup_database(&pool).await.expect("Cleanup failed");
     }
@@ -1922,7 +1922,7 @@ async fn test_empty_database() {
             
             .build();
 
-        let results = SearchRepository::search(&pool, &query).await.expect("Query failed");
+        let results = SearchRepository::search(&pool, query, 100, 0).await.expect("Query failed");
         assert!(results.is_empty(), "Offset equal to total should return empty");
         cleanup_database(&pool).await.expect("Cleanup failed");
     }
