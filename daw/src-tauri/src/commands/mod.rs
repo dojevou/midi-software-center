@@ -3,7 +3,6 @@
 //! Grown-up Scripts: Thin wrappers that expose backend functionality to frontend.
 //! All commands delegate business logic to Trusty Modules or Grown-up Scripts.
 
-pub mod automation;
 pub mod midi;
 pub mod sequencer;
 pub mod search;
