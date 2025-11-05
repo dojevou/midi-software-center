@@ -183,7 +183,7 @@ async fn test_workflow_load_template_customize() {
 
     // Step 4: Verify tags
     let tags = get_file_tags_impl(file_id, &state).await.unwrap();
-    assert!(tags.iter().any(|tag| tag.name == "template"));
+    assert!(tags.iter().any(|tag| tag == "template"));
 
     // Step 5: Create customized version
     let custom_path = temp_dir.path().join("custom_from_template.mid");
@@ -331,8 +331,8 @@ async fn test_workflow_remix_existing() {
     let tags_original = get_file_tags_impl(original_id, &state).await.unwrap();
     let tags_remix = get_file_tags_impl(remix_id, &state).await.unwrap();
 
-    assert!(tags.iter().any(|tag| tag.name == "original"));
-    assert!(tags.iter().any(|tag| tag.name == "remix"));
+    assert!(tags.iter().any(|tag| tag == "original"));
+    assert!(tags.iter().any(|tag| tag == "remix"));
 
     cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
@@ -635,7 +635,7 @@ async fn test_workflow_tempo_matching() {
 
     // Step 3: Verify all synced files tagged
     let all_tags = get_all_tags_impl(&state).await.unwrap();
-    assert!(all_tags.iter().any(|tag| tag.name == "tempo_synced"));
+    assert!(all_tags.iter().any(|tag| tag == "tempo_synced"));
 
     cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
@@ -764,7 +764,7 @@ async fn test_workflow_collaborative_project() {
 
     // Step 3: Verify all contributions
     let all_tags = get_all_tags_impl(&state).await.unwrap();
-    assert!(all_tags.iter().any(|tag| tag.name == "collaboration"));
+    assert!(all_tags.iter().any(|tag| tag == "collaboration"));
 
     cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
@@ -847,8 +847,8 @@ async fn test_workflow_feedback_incorporation() {
     let v1_tags = get_file_tags_impl(v1_result.id, &state).await.unwrap();
     let v2_tags = get_file_tags_impl(v2_result.id, &state).await.unwrap();
 
-    assert!(v1_tags.iter().any(|tag| tag.name == "v1"));
-    assert!(v2_tags.iter().any(|tag| tag.name == "v2"));
+    assert!(v1_tags.iter().any(|tag| tag == "v1"));
+    assert!(v2_tags.iter().any(|tag| tag == "v2"));
 
     cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
@@ -897,8 +897,8 @@ async fn test_workflow_version_control() {
 
     // Verify version chain
     let all_tags = get_all_tags_impl(&state).await.unwrap();
-    assert!(all_tags.iter().any(|tag| tag.name == "checkpoint"));
-    assert!(all_tags.iter().any(|tag| tag.name == "final"));
+    assert!(all_tags.iter().any(|tag| tag == "checkpoint"));
+    assert!(all_tags.iter().any(|tag| tag == "final"));
 
     cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
@@ -962,7 +962,7 @@ async fn test_workflow_archive_preservation() {
 
     // Step 2: Verify archival integrity
     let all_tags = get_all_tags_impl(&state).await.unwrap();
-    assert!(all_tags.iter().any(|tag| tag.name == "archive"));
+    assert!(all_tags.iter().any(|tag| tag == "archive"));
 
     // Step 3: Simulate restore (files already in database)
     let count = get_file_count_impl(&state).await.unwrap();
@@ -1005,8 +1005,8 @@ async fn test_workflow_data_migration() {
     let old_tags = get_file_tags_impl(old_result.id, &state).await.unwrap();
     let new_tags = get_file_tags_impl(new_result.id, &state).await.unwrap();
 
-    assert!(old_tags.iter().any(|tag| tag.name == "old_format"));
-    assert!(new_tags.iter().any(|tag| tag.name == "migrated"));
+    assert!(old_tags.iter().any(|tag| tag == "old_format"));
+    assert!(new_tags.iter().any(|tag| tag == "migrated"));
 
     cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }

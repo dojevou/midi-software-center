@@ -2322,8 +2322,8 @@ async fn test_many_folder_tags() {
         assert_eq!(page1.len(), 10, "Page 1 should have 10 files");
         assert_eq!(page2.len(), 10, "Page 2 should have 10 files");
 
-        let ids1: Vec<_> = page1.iter().map(|f| f.file_id).collect();
-        let ids2: Vec<_> = page2.iter().map(|f| f.file_id).collect();
+        let ids1: Vec<_> = page1.iter().map(|f| f.id).collect();
+        let ids2: Vec<_> = page2.iter().map(|f| f.id).collect();
 
         for id in ids1 {
             assert!(!ids2.contains(&id), "Pages should not overlap");
