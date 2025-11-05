@@ -151,7 +151,7 @@ async fn test_workflow_compose_new_song() {
     assert!(file_count >= 3);
 
     // Verify composition workflow completed
-    cleanup_test_files(state.database.pool(), &format!("{}%", project_path.to_str().unwrap())).await;
+    cleanup_test_files(state.database.pool().await, &format!("{}%", project_path.to_str().unwrap())).await;
 }
 
 #[tokio::test]
@@ -174,11 +174,7 @@ async fn test_workflow_load_template_customize() {
     let file_id = result.unwrap().id;
 
     // Step 3: Tag as template
-    let tag_result = add_tags_to_file(
-        &state,
-        file_id,
-        vec!["template".to_string(), "house".to_string()],
-    ).await;
+    let tag_result = add_tags_to_file_impl(file_id, vec!["template".to_string(), "house".to_string()], &state).await;
     assert!(tag_result.is_ok());
 
     // Step 4: Verify tags
@@ -196,7 +192,7 @@ async fn test_workflow_load_template_customize() {
     ).await;
     assert!(custom_result.is_ok());
 
-    cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
 
 #[tokio::test]
@@ -218,11 +214,7 @@ async fn test_workflow_jam_session() {
     let backing_id = backing_result.unwrap().id;
 
     // Step 2: Tag as backing track
-    add_tags_to_file(
-        &state,
-        backing_id,
-        vec!["backing".to_string(), "jam".to_string()],
-    ).await.unwrap();
+    add_tags_to_file_impl(backing_id, vec!["backing".to_string(), "jam".to_string()], &state).await.unwrap();
 
     // Step 3: Record improvisation
     let improv_path = temp_dir.path().join("improvisation.mid");
@@ -239,7 +231,7 @@ async fn test_workflow_jam_session() {
     let count = get_file_count_impl(&state).await.unwrap();
     assert!(count >= 2);
 
-    cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
 
 #[tokio::test]
@@ -288,14 +280,10 @@ async fn test_workflow_arrange_for_live() {
     ).await.unwrap();
 
     for file in files.iter().take(4) {
-        add_tags_to_file(
-            &state,
-            file.id,
-            vec!["live".to_string(), "arrangement".to_string()],
-        ).await.unwrap();
+        add_tags_to_file_impl(file.id, vec!["live".to_string(), "arrangement".to_string()], &state).await.unwrap();
     }
 
-    cleanup_test_files(state.database.pool(), &format!("{}%", stems_dir.to_str().unwrap())).await;
+    cleanup_test_files(state.database.pool().await, &format!("{}%", stems_dir.to_str().unwrap())).await;
 }
 
 #[tokio::test]
@@ -317,11 +305,7 @@ async fn test_workflow_remix_existing() {
     let original_id = original_result.unwrap().id;
 
     // Step 2: Tag as original
-    add_tags_to_file(
-        &state,
-        original_id,
-        vec!["original".to_string()],
-    ).await.unwrap();
+    add_tags_to_file_impl(original_id, vec!["original".to_string()], &state).await.unwrap();
 
     // Step 3: Create remix version
     let remix_path = temp_dir.path().join("remix.mid");
@@ -336,11 +320,7 @@ async fn test_workflow_remix_existing() {
     let remix_id = remix_result.unwrap().id;
 
     // Step 4: Tag as remix
-    add_tags_to_file(
-        &state,
-        remix_id,
-        vec!["remix".to_string(), "uptempo".to_string()],
-    ).await.unwrap();
+    add_tags_to_file_impl(remix_id, vec!["remix".to_string(), "uptempo".to_string()], &state).await.unwrap();
 
     // Step 5: Verify both versions exist
     let tags_original = get_file_tags_impl(original_id, &state).await.unwrap();
@@ -349,7 +329,7 @@ async fn test_workflow_remix_existing() {
     assert!(tags_original.contains(&"original".to_string()));
     assert!(tags_remix.contains(&"remix".to_string()));
 
-    cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
 
 #[tokio::test]
@@ -375,17 +355,13 @@ async fn test_workflow_music_theory_analysis() {
     assert!(details.is_ok());
 
     // Step 3: Tag based on analysis
-    add_tags_to_file(
-        &state,
-        file_id,
-        vec!["analyzed".to_string(), "theory".to_string()],
-    ).await.unwrap();
+    add_tags_to_file_impl(file_id, vec!["analyzed".to_string(), "theory".to_string()], &state).await.unwrap();
 
     // Step 4: Verify analysis metadata
     let file_info = details.unwrap();
     assert!(file_info.filepath.contains("analyze_me.mid"));
 
-    cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
 
 #[tokio::test]
@@ -421,17 +397,13 @@ async fn test_workflow_performance_preparation() {
 
     // Step 2: Tag all as setlist
     for file_id in &file_ids {
-        add_tags_to_file(
-            &state,
-            *file_id,
-            vec!["setlist".to_string(), "live".to_string()],
-        ).await.unwrap();
+        add_tags_to_file_impl(*file_id, vec!["setlist".to_string(), "live".to_string()], &state).await.unwrap();
     }
 
     // Step 3: Verify setlist order
     assert_eq!(file_ids.len(), 5);
 
-    cleanup_test_files(state.database.pool(), &format!("{}%", setlist_dir.to_str().unwrap())).await;
+    cleanup_test_files(state.database.pool().await, &format!("{}%", setlist_dir.to_str().unwrap())).await;
 }
 
 #[tokio::test]
@@ -460,7 +432,7 @@ async fn test_workflow_publishing_workflow() {
         "copyright_cleared".to_string(),
     ];
 
-    add_tags_to_file(
+    add_tags_to_file_impl(
         &state,
         file_id,
         publishing_tags.clone(),
@@ -479,7 +451,7 @@ async fn test_workflow_publishing_workflow() {
         fs::write(&export_path, &master_data).await.unwrap();
     }
 
-    cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
 
 // ============================================================================
@@ -511,7 +483,7 @@ async fn test_workflow_organize_library() {
             path.to_str().unwrap().to_string(),
         ).await.unwrap();
 
-        add_tags_to_file(
+        add_tags_to_file_impl(
             &state,
             result.id,
             tags.iter().map(|s| s.to_string()).collect(),
@@ -526,7 +498,7 @@ async fn test_workflow_organize_library() {
     let duration = start.elapsed();
     assert!(duration.as_secs() < 5, "Organization should complete in < 5s");
 
-    cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
 
 #[tokio::test]
@@ -564,7 +536,7 @@ async fn test_workflow_duplicate_cleanup() {
     ).await;
     assert!(delete_result.is_ok());
 
-    cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
 
 #[tokio::test]
@@ -606,13 +578,9 @@ async fn test_workflow_key_transposition() {
     ).await.unwrap();
 
     // Step 4: Tag as transposed
-    add_tags_to_file(
-        &state,
-        result.id,
-        vec!["transposed".to_string()],
-    ).await.unwrap();
+    add_tags_to_file_impl(result.id, vec!["transposed".to_string()], &state).await.unwrap();
 
-    cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
 
 #[tokio::test]
@@ -647,18 +615,14 @@ async fn test_workflow_tempo_matching() {
             path.to_str().unwrap().to_string(),
         ).await.unwrap();
 
-        add_tags_to_file(
-            &state,
-            result.id,
-            vec!["tempo_synced".to_string()],
-        ).await.unwrap();
+        add_tags_to_file_impl(result.id, vec!["tempo_synced".to_string()], &state).await.unwrap();
     }
 
     // Step 3: Verify all synced files tagged
     let all_tags = get_all_tags_impl(&state).await.unwrap();
     assert!(all_tags.contains(&"tempo_synced".to_string()));
 
-    cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
 
 #[tokio::test]
@@ -695,17 +659,13 @@ async fn test_workflow_create_sample_pack() {
 
     // Step 2: Tag all as sample pack
     for file_id in &sample_ids {
-        add_tags_to_file(
-            &state,
-            *file_id,
-            vec!["sample_pack".to_string(), "drums".to_string()],
-        ).await.unwrap();
+        add_tags_to_file_impl(*file_id, vec!["sample_pack".to_string(), "drums".to_string()], &state).await.unwrap();
     }
 
     // Step 3: Verify pack complete
     assert_eq!(sample_ids.len(), 5);
 
-    cleanup_test_files(state.database.pool(), &format!("{}%", pack_dir.to_str().unwrap())).await;
+    cleanup_test_files(state.database.pool().await, &format!("{}%", pack_dir.to_str().unwrap())).await;
 }
 
 #[tokio::test]
@@ -746,7 +706,7 @@ async fn test_workflow_backup_and_restore() {
     let backup_files = fs::read_dir(&backup_dir).await.unwrap().count();
     assert!(backup_files >= 3);
 
-    cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
 
 #[tokio::test]
@@ -767,11 +727,7 @@ async fn test_workflow_collaborative_project() {
         user1_path.to_str().unwrap().to_string(),
     ).await.unwrap();
 
-    add_tags_to_file(
-        &state,
-        user1_result.id,
-        vec!["collaboration".to_string(), "user1".to_string()],
-    ).await.unwrap();
+    add_tags_to_file_impl(user1_result.id, vec!["collaboration".to_string(), "user1".to_string()], &state).await.unwrap();
 
     // Step 2: User 2 contributes
     let user2_dir = temp_dir.path().join("user2");
@@ -785,17 +741,13 @@ async fn test_workflow_collaborative_project() {
         user2_path.to_str().unwrap().to_string(),
     ).await.unwrap();
 
-    add_tags_to_file(
-        &state,
-        user2_result.id,
-        vec!["collaboration".to_string(), "user2".to_string()],
-    ).await.unwrap();
+    add_tags_to_file_impl(user2_result.id, vec!["collaboration".to_string(), "user2".to_string()], &state).await.unwrap();
 
     // Step 3: Verify all contributions
     let all_tags = get_all_tags_impl(&state).await.unwrap();
     assert!(all_tags.contains(&"collaboration".to_string()));
 
-    cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
 
 // ============================================================================
@@ -821,11 +773,7 @@ async fn test_workflow_session_sharing() {
             path.to_str().unwrap().to_string(),
         ).await.unwrap();
 
-        add_tags_to_file(
-            &state,
-            result.id,
-            vec!["session".to_string()],
-        ).await.unwrap();
+        add_tags_to_file_impl(result.id, vec!["session".to_string()], &state).await.unwrap();
     }
 
     // Step 2: Simulate export/send (copy to shared dir)
@@ -842,7 +790,7 @@ async fn test_workflow_session_sharing() {
     let shared_count = fs::read_dir(&shared_dir).await.unwrap().count();
     assert_eq!(shared_count, 3);
 
-    cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
 
 #[tokio::test]
@@ -860,11 +808,7 @@ async fn test_workflow_feedback_incorporation() {
         v1_path.to_str().unwrap().to_string(),
     ).await.unwrap();
 
-    add_tags_to_file(
-        &state,
-        v1_result.id,
-        vec!["v1".to_string(), "needs_revision".to_string()],
-    ).await.unwrap();
+    add_tags_to_file_impl(v1_result.id, vec!["v1".to_string(), "needs_revision".to_string()], &state).await.unwrap();
 
     // Step 2: Create v2 with feedback incorporated
     let v2_path = temp_dir.path().join("track_v2.mid");
@@ -875,11 +819,7 @@ async fn test_workflow_feedback_incorporation() {
         v2_path.to_str().unwrap().to_string(),
     ).await.unwrap();
 
-    add_tags_to_file(
-        &state,
-        v2_result.id,
-        vec!["v2".to_string(), "feedback_applied".to_string()],
-    ).await.unwrap();
+    add_tags_to_file_impl(v2_result.id, vec!["v2".to_string(), "feedback_applied".to_string()], &state).await.unwrap();
 
     // Step 3: Verify iterations
     let v1_tags = get_file_tags_impl(v1_result.id, &state).await.unwrap();
@@ -888,7 +828,7 @@ async fn test_workflow_feedback_incorporation() {
     assert!(v1_tags.contains(&"v1".to_string()));
     assert!(v2_tags.contains(&"v2".to_string()));
 
-    cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
 
 #[tokio::test]
@@ -906,11 +846,7 @@ async fn test_workflow_version_control() {
         v1_path.to_str().unwrap().to_string(),
     ).await.unwrap();
 
-    add_tags_to_file(
-        &state,
-        v1_result.id,
-        vec!["checkpoint".to_string(), "v1".to_string()],
-    ).await.unwrap();
+    add_tags_to_file_impl(v1_result.id, vec!["checkpoint".to_string(), "v1".to_string()], &state).await.unwrap();
 
     // Step 2: Create v2
     let v2_path = temp_dir.path().join("checkpoint_v2.mid");
@@ -921,11 +857,7 @@ async fn test_workflow_version_control() {
         v2_path.to_str().unwrap().to_string(),
     ).await.unwrap();
 
-    add_tags_to_file(
-        &state,
-        v2_result.id,
-        vec!["checkpoint".to_string(), "v2".to_string()],
-    ).await.unwrap();
+    add_tags_to_file_impl(v2_result.id, vec!["checkpoint".to_string(), "v2".to_string()], &state).await.unwrap();
 
     // Step 3: Create final version
     let final_path = temp_dir.path().join("final.mid");
@@ -936,18 +868,14 @@ async fn test_workflow_version_control() {
         final_path.to_str().unwrap().to_string(),
     ).await.unwrap();
 
-    add_tags_to_file(
-        &state,
-        final_result.id,
-        vec!["final".to_string(), "approved".to_string()],
-    ).await.unwrap();
+    add_tags_to_file_impl(final_result.id, vec!["final".to_string(), "approved".to_string()], &state).await.unwrap();
 
     // Verify version chain
     let all_tags = get_all_tags_impl(&state).await.unwrap();
     assert!(all_tags.contains(&"checkpoint".to_string()));
     assert!(all_tags.contains(&"final".to_string()));
 
-    cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
 
 #[tokio::test]
@@ -968,11 +896,7 @@ async fn test_workflow_multi_format_delivery() {
     ).await.unwrap();
 
     // Step 2: Tag as multi-format deliverable
-    add_tags_to_file(
-        &state,
-        result.id,
-        vec!["deliverable".to_string(), "multi_format".to_string()],
-    ).await.unwrap();
+    add_tags_to_file_impl(result.id, vec!["deliverable".to_string(), "multi_format".to_string()], &state).await.unwrap();
 
     // Step 3: Create format variations (simulated)
     let formats = vec!["wav", "mp3", "pdf", "xml"];
@@ -985,7 +909,7 @@ async fn test_workflow_multi_format_delivery() {
     let count = fs::read_dir(&delivery_dir).await.unwrap().count();
     assert!(count >= 5); // master + 4 formats
 
-    cleanup_test_files(state.database.pool(), &format!("{}%", delivery_dir.to_str().unwrap())).await;
+    cleanup_test_files(state.database.pool().await, &format!("{}%", delivery_dir.to_str().unwrap())).await;
 }
 
 #[tokio::test]
@@ -1006,11 +930,7 @@ async fn test_workflow_archive_preservation() {
             path.to_str().unwrap().to_string(),
         ).await.unwrap();
 
-        add_tags_to_file(
-            &state,
-            result.id,
-            vec!["archive".to_string(), "preserved".to_string()],
-        ).await.unwrap();
+        add_tags_to_file_impl(result.id, vec!["archive".to_string(), "preserved".to_string()], &state).await.unwrap();
     }
 
     // Step 2: Verify archival integrity
@@ -1021,7 +941,7 @@ async fn test_workflow_archive_preservation() {
     let count = get_file_count_impl(&state).await.unwrap();
     assert!(count >= 5);
 
-    cleanup_test_files(state.database.pool(), &format!("{}%", archive_dir.to_str().unwrap())).await;
+    cleanup_test_files(state.database.pool().await, &format!("{}%", archive_dir.to_str().unwrap())).await;
 }
 
 #[tokio::test]
@@ -1039,11 +959,7 @@ async fn test_workflow_data_migration() {
         old_format_path.to_str().unwrap().to_string(),
     ).await.unwrap();
 
-    add_tags_to_file(
-        &state,
-        old_result.id,
-        vec!["old_format".to_string(), "migration_pending".to_string()],
-    ).await.unwrap();
+    add_tags_to_file_impl(old_result.id, vec!["old_format".to_string(), "migration_pending".to_string()], &state).await.unwrap();
 
     // Step 2: Convert to new format
     let new_format_path = temp_dir.path().join("new_format.mid");
@@ -1054,11 +970,7 @@ async fn test_workflow_data_migration() {
         new_format_path.to_str().unwrap().to_string(),
     ).await.unwrap();
 
-    add_tags_to_file(
-        &state,
-        new_result.id,
-        vec!["new_format".to_string(), "migrated".to_string()],
-    ).await.unwrap();
+    add_tags_to_file_impl(new_result.id, vec!["new_format".to_string(), "migrated".to_string()], &state).await.unwrap();
 
     // Step 3: Verify migration
     let old_tags = get_file_tags_impl(old_result.id, &state).await.unwrap();
@@ -1067,7 +979,7 @@ async fn test_workflow_data_migration() {
     assert!(old_tags.contains(&"old_format".to_string()));
     assert!(new_tags.contains(&"migrated".to_string()));
 
-    cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
 
 // ===== SECTION 4: EDGE CASE WORKFLOWS (10 additional edge case tests) =====
@@ -1086,7 +998,7 @@ async fn test_workflow_concurrent_import_same_file() {
     let (result1, result2) = tokio::join!(r1, r2);
 
     assert!(result1.is_ok() || result2.is_ok(), "At least one concurrent import should succeed");
-    cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
 
 #[tokio::test]
@@ -1097,10 +1009,10 @@ async fn test_workflow_empty_tag_list() {
     fs::write(&file_path, &create_midi_bytes(120, "C_MAJOR")).await.unwrap();
 
     let result = import_single_file_impl(file_path.to_str().unwrap().to_string()).await.unwrap();
-    let tags = add_tags_to_file_impl(result.id, vec![]).await;
+    let tags = add_tags_to_file_impl(result.id, vec![], &state).await;
 
     assert!(tags.is_ok(), "Empty tag list should be handled gracefully");
-    cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
 
 #[tokio::test]
@@ -1111,11 +1023,11 @@ async fn test_workflow_delete_with_tags() {
     fs::write(&file_path, &create_midi_bytes(120, "C_MAJOR")).await.unwrap();
 
     let result = import_single_file_impl(file_path.to_str().unwrap().to_string()).await.unwrap();
-    add_tags_to_file_impl(result.id, vec!["test".to_string()]).await.unwrap();
+    add_tags_to_file_impl(result.id, vec!["test".to_string()], &state).await.unwrap();
 
     let delete_result = delete_file(&state, result.id).await;
     assert!(delete_result.is_ok(), "Delete with tags should succeed");
-    cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
 
 #[tokio::test]
@@ -1129,7 +1041,7 @@ async fn test_workflow_search_after_analysis() {
     let search_results = search_files_impl("".to_string(), Some(120), Some(160), None).await;
 
     assert!(search_results.is_ok(), "Search after analysis should succeed");
-    cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
 
 #[tokio::test]
@@ -1140,10 +1052,10 @@ async fn test_workflow_duplicate_tag_deduplication() {
     fs::write(&file_path, &create_midi_bytes(120, "C_MAJOR")).await.unwrap();
 
     let result = import_single_file_impl(file_path.to_str().unwrap().to_string()).await.unwrap();
-    let tags = add_tags_to_file_impl(result.id, vec!["tag".to_string(), "tag".to_string()]).await.unwrap();
+    let tags = add_tags_to_file_impl(result.id, vec!["tag".to_string(), "tag".to_string()], &state).await.unwrap();
 
     assert_eq!(tags.len(), 1, "Duplicate tags should be deduplicated");
-    cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
 
 #[tokio::test]
@@ -1156,7 +1068,7 @@ async fn test_workflow_analysis_on_corrupted() {
     let import_result = import_single_file_impl(file_path.to_str().unwrap().to_string()).await;
 
     assert!(import_result.is_err(), "Corrupted file should fail gracefully");
-    cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
 
 #[tokio::test]
@@ -1178,7 +1090,7 @@ async fn test_workflow_rapid_fire_operations() {
     let results: Vec<_> = futures::future::join_all(handles).await;
     let success = results.iter().filter(|r| r.is_ok() && r.as_ref().unwrap().is_ok()).count();
     assert!(success > 0, "Some rapid operations should succeed");
-    cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
 
 #[tokio::test]
@@ -1200,7 +1112,7 @@ async fn test_workflow_large_batch_consistency() {
     assert!(batch_result.is_ok(), "Batch import should complete");
     let summary = batch_result.unwrap();
     assert!(summary.total_files >= 10, "Batch should process all files");
-    cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
 
 #[tokio::test]
@@ -1221,5 +1133,5 @@ async fn test_workflow_search_filter_combination() {
 
     let results = search_files_impl("".to_string(), Some(120), Some(160), Some(vec!["C_MAJOR".to_string()])).await;
     assert!(results.is_ok(), "Complex filter search should succeed");
-    cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }

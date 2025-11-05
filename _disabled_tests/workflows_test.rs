@@ -174,11 +174,7 @@ async fn test_workflow_load_template_customize() {
     let file_id = result.unwrap().file_id;
 
     // Step 3: Tag as template
-    let tag_result = add_tags_to_file(
-        tauri::State(&state),
-        file_id,
-        vec!["template".to_string(), "house".to_string()],
-    ).await;
+    let tag_result = add_tags_to_file(file_id, vec!["template".to_string(), "house".to_string()], tauri::State(&state)).await;
     assert!(tag_result.is_ok());
 
     // Step 4: Verify tags
@@ -218,11 +214,7 @@ async fn test_workflow_jam_session() {
     let backing_id = backing_result.unwrap().file_id;
 
     // Step 2: Tag as backing track
-    add_tags_to_file(
-        tauri::State(&state),
-        backing_id,
-        vec!["backing".to_string(), "jam".to_string()],
-    ).await.unwrap();
+    add_tags_to_file(backing_id, vec!["backing".to_string(), "jam".to_string()], tauri::State(&state)).await.unwrap();
 
     // Step 3: Record improvisation
     let improv_path = temp_dir.path().join("improvisation.mid");
@@ -288,11 +280,7 @@ async fn test_workflow_arrange_for_live() {
     ).await.unwrap();
 
     for file in files.iter().take(4) {
-        add_tags_to_file(
-            tauri::State(&state),
-            file.id,
-            vec!["live".to_string(), "arrangement".to_string()],
-        ).await.unwrap();
+        add_tags_to_file(file.id, vec!["live".to_string(), "arrangement".to_string()], tauri::State(&state)).await.unwrap();
     }
 
     cleanup_test_files(state.database.pool(), &format!("{}%", stems_dir.to_str().unwrap())).await;
@@ -317,11 +305,7 @@ async fn test_workflow_remix_existing() {
     let original_id = original_result.unwrap().file_id;
 
     // Step 2: Tag as original
-    add_tags_to_file(
-        tauri::State(&state),
-        original_id,
-        vec!["original".to_string()],
-    ).await.unwrap();
+    add_tags_to_file(original_id, vec!["original".to_string()], tauri::State(&state)).await.unwrap();
 
     // Step 3: Create remix version
     let remix_path = temp_dir.path().join("remix.mid");
@@ -336,11 +320,7 @@ async fn test_workflow_remix_existing() {
     let remix_id = remix_result.unwrap().file_id;
 
     // Step 4: Tag as remix
-    add_tags_to_file(
-        tauri::State(&state),
-        remix_id,
-        vec!["remix".to_string(), "uptempo".to_string()],
-    ).await.unwrap();
+    add_tags_to_file(remix_id, vec!["remix".to_string(), "uptempo".to_string()], tauri::State(&state)).await.unwrap();
 
     // Step 5: Verify both versions exist
     let tags_original = get_file_tags(tauri::State(&state), original_id).await.unwrap();
@@ -375,11 +355,7 @@ async fn test_workflow_music_theory_analysis() {
     assert!(details.is_ok());
 
     // Step 3: Tag based on analysis
-    add_tags_to_file(
-        tauri::State(&state),
-        file_id,
-        vec!["analyzed".to_string(), "theory".to_string()],
-    ).await.unwrap();
+    add_tags_to_file(file_id, vec!["analyzed".to_string(), "theory".to_string()], tauri::State(&state)).await.unwrap();
 
     // Step 4: Verify analysis metadata
     let file_info = details.unwrap();
@@ -421,11 +397,7 @@ async fn test_workflow_performance_preparation() {
 
     // Step 2: Tag all as setlist
     for file_id in &file_ids {
-        add_tags_to_file(
-            tauri::State(&state),
-            *file_id,
-            vec!["setlist".to_string(), "live".to_string()],
-        ).await.unwrap();
+        add_tags_to_file(*file_id, vec!["setlist".to_string(), "live".to_string()], tauri::State(&state)).await.unwrap();
     }
 
     // Step 3: Verify setlist order
@@ -606,11 +578,7 @@ async fn test_workflow_key_transposition() {
     ).await.unwrap();
 
     // Step 4: Tag as transposed
-    add_tags_to_file(
-        tauri::State(&state),
-        result.file_id,
-        vec!["transposed".to_string()],
-    ).await.unwrap();
+    add_tags_to_file(result.file_id, vec!["transposed".to_string()], tauri::State(&state)).await.unwrap();
 
     cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
@@ -647,11 +615,7 @@ async fn test_workflow_tempo_matching() {
             path.to_str().unwrap().to_string(),
         ).await.unwrap();
 
-        add_tags_to_file(
-            tauri::State(&state),
-            result.file_id,
-            vec!["tempo_synced".to_string()],
-        ).await.unwrap();
+        add_tags_to_file(result.file_id, vec!["tempo_synced".to_string()], tauri::State(&state)).await.unwrap();
     }
 
     // Step 3: Verify all synced files tagged
@@ -695,11 +659,7 @@ async fn test_workflow_create_sample_pack() {
 
     // Step 2: Tag all as sample pack
     for file_id in &sample_ids {
-        add_tags_to_file(
-            tauri::State(&state),
-            *file_id,
-            vec!["sample_pack".to_string(), "drums".to_string()],
-        ).await.unwrap();
+        add_tags_to_file(*file_id, vec!["sample_pack".to_string(), "drums".to_string()], tauri::State(&state)).await.unwrap();
     }
 
     // Step 3: Verify pack complete
@@ -767,11 +727,7 @@ async fn test_workflow_collaborative_project() {
         user1_path.to_str().unwrap().to_string(),
     ).await.unwrap();
 
-    add_tags_to_file(
-        tauri::State(&state),
-        user1_result.file_id,
-        vec!["collaboration".to_string(), "user1".to_string()],
-    ).await.unwrap();
+    add_tags_to_file(user1_result.file_id, vec!["collaboration".to_string(), "user1".to_string()], tauri::State(&state)).await.unwrap();
 
     // Step 2: User 2 contributes
     let user2_dir = temp_dir.path().join("user2");
@@ -785,11 +741,7 @@ async fn test_workflow_collaborative_project() {
         user2_path.to_str().unwrap().to_string(),
     ).await.unwrap();
 
-    add_tags_to_file(
-        tauri::State(&state),
-        user2_result.file_id,
-        vec!["collaboration".to_string(), "user2".to_string()],
-    ).await.unwrap();
+    add_tags_to_file(user2_result.file_id, vec!["collaboration".to_string(), "user2".to_string()], tauri::State(&state)).await.unwrap();
 
     // Step 3: Verify all contributions
     let all_tags = get_all_tags(tauri::State(&state)).await.unwrap();
@@ -821,11 +773,7 @@ async fn test_workflow_session_sharing() {
             path.to_str().unwrap().to_string(),
         ).await.unwrap();
 
-        add_tags_to_file(
-            tauri::State(&state),
-            result.file_id,
-            vec!["session".to_string()],
-        ).await.unwrap();
+        add_tags_to_file(result.file_id, vec!["session".to_string()], tauri::State(&state)).await.unwrap();
     }
 
     // Step 2: Simulate export/send (copy to shared dir)
@@ -860,11 +808,7 @@ async fn test_workflow_feedback_incorporation() {
         v1_path.to_str().unwrap().to_string(),
     ).await.unwrap();
 
-    add_tags_to_file(
-        tauri::State(&state),
-        v1_result.file_id,
-        vec!["v1".to_string(), "needs_revision".to_string()],
-    ).await.unwrap();
+    add_tags_to_file(v1_result.file_id, vec!["v1".to_string(), "needs_revision".to_string()], tauri::State(&state)).await.unwrap();
 
     // Step 2: Create v2 with feedback incorporated
     let v2_path = temp_dir.path().join("track_v2.mid");
@@ -875,11 +819,7 @@ async fn test_workflow_feedback_incorporation() {
         v2_path.to_str().unwrap().to_string(),
     ).await.unwrap();
 
-    add_tags_to_file(
-        tauri::State(&state),
-        v2_result.file_id,
-        vec!["v2".to_string(), "feedback_applied".to_string()],
-    ).await.unwrap();
+    add_tags_to_file(v2_result.file_id, vec!["v2".to_string(), "feedback_applied".to_string()], tauri::State(&state)).await.unwrap();
 
     // Step 3: Verify iterations
     let v1_tags = get_file_tags(tauri::State(&state), v1_result.file_id).await.unwrap();
@@ -906,11 +846,7 @@ async fn test_workflow_version_control() {
         v1_path.to_str().unwrap().to_string(),
     ).await.unwrap();
 
-    add_tags_to_file(
-        tauri::State(&state),
-        v1_result.file_id,
-        vec!["checkpoint".to_string(), "v1".to_string()],
-    ).await.unwrap();
+    add_tags_to_file(v1_result.file_id, vec!["checkpoint".to_string(), "v1".to_string()], tauri::State(&state)).await.unwrap();
 
     // Step 2: Create v2
     let v2_path = temp_dir.path().join("checkpoint_v2.mid");
@@ -921,11 +857,7 @@ async fn test_workflow_version_control() {
         v2_path.to_str().unwrap().to_string(),
     ).await.unwrap();
 
-    add_tags_to_file(
-        tauri::State(&state),
-        v2_result.file_id,
-        vec!["checkpoint".to_string(), "v2".to_string()],
-    ).await.unwrap();
+    add_tags_to_file(v2_result.file_id, vec!["checkpoint".to_string(), "v2".to_string()], tauri::State(&state)).await.unwrap();
 
     // Step 3: Create final version
     let final_path = temp_dir.path().join("final.mid");
@@ -936,11 +868,7 @@ async fn test_workflow_version_control() {
         final_path.to_str().unwrap().to_string(),
     ).await.unwrap();
 
-    add_tags_to_file(
-        tauri::State(&state),
-        final_result.file_id,
-        vec!["final".to_string(), "approved".to_string()],
-    ).await.unwrap();
+    add_tags_to_file(final_result.file_id, vec!["final".to_string(), "approved".to_string()], tauri::State(&state)).await.unwrap();
 
     // Verify version chain
     let all_tags = get_all_tags(tauri::State(&state)).await.unwrap();
@@ -968,11 +896,7 @@ async fn test_workflow_multi_format_delivery() {
     ).await.unwrap();
 
     // Step 2: Tag as multi-format deliverable
-    add_tags_to_file(
-        tauri::State(&state),
-        result.file_id,
-        vec!["deliverable".to_string(), "multi_format".to_string()],
-    ).await.unwrap();
+    add_tags_to_file(result.file_id, vec!["deliverable".to_string(), "multi_format".to_string()], tauri::State(&state)).await.unwrap();
 
     // Step 3: Create format variations (simulated)
     let formats = vec!["wav", "mp3", "pdf", "xml"];
@@ -1006,11 +930,7 @@ async fn test_workflow_archive_preservation() {
             path.to_str().unwrap().to_string(),
         ).await.unwrap();
 
-        add_tags_to_file(
-            tauri::State(&state),
-            result.file_id,
-            vec!["archive".to_string(), "preserved".to_string()],
-        ).await.unwrap();
+        add_tags_to_file(result.file_id, vec!["archive".to_string(), "preserved".to_string()], tauri::State(&state)).await.unwrap();
     }
 
     // Step 2: Verify archival integrity
@@ -1039,11 +959,7 @@ async fn test_workflow_data_migration() {
         old_format_path.to_str().unwrap().to_string(),
     ).await.unwrap();
 
-    add_tags_to_file(
-        tauri::State(&state),
-        old_result.file_id,
-        vec!["old_format".to_string(), "migration_pending".to_string()],
-    ).await.unwrap();
+    add_tags_to_file(old_result.file_id, vec!["old_format".to_string(), "migration_pending".to_string()], tauri::State(&state)).await.unwrap();
 
     // Step 2: Convert to new format
     let new_format_path = temp_dir.path().join("new_format.mid");
@@ -1054,11 +970,7 @@ async fn test_workflow_data_migration() {
         new_format_path.to_str().unwrap().to_string(),
     ).await.unwrap();
 
-    add_tags_to_file(
-        tauri::State(&state),
-        new_result.file_id,
-        vec!["new_format".to_string(), "migrated".to_string()],
-    ).await.unwrap();
+    add_tags_to_file(new_result.file_id, vec!["new_format".to_string(), "migrated".to_string()], tauri::State(&state)).await.unwrap();
 
     // Step 3: Verify migration
     let old_tags = get_file_tags(tauri::State(&state), old_result.file_id).await.unwrap();

@@ -9,7 +9,7 @@
 //!
 //! **Test Categories:**
 //! 1. SECTION 1: import_single_file() Tests (12 tests) - Single file import workflow
-//! 2. SECTION 2: import_directory() Tests (18 tests) - Batch import with concurrency
+//! 2. SECTION 2: import_directory_impl() Tests (18 tests) - Batch import with concurrency
 //! 3. SECTION 3: Additional Edge Cases & Performance (20 tests) - Batch boundaries, Unicode, large files
 //! 4. SECTION 4: Advanced Error Scenarios (12-15 tests) - Database errors, race conditions, security
 //!
@@ -31,7 +31,7 @@
 //! - File size overflow handling (> 2GB edge case)
 //! - Unicode filename normalization and path sanitization
 
-use midi_pipeline::commands::file_import::{import_single_file, import_directory, ImportProgress, ImportSummary, FileMetadata};
+use midi_pipeline::commands::file_import::{import_single_file_impl, import_directory_impl, import_single_file, import_directory, ImportProgress, ImportSummary, FileMetadata};
 use midi_pipeline::{AppState, Database};
 use std::path::PathBuf;
 use std::sync::Arc;
@@ -653,7 +653,7 @@ async fn test_import_single_file_concurrent_access() {
             import_single_file(
                 file_path.to_str().unwrap().to_string(),
                 None,
-                tauri::State::from(&*state_clone),
+                state_clone,
                 window,
             )
             .await
@@ -713,7 +713,7 @@ async fn test_import_single_file_with_category() {
 }
 
 // ============================================================================
-// SECTION 2: import_directory() Tests (18 tests)
+// SECTION 2: import_directory_impl() Tests (18 tests)
 // ============================================================================
 
 #[tokio::test]
@@ -730,7 +730,7 @@ async fn test_import_directory_single_file() {
             .expect("Failed to connect to database"),
     };
 
-    let result = import_directory(
+    let result = import_directory_impl(
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
@@ -764,7 +764,7 @@ async fn test_import_directory_multiple_files_10() {
             .expect("Failed to connect to database"),
     };
 
-    let result = import_directory(
+    let result = import_directory_impl(
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
@@ -801,7 +801,7 @@ async fn test_import_directory_batch_100() {
 
     let start = std::time::Instant::now();
 
-    let result = import_directory(
+    let result = import_directory_impl(
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
@@ -838,7 +838,7 @@ async fn test_import_directory_batch_1000() {
 
     let start = std::time::Instant::now();
 
-    let result = import_directory(
+    let result = import_directory_impl(
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
@@ -874,7 +874,7 @@ async fn test_import_directory_ignore_non_midi_files() {
             .expect("Failed to connect to database"),
     };
 
-    let result = import_directory(
+    let result = import_directory_impl(
         dir.to_str().unwrap().to_string(),
         false,
         None,
@@ -907,7 +907,7 @@ async fn test_import_directory_concurrency_semaphore_limit() {
             .expect("Failed to connect to database"),
     };
 
-    let result = import_directory(
+    let result = import_directory_impl(
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
@@ -941,7 +941,7 @@ async fn test_import_directory_arc_atomic_counter_accuracy() {
             .expect("Failed to connect to database"),
     };
 
-    let result = import_directory(
+    let result = import_directory_impl(
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
@@ -975,7 +975,7 @@ async fn test_import_directory_progress_events_emitted() {
             .expect("Failed to connect to database"),
     };
 
-    let result = import_directory(
+    let result = import_directory_impl(
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
@@ -1009,7 +1009,7 @@ async fn test_import_directory_progress_event_data() {
             .expect("Failed to connect to database"),
     };
 
-    let result = import_directory(
+    let result = import_directory_impl(
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
@@ -1054,7 +1054,7 @@ async fn test_import_directory_duplicate_detection_50_percent() {
     };
 
     // First import
-    let result1 = import_directory(
+    let result1 = import_directory_impl(
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
@@ -1077,7 +1077,7 @@ async fn test_import_directory_duplicate_detection_50_percent() {
     }
 
     // Second import
-    let result2 = import_directory(
+    let result2 = import_directory_impl(
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
@@ -1116,7 +1116,7 @@ async fn test_import_directory_error_collection_continues() {
             .expect("Failed to connect to database"),
     };
 
-    let result = import_directory(
+    let result = import_directory_impl(
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
@@ -1153,7 +1153,7 @@ async fn test_import_directory_file_errors_dont_stop_import() {
             .expect("Failed to connect to database"),
     };
 
-    let result = import_directory(
+    let result = import_directory_impl(
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
@@ -1187,7 +1187,7 @@ async fn test_import_directory_database_errors_collected() {
     };
 
     // First import
-    let result1 = import_directory(
+    let result1 = import_directory_impl(
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
@@ -1199,7 +1199,7 @@ async fn test_import_directory_database_errors_collected() {
     assert!(result1.is_ok());
 
     // Second import (all duplicates) - errors collected in Arc<Mutex<Vec>>
-    let result2 = import_directory(
+    let result2 = import_directory_impl(
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
@@ -1235,7 +1235,7 @@ async fn test_import_directory_edge_case_10k_files() {
 
     let start = std::time::Instant::now();
 
-    let result = import_directory(
+    let result = import_directory_impl(
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
@@ -1276,7 +1276,7 @@ async fn test_import_directory_edge_case_nested_subdirectories() {
     };
 
     // Test recursive import
-    let result = import_directory(
+    let result = import_directory_impl(
         root_dir.to_str().unwrap().to_string(),
         true, // recursive
         None,
@@ -1306,7 +1306,7 @@ async fn test_import_directory_edge_case_permission_denied() {
     };
 
     // Try to import from root (likely permission denied)
-    let result = import_directory(
+    let result = import_directory_impl(
         "/root/nonexistent".to_string(),
         false,
         None,
@@ -1333,7 +1333,7 @@ async fn test_import_directory_empty_directory() {
             .expect("Failed to connect to database"),
     };
 
-    let result = import_directory(
+    let result = import_directory_impl(
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
@@ -1368,7 +1368,7 @@ async fn test_import_directory_nonrecursive_ignores_subdirs() {
     };
 
     // Test non-recursive import
-    let result = import_directory(
+    let result = import_directory_impl(
         root_dir.to_str().unwrap().to_string(),
         false, // NOT recursive
         None,
@@ -1405,7 +1405,7 @@ async fn test_import_directory_batch_insert_boundary() {
             .expect("Failed to connect to database"),
     };
 
-    let result = import_directory(
+    let result = import_directory_impl(
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
@@ -1438,7 +1438,7 @@ async fn test_import_directory_batch_insert_overflow() {
             .expect("Failed to connect to database"),
     };
 
-    let result = import_directory(
+    let result = import_directory_impl(
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
@@ -1495,7 +1495,7 @@ async fn test_import_directory_rate_calculation() {
             .expect("Failed to connect to database"),
     };
 
-    let result = import_directory(
+    let result = import_directory_impl(
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
@@ -1529,7 +1529,7 @@ async fn test_import_directory_progress_throttling() {
             .expect("Failed to connect to database"),
     };
 
-    let result = import_directory(
+    let result = import_directory_impl(
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
@@ -1590,7 +1590,7 @@ async fn test_import_directory_with_category() {
             .expect("Failed to connect to database"),
     };
 
-    let result = import_directory(
+    let result = import_directory_impl(
         fixtures.path().to_str().unwrap().to_string(),
         false,
         Some("test_category".to_string()),
@@ -1667,7 +1667,7 @@ async fn test_import_directory_summary_accuracy() {
             .expect("Failed to connect to database"),
     };
 
-    let result = import_directory(
+    let result = import_directory_impl(
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
@@ -1727,7 +1727,7 @@ async fn test_import_directory_not_found() {
             .expect("Failed to connect to database"),
     };
 
-    let result = import_directory(
+    let result = import_directory_impl(
         "/nonexistent/directory/path".to_string(),
         false,
         None,
@@ -2055,7 +2055,7 @@ async fn test_import_directory_concurrent_same_file_race() {
             import_single_file(
                 path_clone.to_str().unwrap().to_string(),
                 None,
-                tauri::State::from(&*state_clone),
+                state_clone,
                 window,
             )
             .await
@@ -2185,7 +2185,7 @@ async fn test_import_directory_database_pool_exhaustion() {
         let window_clone = MockWindow::new();
 
         let handle = tokio::spawn(async move {
-            import_directory(
+            import_directory_impl(
                 dir_path.to_str().unwrap().to_string(),
                 false,
                 None,
@@ -2297,7 +2297,7 @@ async fn test_import_directory_metadata_extraction_partial_failure() {
             .expect("Failed to connect to database"),
     };
 
-    let result = import_directory(
+    let result = import_directory_impl(
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
@@ -2434,7 +2434,7 @@ async fn test_error_batch_partial_failure() {
     for i in 0..8 { fixtures.create_simple_midi(&format!("v_{}.mid", i)).await; }
     for i in 0..4 { fixtures.create_invalid_midi(&format!("inv_{}.mid", i)).await; }
     let state = AppState { database: Database::new(&db.database_url()).await.expect("DB") };
-    let result = import_directory(fixtures.path().to_str().unwrap().to_string(), false, None, state, MockWindow::new()).await;
+    let result = import_directory_impl(fixtures.path().to_str().unwrap().to_string(), false, None, state, MockWindow::new()).await;
     assert!(result.is_ok());
     let summary = result.unwrap();
     assert_eq!(summary.total_files, 12);
@@ -2463,7 +2463,7 @@ async fn test_error_progress_events() {
     fixtures.create_midi_files(50).await;
     let window = MockWindow::new();
     let state = AppState { database: Database::new(&db.database_url()).await.expect("DB") };
-    let result = import_directory(fixtures.path().to_str().unwrap().to_string(), false, None, state, window.clone()).await;
+    let result = import_directory_impl(fixtures.path().to_str().unwrap().to_string(), false, None, state, window.clone()).await;
     assert!(result.is_ok());
     assert!(window.event_count("import-progress").await >= 2);
     db.cleanup().await;

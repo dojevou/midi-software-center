@@ -544,11 +544,7 @@ async fn test_perf_search_filters_combined() {
         ).await.unwrap();
 
         // Add tags for filtering
-        add_tags_to_file(
-            tauri::State(&state),
-            result.file_id,
-            vec![format!("tag_{}", i % 5)],
-        ).await.unwrap();
+        add_tags_to_file(result.file_id, vec![format!("tag_{}", i % 5)], tauri::State(&state)).await.unwrap();
     }
 
     // Benchmark complex filtered search

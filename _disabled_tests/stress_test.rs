@@ -294,11 +294,7 @@ async fn test_stress_search_complex_10_filters() {
             format!("mood_{}", i % 3),
         ];
 
-        add_tags_to_file(
-            tauri::State(&state),
-            result.file_id,
-            tags,
-        ).await.unwrap();
+        add_tags_to_file(result.file_id, tags, tauri::State(&state)).await.unwrap();
     }
 
     // Stress test complex search

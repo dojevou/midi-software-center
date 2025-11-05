@@ -83,11 +83,7 @@ async fn test_workflow_find_similar_songs() {
         reference_path.to_str().unwrap().to_string(),
     ).await.unwrap();
 
-    add_tags_to_file(
-        tauri::State(&state),
-        ref_result.file_id,
-        vec!["reference".to_string(), "house".to_string()],
-    ).await.unwrap();
+    add_tags_to_file(ref_result.file_id, vec!["reference".to_string(), "house".to_string()], tauri::State(&state)).await.unwrap();
 
     // Step 2: Import similar tracks
     let similar_tracks = vec![
@@ -105,11 +101,7 @@ async fn test_workflow_find_similar_songs() {
             path.to_str().unwrap().to_string(),
         ).await.unwrap();
 
-        add_tags_to_file(
-            tauri::State(&state),
-            result.file_id,
-            vec!["house".to_string()],
-        ).await.unwrap();
+        add_tags_to_file(result.file_id, vec!["house".to_string()], tauri::State(&state)).await.unwrap();
     }
 
     // Step 3: Search by tag to find similar
@@ -146,11 +138,7 @@ async fn test_workflow_mood_based_playlist() {
             path.to_str().unwrap().to_string(),
         ).await.unwrap();
 
-        add_tags_to_file(
-            tauri::State(&state),
-            result.file_id,
-            vec![mood.to_string()],
-        ).await.unwrap();
+        add_tags_to_file(result.file_id, vec![mood.to_string()], tauri::State(&state)).await.unwrap();
     }
 
     // Step 2: Search by mood
@@ -193,11 +181,7 @@ async fn test_workflow_progressive_mix() {
 
         track_ids.push(result.file_id);
 
-        add_tags_to_file(
-            tauri::State(&state),
-            result.file_id,
-            vec!["progressive_mix".to_string()],
-        ).await.unwrap();
+        add_tags_to_file(result.file_id, vec!["progressive_mix".to_string()], tauri::State(&state)).await.unwrap();
     }
 
     // Step 2: Verify progression order
@@ -205,11 +189,7 @@ async fn test_workflow_progressive_mix() {
 
     // Step 3: Tag for mix export
     for file_id in &track_ids {
-        add_tags_to_file(
-            tauri::State(&state),
-            *file_id,
-            vec!["mix_ready".to_string()],
-        ).await.unwrap();
+        add_tags_to_file(*file_id, vec!["mix_ready".to_string()], tauri::State(&state)).await.unwrap();
     }
 
     cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
@@ -239,11 +219,7 @@ async fn test_workflow_genre_exploration() {
             path.to_str().unwrap().to_string(),
         ).await.unwrap();
 
-        add_tags_to_file(
-            tauri::State(&state),
-            result.file_id,
-            vec![genre.to_string()],
-        ).await.unwrap();
+        add_tags_to_file(result.file_id, vec![genre.to_string()], tauri::State(&state)).await.unwrap();
     }
 
     // Step 2: Search by genre
@@ -281,11 +257,7 @@ async fn test_workflow_collaboration_with_artists() {
             path.to_str().unwrap().to_string(),
         ).await.unwrap();
 
-        add_tags_to_file(
-            tauri::State(&state),
-            result.file_id,
-            vec![artist.to_string(), "collaboration".to_string()],
-        ).await.unwrap();
+        add_tags_to_file(result.file_id, vec![artist.to_string(), "collaboration".to_string()], tauri::State(&state)).await.unwrap();
     }
 
     // Step 2: Search by artist
@@ -302,11 +274,7 @@ async fn test_workflow_collaboration_with_artists() {
         derived_path.to_str().unwrap().to_string(),
     ).await.unwrap();
 
-    add_tags_to_file(
-        tauri::State(&state),
-        derived_result.file_id,
-        vec!["artist_a".to_string(), "inspired".to_string()],
-    ).await.unwrap();
+    add_tags_to_file(derived_result.file_id, vec!["artist_a".to_string(), "inspired".to_string()], tauri::State(&state)).await.unwrap();
 
     cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
@@ -327,26 +295,18 @@ async fn test_workflow_educational_analysis() {
     ).await.unwrap();
 
     // Step 2: Add educational tags
-    add_tags_to_file(
-        tauri::State(&state),
-        result.file_id,
-        vec![
+    add_tags_to_file(result.file_id, vec![
             "educational".to_string(),
             "theory".to_string(),
             "analysis".to_string(),
-        ],
-    ).await.unwrap();
+        ], tauri::State(&state)).await.unwrap();
 
     // Step 3: Verify analysis metadata
     let details = get_file_details(tauri::State(&state), result.file_id).await;
     assert!(details.is_ok());
 
     // Step 4: Tag with annotations
-    add_tags_to_file(
-        tauri::State(&state),
-        result.file_id,
-        vec!["annotated".to_string()],
-    ).await.unwrap();
+    add_tags_to_file(result.file_id, vec!["annotated".to_string()], tauri::State(&state)).await.unwrap();
 
     let tags = get_file_tags(tauri::State(&state), result.file_id).await.unwrap();
     assert!(tags.contains(&"educational".to_string()));
@@ -453,11 +413,7 @@ async fn test_workflow_realtime_playback() {
     ).await.unwrap();
 
     // Step 2: Tag as playback ready
-    add_tags_to_file(
-        tauri::State(&state),
-        result.file_id,
-        vec!["playback".to_string()],
-    ).await.unwrap();
+    add_tags_to_file(result.file_id, vec!["playback".to_string()], tauri::State(&state)).await.unwrap();
 
     // Step 3: Simulate recording
     let record_path = temp_dir.path().join("recorded.mid");
@@ -618,11 +574,7 @@ async fn test_workflow_missing_track_recovery() {
         original_path.to_str().unwrap().to_string(),
     ).await.unwrap();
 
-    add_tags_to_file(
-        tauri::State(&state),
-        result.file_id,
-        vec!["project".to_string()],
-    ).await.unwrap();
+    add_tags_to_file(result.file_id, vec!["project".to_string()], tauri::State(&state)).await.unwrap();
 
     // Step 2: Delete original file (simulate missing)
     fs::remove_file(&original_path).await.unwrap();
@@ -636,11 +588,7 @@ async fn test_workflow_missing_track_recovery() {
         substitute_path.to_str().unwrap().to_string(),
     ).await.unwrap();
 
-    add_tags_to_file(
-        tauri::State(&state),
-        sub_result.file_id,
-        vec!["project".to_string(), "substitute".to_string()],
-    ).await.unwrap();
+    add_tags_to_file(sub_result.file_id, vec!["project".to_string(), "substitute".to_string()], tauri::State(&state)).await.unwrap();
 
     // Step 4: Verify recovery
     let tags = get_file_tags(tauri::State(&state), sub_result.file_id).await.unwrap();
@@ -696,11 +644,7 @@ async fn test_workflow_disk_full_recovery() {
     ).await.unwrap();
 
     // Step 2: Simulate space available, continue export
-    add_tags_to_file(
-        tauri::State(&state),
-        result.file_id,
-        vec!["exported".to_string()],
-    ).await.unwrap();
+    add_tags_to_file(result.file_id, vec!["exported".to_string()], tauri::State(&state)).await.unwrap();
 
     // Step 3: Verify recovery
     let tags = get_file_tags(tauri::State(&state), result.file_id).await.unwrap();
@@ -731,11 +675,7 @@ async fn test_workflow_crash_recovery() {
     assert!(details.is_ok(), "Data should persist after crash");
 
     // Step 3: Continue operations post-recovery
-    add_tags_to_file(
-        tauri::State(&state),
-        file_id,
-        vec!["recovered".to_string()],
-    ).await.unwrap();
+    add_tags_to_file(file_id, vec!["recovered".to_string()], tauri::State(&state)).await.unwrap();
 
     let tags = get_file_tags(tauri::State(&state), file_id).await.unwrap();
     assert!(tags.contains(&"recovered".to_string()));
@@ -795,11 +735,7 @@ async fn test_workflow_smart_analysis() {
     assert!(details.is_ok());
 
     // Step 3: Tag based on analysis
-    add_tags_to_file(
-        tauri::State(&state),
-        result.file_id,
-        vec!["smart_analyzed".to_string(), "effects_suggested".to_string()],
-    ).await.unwrap();
+    add_tags_to_file(result.file_id, vec!["smart_analyzed".to_string(), "effects_suggested".to_string()], tauri::State(&state)).await.unwrap();
 
     let tags = get_file_tags(tauri::State(&state), result.file_id).await.unwrap();
     assert!(tags.contains(&"smart_analyzed".to_string()));
@@ -822,11 +758,7 @@ async fn test_workflow_harmonic_mixing() {
         track_a_path.to_str().unwrap().to_string(),
     ).await.unwrap();
 
-    add_tags_to_file(
-        tauri::State(&state),
-        track_a_result.file_id,
-        vec!["mixing".to_string(), "c_major".to_string()],
-    ).await.unwrap();
+    add_tags_to_file(track_a_result.file_id, vec!["mixing".to_string(), "c_major".to_string()], tauri::State(&state)).await.unwrap();
 
     // Step 2: Import harmonic match (G Major is harmonically compatible)
     let track_b_path = temp_dir.path().join("track_b.mid");
@@ -837,11 +769,7 @@ async fn test_workflow_harmonic_mixing() {
         track_b_path.to_str().unwrap().to_string(),
     ).await.unwrap();
 
-    add_tags_to_file(
-        tauri::State(&state),
-        track_b_result.file_id,
-        vec!["mixing".to_string(), "g_major".to_string(), "harmonic_match".to_string()],
-    ).await.unwrap();
+    add_tags_to_file(track_b_result.file_id, vec!["mixing".to_string(), "g_major".to_string(), "harmonic_match".to_string()], tauri::State(&state)).await.unwrap();
 
     // Step 3: Verify harmonic pairing
     let tags_b = get_file_tags(tauri::State(&state), track_b_result.file_id).await.unwrap();
@@ -866,11 +794,7 @@ async fn test_workflow_adaptive_playback() {
     ).await.unwrap();
 
     // Step 2: Tag with detected style
-    add_tags_to_file(
-        tauri::State(&state),
-        result.file_id,
-        vec!["adaptive".to_string(), "high_energy".to_string()],
-    ).await.unwrap();
+    add_tags_to_file(result.file_id, vec!["adaptive".to_string(), "high_energy".to_string()], tauri::State(&state)).await.unwrap();
 
     // Step 3: Verify adaptive settings
     let tags = get_file_tags(tauri::State(&state), result.file_id).await.unwrap();
@@ -903,11 +827,7 @@ async fn test_workflow_time_stretch_workflow() {
         stretched_path.to_str().unwrap().to_string(),
     ).await.unwrap();
 
-    add_tags_to_file(
-        tauri::State(&state),
-        stretched_result.file_id,
-        vec!["time_stretched".to_string(), "140_bpm".to_string()],
-    ).await.unwrap();
+    add_tags_to_file(stretched_result.file_id, vec!["time_stretched".to_string(), "140_bpm".to_string()], tauri::State(&state)).await.unwrap();
 
     // Step 3: Verify stretch workflow
     let tags = get_file_tags(tauri::State(&state), stretched_result.file_id).await.unwrap();
@@ -931,11 +851,7 @@ async fn test_workflow_pitch_correction() {
         uncorrected_path.to_str().unwrap().to_string(),
     ).await.unwrap();
 
-    add_tags_to_file(
-        tauri::State(&state),
-        uncorrected_result.file_id,
-        vec!["uncorrected".to_string()],
-    ).await.unwrap();
+    add_tags_to_file(uncorrected_result.file_id, vec!["uncorrected".to_string()], tauri::State(&state)).await.unwrap();
 
     // Step 2: Create corrected version
     let corrected_path = temp_dir.path().join("corrected.mid");
@@ -946,11 +862,7 @@ async fn test_workflow_pitch_correction() {
         corrected_path.to_str().unwrap().to_string(),
     ).await.unwrap();
 
-    add_tags_to_file(
-        tauri::State(&state),
-        corrected_result.file_id,
-        vec!["pitch_corrected".to_string()],
-    ).await.unwrap();
+    add_tags_to_file(corrected_result.file_id, vec!["pitch_corrected".to_string()], tauri::State(&state)).await.unwrap();
 
     // Step 3: Verify correction
     let tags = get_file_tags(tauri::State(&state), corrected_result.file_id).await.unwrap();
@@ -975,15 +887,11 @@ async fn test_workflow_dynamic_processing() {
     ).await.unwrap();
 
     // Step 2: Tag with processing applied
-    add_tags_to_file(
-        tauri::State(&state),
-        result.file_id,
-        vec![
+    add_tags_to_file(result.file_id, vec![
             "dynamic_processed".to_string(),
             "compression_applied".to_string(),
             "normalized".to_string(),
-        ],
-    ).await.unwrap();
+        ], tauri::State(&state)).await.unwrap();
 
     // Step 3: Verify processing
     let tags = get_file_tags(tauri::State(&state), result.file_id).await.unwrap();
