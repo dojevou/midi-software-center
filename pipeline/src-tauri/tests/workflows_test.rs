@@ -27,7 +27,7 @@ use tempfile::TempDir;
 use tokio::fs;
 
 mod common;
-use common::{TestDatabase, FileFixtures, MidiFileBuilder};
+use common::{TestDatabase, FileFixtures, MidiFileBuilder, setup_test_state, import_and_analyze_file};
 
 // ============================================================================
 // TEST FIXTURES & HELPERS

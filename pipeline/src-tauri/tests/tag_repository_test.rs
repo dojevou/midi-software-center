@@ -37,9 +37,12 @@ mod fixtures;
 mod helpers;
 use fixtures::{NewFileBuilder, NewTagBuilder, Fixtures, random_hash};
 use helpers::db::*;
-use common::assertions::{
-    assert_metadata_exists, assert_file_has_tag, assert_bpm_set,
-    assert_file_not_exists as assert_file_path_not_exists,
+use common::{
+    assertions::{
+        assert_metadata_exists, assert_file_has_tag, assert_bpm_set,
+        assert_file_not_exists as assert_file_path_not_exists,
+    },
+    create_test_file, insert_metadata,
 };
 
 // ============================================================================

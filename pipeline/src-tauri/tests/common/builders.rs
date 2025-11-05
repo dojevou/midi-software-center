@@ -2,6 +2,91 @@
 
 use sqlx::PgPool;
 
+//=============================================================================
+// HELPER FUNCTIONS (exported for test use)
+//=============================================================================
+
+/// Create a test file with default parameters
+pub async fn create_test_file(pool: &PgPool, filename: &str) -> i64 {
+    MidiFileBuilder::new()
+        .with_path(&format!("/test/path/{}", filename))
+        .insert(pool)
+        .await
+}
+
+/// Insert metadata for a test file
+pub async fn insert_metadata(
+    pool: &PgPool,
+    file_id: i64,
+    bpm: Option<f64>,
+    key: Option<&str>,
+    duration: Option<i32>,
+) -> i64 {
+    let mut builder = MetadataBuilder::new(file_id);
+
+    if let Some(bpm_val) = bpm {
+        builder = builder.with_bpm(bpm_val);
+    }
+
+    if let Some(key_val) = key {
+        builder = builder.with_key(key_val);
+    }
+
+    builder.insert(pool).await
+}
+
+/// Create a test file with metadata in one call
+pub async fn create_test_file_with_metadata(
+    pool: &PgPool,
+    filename: &str,
+    bpm: Option<f64>,
+    key: Option<&str>,
+) -> (i64, i64) {
+    let file_id = create_test_file(pool, filename).await;
+    let metadata_id = insert_metadata(pool, file_id, bpm, key, None).await;
+    (file_id, metadata_id)
+}
+
+/// Create multiple test files
+pub async fn create_test_files(pool: &PgPool, count: usize) -> Vec<i64> {
+    let mut ids = Vec::new();
+    for i in 0..count {
+        let file_id = create_test_file(pool, &format!("test_file_{}.mid", i)).await;
+        ids.push(file_id);
+    }
+    ids
+}
+
+/// Setup test app state with database connection
+pub async fn setup_test_state() -> midi_pipeline::AppState {
+    let database_url = std::env::var("TEST_DATABASE_URL")
+        .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string());
+
+    let pool = PgPool::connect(&database_url)
+        .await
+        .expect("Failed to connect to test database");
+
+    // Verify connection
+    sqlx::query("SELECT 1")
+        .execute(&pool)
+        .await
+        .expect("Failed to verify database connection");
+
+    midi_pipeline::AppState {
+        db_pool: Some(pool),
+        // Add other AppState fields as needed with defaults
+    }
+}
+
+/// Import and analyze a file in one operation
+pub async fn import_and_analyze_file(
+    _state: &midi_pipeline::AppState,
+    _file_path: String,
+) -> Result<(), String> {
+    // Placeholder implementation - replace with your actual import/analyze logic
+    Ok(())
+}
+
 /// Builder for test MIDI file metadata
 pub struct MidiFileBuilder {
     file_path: String,

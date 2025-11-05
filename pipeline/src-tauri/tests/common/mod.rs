@@ -9,7 +9,7 @@ pub mod fixtures;
 
 pub use database::TestDatabase;
 pub use mocks::{MockWindow, MockAppHandle, EmittedEvent};
-pub use builders::{MidiFileBuilder, MetadataBuilder, TagBuilder};
+pub use builders::{MidiFileBuilder, MetadataBuilder, TagBuilder, create_test_file, insert_metadata, create_test_file_with_metadata, create_test_files, setup_test_state, import_and_analyze_file};
 pub use assertions::*;
 pub use fixtures::{TestFixtures, FileFixtures};
 
