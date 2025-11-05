@@ -12,10 +12,10 @@
 //! All tests use real database operations, actual MIDI files, and complete
 //! end-to-end workflow validation with performance assertions.
 
-use midi_pipeline::commands::file_import::{import_single_file, import_directory};
-use midi_pipeline::commands::files::{get_file_count, get_file_details, delete_file, list_files};
-use midi_pipeline::commands::search::{search_files, get_all_tags, get_files_by_tag};
-use midi_pipeline::commands::tags::{add_tags_to_file, get_file_tags, update_file_tags};
+use midi_pipeline::commands::file_import::{import_single_file, import_directory, import_single_file_impl, import_directory_impl};
+use midi_pipeline::commands::files::{get_file_count, get_file_details, delete_file, list_files, get_file_count_impl, get_file_details_impl, list_files_impl};
+use midi_pipeline::commands::search::{search_files, get_all_tags, get_files_by_tag, search_files_impl, get_all_tags_impl};
+use midi_pipeline::commands::tags::{add_tags_to_file, get_file_tags, update_file_tags, get_file_tags_impl, add_tags_to_file_impl};
 use midi_pipeline::commands::analyze::start_analysis;
 use midi_pipeline::commands::stats::{get_category_stats, get_database_size};
 use midi_pipeline::{AppState, Database};
@@ -26,6 +26,7 @@ use std::time::Instant;
 use tempfile::TempDir;
 use tokio::fs;
 
+mod common;
 use common::{TestDatabase, FileFixtures, MidiFileBuilder};
 
 // ============================================================================
@@ -181,7 +182,7 @@ async fn test_workflow_load_template_customize() {
     assert!(tag_result.is_ok());
 
     // Step 4: Verify tags
-    let tags = get_file_tags_impl(file_id).await.unwrap();
+    let tags = get_file_tags_impl(file_id, &state).await.unwrap();
     assert!(tags.contains(&"template".to_string()));
 
     // Step 5: Create customized version
@@ -342,8 +343,8 @@ async fn test_workflow_remix_existing() {
     ).await.unwrap();
 
     // Step 5: Verify both versions exist
-    let tags_original = get_file_tags_impl(original_id).await.unwrap();
-    let tags_remix = get_file_tags_impl(remix_id).await.unwrap();
+    let tags_original = get_file_tags_impl(original_id, &state).await.unwrap();
+    let tags_remix = get_file_tags_impl(remix_id, &state).await.unwrap();
 
     assert!(tags_original.contains(&"original".to_string()));
     assert!(tags_remix.contains(&"remix".to_string()));
@@ -370,7 +371,7 @@ async fn test_workflow_music_theory_analysis() {
     let file_id = import_result.unwrap().id;
 
     // Step 2: Get file details (includes analysis)
-    let details = get_file_details_impl(file_id).await;
+    let details = get_file_details_impl(file_id, &state).await;
     assert!(details.is_ok());
 
     // Step 3: Tag based on analysis
@@ -466,7 +467,7 @@ async fn test_workflow_publishing_workflow() {
     ).await.unwrap();
 
     // Step 3: Verify all tags applied
-    let tags = get_file_tags_impl(file_id).await.unwrap();
+    let tags = get_file_tags_impl(file_id, &state).await.unwrap();
     for tag in &publishing_tags {
         assert!(tags.contains(tag));
     }
@@ -881,8 +882,8 @@ async fn test_workflow_feedback_incorporation() {
     ).await.unwrap();
 
     // Step 3: Verify iterations
-    let v1_tags = get_file_tags_impl(v1_result.id).await.unwrap();
-    let v2_tags = get_file_tags_impl(v2_result.id).await.unwrap();
+    let v1_tags = get_file_tags_impl(v1_result.id, &state).await.unwrap();
+    let v2_tags = get_file_tags_impl(v2_result.id, &state).await.unwrap();
 
     assert!(v1_tags.contains(&"v1".to_string()));
     assert!(v2_tags.contains(&"v2".to_string()));
@@ -1060,8 +1061,8 @@ async fn test_workflow_data_migration() {
     ).await.unwrap();
 
     // Step 3: Verify migration
-    let old_tags = get_file_tags_impl(old_result.id).await.unwrap();
-    let new_tags = get_file_tags_impl(new_result.id).await.unwrap();
+    let old_tags = get_file_tags_impl(old_result.id, &state).await.unwrap();
+    let new_tags = get_file_tags_impl(new_result.id, &state).await.unwrap();
 
     assert!(old_tags.contains(&"old_format".to_string()));
     assert!(new_tags.contains(&"migrated".to_string()));
