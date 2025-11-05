@@ -735,7 +735,6 @@ async fn test_import_directory_single_file() {
         false,
         None,
         state,
-        window.clone(),
     )
     .await;
 
@@ -769,7 +768,6 @@ async fn test_import_directory_multiple_files_10() {
         false,
         None,
         state,
-        window.clone(),
     )
     .await;
 
@@ -806,7 +804,6 @@ async fn test_import_directory_batch_100() {
         false,
         None,
         state,
-        window.clone(),
     )
     .await;
 
@@ -843,7 +840,6 @@ async fn test_import_directory_batch_1000() {
         false,
         None,
         state,
-        window.clone(),
     )
     .await;
 
@@ -879,7 +875,6 @@ async fn test_import_directory_ignore_non_midi_files() {
         false,
         None,
         state,
-        window.clone(),
     )
     .await;
 
@@ -912,7 +907,6 @@ async fn test_import_directory_concurrency_semaphore_limit() {
         false,
         None,
         state,
-        window.clone(),
     )
     .await;
 
@@ -946,7 +940,6 @@ async fn test_import_directory_arc_atomic_counter_accuracy() {
         false,
         None,
         state,
-        window.clone(),
     )
     .await;
 
@@ -980,7 +973,6 @@ async fn test_import_directory_progress_events_emitted() {
         false,
         None,
         state,
-        window.clone(),
     )
     .await;
 
@@ -1014,7 +1006,6 @@ async fn test_import_directory_progress_event_data() {
         false,
         None,
         state,
-        window.clone(),
     )
     .await;
 
@@ -1059,7 +1050,6 @@ async fn test_import_directory_duplicate_detection_50_percent() {
         false,
         None,
         state,
-        window.clone(),
     )
     .await;
 
@@ -1082,7 +1072,6 @@ async fn test_import_directory_duplicate_detection_50_percent() {
         false,
         None,
         state,
-        window.clone(),
     )
     .await;
 
@@ -1121,7 +1110,6 @@ async fn test_import_directory_error_collection_continues() {
         false,
         None,
         state,
-        window.clone(),
     )
     .await;
 
@@ -1158,7 +1146,6 @@ async fn test_import_directory_file_errors_dont_stop_import() {
         false,
         None,
         state,
-        window.clone(),
     )
     .await;
 
@@ -1192,7 +1179,6 @@ async fn test_import_directory_database_errors_collected() {
         false,
         None,
         state,
-        window.clone(),
     )
     .await;
 
@@ -1204,7 +1190,6 @@ async fn test_import_directory_database_errors_collected() {
         false,
         None,
         state,
-        window.clone(),
     )
     .await;
 
@@ -1240,7 +1225,6 @@ async fn test_import_directory_edge_case_10k_files() {
         false,
         None,
         state,
-        window.clone(),
     )
     .await;
 
@@ -1281,7 +1265,6 @@ async fn test_import_directory_edge_case_nested_subdirectories() {
         true, // recursive
         None,
         state,
-        window.clone(),
     )
     .await;
 
@@ -1311,7 +1294,6 @@ async fn test_import_directory_edge_case_permission_denied() {
         false,
         None,
         state,
-        window.clone(),
     )
     .await;
 
@@ -1338,7 +1320,6 @@ async fn test_import_directory_empty_directory() {
         false,
         None,
         state,
-        window.clone(),
     )
     .await;
 
@@ -1373,7 +1354,6 @@ async fn test_import_directory_nonrecursive_ignores_subdirs() {
         false, // NOT recursive
         None,
         state,
-        window.clone(),
     )
     .await;
 
@@ -1410,7 +1390,6 @@ async fn test_import_directory_batch_insert_boundary() {
         false,
         None,
         state,
-        window.clone(),
     )
     .await;
 
@@ -1443,7 +1422,6 @@ async fn test_import_directory_batch_insert_overflow() {
         false,
         None,
         state,
-        window.clone(),
     )
     .await;
 
@@ -1500,7 +1478,6 @@ async fn test_import_directory_rate_calculation() {
         false,
         None,
         state,
-        window.clone(),
     )
     .await;
 
@@ -1534,7 +1511,6 @@ async fn test_import_directory_progress_throttling() {
         false,
         None,
         state,
-        window.clone(),
     )
     .await;
 
@@ -1595,7 +1571,6 @@ async fn test_import_directory_with_category() {
         false,
         Some("test_category".to_string()),
         state,
-        window.clone(),
     )
     .await;
 
@@ -1672,7 +1647,6 @@ async fn test_import_directory_summary_accuracy() {
         false,
         None,
         state,
-        window.clone(),
     )
     .await;
 
@@ -1732,7 +1706,6 @@ async fn test_import_directory_not_found() {
         false,
         None,
         state,
-        window.clone(),
     )
     .await;
 
@@ -2302,7 +2275,6 @@ async fn test_import_directory_metadata_extraction_partial_failure() {
         false,
         None,
         state,
-        window.clone(),
     )
     .await;
 

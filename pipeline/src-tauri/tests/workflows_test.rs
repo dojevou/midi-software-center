@@ -121,8 +121,9 @@ async fn test_workflow_compose_new_song() {
 
     // Step 2: Import first track
     let result1 = import_single_file_impl(
-        &state,
         track1_path.to_str().unwrap().to_string(),
+        None,
+        &state,
     ).await;
     assert!(result1.is_ok());
 
@@ -131,8 +132,9 @@ async fn test_workflow_compose_new_song() {
     fs::write(&track2_path, &midi_data).await.unwrap();
 
     let result2 = import_single_file_impl(
-        &state,
         track2_path.to_str().unwrap().to_string(),
+        None,
+        &state,
     ).await;
     assert!(result2.is_ok());
 
@@ -141,8 +143,9 @@ async fn test_workflow_compose_new_song() {
     fs::write(&track3_path, &midi_data).await.unwrap();
 
     let result3 = import_single_file_impl(
-        &state,
         track3_path.to_str().unwrap().to_string(),
+        None,
+        &state,
     ).await;
     assert!(result3.is_ok());
 
@@ -167,8 +170,9 @@ async fn test_workflow_load_template_customize() {
 
     // Step 2: Import template
     let result = import_single_file_impl(
-        &state,
         template_path.to_str().unwrap().to_string(),
+        None,
+        &state,
     ).await;
     assert!(result.is_ok());
     let file_id = result.unwrap().id;
@@ -187,8 +191,9 @@ async fn test_workflow_load_template_customize() {
     fs::write(&custom_path, &custom_data).await.unwrap();
 
     let custom_result = import_single_file_impl(
-        &state,
         custom_path.to_str().unwrap().to_string(),
+        None,
+        &state,
     ).await;
     assert!(custom_result.is_ok());
 
@@ -207,8 +212,9 @@ async fn test_workflow_jam_session() {
     fs::write(&backing_path, &backing_data).await.unwrap();
 
     let backing_result = import_single_file_impl(
-        &state,
         backing_path.to_str().unwrap().to_string(),
+        None,
+        &state,
     ).await;
     assert!(backing_result.is_ok());
     let backing_id = backing_result.unwrap().id;
@@ -222,8 +228,9 @@ async fn test_workflow_jam_session() {
     fs::write(&improv_path, &improv_data).await.unwrap();
 
     let improv_result = import_single_file_impl(
-        &state,
         improv_path.to_str().unwrap().to_string(),
+        None,
+        &state,
     ).await;
     assert!(improv_result.is_ok());
 
@@ -262,9 +269,10 @@ async fn test_workflow_arrange_for_live() {
     for (name, _, _) in &stems {
         let path = stems_dir.join(name);
         import_single_file_impl(
-            &state,
-            path.to_str().unwrap().to_string(),
-        ).await.unwrap();
+        path.to_str().unwrap().to_string(),
+        None,
+        &state,
+    ).await.unwrap();
     }
 
     // Step 3: Verify all stems imported
@@ -298,8 +306,9 @@ async fn test_workflow_remix_existing() {
     fs::write(&original_path, &original_data).await.unwrap();
 
     let original_result = import_single_file_impl(
-        &state,
         original_path.to_str().unwrap().to_string(),
+        None,
+        &state,
     ).await;
     assert!(original_result.is_ok());
     let original_id = original_result.unwrap().id;
@@ -313,8 +322,9 @@ async fn test_workflow_remix_existing() {
     fs::write(&remix_path, &remix_data).await.unwrap();
 
     let remix_result = import_single_file_impl(
-        &state,
         remix_path.to_str().unwrap().to_string(),
+        None,
+        &state,
     ).await;
     assert!(remix_result.is_ok());
     let remix_id = remix_result.unwrap().id;
@@ -344,8 +354,9 @@ async fn test_workflow_music_theory_analysis() {
     fs::write(&file_path, &file_data).await.unwrap();
 
     let import_result = import_single_file_impl(
-        &state,
         file_path.to_str().unwrap().to_string(),
+        None,
+        &state,
     ).await;
     assert!(import_result.is_ok());
     let file_id = import_result.unwrap().id;
@@ -389,9 +400,10 @@ async fn test_workflow_performance_preparation() {
         fs::write(&path, &data).await.unwrap();
 
         let result = import_single_file_impl(
-            &state,
-            path.to_str().unwrap().to_string(),
-        ).await.unwrap();
+        path.to_str().unwrap().to_string(),
+        None,
+        &state,
+    ).await.unwrap();
         file_ids.push(result.id);
     }
 
@@ -418,8 +430,9 @@ async fn test_workflow_publishing_workflow() {
     fs::write(&master_path, &master_data).await.unwrap();
 
     let master_result = import_single_file_impl(
-        &state,
         master_path.to_str().unwrap().to_string(),
+        None,
+        &state,
     ).await;
     assert!(master_result.is_ok());
     let file_id = master_result.unwrap().id;
@@ -479,9 +492,10 @@ async fn test_workflow_organize_library() {
         fs::write(&path, &data).await.unwrap();
 
         let result = import_single_file_impl(
-            &state,
-            path.to_str().unwrap().to_string(),
-        ).await.unwrap();
+        path.to_str().unwrap().to_string(),
+        None,
+        &state,
+    ).await.unwrap();
 
         add_tags_to_file_impl(
             &state,
@@ -513,8 +527,9 @@ async fn test_workflow_duplicate_cleanup() {
     fs::write(&original_path, &midi_data).await.unwrap();
 
     let original_result = import_single_file_impl(
-        &state,
         original_path.to_str().unwrap().to_string(),
+        None,
+        &state,
     ).await.unwrap();
 
     // Step 2: Try to import duplicate (same hash)
@@ -522,8 +537,9 @@ async fn test_workflow_duplicate_cleanup() {
     fs::write(&duplicate_path, &midi_data).await.unwrap();
 
     let duplicate_result = import_single_file_impl(
-        &state,
         duplicate_path.to_str().unwrap().to_string(),
+        None,
+        &state,
     ).await;
 
     // Step 3: Verify duplicate detection (should succeed but detect duplicate)
@@ -558,9 +574,10 @@ async fn test_workflow_key_transposition() {
         fs::write(&path, &data).await.unwrap();
 
         import_single_file_impl(
-            &state,
-            path.to_str().unwrap().to_string(),
-        ).await.unwrap();
+        path.to_str().unwrap().to_string(),
+        None,
+        &state,
+    ).await.unwrap();
     }
 
     // Step 2: Search would filter by key (simulated here)
@@ -573,8 +590,9 @@ async fn test_workflow_key_transposition() {
     fs::write(&transposed_path, &transposed_data).await.unwrap();
 
     let result = import_single_file_impl(
-        &state,
         transposed_path.to_str().unwrap().to_string(),
+        None,
+        &state,
     ).await.unwrap();
 
     // Step 4: Tag as transposed
@@ -599,9 +617,10 @@ async fn test_workflow_tempo_matching() {
         fs::write(&path, &data).await.unwrap();
 
         import_single_file_impl(
-            &state,
-            path.to_str().unwrap().to_string(),
-        ).await.unwrap();
+        path.to_str().unwrap().to_string(),
+        None,
+        &state,
+    ).await.unwrap();
     }
 
     // Step 2: Create tempo-matched versions
@@ -611,9 +630,10 @@ async fn test_workflow_tempo_matching() {
         fs::write(&path, &data).await.unwrap();
 
         let result = import_single_file_impl(
-            &state,
-            path.to_str().unwrap().to_string(),
-        ).await.unwrap();
+        path.to_str().unwrap().to_string(),
+        None,
+        &state,
+    ).await.unwrap();
 
         add_tags_to_file_impl(result.id, vec!["tempo_synced".to_string()], &state).await.unwrap();
     }
@@ -650,9 +670,10 @@ async fn test_workflow_create_sample_pack() {
         fs::write(&path, &data).await.unwrap();
 
         let result = import_single_file_impl(
-            &state,
-            path.to_str().unwrap().to_string(),
-        ).await.unwrap();
+        path.to_str().unwrap().to_string(),
+        None,
+        &state,
+    ).await.unwrap();
 
         sample_ids.push(result.id);
     }
@@ -687,9 +708,10 @@ async fn test_workflow_backup_and_restore() {
         fs::write(&path, &data).await.unwrap();
 
         import_single_file_impl(
-            &state,
-            path.to_str().unwrap().to_string(),
-        ).await.unwrap();
+        path.to_str().unwrap().to_string(),
+        None,
+        &state,
+    ).await.unwrap();
     }
 
     let after_import_count = get_file_count_impl(&state).await.unwrap();
@@ -723,8 +745,9 @@ async fn test_workflow_collaborative_project() {
     fs::write(&user1_path, &create_midi_bytes(128, "C_MAJOR")).await.unwrap();
 
     let user1_result = import_single_file_impl(
-        &state,
         user1_path.to_str().unwrap().to_string(),
+        None,
+        &state,
     ).await.unwrap();
 
     add_tags_to_file_impl(user1_result.id, vec!["collaboration".to_string(), "user1".to_string()], &state).await.unwrap();
@@ -737,8 +760,9 @@ async fn test_workflow_collaborative_project() {
     fs::write(&user2_path, &create_midi_bytes(128, "C_MAJOR")).await.unwrap();
 
     let user2_result = import_single_file_impl(
-        &state,
         user2_path.to_str().unwrap().to_string(),
+        None,
+        &state,
     ).await.unwrap();
 
     add_tags_to_file_impl(user2_result.id, vec!["collaboration".to_string(), "user2".to_string()], &state).await.unwrap();
@@ -769,9 +793,10 @@ async fn test_workflow_session_sharing() {
         fs::write(&path, &create_midi_bytes(120, "C_MAJOR")).await.unwrap();
 
         let result = import_single_file_impl(
-            &state,
-            path.to_str().unwrap().to_string(),
-        ).await.unwrap();
+        path.to_str().unwrap().to_string(),
+        None,
+        &state,
+    ).await.unwrap();
 
         add_tags_to_file_impl(result.id, vec!["session".to_string()], &state).await.unwrap();
     }
@@ -804,8 +829,9 @@ async fn test_workflow_feedback_incorporation() {
     fs::write(&v1_path, &create_midi_bytes(128, "C_MAJOR")).await.unwrap();
 
     let v1_result = import_single_file_impl(
-        &state,
         v1_path.to_str().unwrap().to_string(),
+        None,
+        &state,
     ).await.unwrap();
 
     add_tags_to_file_impl(v1_result.id, vec!["v1".to_string(), "needs_revision".to_string()], &state).await.unwrap();
@@ -815,8 +841,9 @@ async fn test_workflow_feedback_incorporation() {
     fs::write(&v2_path, &create_midi_bytes(132, "C_MAJOR")).await.unwrap();
 
     let v2_result = import_single_file_impl(
-        &state,
         v2_path.to_str().unwrap().to_string(),
+        None,
+        &state,
     ).await.unwrap();
 
     add_tags_to_file_impl(v2_result.id, vec!["v2".to_string(), "feedback_applied".to_string()], &state).await.unwrap();
@@ -842,8 +869,9 @@ async fn test_workflow_version_control() {
     fs::write(&v1_path, &create_midi_bytes(120, "C_MAJOR")).await.unwrap();
 
     let v1_result = import_single_file_impl(
-        &state,
         v1_path.to_str().unwrap().to_string(),
+        None,
+        &state,
     ).await.unwrap();
 
     add_tags_to_file_impl(v1_result.id, vec!["checkpoint".to_string(), "v1".to_string()], &state).await.unwrap();
@@ -853,8 +881,9 @@ async fn test_workflow_version_control() {
     fs::write(&v2_path, &create_midi_bytes(125, "C_MAJOR")).await.unwrap();
 
     let v2_result = import_single_file_impl(
-        &state,
         v2_path.to_str().unwrap().to_string(),
+        None,
+        &state,
     ).await.unwrap();
 
     add_tags_to_file_impl(v2_result.id, vec!["checkpoint".to_string(), "v2".to_string()], &state).await.unwrap();
@@ -864,8 +893,9 @@ async fn test_workflow_version_control() {
     fs::write(&final_path, &create_midi_bytes(128, "C_MAJOR")).await.unwrap();
 
     let final_result = import_single_file_impl(
-        &state,
         final_path.to_str().unwrap().to_string(),
+        None,
+        &state,
     ).await.unwrap();
 
     add_tags_to_file_impl(final_result.id, vec!["final".to_string(), "approved".to_string()], &state).await.unwrap();
@@ -891,8 +921,9 @@ async fn test_workflow_multi_format_delivery() {
     fs::write(&master_path, &create_midi_bytes(128, "C_MAJOR")).await.unwrap();
 
     let result = import_single_file_impl(
-        &state,
         master_path.to_str().unwrap().to_string(),
+        None,
+        &state,
     ).await.unwrap();
 
     // Step 2: Tag as multi-format deliverable
@@ -926,9 +957,10 @@ async fn test_workflow_archive_preservation() {
         fs::write(&path, &create_midi_bytes(120, "C_MAJOR")).await.unwrap();
 
         let result = import_single_file_impl(
-            &state,
-            path.to_str().unwrap().to_string(),
-        ).await.unwrap();
+        path.to_str().unwrap().to_string(),
+        None,
+        &state,
+    ).await.unwrap();
 
         add_tags_to_file_impl(result.id, vec!["archive".to_string(), "preserved".to_string()], &state).await.unwrap();
     }
@@ -955,8 +987,9 @@ async fn test_workflow_data_migration() {
     fs::write(&old_format_path, &create_midi_bytes(110, "D_MAJOR")).await.unwrap();
 
     let old_result = import_single_file_impl(
-        &state,
         old_format_path.to_str().unwrap().to_string(),
+        None,
+        &state,
     ).await.unwrap();
 
     add_tags_to_file_impl(old_result.id, vec!["old_format".to_string(), "migration_pending".to_string()], &state).await.unwrap();
@@ -966,8 +999,9 @@ async fn test_workflow_data_migration() {
     fs::write(&new_format_path, &create_midi_bytes(110, "D_MAJOR")).await.unwrap();
 
     let new_result = import_single_file_impl(
-        &state,
         new_format_path.to_str().unwrap().to_string(),
+        None,
+        &state,
     ).await.unwrap();
 
     add_tags_to_file_impl(new_result.id, vec!["new_format".to_string(), "migrated".to_string()], &state).await.unwrap();
