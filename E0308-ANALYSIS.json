@@ -1,0 +1,207 @@
+{
+  "summary": {
+    "total_e0308_errors": 58,
+    "analysis_date": "2025-11-05",
+    "primary_focus": "Pool reference type mismatches in cleanup_test_files calls",
+    "critical_issue": "cleanup_test_files expects &PgPool but receives Pool<Postgres> from state.database.pool().await"
+  },
+  
+  "pool_mismatch": {
+    "count": 30,
+    "percentage": "51.7%",
+    "description": "Pool reference mismatch - expected &Pool<Postgres> but found Pool<Postgres>",
+    "root_cause": {
+      "function": "cleanup_test_files",
+      "signature": "async fn cleanup_test_files(pool: &PgPool, pattern: &str)",
+      "issue": "Function expects a reference to PgPool, but state.database.pool().await returns owned Pool<Postgres>",
+      "location": "pipeline/src-tauri/tests/workflows_test.rs:98"
+    },
+    "primary_file": "workflows_test.rs",
+    "files": {
+      "workflows_test.rs": [157, 200, 241, 294, 342, 375, 418, 467, 515, 555, 601, 645, 689, 731, 774, 818, 858, 908, 943, 976, 1016, 1035, 1049, 1064, 1078, 1092, 1102, 1105, 1115, 1119],
+      "file_import_test.rs": [650, 1035, 1309, 1668, 2105, 2190, 2242],
+      "files.rs": [317],
+      "file_import.rs": [92, 361]
+    },
+    "example_error": {
+      "file": "workflows_test.rs",
+      "line": 157,
+      "code": "cleanup_test_files(state.database.pool().await, &format!(\"{}%\", project_path.to_str().unwrap())).await;",
+      "error_message": "expected `&Pool<Postgres>`, found `Pool<Postgres>`",
+      "fix": "cleanup_test_files(&state.database.pool().await, &format!(\"{}%\", project_path.to_str().unwrap())).await;"
+    },
+    "fix_pattern": "Add & reference operator before state.database.pool().await",
+    "estimated_fixes": 30
+  },
+  
+  "string_vs_tagresponse": {
+    "count": 8,
+    "percentage": "13.8%",
+    "description": "Type mismatch comparing String with TagResponse",
+    "root_cause": {
+      "issue": "assert!(tags.contains(&\"string\")) expects tags to contain TagResponse objects, not String",
+      "location": "pipeline/src-tauri/tests/workflows_test.rs:186, 339, 340, 457, 855, 856, 1013, 1014"
+    },
+    "files": {
+      "workflows_test.rs": [186, 339, 340, 457, 855, 856, 1013, 1014]
+    },
+    "example_error": {
+      "file": "workflows_test.rs",
+      "line": 186,
+      "code": "assert!(tags.contains(&\"template\".to_string()));",
+      "error_message": "expected `&TagResponse`, found `&String`",
+      "problem": "tags is Vec<TagResponse> but comparing with String",
+      "fix": "Use tags.iter().any(|tag| tag.name == \"template\") or compare with TagResponse field"
+    },
+    "fix_pattern": "Compare with tag.name field or use custom comparison",
+    "estimated_fixes": 8
+  },
+  
+  "appstate_mismatch": {
+    "count": 9,
+    "percentage": "15.5%",
+    "description": "Function argument count/type errors related to AppState",
+    "root_cause": {
+      "file": "file_import.rs",
+      "issue": "Function signature mismatch - expecting &AppState or State wrapper",
+      "locations": ["file_import.rs:92, 170"]
+    },
+    "files": {
+      "file_import.rs": [92, 92, 92, 92, 92, 92, 92, 170],
+      "iterator.rs": [2014]
+    },
+    "example_error": {
+      "file": "file_import.rs",
+      "line": 92,
+      "issue": "Type parameter order wrong: expected `i64`, found `&AppState`",
+      "problem": "Function call arguments are in wrong order"
+    },
+    "fix_pattern": "Review function signatures and reorder arguments correctly",
+    "estimated_fixes": 9
+  },
+  
+  "option_type_mismatch": {
+    "count": 8,
+    "percentage": "13.8%",
+    "description": "Option/non-Option type mismatches",
+    "files": {
+      "file_repository_test.rs": [2255, 2276, 2297, 2318, 2319, 2325, 2324, 2398],
+      "search.rs": [92, 92],
+      "file_import.rs": [92],
+      "tag_repository.rs": [47],
+      "file_repository.rs": [256, 256, 256]
+    },
+    "patterns": [
+      {
+        "type": "i64 vs Option<i64>",
+        "example": "file_repository_test.rs:2255",
+        "fix": "Use .unwrap() or pattern match on Option value"
+      },
+      {
+        "type": "Option<String> vs String",
+        "description": "Function parameter expects Option<String> but receiving String or vice versa",
+        "files": ["search_repository_test.rs"]
+      }
+    ],
+    "estimated_fixes": 8
+  },
+  
+  "other": {
+    "count": 3,
+    "percentage": "5.2%",
+    "description": "Miscellaneous type mismatches",
+    "files": {
+      "tag_repository_test.rs": [1715],
+      "file_import_test.rs": [2354],
+      "search_repository_test.rs": [1456, 1457, 1477, 1792]
+    }
+  },
+
+  "priority_fixes": [
+    {
+      "priority": 1,
+      "category": "pool_mismatch",
+      "count": 30,
+      "effort": "Low - mechanical fix",
+      "fix": "Add & operator: &state.database.pool().await",
+      "estimated_time": "5 minutes",
+      "file": "workflows_test.rs"
+    },
+    {
+      "priority": 2,
+      "category": "string_vs_tagresponse",
+      "count": 8,
+      "effort": "Low - structural fix",
+      "fix": "Replace assert!(tags.contains(&\"string\")) with tags.iter().any(|t| t.name == \"string\")",
+      "estimated_time": "10 minutes",
+      "file": "workflows_test.rs"
+    },
+    {
+      "priority": 3,
+      "category": "appstate_mismatch",
+      "count": 9,
+      "effort": "Medium - function signature review",
+      "fix": "Review function signatures in file_import.rs and fix argument order",
+      "estimated_time": "15 minutes",
+      "file": "file_import.rs"
+    },
+    {
+      "priority": 4,
+      "category": "option_type_mismatch",
+      "count": 8,
+      "effort": "Medium - type analysis needed",
+      "fix": "Add .unwrap() or pattern match for Option values",
+      "estimated_time": "20 minutes",
+      "file": "file_repository_test.rs, search.rs"
+    }
+  ],
+
+  "implementation_strategy": {
+    "phase_1_pool_fixes": {
+      "target": "Remove all pool_mismatch errors (30)",
+      "method": "Add & operator before all cleanup_test_files calls",
+      "regex_pattern": "cleanup_test_files(state.database.pool().await",
+      "replacement": "cleanup_test_files(&state.database.pool().await",
+      "commands": [
+        "grep -r 'cleanup_test_files(state.database.pool().await' pipeline/src-tauri/tests/",
+        "sed -i 's/cleanup_test_files(state.database.pool().await/cleanup_test_files(\\&state.database.pool().await/g' pipeline/src-tauri/tests/workflows_test.rs"
+      ]
+    },
+    "phase_2_tagresponse_fixes": {
+      "target": "Remove all string_vs_tagresponse errors (8)",
+      "method": "Update assertions to compare TagResponse.name field",
+      "pattern": "assert!(tags.contains(&\"...\".to_string()))",
+      "replacement": "assert!(tags.iter().any(|tag| tag.name == \"...\"))",
+      "files_affected": ["workflows_test.rs"]
+    },
+    "phase_3_appstate_review": {
+      "target": "Review and fix file_import.rs function signatures",
+      "method": "Audit all _impl functions and verify argument order",
+      "files_affected": ["file_import.rs"]
+    },
+    "phase_4_option_fixes": {
+      "target": "Fix Option/non-Option mismatches (8)",
+      "method": "Add unwrap() or Ok/Some pattern matching",
+      "files_affected": ["file_repository_test.rs", "search.rs", "tag_repository.rs"]
+    }
+  },
+
+  "metrics": {
+    "total_errors": 58,
+    "breakdown": {
+      "pool_mismatch": {"count": 30, "percent": 51.7},
+      "string_vs_tagresponse": {"count": 8, "percent": 13.8},
+      "appstate_mismatch": {"count": 9, "percent": 15.5},
+      "option_type_mismatch": {"count": 8, "percent": 13.8},
+      "other": {"count": 3, "percent": 5.2}
+    },
+    "files_with_most_errors": {
+      "workflows_test.rs": 30,
+      "file_import_test.rs": 7,
+      "file_import.rs": 9
+    },
+    "estimated_total_fix_time": "45-60 minutes",
+    "blocking_deployment": false,
+    "notes": "These are test compilation errors, not production code errors. Production code compiles cleanly."
+  }
+}

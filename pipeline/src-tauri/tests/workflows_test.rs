@@ -154,7 +154,7 @@ async fn test_workflow_compose_new_song() {
     assert!(file_count >= 3);
 
     // Verify composition workflow completed
-    cleanup_test_files(state.database.pool().await, &format!("{}%", project_path.to_str().unwrap())).await;
+    cleanup_test_files(&state.database.pool().await, &format!("{}%", project_path.to_str().unwrap())).await;
 }
 
 #[tokio::test]
@@ -183,7 +183,7 @@ async fn test_workflow_load_template_customize() {
 
     // Step 4: Verify tags
     let tags = get_file_tags_impl(file_id, &state).await.unwrap();
-    assert!(tags.contains(&"template".to_string()));
+    assert!(tags.iter().any(|tag| tag.name == "template"));
 
     // Step 5: Create customized version
     let custom_path = temp_dir.path().join("custom_from_template.mid");
@@ -197,7 +197,7 @@ async fn test_workflow_load_template_customize() {
     ).await;
     assert!(custom_result.is_ok());
 
-    cleanup_test_files(state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
 
 #[tokio::test]
@@ -238,7 +238,7 @@ async fn test_workflow_jam_session() {
     let count = get_file_count_impl(&state).await.unwrap();
     assert!(count >= 2);
 
-    cleanup_test_files(state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
 
 #[tokio::test]
@@ -280,18 +280,13 @@ async fn test_workflow_arrange_for_live() {
     assert_eq!(final_count - initial_count, 4);
 
     // Step 4: Tag all as live arrangement
-    let files = list_files(
-        &state,
-        Some(1),
-        Some(10),
-        None,
-    ).await.unwrap();
+    let files = list_files_impl(Some(1), Some(10), &state).await.unwrap();
 
     for file in files.iter().take(4) {
         add_tags_to_file_impl(file.id, vec!["live".to_string(), "arrangement".to_string()], &state).await.unwrap();
     }
 
-    cleanup_test_files(state.database.pool().await, &format!("{}%", stems_dir.to_str().unwrap())).await;
+    cleanup_test_files(&state.database.pool().await, &format!("{}%", stems_dir.to_str().unwrap())).await;
 }
 
 #[tokio::test]
@@ -336,10 +331,10 @@ async fn test_workflow_remix_existing() {
     let tags_original = get_file_tags_impl(original_id, &state).await.unwrap();
     let tags_remix = get_file_tags_impl(remix_id, &state).await.unwrap();
 
-    assert!(tags_original.contains(&"original".to_string()));
-    assert!(tags_remix.contains(&"remix".to_string()));
+    assert!(tags.iter().any(|tag| tag.name == "original"));
+    assert!(tags.iter().any(|tag| tag.name == "remix"));
 
-    cleanup_test_files(state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
 
 #[tokio::test]
@@ -372,7 +367,7 @@ async fn test_workflow_music_theory_analysis() {
     let file_info = details.unwrap();
     assert!(file_info.filepath.contains("analyze_me.mid"));
 
-    cleanup_test_files(state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
 
 #[tokio::test]
@@ -415,7 +410,7 @@ async fn test_workflow_performance_preparation() {
     // Step 3: Verify setlist order
     assert_eq!(file_ids.len(), 5);
 
-    cleanup_test_files(state.database.pool().await, &format!("{}%", setlist_dir.to_str().unwrap())).await;
+    cleanup_test_files(&state.database.pool().await, &format!("{}%", setlist_dir.to_str().unwrap())).await;
 }
 
 #[tokio::test]
@@ -464,7 +459,7 @@ async fn test_workflow_publishing_workflow() {
         fs::write(&export_path, &master_data).await.unwrap();
     }
 
-    cleanup_test_files(state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
 
 // ============================================================================
@@ -512,7 +507,7 @@ async fn test_workflow_organize_library() {
     let duration = start.elapsed();
     assert!(duration.as_secs() < 5, "Organization should complete in < 5s");
 
-    cleanup_test_files(state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
 
 #[tokio::test]
@@ -552,7 +547,7 @@ async fn test_workflow_duplicate_cleanup() {
     ).await;
     assert!(delete_result.is_ok());
 
-    cleanup_test_files(state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
 
 #[tokio::test]
@@ -598,7 +593,7 @@ async fn test_workflow_key_transposition() {
     // Step 4: Tag as transposed
     add_tags_to_file_impl(result.id, vec!["transposed".to_string()], &state).await.unwrap();
 
-    cleanup_test_files(state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
 
 #[tokio::test]
@@ -640,9 +635,9 @@ async fn test_workflow_tempo_matching() {
 
     // Step 3: Verify all synced files tagged
     let all_tags = get_all_tags_impl(&state).await.unwrap();
-    assert!(all_tags.contains(&"tempo_synced".to_string()));
+    assert!(all_tags.iter().any(|tag| tag.name == "tempo_synced"));
 
-    cleanup_test_files(state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
 
 #[tokio::test]
@@ -686,7 +681,7 @@ async fn test_workflow_create_sample_pack() {
     // Step 3: Verify pack complete
     assert_eq!(sample_ids.len(), 5);
 
-    cleanup_test_files(state.database.pool().await, &format!("{}%", pack_dir.to_str().unwrap())).await;
+    cleanup_test_files(&state.database.pool().await, &format!("{}%", pack_dir.to_str().unwrap())).await;
 }
 
 #[tokio::test]
@@ -728,7 +723,7 @@ async fn test_workflow_backup_and_restore() {
     let backup_files = fs::read_dir(&backup_dir).await.unwrap().count();
     assert!(backup_files >= 3);
 
-    cleanup_test_files(state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
 
 #[tokio::test]
@@ -769,9 +764,9 @@ async fn test_workflow_collaborative_project() {
 
     // Step 3: Verify all contributions
     let all_tags = get_all_tags_impl(&state).await.unwrap();
-    assert!(all_tags.contains(&"collaboration".to_string()));
+    assert!(all_tags.iter().any(|tag| tag.name == "collaboration"));
 
-    cleanup_test_files(state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
 
 // ============================================================================
@@ -815,7 +810,7 @@ async fn test_workflow_session_sharing() {
     let shared_count = fs::read_dir(&shared_dir).await.unwrap().count();
     assert_eq!(shared_count, 3);
 
-    cleanup_test_files(state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
 
 #[tokio::test]
@@ -852,10 +847,10 @@ async fn test_workflow_feedback_incorporation() {
     let v1_tags = get_file_tags_impl(v1_result.id, &state).await.unwrap();
     let v2_tags = get_file_tags_impl(v2_result.id, &state).await.unwrap();
 
-    assert!(v1_tags.contains(&"v1".to_string()));
-    assert!(v2_tags.contains(&"v2".to_string()));
+    assert!(v1_tags.iter().any(|tag| tag.name == "v1"));
+    assert!(v2_tags.iter().any(|tag| tag.name == "v2"));
 
-    cleanup_test_files(state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
 
 #[tokio::test]
@@ -902,10 +897,10 @@ async fn test_workflow_version_control() {
 
     // Verify version chain
     let all_tags = get_all_tags_impl(&state).await.unwrap();
-    assert!(all_tags.contains(&"checkpoint".to_string()));
-    assert!(all_tags.contains(&"final".to_string()));
+    assert!(all_tags.iter().any(|tag| tag.name == "checkpoint"));
+    assert!(all_tags.iter().any(|tag| tag.name == "final"));
 
-    cleanup_test_files(state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
 
 #[tokio::test]
@@ -940,7 +935,7 @@ async fn test_workflow_multi_format_delivery() {
     let count = fs::read_dir(&delivery_dir).await.unwrap().count();
     assert!(count >= 5); // master + 4 formats
 
-    cleanup_test_files(state.database.pool().await, &format!("{}%", delivery_dir.to_str().unwrap())).await;
+    cleanup_test_files(&state.database.pool().await, &format!("{}%", delivery_dir.to_str().unwrap())).await;
 }
 
 #[tokio::test]
@@ -967,13 +962,13 @@ async fn test_workflow_archive_preservation() {
 
     // Step 2: Verify archival integrity
     let all_tags = get_all_tags_impl(&state).await.unwrap();
-    assert!(all_tags.contains(&"archive".to_string()));
+    assert!(all_tags.iter().any(|tag| tag.name == "archive"));
 
     // Step 3: Simulate restore (files already in database)
     let count = get_file_count_impl(&state).await.unwrap();
     assert!(count >= 5);
 
-    cleanup_test_files(state.database.pool().await, &format!("{}%", archive_dir.to_str().unwrap())).await;
+    cleanup_test_files(&state.database.pool().await, &format!("{}%", archive_dir.to_str().unwrap())).await;
 }
 
 #[tokio::test]
@@ -1010,10 +1005,10 @@ async fn test_workflow_data_migration() {
     let old_tags = get_file_tags_impl(old_result.id, &state).await.unwrap();
     let new_tags = get_file_tags_impl(new_result.id, &state).await.unwrap();
 
-    assert!(old_tags.contains(&"old_format".to_string()));
-    assert!(new_tags.contains(&"migrated".to_string()));
+    assert!(old_tags.iter().any(|tag| tag.name == "old_format"));
+    assert!(new_tags.iter().any(|tag| tag.name == "migrated"));
 
-    cleanup_test_files(state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
 
 // ===== SECTION 4: EDGE CASE WORKFLOWS (10 additional edge case tests) =====
@@ -1032,7 +1027,7 @@ async fn test_workflow_concurrent_import_same_file() {
     let (result1, result2) = tokio::join!(r1, r2);
 
     assert!(result1.is_ok() || result2.is_ok(), "At least one concurrent import should succeed");
-    cleanup_test_files(state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
 
 #[tokio::test]
@@ -1046,7 +1041,7 @@ async fn test_workflow_empty_tag_list() {
     let tags = add_tags_to_file_impl(result.id, vec![], &state).await;
 
     assert!(tags.is_ok(), "Empty tag list should be handled gracefully");
-    cleanup_test_files(state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
 
 #[tokio::test]
@@ -1061,7 +1056,7 @@ async fn test_workflow_delete_with_tags() {
 
     let delete_result = delete_file(&state, result.id).await;
     assert!(delete_result.is_ok(), "Delete with tags should succeed");
-    cleanup_test_files(state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
 
 #[tokio::test]
@@ -1075,7 +1070,7 @@ async fn test_workflow_search_after_analysis() {
     let search_results = search_files_impl("".to_string(), Some(120), Some(160), None).await;
 
     assert!(search_results.is_ok(), "Search after analysis should succeed");
-    cleanup_test_files(state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
 
 #[tokio::test]
@@ -1089,7 +1084,7 @@ async fn test_workflow_duplicate_tag_deduplication() {
     let tags = add_tags_to_file_impl(result.id, vec!["tag".to_string(), "tag".to_string()], &state).await.unwrap();
 
     assert_eq!(tags.len(), 1, "Duplicate tags should be deduplicated");
-    cleanup_test_files(state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
 
 #[tokio::test]
@@ -1102,7 +1097,7 @@ async fn test_workflow_analysis_on_corrupted() {
     let import_result = import_single_file_impl(file_path.to_str().unwrap().to_string()).await;
 
     assert!(import_result.is_err(), "Corrupted file should fail gracefully");
-    cleanup_test_files(state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
 
 #[tokio::test]
@@ -1124,7 +1119,7 @@ async fn test_workflow_rapid_fire_operations() {
     let results: Vec<_> = futures::future::join_all(handles).await;
     let success = results.iter().filter(|r| r.is_ok() && r.as_ref().unwrap().is_ok()).count();
     assert!(success > 0, "Some rapid operations should succeed");
-    cleanup_test_files(state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
 
 #[tokio::test]
@@ -1146,7 +1141,7 @@ async fn test_workflow_large_batch_consistency() {
     assert!(batch_result.is_ok(), "Batch import should complete");
     let summary = batch_result.unwrap();
     assert!(summary.total_files >= 10, "Batch should process all files");
-    cleanup_test_files(state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
 
 #[tokio::test]
@@ -1167,5 +1162,5 @@ async fn test_workflow_search_filter_combination() {
 
     let results = search_files_impl("".to_string(), Some(120), Some(160), Some(vec!["C_MAJOR".to_string()])).await;
     assert!(results.is_ok(), "Complex filter search should succeed");
-    cleanup_test_files(state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }

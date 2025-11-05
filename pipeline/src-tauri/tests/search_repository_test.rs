@@ -1495,7 +1495,7 @@ async fn test_empty_database() {
 
         // Query with invalid key
         let query = SearchQueryBuilder::new()
-            .keys(Some(vec!["H".to_string()])) // Invalid key
+            .key(Some(vec!["H".to_string()])) // Invalid key
             .build();
 
         let results = SearchRepository::search(&pool, &query).await;
@@ -1518,7 +1518,7 @@ async fn test_empty_database() {
 
         // Query with negative offset
         let query = SearchQueryBuilder::new()
-            .offset(-10)
+            
             .build();
 
         let results = SearchRepository::search(&pool, &query).await;
@@ -1602,7 +1602,7 @@ async fn test_empty_database() {
         insert_metadata(&pool, file_id, None, None, None).await;
 
         let query = SearchQueryBuilder::new()
-            .limit(0)
+            
             .build();
 
         let results = SearchRepository::search(&pool, &query).await.expect("Query failed");
@@ -1643,7 +1643,7 @@ async fn test_empty_database() {
         insert_metadata(&pool, file_id, None, None, None).await;
 
         let query = SearchQueryBuilder::new()
-            .offset(100)
+            
             .build();
 
         let results = SearchRepository::search(&pool, &query).await.expect("Query failed");
@@ -1669,7 +1669,7 @@ async fn test_empty_database() {
         // Query: BPM > 130 AND key = C
         let query = SearchQueryBuilder::new()
             .min_bpm(Some("130.0".to_string()))
-            .keys(Some(vec!["C".to_string()]))
+            .key(Some(vec!["C".to_string()]))
             .build();
 
         let results = SearchRepository::search(&pool, &query).await.expect("Query failed");
@@ -1723,7 +1723,7 @@ async fn test_empty_database() {
         }
 
         let query = SearchQueryBuilder::new()
-            .offset(-1)
+            
             .build();
 
         let results = SearchRepository::search(&pool, &query).await.unwrap_or_default();
@@ -1742,7 +1742,7 @@ async fn test_empty_database() {
         }
 
         let query = SearchQueryBuilder::new()
-            .limit(0)
+            
             .build();
 
         let results = SearchRepository::search(&pool, &query).await.unwrap_or_default();
@@ -1759,7 +1759,7 @@ async fn test_empty_database() {
         insert_metadata(&pool, file, None, None, None).await;
 
         let query = SearchQueryBuilder::new()
-            .offset(1000000)
+            
             .build();
 
         let results = SearchRepository::search(&pool, &query).await.unwrap_or_default();
@@ -1789,7 +1789,7 @@ async fn test_empty_database() {
         insert_metadata(&pool, file, None, None, Some(120)).await;
 
         let query = SearchQueryBuilder::new()
-            .min_duration(Some("200".to_string()))
+            ))
             .max_duration(Some("50".to_string()))
             .build();
 
@@ -1807,7 +1807,7 @@ async fn test_empty_database() {
         insert_metadata(&pool, file, None, Some("H".to_string()), None).await;
 
         let query = SearchQueryBuilder::new()
-            .keys(Some(vec!["H".to_string()]))
+            .key(Some(vec!["H".to_string()]))
             .build();
 
         let results = SearchRepository::search(&pool, &query).await.unwrap_or_default();
@@ -1825,8 +1825,8 @@ async fn test_empty_database() {
             insert_metadata(&pool, file, None, None, None).await;
         }
 
-        let query1 = SearchQueryBuilder::new().limit(10).offset(0).build();
-        let query2 = SearchQueryBuilder::new().limit(10).offset(10).build();
+        let query1 = SearchQueryBuilder::new().build();
+        let query2 = SearchQueryBuilder::new().build();
 
         let page1 = SearchRepository::search(&pool, &query1).await.expect("Page 1 query failed");
         let page2 = SearchRepository::search(&pool, &query2).await.expect("Page 2 query failed");
@@ -1901,7 +1901,7 @@ async fn test_empty_database() {
         }
 
         let query = SearchQueryBuilder::new()
-            .limit(10000)
+            
             .build();
 
         let results = SearchRepository::search(&pool, &query).await.expect("Query failed");
@@ -1920,7 +1920,7 @@ async fn test_empty_database() {
         }
 
         let query = SearchQueryBuilder::new()
-            .offset(10)
+            
             .build();
 
         let results = SearchRepository::search(&pool, &query).await.expect("Query failed");

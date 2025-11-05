@@ -1537,7 +1537,7 @@ async fn test_get_files_by_tags_and_performance() {
         cleanup_database(&pool).await.expect("Cleanup failed");
 
         let file_id = create_test_file(&pool, "file.mid").await;
-        let repo = TagRepository::new();
+        let repo = TagRepository::new(&pool);
 
         repo.add_tag_to_file(&pool, file_id, "test_tag").await.expect("First add failed");
 
@@ -1556,7 +1556,7 @@ async fn test_get_files_by_tags_and_performance() {
 
         let file_id = create_test_file(&pool, "file.mid").await;
         let long_tag = "t".repeat(150); // > 100 chars
-        let repo = TagRepository::new();
+        let repo = TagRepository::new(&pool);
 
         let result = repo.add_tag_to_file(&pool, file_id, &long_tag).await;
         assert!(result.is_err(), "Tag name > 100 chars should fail");
@@ -1571,7 +1571,7 @@ async fn test_get_files_by_tags_and_performance() {
         cleanup_database(&pool).await.expect("Cleanup failed");
 
         let long_category = "c".repeat(60); // > 50 chars
-        let repo = TagRepository::new();
+        let repo = TagRepository::new(&pool);
 
         let new_tag = midi_pipeline::db::models::NewTag {
             name: "test".to_string(),
@@ -1591,7 +1591,7 @@ async fn test_get_files_by_tags_and_performance() {
         let pool = setup_test_pool().await;
         cleanup_database(&pool).await.expect("Cleanup failed");
 
-        let repo = TagRepository::new();
+        let repo = TagRepository::new(&pool);
         let result = repo.add_tag_to_file(&pool, 999999, "test_tag").await;
         assert!(result.is_err(), "Adding tag to non-existent file should fail FK constraint");
 
@@ -1605,7 +1605,7 @@ async fn test_get_files_by_tags_and_performance() {
         cleanup_database(&pool).await.expect("Cleanup failed");
 
         let file_id = create_test_file(&pool, "file.mid").await;
-        let repo = TagRepository::new();
+        let repo = TagRepository::new(&pool);
 
         // Remove tag that was never added - should not error
         let result = repo.remove_tag_from_file(&pool, file_id, "nonexistent").await;
@@ -1620,7 +1620,7 @@ async fn test_get_files_by_tags_and_performance() {
         let pool = setup_test_pool().await;
         cleanup_database(&pool).await.expect("Cleanup failed");
 
-        let repo = TagRepository::new();
+        let repo = TagRepository::new(&pool);
         let result = repo.delete(&pool, "nonexistent_tag").await;
         assert!(result.is_ok(), "Delete non-existent should be idempotent");
 
@@ -1633,7 +1633,7 @@ async fn test_get_files_by_tags_and_performance() {
         let pool = setup_test_pool().await;
         cleanup_database(&pool).await.expect("Cleanup failed");
 
-        let repo = TagRepository::new();
+        let repo = TagRepository::new(&pool);
         let result = repo.get_tags_for_file(&pool, 999999).await;
         assert!(result.is_ok(), "Should not error");
         assert_eq!(result.unwrap().len(), 0, "Should return empty list");
@@ -1648,7 +1648,7 @@ async fn test_get_files_by_tags_and_performance() {
         cleanup_database(&pool).await.expect("Cleanup failed");
 
         let file_id = create_test_file(&pool, "file.mid").await;
-        let repo = TagRepository::new();
+        let repo = TagRepository::new(&pool);
 
         let result = repo.add_tag_to_file(&pool, file_id, "").await;
         assert!(result.is_err(), "Empty tag name should fail");
@@ -1663,7 +1663,7 @@ async fn test_get_files_by_tags_and_performance() {
         cleanup_database(&pool).await.expect("Cleanup failed");
 
         let file_id = create_test_file(&pool, "file.mid").await;
-        let repo = TagRepository::new();
+        let repo = TagRepository::new(&pool);
 
         let tags = vec![
             ("valid_tag".to_string(), None),
@@ -1682,7 +1682,7 @@ async fn test_get_files_by_tags_and_performance() {
         let pool = setup_test_pool().await;
         cleanup_database(&pool).await.expect("Cleanup failed");
 
-        let repo = TagRepository::new();
+        let repo = TagRepository::new(&pool);
         let result = repo.get_popular_tags(&pool, -10).await;
         assert!(result.is_err(), "Negative limit should fail");
 
@@ -1695,7 +1695,7 @@ async fn test_get_files_by_tags_and_performance() {
         let pool = setup_test_pool().await;
         cleanup_database(&pool).await.expect("Cleanup failed");
 
-        let repo = TagRepository::new();
+        let repo = TagRepository::new(&pool);
         repo.insert(&pool, midi_pipeline::db::models::NewTag {
             name: "test1".to_string(),
             category: None,
