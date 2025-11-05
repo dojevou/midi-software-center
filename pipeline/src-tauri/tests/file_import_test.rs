@@ -8,7 +8,7 @@
 //! MIDI files with batch database operations, concurrent workers, and robust error handling.
 //!
 //! **Test Categories:**
-//! 1. SECTION 1: import_single_file() Tests (12 tests) - Single file import workflow
+//! 1. SECTION 1: import_single_file_impl() Tests (12 tests) - Single file import workflow
 //! 2. SECTION 2: import_directory_impl() Tests (18 tests) - Batch import with concurrency
 //! 3. SECTION 3: Additional Edge Cases & Performance (20 tests) - Batch boundaries, Unicode, large files
 //! 4. SECTION 4: Advanced Error Scenarios (12-15 tests) - Database errors, race conditions, security
@@ -339,7 +339,7 @@ impl Emitter for MockWindow {
 }
 
 // ============================================================================
-// SECTION 1: import_single_file() Tests (12 tests)
+// SECTION 1: import_single_file_impl() Tests (12 tests)
 // ============================================================================
 
 #[tokio::test]
@@ -650,12 +650,11 @@ async fn test_import_single_file_concurrent_access() {
         let window = MockWindow::new();
 
         let handle = tokio::spawn(async move {
-            import_single_file(
-                file_path.to_str().unwrap().to_string(),
-                None,
-                state_clone,
-                window,
-            )
+            import_single_file_impl(
+        file_path.to_str().unwrap().to_string(),
+        None,
+        &state_clone,
+    )
             .await
         });
 
@@ -734,7 +733,7 @@ async fn test_import_directory_single_file() {
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
-        state,
+        &state,
     )
     .await;
 
@@ -767,7 +766,7 @@ async fn test_import_directory_multiple_files_10() {
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
-        state,
+        &state,
     )
     .await;
 
@@ -803,7 +802,7 @@ async fn test_import_directory_batch_100() {
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
-        state,
+        &state,
     )
     .await;
 
@@ -839,7 +838,7 @@ async fn test_import_directory_batch_1000() {
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
-        state,
+        &state,
     )
     .await;
 
@@ -874,7 +873,7 @@ async fn test_import_directory_ignore_non_midi_files() {
         dir.to_str().unwrap().to_string(),
         false,
         None,
-        state,
+        &state,
     )
     .await;
 
@@ -906,7 +905,7 @@ async fn test_import_directory_concurrency_semaphore_limit() {
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
-        state,
+        &state,
     )
     .await;
 
@@ -939,7 +938,7 @@ async fn test_import_directory_arc_atomic_counter_accuracy() {
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
-        state,
+        &state,
     )
     .await;
 
@@ -972,7 +971,7 @@ async fn test_import_directory_progress_events_emitted() {
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
-        state,
+        &state,
     )
     .await;
 
@@ -1005,7 +1004,7 @@ async fn test_import_directory_progress_event_data() {
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
-        state,
+        &state,
     )
     .await;
 
@@ -1049,7 +1048,7 @@ async fn test_import_directory_duplicate_detection_50_percent() {
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
-        state,
+        &state,
     )
     .await;
 
@@ -1071,7 +1070,7 @@ async fn test_import_directory_duplicate_detection_50_percent() {
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
-        state,
+        &state,
     )
     .await;
 
@@ -1109,7 +1108,7 @@ async fn test_import_directory_error_collection_continues() {
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
-        state,
+        &state,
     )
     .await;
 
@@ -1145,7 +1144,7 @@ async fn test_import_directory_file_errors_dont_stop_import() {
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
-        state,
+        &state,
     )
     .await;
 
@@ -1178,7 +1177,7 @@ async fn test_import_directory_database_errors_collected() {
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
-        state,
+        &state,
     )
     .await;
 
@@ -1189,7 +1188,7 @@ async fn test_import_directory_database_errors_collected() {
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
-        state,
+        &state,
     )
     .await;
 
@@ -1224,7 +1223,7 @@ async fn test_import_directory_edge_case_10k_files() {
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
-        state,
+        &state,
     )
     .await;
 
@@ -1264,7 +1263,7 @@ async fn test_import_directory_edge_case_nested_subdirectories() {
         root_dir.to_str().unwrap().to_string(),
         true, // recursive
         None,
-        state,
+        &state,
     )
     .await;
 
@@ -1293,7 +1292,7 @@ async fn test_import_directory_edge_case_permission_denied() {
         "/root/nonexistent".to_string(),
         false,
         None,
-        state,
+        &state,
     )
     .await;
 
@@ -1319,7 +1318,7 @@ async fn test_import_directory_empty_directory() {
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
-        state,
+        &state,
     )
     .await;
 
@@ -1353,7 +1352,7 @@ async fn test_import_directory_nonrecursive_ignores_subdirs() {
         root_dir.to_str().unwrap().to_string(),
         false, // NOT recursive
         None,
-        state,
+        &state,
     )
     .await;
 
@@ -1389,7 +1388,7 @@ async fn test_import_directory_batch_insert_boundary() {
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
-        state,
+        &state,
     )
     .await;
 
@@ -1421,7 +1420,7 @@ async fn test_import_directory_batch_insert_overflow() {
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
-        state,
+        &state,
     )
     .await;
 
@@ -1477,7 +1476,7 @@ async fn test_import_directory_rate_calculation() {
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
-        state,
+        &state,
     )
     .await;
 
@@ -1510,7 +1509,7 @@ async fn test_import_directory_progress_throttling() {
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
-        state,
+        &state,
     )
     .await;
 
@@ -1570,7 +1569,7 @@ async fn test_import_directory_with_category() {
         fixtures.path().to_str().unwrap().to_string(),
         false,
         Some("test_category".to_string()),
-        state,
+        &state,
     )
     .await;
 
@@ -1646,7 +1645,7 @@ async fn test_import_directory_summary_accuracy() {
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
-        state,
+        &state,
     )
     .await;
 
@@ -1705,7 +1704,7 @@ async fn test_import_directory_not_found() {
         "/nonexistent/directory/path".to_string(),
         false,
         None,
-        state,
+        &state,
     )
     .await;
 
@@ -2025,12 +2024,11 @@ async fn test_import_directory_concurrent_same_file_race() {
         let window = MockWindow::new();
 
         let handle = tokio::spawn(async move {
-            import_single_file(
-                path_clone.to_str().unwrap().to_string(),
-                None,
-                state_clone,
-                window,
-            )
+            import_single_file_impl(
+        path_clone.to_str().unwrap().to_string(),
+        None,
+        &state_clone,
+    )
             .await
         });
 
@@ -2274,7 +2272,7 @@ async fn test_import_directory_metadata_extraction_partial_failure() {
         fixtures.path().to_str().unwrap().to_string(),
         false,
         None,
-        state,
+        &state,
     )
     .await;
 
@@ -2309,9 +2307,9 @@ async fn test_error_duplicate_file() {
     let fixtures = MidiFixtures::new().await;
     let file_path = fixtures.create_simple_midi("duplicate.mid").await;
     let state = AppState { database: Database::new(&db.database_url()).await.expect("DB") };
-    let r1 = import_single_file(file_path.to_str().unwrap().to_string(), None, state, MockWindow::new()).await;
+    let r1 = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, state, MockWindow::new()).await;
     assert!(r1.is_ok());
-    let r2 = import_single_file(file_path.to_str().unwrap().to_string(), None, state, MockWindow::new()).await;
+    let r2 = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, state, MockWindow::new()).await;
     assert!(r2.is_err());
     db.cleanup().await;
 }
@@ -2353,7 +2351,7 @@ async fn test_error_concurrent_race() {
         let path = file_path.clone();
         let st = Arc::clone(&state);
         let h = tokio::spawn(async move {
-            import_single_file(path.to_str().unwrap().to_string(), None, tauri::State::from(&*st), MockWindow::new()).await
+            import_single_file_impl(path.to_str().unwrap().to_string(), None, tauri::State::from(&*st), MockWindow::new()).await
         });
         handles.push(h);
     }
@@ -2393,7 +2391,7 @@ async fn test_error_path_traversal() {
     let state = AppState { database: Database::new(&db.database_url()).await.expect("DB") };
     let paths = vec!["../../../etc/passwd", "..\\..\\..\\windows\\system32"];
     for path in paths {
-        let r = import_single_file(path.to_string(), None, state, MockWindow::new()).await;
+        let r = import_single_file_impl(path.to_string(), None, state, MockWindow::new()).await;
         assert!(r.is_err());
     }
     db.cleanup().await;
