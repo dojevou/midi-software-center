@@ -1,0 +1,3947 @@
+error[E0432]: unresolved import `common`
+  --> pipeline/src-tauri/tests/workflows_test.rs:29:5
+   |
+29 | use common::{TestDatabase, FileFixtures, MidiFileBuilder};
+   |     ^^^^^^ use of unresolved module or unlinked crate `common`
+   |
+help: to make use of source file pipeline/src-tauri/tests/common/mod.rs, use `mod common` in this file to declare the module
+   |
+15 + mod common;
+   |
+
+--
+error[E0433]: failed to resolve: use of unresolved module or unlinked crate `common`
+  --> pipeline/src-tauri/tests/metadata_repository_test.rs:39:5
+   |
+39 | use common::assertions::{
+   |     ^^^^^^ use of unresolved module or unlinked crate `common`
+   |
+help: to make use of source file pipeline/src-tauri/tests/common/mod.rs, use `mod common` in this file to declare the module
+   |
+28 + mod common;
+   |
+
+--
+error[E0432]: unresolved import `common`
+  --> pipeline/src-tauri/tests/analyze_test.rs:35:5
+   |
+35 | use common::*;
+   |     ^^^^^^ use of unresolved module or unlinked crate `common`
+   |
+help: to make use of source file pipeline/src-tauri/tests/common/mod.rs, use `mod common` in this file to declare the module
+   |
+35 + mod common;
+   |
+
+error[E0433]: failed to resolve: use of unresolved module or unlinked crate `common`
+  --> pipeline/src-tauri/tests/tag_repository_test.rs:40:5
+   |
+40 | use common::assertions::{
+   |     ^^^^^^ use of unresolved module or unlinked crate `common`
+   |
+help: to make use of source file pipeline/src-tauri/tests/common/mod.rs, use `mod common` in this file to declare the module
+   |
+31 + mod common;
+   |
+
+error[E0433]: failed to resolve: use of unresolved module or unlinked crate `common`
+  --> pipeline/src-tauri/tests/search_repository_test.rs:36:5
+   |
+36 | use common::assertions::{
+   |     ^^^^^^ use of unresolved module or unlinked crate `common`
+   |
+help: to make use of source file pipeline/src-tauri/tests/common/mod.rs, use `mod common` in this file to declare the module
+   |
+26 + mod common;
+   |
+
+error[E0433]: failed to resolve: use of unresolved module or unlinked crate `common`
+  --> pipeline/src-tauri/tests/file_repository_test.rs:38:5
+   |
+38 | use common::assertions::{
+   |     ^^^^^^ use of unresolved module or unlinked crate `common`
+   |
+help: to make use of source file pipeline/src-tauri/tests/common/mod.rs, use `mod common` in this file to declare the module
+   |
+28 + mod common;
+   |
+
+--
+error[E0107]: missing generics for trait `Emitter`
+   --> pipeline/src-tauri/tests/file_import_test.rs:310:6
+    |
+310 | impl Emitter for MockWindow {
+    |      ^^^^^^^ expected 1 generic argument
+    |
+note: trait defined here, with 1 generic parameter: `R`
+   --> /home/dojevou/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tauri-2.9.2/src/lib.rs:967:11
+    |
+967 | pub trait Emitter<R: Runtime>: sealed::ManagerBase<R> {
+    |           ^^^^^^^ -
+--
+error[E0422]: cannot find struct, variant or union type `NewTag` in module `midi_pipeline::db::models`
+    --> pipeline/src-tauri/tests/tag_repository_test.rs:1573:50
+     |
+1573 |         let new_tag = midi_pipeline::db::models::NewTag {
+     |                                                  ^^^^^^ not found in `midi_pipeline::db::models`
+     |
+help: consider importing this struct
+     |
+  31 + use crate::fixtures::NewTag;
+     |
+help: if you import `NewTag`, refer to it directly
+--
+error[E0422]: cannot find struct, variant or union type `NewTag` in module `midi_pipeline::db::models`
+    --> pipeline/src-tauri/tests/tag_repository_test.rs:1696:55
+     |
+1696 |         repo.insert(&pool, midi_pipeline::db::models::NewTag {
+     |                                                       ^^^^^^ not found in `midi_pipeline::db::models`
+     |
+help: consider importing this struct
+     |
+  31 + use crate::fixtures::NewTag;
+     |
+help: if you import `NewTag`, refer to it directly
+--
+error[E0422]: cannot find struct, variant or union type `NewTag` in module `midi_pipeline::db::models`
+    --> pipeline/src-tauri/tests/tag_repository_test.rs:1704:55
+     |
+1704 |         repo.insert(&pool, midi_pipeline::db::models::NewTag {
+     |                                                       ^^^^^^ not found in `midi_pipeline::db::models`
+     |
+help: consider importing this struct
+     |
+  31 + use crate::fixtures::NewTag;
+     |
+help: if you import `NewTag`, refer to it directly
+--
+error[E0425]: cannot find function `get_file_count_impl` in this scope
+   --> pipeline/src-tauri/tests/workflows_test.rs:149:22
+    |
+149 |     let file_count = get_file_count_impl(&state).await.unwrap();
+    |                      ^^^^^^^^^^^^^^^^^^^
+    |
+   ::: /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/commands/files.rs:154:1
+    |
+154 | pub async fn get_file_count(state: State<'_, AppState>) -> Result<i64, String> {
+    | ------------------------------------------------------------------------------ similarly named function `get_file_count` defined here
+    |
+--
+error[E0425]: cannot find function `get_file_tags_impl` in this scope
+   --> pipeline/src-tauri/tests/workflows_test.rs:184:16
+    |
+184 |       let tags = get_file_tags_impl(file_id).await.unwrap();
+    |                  ^^^^^^^^^^^^^^^^^^
+    |
+   ::: /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/commands/tags.rs:71:1
+    |
+ 71 | / pub async fn get_file_tags(
+ 72 | |     file_id: i64,
+ 73 | |     state: State<'_, AppState>,
+--
+error[E0425]: cannot find function `get_file_count_impl` in this scope
+   --> pipeline/src-tauri/tests/workflows_test.rs:238:17
+    |
+238 |     let count = get_file_count_impl(&state).await.unwrap();
+    |                 ^^^^^^^^^^^^^^^^^^^
+    |
+   ::: /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/commands/files.rs:154:1
+    |
+154 | pub async fn get_file_count(state: State<'_, AppState>) -> Result<i64, String> {
+    | ------------------------------------------------------------------------------ similarly named function `get_file_count` defined here
+    |
+--
+error[E0425]: cannot find function `get_file_count_impl` in this scope
+   --> pipeline/src-tauri/tests/workflows_test.rs:267:25
+    |
+267 |     let initial_count = get_file_count_impl(&state).await.unwrap();
+    |                         ^^^^^^^^^^^^^^^^^^^
+    |
+   ::: /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/commands/files.rs:154:1
+    |
+154 | pub async fn get_file_count(state: State<'_, AppState>) -> Result<i64, String> {
+    | ------------------------------------------------------------------------------ similarly named function `get_file_count` defined here
+    |
+--
+error[E0425]: cannot find function `get_file_count_impl` in this scope
+   --> pipeline/src-tauri/tests/workflows_test.rs:278:23
+    |
+278 |     let final_count = get_file_count_impl(&state).await.unwrap();
+    |                       ^^^^^^^^^^^^^^^^^^^
+    |
+   ::: /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/commands/files.rs:154:1
+    |
+154 | pub async fn get_file_count(state: State<'_, AppState>) -> Result<i64, String> {
+    | ------------------------------------------------------------------------------ similarly named function `get_file_count` defined here
+    |
+--
+error[E0425]: cannot find function `get_file_tags_impl` in this scope
+   --> pipeline/src-tauri/tests/workflows_test.rs:345:25
+    |
+345 |       let tags_original = get_file_tags_impl(original_id).await.unwrap();
+    |                           ^^^^^^^^^^^^^^^^^^
+    |
+   ::: /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/commands/tags.rs:71:1
+    |
+ 71 | / pub async fn get_file_tags(
+ 72 | |     file_id: i64,
+ 73 | |     state: State<'_, AppState>,
+--
+error[E0425]: cannot find function `get_file_tags_impl` in this scope
+   --> pipeline/src-tauri/tests/workflows_test.rs:346:22
+    |
+346 |       let tags_remix = get_file_tags_impl(remix_id).await.unwrap();
+    |                        ^^^^^^^^^^^^^^^^^^
+    |
+   ::: /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/commands/tags.rs:71:1
+    |
+ 71 | / pub async fn get_file_tags(
+ 72 | |     file_id: i64,
+ 73 | |     state: State<'_, AppState>,
+--
+error[E0425]: cannot find function `get_file_details_impl` in this scope
+   --> pipeline/src-tauri/tests/workflows_test.rs:373:19
+    |
+373 |       let details = get_file_details_impl(file_id).await;
+    |                     ^^^^^^^^^^^^^^^^^^^^^
+    |
+   ::: /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/commands/files.rs:225:1
+    |
+225 | / pub async fn get_file_details(
+226 | |     file_id: i64,
+227 | |     state: State<'_, AppState>,
+--
+error[E0425]: cannot find function `get_file_tags_impl` in this scope
+   --> pipeline/src-tauri/tests/workflows_test.rs:469:16
+    |
+469 |       let tags = get_file_tags_impl(file_id).await.unwrap();
+    |                  ^^^^^^^^^^^^^^^^^^
+    |
+   ::: /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/commands/tags.rs:71:1
+    |
+ 71 | / pub async fn get_file_tags(
+ 72 | |     file_id: i64,
+ 73 | |     state: State<'_, AppState>,
+--
+error[E0425]: cannot find function `get_all_tags_impl` in this scope
+   --> pipeline/src-tauri/tests/workflows_test.rs:521:20
+    |
+521 |       let all_tags = get_all_tags_impl(&state).await.unwrap();
+    |                      ^^^^^^^^^^^^^^^^^
+    |
+   ::: /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/commands/search.rs:214:1
+    |
+214 | / pub async fn get_all_tags(
+215 | |     state: State<'_, AppState>,
+216 | | ) -> Result<Vec<String>, String> {
+--
+error[E0425]: cannot find function `get_file_count_impl` in this scope
+   --> pipeline/src-tauri/tests/workflows_test.rs:594:17
+    |
+594 |     let count = get_file_count_impl(&state).await.unwrap();
+    |                 ^^^^^^^^^^^^^^^^^^^
+    |
+   ::: /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/commands/files.rs:154:1
+    |
+154 | pub async fn get_file_count(state: State<'_, AppState>) -> Result<i64, String> {
+    | ------------------------------------------------------------------------------ similarly named function `get_file_count` defined here
+    |
+--
+error[E0425]: cannot find function `get_all_tags_impl` in this scope
+   --> pipeline/src-tauri/tests/workflows_test.rs:657:20
+    |
+657 |       let all_tags = get_all_tags_impl(&state).await.unwrap();
+    |                      ^^^^^^^^^^^^^^^^^
+    |
+   ::: /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/commands/search.rs:214:1
+    |
+214 | / pub async fn get_all_tags(
+215 | |     state: State<'_, AppState>,
+216 | | ) -> Result<Vec<String>, String> {
+--
+error[E0425]: cannot find function `get_file_count_impl` in this scope
+   --> pipeline/src-tauri/tests/workflows_test.rs:721:26
+    |
+721 |     let original_count = get_file_count_impl(&state).await.unwrap();
+    |                          ^^^^^^^^^^^^^^^^^^^
+    |
+   ::: /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/commands/files.rs:154:1
+    |
+154 | pub async fn get_file_count(state: State<'_, AppState>) -> Result<i64, String> {
+    | ------------------------------------------------------------------------------ similarly named function `get_file_count` defined here
+    |
+--
+error[E0425]: cannot find function `get_file_count_impl` in this scope
+   --> pipeline/src-tauri/tests/workflows_test.rs:734:30
+    |
+734 |     let after_import_count = get_file_count_impl(&state).await.unwrap();
+    |                              ^^^^^^^^^^^^^^^^^^^
+    |
+   ::: /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/commands/files.rs:154:1
+    |
+154 | pub async fn get_file_count(state: State<'_, AppState>) -> Result<i64, String> {
+    | ------------------------------------------------------------------------------ similarly named function `get_file_count` defined here
+    |
+--
+error[E0425]: cannot find function `get_all_tags_impl` in this scope
+   --> pipeline/src-tauri/tests/workflows_test.rs:794:20
+    |
+794 |       let all_tags = get_all_tags_impl(&state).await.unwrap();
+    |                      ^^^^^^^^^^^^^^^^^
+    |
+   ::: /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/commands/search.rs:214:1
+    |
+214 | / pub async fn get_all_tags(
+215 | |     state: State<'_, AppState>,
+216 | | ) -> Result<Vec<String>, String> {
+--
+error[E0425]: cannot find function `get_file_tags_impl` in this scope
+   --> pipeline/src-tauri/tests/workflows_test.rs:884:19
+    |
+884 |       let v1_tags = get_file_tags_impl(v1_result.id).await.unwrap();
+    |                     ^^^^^^^^^^^^^^^^^^
+    |
+   ::: /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/commands/tags.rs:71:1
+    |
+ 71 | / pub async fn get_file_tags(
+ 72 | |     file_id: i64,
+ 73 | |     state: State<'_, AppState>,
+--
+error[E0425]: cannot find function `get_file_tags_impl` in this scope
+   --> pipeline/src-tauri/tests/workflows_test.rs:885:19
+    |
+885 |       let v2_tags = get_file_tags_impl(v2_result.id).await.unwrap();
+    |                     ^^^^^^^^^^^^^^^^^^
+    |
+   ::: /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/commands/tags.rs:71:1
+    |
+ 71 | / pub async fn get_file_tags(
+ 72 | |     file_id: i64,
+ 73 | |     state: State<'_, AppState>,
+--
+error[E0425]: cannot find function `get_all_tags_impl` in this scope
+   --> pipeline/src-tauri/tests/workflows_test.rs:945:20
+    |
+945 |       let all_tags = get_all_tags_impl(&state).await.unwrap();
+    |                      ^^^^^^^^^^^^^^^^^
+    |
+   ::: /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/commands/search.rs:214:1
+    |
+214 | / pub async fn get_all_tags(
+215 | |     state: State<'_, AppState>,
+216 | | ) -> Result<Vec<String>, String> {
+--
+error[E0425]: cannot find function `get_all_tags_impl` in this scope
+    --> pipeline/src-tauri/tests/workflows_test.rs:1016:20
+     |
+1016 |       let all_tags = get_all_tags_impl(&state).await.unwrap();
+     |                      ^^^^^^^^^^^^^^^^^
+     |
+    ::: /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/commands/search.rs:214:1
+     |
+ 214 | / pub async fn get_all_tags(
+ 215 | |     state: State<'_, AppState>,
+ 216 | | ) -> Result<Vec<String>, String> {
+--
+error[E0425]: cannot find function `get_file_count_impl` in this scope
+    --> pipeline/src-tauri/tests/workflows_test.rs:1020:17
+     |
+1020 |     let count = get_file_count_impl(&state).await.unwrap();
+     |                 ^^^^^^^^^^^^^^^^^^^
+     |
+    ::: /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/commands/files.rs:154:1
+     |
+ 154 | pub async fn get_file_count(state: State<'_, AppState>) -> Result<i64, String> {
+     | ------------------------------------------------------------------------------ similarly named function `get_file_count` defined here
+     |
+--
+error[E0425]: cannot find function `get_file_tags_impl` in this scope
+    --> pipeline/src-tauri/tests/workflows_test.rs:1063:20
+     |
+1063 |       let old_tags = get_file_tags_impl(old_result.id).await.unwrap();
+     |                      ^^^^^^^^^^^^^^^^^^
+     |
+    ::: /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/commands/tags.rs:71:1
+     |
+  71 | / pub async fn get_file_tags(
+  72 | |     file_id: i64,
+  73 | |     state: State<'_, AppState>,
+--
+error[E0425]: cannot find function `get_file_tags_impl` in this scope
+    --> pipeline/src-tauri/tests/workflows_test.rs:1064:20
+     |
+1064 |       let new_tags = get_file_tags_impl(new_result.id).await.unwrap();
+     |                      ^^^^^^^^^^^^^^^^^^
+     |
+    ::: /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/commands/tags.rs:71:1
+     |
+  71 | / pub async fn get_file_tags(
+  72 | |     file_id: i64,
+  73 | |     state: State<'_, AppState>,
+--
+error[E0425]: cannot find function `import_single_file_impl` in this scope
+    --> pipeline/src-tauri/tests/workflows_test.rs:1082:14
+     |
+1082 |       let r1 = import_single_file_impl(path_str.clone());
+     |                ^^^^^^^^^^^^^^^^^^^^^^^
+     |
+    ::: /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/commands/file_import.rs:150:1
+     |
+ 150 | / pub async fn import_single_file(
+ 151 | |     file_path: String,
+ 152 | |     category: Option<String>,
+--
+error[E0425]: cannot find function `import_single_file_impl` in this scope
+    --> pipeline/src-tauri/tests/workflows_test.rs:1083:14
+     |
+1083 |       let r2 = import_single_file_impl(path_str.clone());
+     |                ^^^^^^^^^^^^^^^^^^^^^^^
+     |
+    ::: /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/commands/file_import.rs:150:1
+     |
+ 150 | / pub async fn import_single_file(
+ 151 | |     file_path: String,
+ 152 | |     category: Option<String>,
+--
+error[E0425]: cannot find function `import_single_file_impl` in this scope
+    --> pipeline/src-tauri/tests/workflows_test.rs:1098:18
+     |
+1098 |       let result = import_single_file_impl(file_path.to_str().unwrap().to_string()).await.unwrap();
+     |                    ^^^^^^^^^^^^^^^^^^^^^^^
+     |
+    ::: /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/commands/file_import.rs:150:1
+     |
+ 150 | / pub async fn import_single_file(
+ 151 | |     file_path: String,
+ 152 | |     category: Option<String>,
+--
+error[E0425]: cannot find function `add_tags_to_file_impl` in this scope
+    --> pipeline/src-tauri/tests/workflows_test.rs:1099:16
+     |
+1099 |       let tags = add_tags_to_file_impl(result.id, vec![]).await;
+     |                  ^^^^^^^^^^^^^^^^^^^^^
+     |
+    ::: /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/commands/tags.rs:237:1
+     |
+ 237 | / pub async fn add_tags_to_file(
+ 238 | |     file_id: i64,
+ 239 | |     tag_names: Vec<String>,
+--
+error[E0425]: cannot find function `import_single_file_impl` in this scope
+    --> pipeline/src-tauri/tests/workflows_test.rs:1112:18
+     |
+1112 |       let result = import_single_file_impl(file_path.to_str().unwrap().to_string()).await.unwrap();
+     |                    ^^^^^^^^^^^^^^^^^^^^^^^
+     |
+    ::: /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/commands/file_import.rs:150:1
+     |
+ 150 | / pub async fn import_single_file(
+ 151 | |     file_path: String,
+ 152 | |     category: Option<String>,
+--
+error[E0425]: cannot find function `add_tags_to_file_impl` in this scope
+    --> pipeline/src-tauri/tests/workflows_test.rs:1113:5
+     |
+1113 |       add_tags_to_file_impl(result.id, vec!["test".to_string()]).await.unwrap();
+     |       ^^^^^^^^^^^^^^^^^^^^^
+     |
+    ::: /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/commands/tags.rs:237:1
+     |
+ 237 | / pub async fn add_tags_to_file(
+ 238 | |     file_id: i64,
+ 239 | |     tag_names: Vec<String>,
+--
+error[E0425]: cannot find function `search_files_impl` in this scope
+    --> pipeline/src-tauri/tests/workflows_test.rs:1128:26
+     |
+1128 |       let search_results = search_files_impl("".to_string(), Some(120), Some(160), None).await;
+     |                            ^^^^^^^^^^^^^^^^^
+     |
+    ::: /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/commands/search.rs:178:1
+     |
+ 178 | / pub async fn search_files(
+ 179 | |     query: String,
+ 180 | |     filters: SearchFilters,
+--
+error[E0425]: cannot find function `import_single_file_impl` in this scope
+    --> pipeline/src-tauri/tests/workflows_test.rs:1141:18
+     |
+1141 |       let result = import_single_file_impl(file_path.to_str().unwrap().to_string()).await.unwrap();
+     |                    ^^^^^^^^^^^^^^^^^^^^^^^
+     |
+    ::: /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/commands/file_import.rs:150:1
+     |
+ 150 | / pub async fn import_single_file(
+ 151 | |     file_path: String,
+ 152 | |     category: Option<String>,
+--
+error[E0425]: cannot find function `add_tags_to_file_impl` in this scope
+    --> pipeline/src-tauri/tests/workflows_test.rs:1142:16
+     |
+1142 |       let tags = add_tags_to_file_impl(result.id, vec!["tag".to_string(), "tag".to_string()]).await.unwrap();
+     |                  ^^^^^^^^^^^^^^^^^^^^^
+     |
+    ::: /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/commands/tags.rs:237:1
+     |
+ 237 | / pub async fn add_tags_to_file(
+ 238 | |     file_id: i64,
+ 239 | |     tag_names: Vec<String>,
+--
+error[E0425]: cannot find function `import_single_file_impl` in this scope
+    --> pipeline/src-tauri/tests/workflows_test.rs:1155:25
+     |
+1155 |       let import_result = import_single_file_impl(file_path.to_str().unwrap().to_string()).await;
+     |                           ^^^^^^^^^^^^^^^^^^^^^^^
+     |
+    ::: /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/commands/file_import.rs:150:1
+     |
+ 150 | / pub async fn import_single_file(
+ 151 | |     file_path: String,
+ 152 | |     category: Option<String>,
+--
+error[E0423]: cannot initialize a tuple struct which contains private fields
+    --> pipeline/src-tauri/tests/workflows_test.rs:1172:32
+     |
+1172 |             import_single_file(tauri::State(&state_clone), temp_path.to_str().unwrap().to_string()).await
+     |                                ^^^^^^^^^^^^
+     |
+note: constructor is not visible here due to private fields
+    --> /home/dojevou/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tauri-2.9.2/src/state.rs:21:48
+     |
+  21 | pub struct State<'r, T: Send + Sync + 'static>(&'r T);
+     |                                                ^^^^^ private field
+--
+error[E0425]: cannot find function `search_files_impl` in this scope
+    --> pipeline/src-tauri/tests/workflows_test.rs:1221:19
+     |
+1221 |       let results = search_files_impl("".to_string(), Some(120), Some(160), Some(vec!["C_MAJOR".to_string()])).await;
+     |                     ^^^^^^^^^^^^^^^^^
+     |
+    ::: /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/commands/search.rs:178:1
+     |
+ 178 | / pub async fn search_files(
+ 179 | |     query: String,
+ 180 | |     filters: SearchFilters,
+--
+error[E0599]: no variant or associated item named `Emit` found for enum `tauri::Error` in the current scope
+   --> pipeline/src-tauri/tests/file_import_test.rs:313:40
+    |
+313 |             .map_err(|e| tauri::Error::Emit(e.to_string()))?;
+    |                                        ^^^^ variant or associated item not found in `tauri::Error`
+
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+   --> pipeline/src-tauri/tests/workflows_test.rs:122:19
+    |
+122 |       let result1 = import_single_file(
+    |  ___________________^^^^^^^^^^^^^^^^^^-
+123 | |         &state,
+    | |         ------ unexpected argument #1 of type `&AppState`
+124 | |         track1_path.to_str().unwrap().to_string(),
+125 | |     ).await;
+    | |_____- three arguments of type `Option<std::string::String>`, `State<'_, AppState>`, and `tauri::Window` are missing
+    |
+--
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+   --> pipeline/src-tauri/tests/workflows_test.rs:132:19
+    |
+132 |       let result2 = import_single_file(
+    |  ___________________^^^^^^^^^^^^^^^^^^-
+133 | |         &state,
+    | |         ------ unexpected argument #1 of type `&AppState`
+134 | |         track2_path.to_str().unwrap().to_string(),
+135 | |     ).await;
+    | |_____- three arguments of type `Option<std::string::String>`, `State<'_, AppState>`, and `tauri::Window` are missing
+    |
+--
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+   --> pipeline/src-tauri/tests/workflows_test.rs:142:19
+    |
+142 |       let result3 = import_single_file(
+    |  ___________________^^^^^^^^^^^^^^^^^^-
+143 | |         &state,
+    | |         ------ unexpected argument #1 of type `&AppState`
+144 | |         track3_path.to_str().unwrap().to_string(),
+145 | |     ).await;
+    | |_____- three arguments of type `Option<std::string::String>`, `State<'_, AppState>`, and `tauri::Window` are missing
+    |
+--
+error[E0308]: arguments to this function are incorrect
+   --> pipeline/src-tauri/tests/file_import_test.rs:359:18
+    |
+359 |     let result = import_single_file(
+    |                  ^^^^^^^^^^^^^^^^^^
+    |
+note: expected `State<'_, AppState>`, found `AppState`
+   --> pipeline/src-tauri/tests/file_import_test.rs:362:9
+    |
+362 |         state,
+    |         ^^^^^
+--
+error[E0308]: arguments to this function are incorrect
+   --> pipeline/src-tauri/tests/file_import_test.rs:396:19
+    |
+396 |     let result1 = import_single_file(
+    |                   ^^^^^^^^^^^^^^^^^^
+    |
+note: expected `State<'_, AppState>`, found `AppState`
+   --> pipeline/src-tauri/tests/file_import_test.rs:399:9
+    |
+399 |         state,
+    |         ^^^^^
+--
+error[E0308]: mismatched types
+   --> pipeline/src-tauri/tests/workflows_test.rs:153:24
+    |
+153 |     cleanup_test_files(state.database.pool(), &format!("{}%", project_path.to_str().unwrap())).await;
+    |     ------------------ ^^^^^^^^^^^^^^^^^^^^^ expected `&Pool<Postgres>`, found future
+    |     |
+    |     arguments to this function are incorrect
+    |
+note: function defined here
+   --> pipeline/src-tauri/tests/workflows_test.rs:97:10
+    |
+--
+error[E0308]: arguments to this function are incorrect
+   --> pipeline/src-tauri/tests/file_import_test.rs:407:19
+    |
+407 |     let result2 = import_single_file(
+    |                   ^^^^^^^^^^^^^^^^^^
+    |
+note: expected `State<'_, AppState>`, found `AppState`
+   --> pipeline/src-tauri/tests/file_import_test.rs:410:9
+    |
+410 |         state,
+    |         ^^^^^
+--
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+   --> pipeline/src-tauri/tests/workflows_test.rs:168:18
+    |
+168 |       let result = import_single_file(
+    |  __________________^^^^^^^^^^^^^^^^^^-
+169 | |         &state,
+    | |         ------ unexpected argument #1 of type `&AppState`
+170 | |         template_path.to_str().unwrap().to_string(),
+171 | |     ).await;
+    | |_____- three arguments of type `Option<std::string::String>`, `State<'_, AppState>`, and `tauri::Window` are missing
+    |
+--
+error[E0308]: arguments to this function are incorrect
+   --> pipeline/src-tauri/tests/workflows_test.rs:176:22
+    |
+176 |     let tag_result = add_tags_to_file(
+    |                      ^^^^^^^^^^^^^^^^
+177 |         &state,
+    |         ------ unexpected argument #1 of type `&AppState`
+178 |         file_id,
+179 |         vec!["template".to_string(), "house".to_string()],
+    |         ------------------------------------------------- argument #3 of type `State<'_, AppState>` is missing
+    |
+--
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+   --> pipeline/src-tauri/tests/workflows_test.rs:192:25
+    |
+192 |       let custom_result = import_single_file(
+    |  _________________________^^^^^^^^^^^^^^^^^^-
+193 | |         &state,
+    | |         ------ unexpected argument #1 of type `&AppState`
+194 | |         custom_path.to_str().unwrap().to_string(),
+195 | |     ).await;
+    | |_____- three arguments of type `Option<std::string::String>`, `State<'_, AppState>`, and `tauri::Window` are missing
+    |
+--
+error[E0308]: arguments to this function are incorrect
+   --> pipeline/src-tauri/tests/file_import_test.rs:436:18
+    |
+436 |     let result = import_single_file(
+    |                  ^^^^^^^^^^^^^^^^^^
+    |
+note: expected `State<'_, AppState>`, found `AppState`
+   --> pipeline/src-tauri/tests/file_import_test.rs:439:9
+    |
+439 |         state,
+    |         ^^^^^
+--
+error[E0308]: mismatched types
+   --> pipeline/src-tauri/tests/workflows_test.rs:198:24
+    |
+198 |     cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    |     ------------------ ^^^^^^^^^^^^^^^^^^^^^ expected `&Pool<Postgres>`, found future
+    |     |
+    |     arguments to this function are incorrect
+    |
+note: function defined here
+   --> pipeline/src-tauri/tests/workflows_test.rs:97:10
+    |
+--
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+   --> pipeline/src-tauri/tests/workflows_test.rs:212:26
+    |
+212 |       let backing_result = import_single_file(
+    |  __________________________^^^^^^^^^^^^^^^^^^-
+213 | |         &state,
+    | |         ------ unexpected argument #1 of type `&AppState`
+214 | |         backing_path.to_str().unwrap().to_string(),
+215 | |     ).await;
+    | |_____- three arguments of type `Option<std::string::String>`, `State<'_, AppState>`, and `tauri::Window` are missing
+    |
+--
+error[E0308]: arguments to this function are incorrect
+   --> pipeline/src-tauri/tests/workflows_test.rs:220:5
+    |
+220 |     add_tags_to_file(
+    |     ^^^^^^^^^^^^^^^^
+221 |         &state,
+    |         ------ unexpected argument #1 of type `&AppState`
+222 |         backing_id,
+223 |         vec!["backing".to_string(), "jam".to_string()],
+    |         ---------------------------------------------- argument #3 of type `State<'_, AppState>` is missing
+    |
+--
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+   --> pipeline/src-tauri/tests/workflows_test.rs:231:25
+    |
+231 |       let improv_result = import_single_file(
+    |  _________________________^^^^^^^^^^^^^^^^^^-
+232 | |         &state,
+    | |         ------ unexpected argument #1 of type `&AppState`
+233 | |         improv_path.to_str().unwrap().to_string(),
+234 | |     ).await;
+    | |_____- three arguments of type `Option<std::string::String>`, `State<'_, AppState>`, and `tauri::Window` are missing
+    |
+--
+error[E0308]: arguments to this function are incorrect
+   --> pipeline/src-tauri/tests/file_import_test.rs:474:18
+    |
+474 |     let result = import_single_file(
+    |                  ^^^^^^^^^^^^^^^^^^
+    |
+note: expected `State<'_, AppState>`, found `AppState`
+   --> pipeline/src-tauri/tests/file_import_test.rs:477:9
+    |
+477 |         state,
+    |         ^^^^^
+--
+error[E0308]: mismatched types
+   --> pipeline/src-tauri/tests/workflows_test.rs:241:24
+    |
+241 |     cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    |     ------------------ ^^^^^^^^^^^^^^^^^^^^^ expected `&Pool<Postgres>`, found future
+    |     |
+    |     arguments to this function are incorrect
+    |
+note: function defined here
+   --> pipeline/src-tauri/tests/workflows_test.rs:97:10
+    |
+--
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+   --> pipeline/src-tauri/tests/workflows_test.rs:271:9
+    |
+271 |           import_single_file(
+    |  _________^^^^^^^^^^^^^^^^^^-
+272 | |             &state,
+    | |             ------ unexpected argument #1 of type `&AppState`
+273 | |             path.to_str().unwrap().to_string(),
+274 | |         ).await.unwrap();
+    | |_________- three arguments of type `Option<std::string::String>`, `State<'_, AppState>`, and `tauri::Window` are missing
+    |
+--
+error[E0061]: this function takes 3 arguments but 4 arguments were supplied
+   --> pipeline/src-tauri/tests/workflows_test.rs:282:17
+    |
+282 |     let files = list_files(
+    |                 ^^^^^^^^^^
+283 |         &state,
+    |         ------ unexpected argument #1 of type `&AppState`
+284 |         Some(1),
+285 |         Some(10),
+    |         -------- argument #3 of type `State<'_, AppState>` is missing
+286 |         None,
+--
+error[E0308]: arguments to this function are incorrect
+   --> pipeline/src-tauri/tests/workflows_test.rs:290:9
+    |
+290 |         add_tags_to_file(
+    |         ^^^^^^^^^^^^^^^^
+291 |             &state,
+    |             ------ unexpected argument #1 of type `&AppState`
+292 |             file.id,
+293 |             vec!["live".to_string(), "arrangement".to_string()],
+    |             --------------------------------------------------- argument #3 of type `State<'_, AppState>` is missing
+    |
+--
+error[E0308]: mismatched types
+   --> pipeline/src-tauri/tests/workflows_test.rs:297:24
+    |
+297 |     cleanup_test_files(state.database.pool(), &format!("{}%", stems_dir.to_str().unwrap())).await;
+    |     ------------------ ^^^^^^^^^^^^^^^^^^^^^ expected `&Pool<Postgres>`, found future
+    |     |
+    |     arguments to this function are incorrect
+    |
+note: function defined here
+   --> pipeline/src-tauri/tests/workflows_test.rs:97:10
+    |
+--
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+   --> pipeline/src-tauri/tests/workflows_test.rs:311:27
+    |
+311 |       let original_result = import_single_file(
+    |  ___________________________^^^^^^^^^^^^^^^^^^-
+312 | |         &state,
+    | |         ------ unexpected argument #1 of type `&AppState`
+313 | |         original_path.to_str().unwrap().to_string(),
+314 | |     ).await;
+    | |_____- three arguments of type `Option<std::string::String>`, `State<'_, AppState>`, and `tauri::Window` are missing
+    |
+--
+error[E0308]: arguments to this function are incorrect
+   --> pipeline/src-tauri/tests/workflows_test.rs:319:5
+    |
+319 |     add_tags_to_file(
+    |     ^^^^^^^^^^^^^^^^
+320 |         &state,
+    |         ------ unexpected argument #1 of type `&AppState`
+321 |         original_id,
+322 |         vec!["original".to_string()],
+    |         ---------------------------- argument #3 of type `State<'_, AppState>` is missing
+    |
+--
+error[E0308]: arguments to this function are incorrect
+   --> pipeline/src-tauri/tests/file_import_test.rs:512:18
+    |
+512 |     let result = import_single_file(
+    |                  ^^^^^^^^^^^^^^^^^^
+    |
+note: expected `State<'_, AppState>`, found `AppState`
+   --> pipeline/src-tauri/tests/file_import_test.rs:515:9
+    |
+515 |         state,
+    |         ^^^^^
+--
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+   --> pipeline/src-tauri/tests/workflows_test.rs:330:24
+    |
+330 |       let remix_result = import_single_file(
+    |  ________________________^^^^^^^^^^^^^^^^^^-
+331 | |         &state,
+    | |         ------ unexpected argument #1 of type `&AppState`
+332 | |         remix_path.to_str().unwrap().to_string(),
+333 | |     ).await;
+    | |_____- three arguments of type `Option<std::string::String>`, `State<'_, AppState>`, and `tauri::Window` are missing
+    |
+--
+error[E0308]: arguments to this function are incorrect
+   --> pipeline/src-tauri/tests/workflows_test.rs:338:5
+    |
+338 |     add_tags_to_file(
+    |     ^^^^^^^^^^^^^^^^
+339 |         &state,
+    |         ------ unexpected argument #1 of type `&AppState`
+340 |         remix_id,
+341 |         vec!["remix".to_string(), "uptempo".to_string()],
+    |         ------------------------------------------------ argument #3 of type `State<'_, AppState>` is missing
+    |
+--
+error[E0308]: mismatched types
+   --> pipeline/src-tauri/tests/workflows_test.rs:351:24
+    |
+351 |     cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    |     ------------------ ^^^^^^^^^^^^^^^^^^^^^ expected `&Pool<Postgres>`, found future
+    |     |
+    |     arguments to this function are incorrect
+    |
+note: function defined here
+   --> pipeline/src-tauri/tests/workflows_test.rs:97:10
+    |
+--
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+   --> pipeline/src-tauri/tests/workflows_test.rs:365:25
+    |
+365 |       let import_result = import_single_file(
+    |  _________________________^^^^^^^^^^^^^^^^^^-
+366 | |         &state,
+    | |         ------ unexpected argument #1 of type `&AppState`
+367 | |         file_path.to_str().unwrap().to_string(),
+368 | |     ).await;
+    | |_____- three arguments of type `Option<std::string::String>`, `State<'_, AppState>`, and `tauri::Window` are missing
+    |
+--
+error[E0308]: arguments to this function are incorrect
+   --> pipeline/src-tauri/tests/workflows_test.rs:377:5
+    |
+377 |     add_tags_to_file(
+    |     ^^^^^^^^^^^^^^^^
+378 |         &state,
+    |         ------ unexpected argument #1 of type `&AppState`
+379 |         file_id,
+380 |         vec!["analyzed".to_string(), "theory".to_string()],
+    |         -------------------------------------------------- argument #3 of type `State<'_, AppState>` is missing
+    |
+--
+error[E0308]: arguments to this function are incorrect
+   --> pipeline/src-tauri/tests/file_import_test.rs:540:18
+    |
+540 |     let result = import_single_file(
+    |                  ^^^^^^^^^^^^^^^^^^
+    |
+note: expected `State<'_, AppState>`, found `AppState`
+   --> pipeline/src-tauri/tests/file_import_test.rs:543:9
+    |
+543 |         state,
+    |         ^^^^^
+--
+error[E0308]: mismatched types
+   --> pipeline/src-tauri/tests/workflows_test.rs:387:24
+    |
+387 |     cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    |     ------------------ ^^^^^^^^^^^^^^^^^^^^^ expected `&Pool<Postgres>`, found future
+    |     |
+    |     arguments to this function are incorrect
+    |
+note: function defined here
+   --> pipeline/src-tauri/tests/workflows_test.rs:97:10
+    |
+--
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+   --> pipeline/src-tauri/tests/workflows_test.rs:414:22
+    |
+414 |           let result = import_single_file(
+    |  ______________________^^^^^^^^^^^^^^^^^^-
+415 | |             &state,
+    | |             ------ unexpected argument #1 of type `&AppState`
+416 | |             path.to_str().unwrap().to_string(),
+417 | |         ).await.unwrap();
+    | |_________- three arguments of type `Option<std::string::String>`, `State<'_, AppState>`, and `tauri::Window` are missing
+    |
+--
+error[E0308]: arguments to this function are incorrect
+   --> pipeline/src-tauri/tests/workflows_test.rs:423:9
+    |
+423 |         add_tags_to_file(
+    |         ^^^^^^^^^^^^^^^^
+424 |             &state,
+    |             ------ unexpected argument #1 of type `&AppState`
+425 |             *file_id,
+426 |             vec!["setlist".to_string(), "live".to_string()],
+    |             ----------------------------------------------- argument #3 of type `State<'_, AppState>` is missing
+    |
+--
+error[E0308]: arguments to this function are incorrect
+   --> pipeline/src-tauri/tests/file_import_test.rs:569:19
+    |
+569 |     let result1 = import_single_file(
+    |                   ^^^^^^^^^^^^^^^^^^
+    |
+note: expected `State<'_, AppState>`, found `AppState`
+   --> pipeline/src-tauri/tests/file_import_test.rs:572:9
+    |
+572 |         state,
+    |         ^^^^^
+--
+error[E0308]: mismatched types
+   --> pipeline/src-tauri/tests/workflows_test.rs:433:24
+    |
+433 |     cleanup_test_files(state.database.pool(), &format!("{}%", setlist_dir.to_str().unwrap())).await;
+    |     ------------------ ^^^^^^^^^^^^^^^^^^^^^ expected `&Pool<Postgres>`, found future
+    |     |
+    |     arguments to this function are incorrect
+    |
+note: function defined here
+   --> pipeline/src-tauri/tests/workflows_test.rs:97:10
+    |
+--
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+   --> pipeline/src-tauri/tests/workflows_test.rs:447:25
+    |
+447 |       let master_result = import_single_file(
+    |  _________________________^^^^^^^^^^^^^^^^^^-
+448 | |         &state,
+    | |         ------ unexpected argument #1 of type `&AppState`
+449 | |         master_path.to_str().unwrap().to_string(),
+450 | |     ).await;
+    | |_____- three arguments of type `Option<std::string::String>`, `State<'_, AppState>`, and `tauri::Window` are missing
+    |
+--
+error[E0308]: arguments to this function are incorrect
+   --> pipeline/src-tauri/tests/workflows_test.rs:462:5
+    |
+462 |     add_tags_to_file(
+    |     ^^^^^^^^^^^^^^^^
+463 |         &state,
+    |         ------ unexpected argument #1 of type `&AppState`
+464 |         file_id,
+465 |         publishing_tags.clone(),
+    |         ----------------------- argument #3 of type `State<'_, AppState>` is missing
+    |
+--
+error[E0308]: arguments to this function are incorrect
+   --> pipeline/src-tauri/tests/file_import_test.rs:580:19
+    |
+580 |     let result2 = import_single_file(
+    |                   ^^^^^^^^^^^^^^^^^^
+    |
+note: expected `State<'_, AppState>`, found `AppState`
+   --> pipeline/src-tauri/tests/file_import_test.rs:583:9
+    |
+583 |         state,
+    |         ^^^^^
+--
+error[E0308]: mismatched types
+   --> pipeline/src-tauri/tests/workflows_test.rs:481:24
+    |
+481 |     cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    |     ------------------ ^^^^^^^^^^^^^^^^^^^^^ expected `&Pool<Postgres>`, found future
+    |     |
+    |     arguments to this function are incorrect
+    |
+note: function defined here
+   --> pipeline/src-tauri/tests/workflows_test.rs:97:10
+    |
+--
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+   --> pipeline/src-tauri/tests/workflows_test.rs:508:22
+    |
+508 |           let result = import_single_file(
+    |  ______________________^^^^^^^^^^^^^^^^^^-
+509 | |             &state,
+    | |             ------ unexpected argument #1 of type `&AppState`
+510 | |             path.to_str().unwrap().to_string(),
+511 | |         ).await.unwrap();
+    | |_________- three arguments of type `Option<std::string::String>`, `State<'_, AppState>`, and `tauri::Window` are missing
+    |
+--
+error[E0308]: arguments to this function are incorrect
+   --> pipeline/src-tauri/tests/file_import_test.rs:607:18
+    |
+607 |     let result = import_single_file(
+    |                  ^^^^^^^^^^^^^^^^^^
+    |
+note: expected `State<'_, AppState>`, found `AppState`
+   --> pipeline/src-tauri/tests/file_import_test.rs:610:9
+    |
+610 |         state,
+    |         ^^^^^
+--
+error[E0277]: a value of type `State<'_, AppState>` cannot be built from an iterator over elements of type `std::string::String`
+    --> pipeline/src-tauri/tests/workflows_test.rs:516:48
+     |
+ 516 |             tags.iter().map(|s| s.to_string()).collect(),
+     |                                                ^^^^^^^ value of type `State<'_, AppState>` cannot be built from `std::iter::Iterator<Item=std::string::String>`
+     |
+     = help: the trait `FromIterator<std::string::String>` is not implemented for `State<'_, AppState>`
+note: the method call chain might not have had the expected associated types
+    --> pipeline/src-tauri/tests/workflows_test.rs:516:25
+     |
+ 516 |             tags.iter().map(|s| s.to_string()).collect(),
+--
+error[E0308]: arguments to this function are incorrect
+   --> pipeline/src-tauri/tests/workflows_test.rs:513:9
+    |
+513 |         add_tags_to_file(
+    |         ^^^^^^^^^^^^^^^^
+514 |             &state,
+    |             ------ unexpected argument #1 of type `&AppState`
+515 |             result.id,
+    |             --------- argument #2 of type `Vec<std::string::String>` is missing
+    |
+note: function defined here
+--
+error[E0308]: mismatched types
+   --> pipeline/src-tauri/tests/workflows_test.rs:528:24
+    |
+528 |     cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    |     ------------------ ^^^^^^^^^^^^^^^^^^^^^ expected `&Pool<Postgres>`, found future
+    |     |
+    |     arguments to this function are incorrect
+    |
+note: function defined here
+   --> pipeline/src-tauri/tests/workflows_test.rs:97:10
+    |
+--
+error[E0308]: arguments to this function are incorrect
+   --> pipeline/src-tauri/tests/file_import_test.rs:645:18
+    |
+645 |     let result = import_single_file(
+    |                  ^^^^^^^^^^^^^^^^^^
+    |
+note: expected `State<'_, AppState>`, found `AppState`
+   --> pipeline/src-tauri/tests/file_import_test.rs:648:9
+    |
+648 |         state,
+    |         ^^^^^
+--
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+   --> pipeline/src-tauri/tests/workflows_test.rs:542:27
+    |
+542 |       let original_result = import_single_file(
+    |  ___________________________^^^^^^^^^^^^^^^^^^-
+543 | |         &state,
+    | |         ------ unexpected argument #1 of type `&AppState`
+544 | |         original_path.to_str().unwrap().to_string(),
+545 | |     ).await.unwrap();
+    | |_____- three arguments of type `Option<std::string::String>`, `State<'_, AppState>`, and `tauri::Window` are missing
+    |
+--
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+   --> pipeline/src-tauri/tests/workflows_test.rs:551:28
+    |
+551 |       let duplicate_result = import_single_file(
+    |  ____________________________^^^^^^^^^^^^^^^^^^-
+552 | |         &state,
+    | |         ------ unexpected argument #1 of type `&AppState`
+553 | |         duplicate_path.to_str().unwrap().to_string(),
+554 | |     ).await;
+    | |_____- three arguments of type `Option<std::string::String>`, `State<'_, AppState>`, and `tauri::Window` are missing
+    |
+--
+error[E0308]: arguments to this function are incorrect
+   --> pipeline/src-tauri/tests/workflows_test.rs:560:25
+    |
+560 |     let delete_result = delete_file(
+    |                         ^^^^^^^^^^^
+561 |         &state,
+    |         ------ unexpected argument #1 of type `&AppState`
+562 |         original_result.id,
+    |         ------------------ argument #2 of type `State<'_, AppState>` is missing
+    |
+note: function defined here
+--
+error[E0308]: mismatched types
+   --> pipeline/src-tauri/tests/workflows_test.rs:566:24
+    |
+566 |     cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    |     ------------------ ^^^^^^^^^^^^^^^^^^^^^ expected `&Pool<Postgres>`, found future
+    |     |
+    |     arguments to this function are incorrect
+    |
+note: function defined here
+   --> pipeline/src-tauri/tests/workflows_test.rs:97:10
+    |
+--
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+   --> pipeline/src-tauri/tests/workflows_test.rs:587:9
+    |
+587 |           import_single_file(
+    |  _________^^^^^^^^^^^^^^^^^^-
+588 | |             &state,
+    | |             ------ unexpected argument #1 of type `&AppState`
+589 | |             path.to_str().unwrap().to_string(),
+590 | |         ).await.unwrap();
+    | |_________- three arguments of type `Option<std::string::String>`, `State<'_, AppState>`, and `tauri::Window` are missing
+    |
+--
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+   --> pipeline/src-tauri/tests/workflows_test.rs:602:18
+    |
+602 |       let result = import_single_file(
+    |  __________________^^^^^^^^^^^^^^^^^^-
+603 | |         &state,
+    | |         ------ unexpected argument #1 of type `&AppState`
+604 | |         transposed_path.to_str().unwrap().to_string(),
+605 | |     ).await.unwrap();
+    | |_____- three arguments of type `Option<std::string::String>`, `State<'_, AppState>`, and `tauri::Window` are missing
+    |
+--
+error[E0308]: arguments to this function are incorrect
+   --> pipeline/src-tauri/tests/workflows_test.rs:608:5
+    |
+608 |     add_tags_to_file(
+    |     ^^^^^^^^^^^^^^^^
+609 |         &state,
+    |         ------ unexpected argument #1 of type `&AppState`
+610 |         result.id,
+611 |         vec!["transposed".to_string()],
+    |         ------------------------------ argument #3 of type `State<'_, AppState>` is missing
+    |
+--
+error[E0308]: arguments to this function are incorrect
+   --> pipeline/src-tauri/tests/file_import_test.rs:677:18
+    |
+677 |     let result = import_single_file(
+    |                  ^^^^^^^^^^^^^^^^^^
+    |
+note: expected `State<'_, AppState>`, found `AppState`
+   --> pipeline/src-tauri/tests/file_import_test.rs:680:9
+    |
+680 |         state,
+    |         ^^^^^
+--
+error[E0308]: mismatched types
+   --> pipeline/src-tauri/tests/workflows_test.rs:614:24
+    |
+614 |     cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    |     ------------------ ^^^^^^^^^^^^^^^^^^^^^ expected `&Pool<Postgres>`, found future
+    |     |
+    |     arguments to this function are incorrect
+    |
+note: function defined here
+   --> pipeline/src-tauri/tests/workflows_test.rs:97:10
+    |
+--
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+   --> pipeline/src-tauri/tests/workflows_test.rs:632:9
+    |
+632 |           import_single_file(
+    |  _________^^^^^^^^^^^^^^^^^^-
+633 | |             &state,
+    | |             ------ unexpected argument #1 of type `&AppState`
+634 | |             path.to_str().unwrap().to_string(),
+635 | |         ).await.unwrap();
+    | |_________- three arguments of type `Option<std::string::String>`, `State<'_, AppState>`, and `tauri::Window` are missing
+    |
+--
+error[E0308]: mismatched types
+   --> pipeline/src-tauri/tests/file_import_test.rs:716:36
+    |
+716 |                 tauri::State::from(&*state_clone),
+    |                 ------------------ ^^^^^^^^^^^^^ expected `State<'_, AppState>`, found `&AppState`
+    |                 |
+    |                 arguments to this function are incorrect
+    |
+    = note: expected struct `tauri::State<'_, AppState>`
+            found reference `&AppState`
+note: associated function defined here
+--
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+   --> pipeline/src-tauri/tests/workflows_test.rs:644:22
+    |
+644 |           let result = import_single_file(
+    |  ______________________^^^^^^^^^^^^^^^^^^-
+645 | |             &state,
+    | |             ------ unexpected argument #1 of type `&AppState`
+646 | |             path.to_str().unwrap().to_string(),
+647 | |         ).await.unwrap();
+    | |_________- three arguments of type `Option<std::string::String>`, `State<'_, AppState>`, and `tauri::Window` are missing
+    |
+--
+error[E0308]: arguments to this function are incorrect
+   --> pipeline/src-tauri/tests/workflows_test.rs:649:9
+    |
+649 |         add_tags_to_file(
+    |         ^^^^^^^^^^^^^^^^
+650 |             &state,
+    |             ------ unexpected argument #1 of type `&AppState`
+651 |             result.id,
+652 |             vec!["tempo_synced".to_string()],
+    |             -------------------------------- argument #3 of type `State<'_, AppState>` is missing
+    |
+--
+error[E0308]: mismatched types
+   --> pipeline/src-tauri/tests/file_import_test.rs:717:17
+    |
+713 |             import_single_file(
+    |             ------------------ arguments to this function are incorrect
+...
+717 |                 window,
+    |                 ^^^^^^ expected `Window`, found `MockWindow`
+    |
+    = note: expected struct `tauri::Window`
+               found struct `MockWindow`
+--
+error[E0308]: mismatched types
+   --> pipeline/src-tauri/tests/workflows_test.rs:660:24
+    |
+660 |     cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    |     ------------------ ^^^^^^^^^^^^^^^^^^^^^ expected `&Pool<Postgres>`, found future
+    |     |
+    |     arguments to this function are incorrect
+    |
+note: function defined here
+   --> pipeline/src-tauri/tests/workflows_test.rs:97:10
+    |
+--
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+   --> pipeline/src-tauri/tests/workflows_test.rs:687:22
+    |
+687 |           let result = import_single_file(
+    |  ______________________^^^^^^^^^^^^^^^^^^-
+688 | |             &state,
+    | |             ------ unexpected argument #1 of type `&AppState`
+689 | |             path.to_str().unwrap().to_string(),
+690 | |         ).await.unwrap();
+    | |_________- three arguments of type `Option<std::string::String>`, `State<'_, AppState>`, and `tauri::Window` are missing
+    |
+--
+error[E0308]: arguments to this function are incorrect
+   --> pipeline/src-tauri/tests/workflows_test.rs:697:9
+    |
+697 |         add_tags_to_file(
+    |         ^^^^^^^^^^^^^^^^
+698 |             &state,
+    |             ------ unexpected argument #1 of type `&AppState`
+699 |             *file_id,
+700 |             vec!["sample_pack".to_string(), "drums".to_string()],
+    |             ---------------------------------------------------- argument #3 of type `State<'_, AppState>` is missing
+    |
+--
+error[E0308]: mismatched types
+   --> pipeline/src-tauri/tests/workflows_test.rs:707:24
+    |
+707 |     cleanup_test_files(state.database.pool(), &format!("{}%", pack_dir.to_str().unwrap())).await;
+    |     ------------------ ^^^^^^^^^^^^^^^^^^^^^ expected `&Pool<Postgres>`, found future
+    |     |
+    |     arguments to this function are incorrect
+    |
+note: function defined here
+   --> pipeline/src-tauri/tests/workflows_test.rs:97:10
+    |
+--
+error[E0308]: arguments to this function are incorrect
+   --> pipeline/src-tauri/tests/file_import_test.rs:748:18
+    |
+748 |     let result = import_single_file(
+    |                  ^^^^^^^^^^^^^^^^^^
+    |
+note: expected `State<'_, AppState>`, found `AppState`
+   --> pipeline/src-tauri/tests/file_import_test.rs:751:9
+    |
+751 |         state,
+    |         ^^^^^
+--
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+   --> pipeline/src-tauri/tests/workflows_test.rs:728:9
+    |
+728 |           import_single_file(
+    |  _________^^^^^^^^^^^^^^^^^^-
+729 | |             &state,
+    | |             ------ unexpected argument #1 of type `&AppState`
+730 | |             path.to_str().unwrap().to_string(),
+731 | |         ).await.unwrap();
+    | |_________- three arguments of type `Option<std::string::String>`, `State<'_, AppState>`, and `tauri::Window` are missing
+    |
+--
+error[E0308]: arguments to this function are incorrect
+   --> pipeline/src-tauri/tests/file_import_test.rs:798:18
+    |
+798 |     let result = import_directory(
+    |                  ^^^^^^^^^^^^^^^^
+    |
+note: expected `State<'_, AppState>`, found `AppState`
+   --> pipeline/src-tauri/tests/file_import_test.rs:802:9
+    |
+802 |         state,
+    |         ^^^^^
+--
+error[E0308]: arguments to this function are incorrect
+   --> pipeline/src-tauri/tests/file_import_test.rs:832:18
+    |
+832 |     let result = import_directory(
+    |                  ^^^^^^^^^^^^^^^^
+    |
+note: expected `State<'_, AppState>`, found `AppState`
+   --> pipeline/src-tauri/tests/file_import_test.rs:836:9
+    |
+836 |         state,
+    |         ^^^^^
+--
+error[E0308]: arguments to this function are incorrect
+   --> pipeline/src-tauri/tests/file_import_test.rs:869:18
+    |
+869 |     let result = import_directory(
+    |                  ^^^^^^^^^^^^^^^^
+    |
+note: expected `State<'_, AppState>`, found `AppState`
+   --> pipeline/src-tauri/tests/file_import_test.rs:873:9
+    |
+873 |         state,
+    |         ^^^^^
+--
+error[E0599]: `tokio::fs::ReadDir` is not an iterator
+   --> pipeline/src-tauri/tests/workflows_test.rs:745:65
+    |
+745 |     let backup_files = fs::read_dir(&backup_dir).await.unwrap().count();
+    |                                                                 ^^^^^ `tokio::fs::ReadDir` is not an iterator
+    |
+   ::: /home/dojevou/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.48.0/src/fs/read_dir.rs:64:1
+    |
+ 64 | pub struct ReadDir(State);
+    | ------------------ doesn't satisfy `tokio::fs::ReadDir: Iterator`
+    |
+--
+error[E0308]: arguments to this function are incorrect
+   --> pipeline/src-tauri/tests/file_import_test.rs:906:18
+    |
+906 |     let result = import_directory(
+    |                  ^^^^^^^^^^^^^^^^
+    |
+note: expected `State<'_, AppState>`, found `AppState`
+   --> pipeline/src-tauri/tests/file_import_test.rs:910:9
+    |
+910 |         state,
+    |         ^^^^^
+--
+error[E0308]: mismatched types
+   --> pipeline/src-tauri/tests/workflows_test.rs:748:24
+    |
+748 |     cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    |     ------------------ ^^^^^^^^^^^^^^^^^^^^^ expected `&Pool<Postgres>`, found future
+    |     |
+    |     arguments to this function are incorrect
+    |
+note: function defined here
+   --> pipeline/src-tauri/tests/workflows_test.rs:97:10
+    |
+--
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+   --> pipeline/src-tauri/tests/workflows_test.rs:764:24
+    |
+764 |       let user1_result = import_single_file(
+    |  ________________________^^^^^^^^^^^^^^^^^^-
+765 | |         &state,
+    | |         ------ unexpected argument #1 of type `&AppState`
+766 | |         user1_path.to_str().unwrap().to_string(),
+767 | |     ).await.unwrap();
+    | |_____- three arguments of type `Option<std::string::String>`, `State<'_, AppState>`, and `tauri::Window` are missing
+    |
+--
+error[E0308]: arguments to this function are incorrect
+   --> pipeline/src-tauri/tests/workflows_test.rs:769:5
+    |
+769 |     add_tags_to_file(
+    |     ^^^^^^^^^^^^^^^^
+770 |         &state,
+    |         ------ unexpected argument #1 of type `&AppState`
+771 |         user1_result.id,
+772 |         vec!["collaboration".to_string(), "user1".to_string()],
+    |         ------------------------------------------------------ argument #3 of type `State<'_, AppState>` is missing
+    |
+--
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+   --> pipeline/src-tauri/tests/workflows_test.rs:782:24
+    |
+782 |       let user2_result = import_single_file(
+    |  ________________________^^^^^^^^^^^^^^^^^^-
+783 | |         &state,
+    | |         ------ unexpected argument #1 of type `&AppState`
+784 | |         user2_path.to_str().unwrap().to_string(),
+785 | |     ).await.unwrap();
+    | |_____- three arguments of type `Option<std::string::String>`, `State<'_, AppState>`, and `tauri::Window` are missing
+    |
+--
+error[E0308]: arguments to this function are incorrect
+   --> pipeline/src-tauri/tests/workflows_test.rs:787:5
+    |
+787 |     add_tags_to_file(
+    |     ^^^^^^^^^^^^^^^^
+788 |         &state,
+    |         ------ unexpected argument #1 of type `&AppState`
+789 |         user2_result.id,
+790 |         vec!["collaboration".to_string(), "user2".to_string()],
+    |         ------------------------------------------------------ argument #3 of type `State<'_, AppState>` is missing
+    |
+--
+error[E0308]: arguments to this function are incorrect
+   --> pipeline/src-tauri/tests/file_import_test.rs:942:18
+    |
+942 |     let result = import_directory(
+    |                  ^^^^^^^^^^^^^^^^
+    |
+note: expected `State<'_, AppState>`, found `AppState`
+   --> pipeline/src-tauri/tests/file_import_test.rs:946:9
+    |
+946 |         state,
+    |         ^^^^^
+--
+error[E0308]: mismatched types
+   --> pipeline/src-tauri/tests/workflows_test.rs:797:24
+    |
+797 |     cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    |     ------------------ ^^^^^^^^^^^^^^^^^^^^^ expected `&Pool<Postgres>`, found future
+    |     |
+    |     arguments to this function are incorrect
+    |
+note: function defined here
+   --> pipeline/src-tauri/tests/workflows_test.rs:97:10
+    |
+--
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+   --> pipeline/src-tauri/tests/workflows_test.rs:818:22
+    |
+818 |           let result = import_single_file(
+    |  ______________________^^^^^^^^^^^^^^^^^^-
+819 | |             &state,
+    | |             ------ unexpected argument #1 of type `&AppState`
+820 | |             path.to_str().unwrap().to_string(),
+821 | |         ).await.unwrap();
+    | |_________- three arguments of type `Option<std::string::String>`, `State<'_, AppState>`, and `tauri::Window` are missing
+    |
+--
+error[E0308]: arguments to this function are incorrect
+   --> pipeline/src-tauri/tests/workflows_test.rs:823:9
+    |
+823 |         add_tags_to_file(
+    |         ^^^^^^^^^^^^^^^^
+824 |             &state,
+    |             ------ unexpected argument #1 of type `&AppState`
+825 |             result.id,
+826 |             vec!["session".to_string()],
+    |             --------------------------- argument #3 of type `State<'_, AppState>` is missing
+    |
+--
+error[E0308]: arguments to this function are incorrect
+   --> pipeline/src-tauri/tests/file_import_test.rs:975:18
+    |
+975 |     let result = import_directory(
+    |                  ^^^^^^^^^^^^^^^^
+    |
+note: expected `State<'_, AppState>`, found `AppState`
+   --> pipeline/src-tauri/tests/file_import_test.rs:979:9
+    |
+979 |         state,
+    |         ^^^^^
+--
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_import_test.rs:1009:18
+     |
+1009 |     let result = import_directory(
+     |                  ^^^^^^^^^^^^^^^^
+     |
+note: expected `State<'_, AppState>`, found `AppState`
+    --> pipeline/src-tauri/tests/file_import_test.rs:1013:9
+     |
+1013 |         state,
+     |         ^^^^^
+--
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_import_test.rs:1043:18
+     |
+1043 |     let result = import_directory(
+     |                  ^^^^^^^^^^^^^^^^
+     |
+note: expected `State<'_, AppState>`, found `AppState`
+    --> pipeline/src-tauri/tests/file_import_test.rs:1047:9
+     |
+1047 |         state,
+     |         ^^^^^
+--
+error[E0599]: `tokio::fs::ReadDir` is not an iterator
+   --> pipeline/src-tauri/tests/workflows_test.rs:841:65
+    |
+841 |     let shared_count = fs::read_dir(&shared_dir).await.unwrap().count();
+    |                                                                 ^^^^^ `tokio::fs::ReadDir` is not an iterator
+    |
+   ::: /home/dojevou/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.48.0/src/fs/read_dir.rs:64:1
+    |
+ 64 | pub struct ReadDir(State);
+    | ------------------ doesn't satisfy `tokio::fs::ReadDir: Iterator`
+    |
+--
+error[E0308]: mismatched types
+   --> pipeline/src-tauri/tests/workflows_test.rs:844:24
+    |
+844 |     cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    |     ------------------ ^^^^^^^^^^^^^^^^^^^^^ expected `&Pool<Postgres>`, found future
+    |     |
+    |     arguments to this function are incorrect
+    |
+note: function defined here
+   --> pipeline/src-tauri/tests/workflows_test.rs:97:10
+    |
+--
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_import_test.rs:1077:18
+     |
+1077 |     let result = import_directory(
+     |                  ^^^^^^^^^^^^^^^^
+     |
+note: expected `State<'_, AppState>`, found `AppState`
+    --> pipeline/src-tauri/tests/file_import_test.rs:1081:9
+     |
+1081 |         state,
+     |         ^^^^^
+--
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+   --> pipeline/src-tauri/tests/workflows_test.rs:857:21
+    |
+857 |       let v1_result = import_single_file(
+    |  _____________________^^^^^^^^^^^^^^^^^^-
+858 | |         &state,
+    | |         ------ unexpected argument #1 of type `&AppState`
+859 | |         v1_path.to_str().unwrap().to_string(),
+860 | |     ).await.unwrap();
+    | |_____- three arguments of type `Option<std::string::String>`, `State<'_, AppState>`, and `tauri::Window` are missing
+    |
+--
+error[E0308]: arguments to this function are incorrect
+   --> pipeline/src-tauri/tests/workflows_test.rs:862:5
+    |
+862 |     add_tags_to_file(
+    |     ^^^^^^^^^^^^^^^^
+863 |         &state,
+    |         ------ unexpected argument #1 of type `&AppState`
+864 |         v1_result.id,
+865 |         vec!["v1".to_string(), "needs_revision".to_string()],
+    |         ---------------------------------------------------- argument #3 of type `State<'_, AppState>` is missing
+    |
+--
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+   --> pipeline/src-tauri/tests/workflows_test.rs:872:21
+    |
+872 |       let v2_result = import_single_file(
+    |  _____________________^^^^^^^^^^^^^^^^^^-
+873 | |         &state,
+    | |         ------ unexpected argument #1 of type `&AppState`
+874 | |         v2_path.to_str().unwrap().to_string(),
+875 | |     ).await.unwrap();
+    | |_____- three arguments of type `Option<std::string::String>`, `State<'_, AppState>`, and `tauri::Window` are missing
+    |
+--
+error[E0308]: arguments to this function are incorrect
+   --> pipeline/src-tauri/tests/workflows_test.rs:877:5
+    |
+877 |     add_tags_to_file(
+    |     ^^^^^^^^^^^^^^^^
+878 |         &state,
+    |         ------ unexpected argument #1 of type `&AppState`
+879 |         v2_result.id,
+880 |         vec!["v2".to_string(), "feedback_applied".to_string()],
+    |         ------------------------------------------------------ argument #3 of type `State<'_, AppState>` is missing
+    |
+--
+error[E0308]: mismatched types
+   --> pipeline/src-tauri/tests/workflows_test.rs:890:24
+    |
+890 |     cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    |     ------------------ ^^^^^^^^^^^^^^^^^^^^^ expected `&Pool<Postgres>`, found future
+    |     |
+    |     arguments to this function are incorrect
+    |
+note: function defined here
+   --> pipeline/src-tauri/tests/workflows_test.rs:97:10
+    |
+--
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+   --> pipeline/src-tauri/tests/workflows_test.rs:903:21
+    |
+903 |       let v1_result = import_single_file(
+    |  _____________________^^^^^^^^^^^^^^^^^^-
+904 | |         &state,
+    | |         ------ unexpected argument #1 of type `&AppState`
+905 | |         v1_path.to_str().unwrap().to_string(),
+906 | |     ).await.unwrap();
+    | |_____- three arguments of type `Option<std::string::String>`, `State<'_, AppState>`, and `tauri::Window` are missing
+    |
+--
+error[E0308]: arguments to this function are incorrect
+   --> pipeline/src-tauri/tests/workflows_test.rs:908:5
+    |
+908 |     add_tags_to_file(
+    |     ^^^^^^^^^^^^^^^^
+909 |         &state,
+    |         ------ unexpected argument #1 of type `&AppState`
+910 |         v1_result.id,
+911 |         vec!["checkpoint".to_string(), "v1".to_string()],
+    |         ------------------------------------------------ argument #3 of type `State<'_, AppState>` is missing
+    |
+--
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+   --> pipeline/src-tauri/tests/workflows_test.rs:918:21
+    |
+918 |       let v2_result = import_single_file(
+    |  _____________________^^^^^^^^^^^^^^^^^^-
+919 | |         &state,
+    | |         ------ unexpected argument #1 of type `&AppState`
+920 | |         v2_path.to_str().unwrap().to_string(),
+921 | |     ).await.unwrap();
+    | |_____- three arguments of type `Option<std::string::String>`, `State<'_, AppState>`, and `tauri::Window` are missing
+    |
+--
+error[E0308]: arguments to this function are incorrect
+   --> pipeline/src-tauri/tests/workflows_test.rs:923:5
+    |
+923 |     add_tags_to_file(
+    |     ^^^^^^^^^^^^^^^^
+924 |         &state,
+    |         ------ unexpected argument #1 of type `&AppState`
+925 |         v2_result.id,
+926 |         vec!["checkpoint".to_string(), "v2".to_string()],
+    |         ------------------------------------------------ argument #3 of type `State<'_, AppState>` is missing
+    |
+--
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+   --> pipeline/src-tauri/tests/workflows_test.rs:933:24
+    |
+933 |       let final_result = import_single_file(
+    |  ________________________^^^^^^^^^^^^^^^^^^-
+934 | |         &state,
+    | |         ------ unexpected argument #1 of type `&AppState`
+935 | |         final_path.to_str().unwrap().to_string(),
+936 | |     ).await.unwrap();
+    | |_____- three arguments of type `Option<std::string::String>`, `State<'_, AppState>`, and `tauri::Window` are missing
+    |
+--
+error[E0308]: arguments to this function are incorrect
+   --> pipeline/src-tauri/tests/workflows_test.rs:938:5
+    |
+938 |     add_tags_to_file(
+    |     ^^^^^^^^^^^^^^^^
+939 |         &state,
+    |         ------ unexpected argument #1 of type `&AppState`
+940 |         final_result.id,
+941 |         vec!["final".to_string(), "approved".to_string()],
+    |         ------------------------------------------------- argument #3 of type `State<'_, AppState>` is missing
+    |
+--
+error[E0277]: the trait bound `ImportProgress: serde::Deserialize<'de>` is not satisfied
+    --> pipeline/src-tauri/tests/file_import_test.rs:1094:40
+     |
+1094 |         let progress: ImportProgress = serde_json::from_str(&events[0])
+     |                                        ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ the trait `Deserialize<'_>` is not implemented for `ImportProgress`
+     |
+     = note: for local types consider adding `#[derive(serde::Deserialize)]` to your `ImportProgress` type
+     = note: for types from other crates check whether the crate offers a `serde` feature flag
+     = help: the following other types implement trait `Deserialize<'de>`:
+               `&'a JsonRawValue` implements `Deserialize<'de>`
+               `&'a [u8]` implements `Deserialize<'de>`
+--
+error[E0308]: mismatched types
+   --> pipeline/src-tauri/tests/workflows_test.rs:949:24
+    |
+949 |     cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    |     ------------------ ^^^^^^^^^^^^^^^^^^^^^ expected `&Pool<Postgres>`, found future
+    |     |
+    |     arguments to this function are incorrect
+    |
+note: function defined here
+   --> pipeline/src-tauri/tests/workflows_test.rs:97:10
+    |
+--
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+   --> pipeline/src-tauri/tests/workflows_test.rs:964:18
+    |
+964 |       let result = import_single_file(
+    |  __________________^^^^^^^^^^^^^^^^^^-
+965 | |         &state,
+    | |         ------ unexpected argument #1 of type `&AppState`
+966 | |         master_path.to_str().unwrap().to_string(),
+967 | |     ).await.unwrap();
+    | |_____- three arguments of type `Option<std::string::String>`, `State<'_, AppState>`, and `tauri::Window` are missing
+    |
+--
+error[E0308]: arguments to this function are incorrect
+   --> pipeline/src-tauri/tests/workflows_test.rs:970:5
+    |
+970 |     add_tags_to_file(
+    |     ^^^^^^^^^^^^^^^^
+971 |         &state,
+    |         ------ unexpected argument #1 of type `&AppState`
+972 |         result.id,
+973 |         vec!["deliverable".to_string(), "multi_format".to_string()],
+    |         ----------------------------------------------------------- argument #3 of type `State<'_, AppState>` is missing
+    |
+--
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_import_test.rs:1122:19
+     |
+1122 |     let result1 = import_directory(
+     |                   ^^^^^^^^^^^^^^^^
+     |
+note: expected `State<'_, AppState>`, found `AppState`
+    --> pipeline/src-tauri/tests/file_import_test.rs:1126:9
+     |
+1126 |         state,
+     |         ^^^^^
+--
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_import_test.rs:1145:19
+     |
+1145 |     let result2 = import_directory(
+     |                   ^^^^^^^^^^^^^^^^
+     |
+note: expected `State<'_, AppState>`, found `AppState`
+    --> pipeline/src-tauri/tests/file_import_test.rs:1149:9
+     |
+1149 |         state,
+     |         ^^^^^
+--
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_import_test.rs:1184:18
+     |
+1184 |     let result = import_directory(
+     |                  ^^^^^^^^^^^^^^^^
+     |
+note: expected `State<'_, AppState>`, found `AppState`
+    --> pipeline/src-tauri/tests/file_import_test.rs:1188:9
+     |
+1188 |         state,
+     |         ^^^^^
+--
+error[E0599]: `tokio::fs::ReadDir` is not an iterator
+   --> pipeline/src-tauri/tests/workflows_test.rs:984:60
+    |
+984 |     let count = fs::read_dir(&delivery_dir).await.unwrap().count();
+    |                                                            ^^^^^ `tokio::fs::ReadDir` is not an iterator
+    |
+   ::: /home/dojevou/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tokio-1.48.0/src/fs/read_dir.rs:64:1
+    |
+ 64 | pub struct ReadDir(State);
+    | ------------------ doesn't satisfy `tokio::fs::ReadDir: Iterator`
+    |
+--
+error[E0308]: mismatched types
+   --> pipeline/src-tauri/tests/workflows_test.rs:987:24
+    |
+987 |     cleanup_test_files(state.database.pool(), &format!("{}%", delivery_dir.to_str().unwrap())).await;
+    |     ------------------ ^^^^^^^^^^^^^^^^^^^^^ expected `&Pool<Postgres>`, found future
+    |     |
+    |     arguments to this function are incorrect
+    |
+note: function defined here
+   --> pipeline/src-tauri/tests/workflows_test.rs:97:10
+    |
+--
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+    --> pipeline/src-tauri/tests/workflows_test.rs:1003:22
+     |
+1003 |           let result = import_single_file(
+     |  ______________________^^^^^^^^^^^^^^^^^^-
+1004 | |             &state,
+     | |             ------ unexpected argument #1 of type `&AppState`
+1005 | |             path.to_str().unwrap().to_string(),
+1006 | |         ).await.unwrap();
+     | |_________- three arguments of type `Option<std::string::String>`, `State<'_, AppState>`, and `tauri::Window` are missing
+     |
+--
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/workflows_test.rs:1008:9
+     |
+1008 |         add_tags_to_file(
+     |         ^^^^^^^^^^^^^^^^
+1009 |             &state,
+     |             ------ unexpected argument #1 of type `&AppState`
+1010 |             result.id,
+1011 |             vec!["archive".to_string(), "preserved".to_string()],
+     |             ---------------------------------------------------- argument #3 of type `State<'_, AppState>` is missing
+     |
+--
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_import_test.rs:1221:18
+     |
+1221 |     let result = import_directory(
+     |                  ^^^^^^^^^^^^^^^^
+     |
+note: expected `State<'_, AppState>`, found `AppState`
+    --> pipeline/src-tauri/tests/file_import_test.rs:1225:9
+     |
+1225 |         state,
+     |         ^^^^^
+--
+error[E0308]: mismatched types
+    --> pipeline/src-tauri/tests/workflows_test.rs:1023:24
+     |
+1023 |     cleanup_test_files(state.database.pool(), &format!("{}%", archive_dir.to_str().unwrap())).await;
+     |     ------------------ ^^^^^^^^^^^^^^^^^^^^^ expected `&Pool<Postgres>`, found future
+     |     |
+     |     arguments to this function are incorrect
+     |
+note: function defined here
+    --> pipeline/src-tauri/tests/workflows_test.rs:97:10
+     |
+--
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+    --> pipeline/src-tauri/tests/workflows_test.rs:1036:22
+     |
+1036 |       let old_result = import_single_file(
+     |  ______________________^^^^^^^^^^^^^^^^^^-
+1037 | |         &state,
+     | |         ------ unexpected argument #1 of type `&AppState`
+1038 | |         old_format_path.to_str().unwrap().to_string(),
+1039 | |     ).await.unwrap();
+     | |_____- three arguments of type `Option<std::string::String>`, `State<'_, AppState>`, and `tauri::Window` are missing
+     |
+--
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/workflows_test.rs:1041:5
+     |
+1041 |     add_tags_to_file(
+     |     ^^^^^^^^^^^^^^^^
+1042 |         &state,
+     |         ------ unexpected argument #1 of type `&AppState`
+1043 |         old_result.id,
+1044 |         vec!["old_format".to_string(), "migration_pending".to_string()],
+     |         --------------------------------------------------------------- argument #3 of type `State<'_, AppState>` is missing
+     |
+--
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+    --> pipeline/src-tauri/tests/workflows_test.rs:1051:22
+     |
+1051 |       let new_result = import_single_file(
+     |  ______________________^^^^^^^^^^^^^^^^^^-
+1052 | |         &state,
+     | |         ------ unexpected argument #1 of type `&AppState`
+1053 | |         new_format_path.to_str().unwrap().to_string(),
+1054 | |     ).await.unwrap();
+     | |_____- three arguments of type `Option<std::string::String>`, `State<'_, AppState>`, and `tauri::Window` are missing
+     |
+--
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/workflows_test.rs:1056:5
+     |
+1056 |     add_tags_to_file(
+     |     ^^^^^^^^^^^^^^^^
+1057 |         &state,
+     |         ------ unexpected argument #1 of type `&AppState`
+1058 |         new_result.id,
+1059 |         vec!["new_format".to_string(), "migrated".to_string()],
+     |         ------------------------------------------------------ argument #3 of type `State<'_, AppState>` is missing
+     |
+--
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_import_test.rs:1255:19
+     |
+1255 |     let result1 = import_directory(
+     |                   ^^^^^^^^^^^^^^^^
+     |
+note: expected `State<'_, AppState>`, found `AppState`
+    --> pipeline/src-tauri/tests/file_import_test.rs:1259:9
+     |
+1259 |         state,
+     |         ^^^^^
+--
+error[E0308]: mismatched types
+    --> pipeline/src-tauri/tests/workflows_test.rs:1069:24
+     |
+1069 |     cleanup_test_files(state.database.pool(), &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+     |     ------------------ ^^^^^^^^^^^^^^^^^^^^^ expected `&Pool<Postgres>`, found future
+     |     |
+     |     arguments to this function are incorrect
+     |
+note: function defined here
+    --> pipeline/src-tauri/tests/workflows_test.rs:97:10
+     |
+--
+error[E0425]: cannot find function `setup_test_state` in this scope
+    --> pipeline/src-tauri/tests/workflows_test.rs:1076:17
+     |
+1076 |     let state = setup_test_state().await;
+     |                 ^^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_import_test.rs:1267:19
+     |
+1267 |     let result2 = import_directory(
+     |                   ^^^^^^^^^^^^^^^^
+     |
+note: expected `State<'_, AppState>`, found `AppState`
+    --> pipeline/src-tauri/tests/file_import_test.rs:1271:9
+     |
+1271 |         state,
+     |         ^^^^^
+--
+error[E0282]: type annotations needed
+    --> pipeline/src-tauri/tests/workflows_test.rs:1085:30
+     |
+1085 |     let (result1, result2) = tokio::join!(r1, r2);
+     |                              ^^^^^^^^^^^^^^^^^^^^ cannot infer type
+     |
+     = note: this error originates in the macro `$crate::join` which comes from the expansion of the macro `tokio::join` (in Nightly builds, run with -Z macro-backtrace for more info)
+
+error[E0425]: cannot find function `setup_test_state` in this scope
+    --> pipeline/src-tauri/tests/workflows_test.rs:1093:17
+     |
+1093 |     let state = setup_test_state().await;
+     |                 ^^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find function `setup_test_state` in this scope
+    --> pipeline/src-tauri/tests/workflows_test.rs:1107:17
+     |
+1107 |     let state = setup_test_state().await;
+     |                 ^^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0308]: mismatched types
+    --> pipeline/src-tauri/tests/workflows_test.rs:1115:37
+     |
+1115 |     let delete_result = delete_file(&state, result.id).await;
+     |                         ----------- ^^^^^^ expected `i64`, found `&_`
+     |                         |
+     |                         arguments to this function are incorrect
+     |
+     = note:   expected type `i64`
+             found reference `&_`
+note: function defined here
+--
+error[E0425]: cannot find function `setup_test_state` in this scope
+    --> pipeline/src-tauri/tests/workflows_test.rs:1122:17
+     |
+1122 |     let state = setup_test_state().await;
+     |                 ^^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find function `import_and_analyze_file` in this scope
+    --> pipeline/src-tauri/tests/workflows_test.rs:1127:13
+     |
+1127 |     let _ = import_and_analyze_file(&state, file_path.to_str().unwrap().to_string()).await;
+     |             ^^^^^^^^^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_import_test.rs:1303:18
+     |
+1303 |     let result = import_directory(
+     |                  ^^^^^^^^^^^^^^^^
+     |
+note: expected `State<'_, AppState>`, found `AppState`
+    --> pipeline/src-tauri/tests/file_import_test.rs:1307:9
+     |
+1307 |         state,
+     |         ^^^^^
+--
+error[E0425]: cannot find function `setup_test_state` in this scope
+    --> pipeline/src-tauri/tests/workflows_test.rs:1136:17
+     |
+1136 |     let state = setup_test_state().await;
+     |                 ^^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find function `setup_test_state` in this scope
+    --> pipeline/src-tauri/tests/workflows_test.rs:1150:17
+     |
+1150 |     let state = setup_test_state().await;
+     |                 ^^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find function `setup_test_state` in this scope
+    --> pipeline/src-tauri/tests/workflows_test.rs:1163:17
+     |
+1163 |     let state = setup_test_state().await;
+     |                 ^^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+    --> pipeline/src-tauri/tests/workflows_test.rs:1172:13
+     |
+1172 |             import_single_file(tauri::State(&state_clone), temp_path.to_str().unwrap().to_string()).await
+     |             ^^^^^^^^^^^^^^^^^^--------------------------------------------------------------------- two arguments of type `State<'_, AppState>` and `tauri::Window` are missing
+     |
+note: expected `Option<String>`, found `String`
+    --> pipeline/src-tauri/tests/workflows_test.rs:1172:60
+     |
+1172 |             import_single_file(tauri::State(&state_clone), temp_path.to_str().unwrap().to_string()).await
+     |                                                            ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+--
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_import_test.rs:1344:18
+     |
+1344 |     let result = import_directory(
+     |                  ^^^^^^^^^^^^^^^^
+     |
+note: expected `State<'_, AppState>`, found `AppState`
+    --> pipeline/src-tauri/tests/file_import_test.rs:1348:9
+     |
+1348 |         state,
+     |         ^^^^^
+--
+error[E0425]: cannot find function `setup_test_state` in this scope
+    --> pipeline/src-tauri/tests/workflows_test.rs:1185:17
+     |
+1185 |     let state = setup_test_state().await;
+     |                 ^^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0061]: this function takes 5 arguments but 3 arguments were supplied
+    --> pipeline/src-tauri/tests/workflows_test.rs:1193:24
+     |
+1193 |       let batch_result = import_directory(
+     |  ________________________^^^^^^^^^^^^^^^^-
+1194 | |         &state,
+     | |         ------ unexpected argument #1 of type `&_`
+1195 | |         temp_dir.path().to_str().unwrap().to_string(),
+1196 | |         false,
+1197 | |     ).await;
+     | |_____- three arguments of type `Option<std::string::String>`, `State<'_, AppState>`, and `tauri::Window` are missing
+--
+error[E0425]: cannot find function `setup_test_state` in this scope
+    --> pipeline/src-tauri/tests/workflows_test.rs:1207:17
+     |
+1207 |     let state = setup_test_state().await;
+     |                 ^^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find function `import_and_analyze_file` in this scope
+    --> pipeline/src-tauri/tests/workflows_test.rs:1218:17
+     |
+1218 |         let _ = import_and_analyze_file(&state, file_path.to_str().unwrap().to_string()).await;
+     |                 ^^^^^^^^^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_import_test.rs:1374:18
+     |
+1374 |     let result = import_directory(
+     |                  ^^^^^^^^^^^^^^^^
+     |
+note: expected `State<'_, AppState>`, found `AppState`
+    --> pipeline/src-tauri/tests/file_import_test.rs:1378:9
+     |
+1378 |         state,
+     |         ^^^^^
+--
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_import_test.rs:1401:18
+     |
+1401 |     let result = import_directory(
+     |                  ^^^^^^^^^^^^^^^^
+     |
+note: expected `State<'_, AppState>`, found `AppState`
+    --> pipeline/src-tauri/tests/file_import_test.rs:1405:9
+     |
+1405 |         state,
+     |         ^^^^^
+--
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_import_test.rs:1436:18
+     |
+1436 |     let result = import_directory(
+     |                  ^^^^^^^^^^^^^^^^
+     |
+note: expected `State<'_, AppState>`, found `AppState`
+    --> pipeline/src-tauri/tests/file_import_test.rs:1440:9
+     |
+1440 |         state,
+     |         ^^^^^
+--
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_import_test.rs:1473:18
+     |
+1473 |     let result = import_directory(
+     |                  ^^^^^^^^^^^^^^^^
+     |
+note: expected `State<'_, AppState>`, found `AppState`
+    --> pipeline/src-tauri/tests/file_import_test.rs:1477:9
+     |
+1477 |         state,
+     |         ^^^^^
+--
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_import_test.rs:1506:18
+     |
+1506 |     let result = import_directory(
+     |                  ^^^^^^^^^^^^^^^^
+     |
+note: expected `State<'_, AppState>`, found `AppState`
+    --> pipeline/src-tauri/tests/file_import_test.rs:1510:9
+     |
+1510 |         state,
+     |         ^^^^^
+--
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_import_test.rs:1538:18
+     |
+1538 |     let result = import_single_file(
+     |                  ^^^^^^^^^^^^^^^^^^
+     |
+note: expected `State<'_, AppState>`, found `AppState`
+    --> pipeline/src-tauri/tests/file_import_test.rs:1541:9
+     |
+1541 |         state,
+     |         ^^^^^
+--
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_import_test.rs:1568:18
+     |
+1568 |     let result = import_directory(
+     |                  ^^^^^^^^^^^^^^^^
+     |
+note: expected `State<'_, AppState>`, found `AppState`
+    --> pipeline/src-tauri/tests/file_import_test.rs:1572:9
+     |
+1572 |         state,
+     |         ^^^^^
+--
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_import_test.rs:1602:18
+     |
+1602 |     let result = import_directory(
+     |                  ^^^^^^^^^^^^^^^^
+     |
+note: expected `State<'_, AppState>`, found `AppState`
+    --> pipeline/src-tauri/tests/file_import_test.rs:1606:9
+     |
+1606 |         state,
+     |         ^^^^^
+--
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_import_test.rs:1637:18
+     |
+1637 |     let result = import_single_file(
+     |                  ^^^^^^^^^^^^^^^^^^
+     |
+note: expected `State<'_, AppState>`, found `AppState`
+    --> pipeline/src-tauri/tests/file_import_test.rs:1640:9
+     |
+1640 |         state,
+     |         ^^^^^
+--
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_import_test.rs:1668:18
+     |
+1668 |     let result = import_directory(
+     |                  ^^^^^^^^^^^^^^^^
+     |
+note: expected `State<'_, AppState>`, found `AppState`
+    --> pipeline/src-tauri/tests/file_import_test.rs:1672:9
+     |
+1672 |         state,
+     |         ^^^^^
+--
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_import_test.rs:1712:19
+     |
+1712 |     let result1 = import_single_file(
+     |                   ^^^^^^^^^^^^^^^^^^
+     |
+note: expected `State<'_, AppState>`, found `AppState`
+    --> pipeline/src-tauri/tests/file_import_test.rs:1715:9
+     |
+1715 |         state,
+     |         ^^^^^
+--
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_import_test.rs:1724:19
+     |
+1724 |     let result2 = import_single_file(
+     |                   ^^^^^^^^^^^^^^^^^^
+     |
+note: expected `State<'_, AppState>`, found `AppState`
+    --> pipeline/src-tauri/tests/file_import_test.rs:1727:9
+     |
+1727 |         state,
+     |         ^^^^^
+--
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_import_test.rs:1755:18
+     |
+1755 |     let result = import_directory(
+     |                  ^^^^^^^^^^^^^^^^
+     |
+note: expected `State<'_, AppState>`, found `AppState`
+    --> pipeline/src-tauri/tests/file_import_test.rs:1759:9
+     |
+1759 |         state,
+     |         ^^^^^
+--
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_import_test.rs:1790:18
+     |
+1790 |     let result = import_single_file(
+     |                  ^^^^^^^^^^^^^^^^^^
+     |
+note: expected `State<'_, AppState>`, found `AppState`
+    --> pipeline/src-tauri/tests/file_import_test.rs:1793:9
+     |
+1793 |         state,
+     |         ^^^^^
+--
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_import_test.rs:1820:18
+     |
+1820 |     let result = import_directory(
+     |                  ^^^^^^^^^^^^^^^^
+     |
+note: expected `State<'_, AppState>`, found `AppState`
+    --> pipeline/src-tauri/tests/file_import_test.rs:1824:9
+     |
+1824 |         state,
+     |         ^^^^^
+--
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_import_test.rs:1849:18
+     |
+1849 |     let result = import_single_file(
+     |                  ^^^^^^^^^^^^^^^^^^
+     |
+note: expected `State<'_, AppState>`, found `AppState`
+    --> pipeline/src-tauri/tests/file_import_test.rs:1852:9
+     |
+1852 |         state,
+     |         ^^^^^
+--
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_import_test.rs:1941:18
+     |
+1941 |     let result = import_single_file(
+     |                  ^^^^^^^^^^^^^^^^^^
+     |
+note: expected `State<'_, AppState>`, found `AppState`
+    --> pipeline/src-tauri/tests/file_import_test.rs:1944:9
+     |
+1944 |         state,
+     |         ^^^^^
+--
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_import_test.rs:1990:18
+     |
+1990 |     let result = import_single_file(
+     |                  ^^^^^^^^^^^^^^^^^^
+     |
+note: expected `State<'_, AppState>`, found `AppState`
+    --> pipeline/src-tauri/tests/file_import_test.rs:1993:9
+     |
+1993 |         state,
+     |         ^^^^^
+--
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_import_test.rs:2024:18
+     |
+2024 |     let result = import_single_file(
+     |                  ^^^^^^^^^^^^^^^^^^
+     |
+note: expected `State<'_, AppState>`, found `AppState`
+    --> pipeline/src-tauri/tests/file_import_test.rs:2027:9
+     |
+2027 |         state,
+     |         ^^^^^
+--
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_import_test.rs:2064:22
+     |
+2064 |         let result = import_single_file(
+     |                      ^^^^^^^^^^^^^^^^^^
+     |
+note: expected `State<'_, AppState>`, found `AppState`
+    --> pipeline/src-tauri/tests/file_import_test.rs:2067:13
+     |
+2067 |             state,
+     |             ^^^^^
+--
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_import_test.rs:2100:18
+     |
+2100 |     let result = import_single_file(
+     |                  ^^^^^^^^^^^^^^^^^^
+     |
+note: expected `State<'_, AppState>`, found `AppState`
+    --> pipeline/src-tauri/tests/file_import_test.rs:2103:9
+     |
+2103 |         state,
+     |         ^^^^^
+--
+error[E0425]: cannot find function `create_test_file` in this scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1448:23
+     |
+1448 |         let file_id = create_test_file(&pool, "test.mid").await;
+     |                       ^^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find function `insert_metadata` in this scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1449:9
+     |
+1449 |         insert_metadata(&pool, file_id, Some("120.0"), None, None).await;
+     |         ^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_import_test.rs:2143:18
+     |
+2143 |     let result = import_single_file(
+     |                  ^^^^^^^^^^^^^^^^^^
+     |
+note: expected `State<'_, AppState>`, found `AppState`
+    --> pipeline/src-tauri/tests/file_import_test.rs:2146:9
+     |
+2146 |         state,
+     |         ^^^^^
+--
+error[E0061]: this function takes 1 argument but 0 arguments were supplied
+    --> pipeline/src-tauri/tests/tag_repository_test.rs:1537:20
+     |
+1537 |         let repo = TagRepository::new();
+     |                    ^^^^^^^^^^^^^^^^^^-- argument #1 of type `Pool<Postgres>` is missing
+     |
+note: associated function defined here
+    --> /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/db/repositories/tag_repository.rs:47:12
+     |
+  47 |     pub fn new(pool: PgPool) -> Self {
+     |            ^^^
+--
+error[E0308]: mismatched types
+    --> pipeline/src-tauri/tests/file_import_test.rs:2183:36
+     |
+2183 |                 tauri::State::from(&*state_clone),
+     |                 ------------------ ^^^^^^^^^^^^^ expected `State<'_, AppState>`, found `&AppState`
+     |                 |
+     |                 arguments to this function are incorrect
+     |
+     = note: expected struct `tauri::State<'_, AppState>`
+             found reference `&AppState`
+note: associated function defined here
+--
+error[E0308]: mismatched types
+    --> pipeline/src-tauri/tests/file_import_test.rs:2184:17
+     |
+2180 |             import_single_file(
+     |             ------------------ arguments to this function are incorrect
+...
+2184 |                 window,
+     |                 ^^^^^^ expected `Window`, found `MockWindow`
+     |
+     = note: expected struct `tauri::Window`
+                found struct `MockWindow`
+--
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_import_test.rs:2240:18
+     |
+2240 |     let result = import_single_file(
+     |                  ^^^^^^^^^^^^^^^^^^
+     |
+note: expected `State<'_, AppState>`, found `AppState`
+    --> pipeline/src-tauri/tests/file_import_test.rs:2243:9
+     |
+2243 |         state,
+     |         ^^^^^
+--
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_import_test.rs:2281:22
+     |
+2281 |         let result = import_single_file(
+     |                      ^^^^^^^^^^^^^^^^^^
+     |
+note: expected `State<'_, AppState>`, found `AppState`
+    --> pipeline/src-tauri/tests/file_import_test.rs:2284:13
+     |
+2284 |             state,
+     |             ^^^^^
+--
+error[E0599]: no method named `midi_format` found for struct `fixtures::NewFileBuilder` in the current scope
+    --> pipeline/src-tauri/tests/file_repository_test.rs:2073:14
+     |
+2069 |           let file = NewFileBuilder::new()
+     |  ____________________-
+2070 | |             .filename("test.mid")
+2071 | |             .filepath("/test/test.mid")
+2072 | |             .content_hash(random_hash())
+2073 | |             .midi_format(3) // > 2
+     | |_____________-^^^^^^^^^^^
+     |
+--
+error[E0599]: no method named `clone` found for struct `AppState` in the current scope
+    --> pipeline/src-tauri/tests/file_import_test.rs:2319:33
+     |
+2319 |         let state_clone = state.clone();
+     |                                 ^^^^^ method not found in `AppState`
+
+error[E0308]: mismatched types
+    --> pipeline/src-tauri/tests/file_import_test.rs:2328:17
+     |
+2323 |             import_directory(
+     |             ---------------- arguments to this function are incorrect
+...
+2328 |                 window_clone,
+     |                 ^^^^^^^^^^^^ expected `Window`, found `MockWindow`
+     |
+     = note: expected struct `tauri::Window`
+                found struct `MockWindow`
+--
+error[E0308]: mismatched types
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1453:22
+     |
+1453 |             .min_bpm(Some("150.0".to_string()))
+     |              ------- ^^^^^^^^^^^^^^^^^^^^^^^^^ expected `f64`, found `Option<String>`
+     |              |
+     |              arguments to this method are incorrect
+     |
+     = note: expected type `f64`
+                found enum `Option<std::string::String>`
+note: method defined here
+--
+error[E0599]: no method named `add_tag_to_file` found for struct `TagRepository` in the current scope
+    --> pipeline/src-tauri/tests/tag_repository_test.rs:1539:14
+     |
+1539 |         repo.add_tag_to_file(&pool, file_id, "test_tag").await.expect("First add failed");
+     |              ^^^^^^^^^^^^^^^
+     |
+help: there is a method `add_tags_to_file` with a similar name, but with different arguments
+    --> /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/db/repositories/tag_repository.rs:115:5
+     |
+ 115 |     pub async fn add_tags_to_file(&self, file_id: i64, tag_ids: &[i32]) -> Result<()> {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+--
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_import_test.rs:2365:19
+     |
+2365 |     let result1 = import_single_file(
+     |                   ^^^^^^^^^^^^^^^^^^
+     |
+note: expected `State<'_, AppState>`, found `AppState`
+    --> pipeline/src-tauri/tests/file_import_test.rs:2368:9
+     |
+2368 |         state,
+     |         ^^^^^
+--
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_import_test.rs:2387:19
+     |
+2387 |     let result2 = import_single_file(
+     |                   ^^^^^^^^^^^^^^^^^^
+     |
+note: expected `State<'_, AppState>`, found `AppState`
+    --> pipeline/src-tauri/tests/file_import_test.rs:2390:9
+     |
+2390 |         state,
+     |         ^^^^^
+--
+error[E0599]: no method named `midi_format` found for struct `fixtures::NewFileBuilder` in the current scope
+    --> pipeline/src-tauri/tests/file_repository_test.rs:2092:14
+     |
+2088 |           let file = NewFileBuilder::new()
+     |  ____________________-
+2089 | |             .filename("test.mid")
+2090 | |             .filepath("/test/test.mid")
+2091 | |             .content_hash(random_hash())
+2092 | |             .midi_format(-1)
+     | |_____________-^^^^^^^^^^^
+     |
+--
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_import_test.rs:2445:18
+     |
+2445 |     let result = import_directory(
+     |                  ^^^^^^^^^^^^^^^^
+     |
+note: expected `State<'_, AppState>`, found `AppState`
+    --> pipeline/src-tauri/tests/file_import_test.rs:2449:9
+     |
+2449 |         state,
+     |         ^^^^^
+--
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_import_test.rs:2474:18
+     |
+2474 |     let result = import_single_file("/nonexistent/path/file.mid".to_string(), None, state, window).await;
+     |                  ^^^^^^^^^^^^^^^^^^
+     |
+note: expected `State<'_, AppState>`, found `AppState`
+    --> pipeline/src-tauri/tests/file_import_test.rs:2474:85
+     |
+2474 |     let result = import_single_file("/nonexistent/path/file.mid".to_string(), None, state, window).await;
+     |                                                                                     ^^^^^
+--
+error[E0308]: mismatched types
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1454:22
+     |
+1454 |             .max_bpm(Some("100.0".to_string()))
+     |              ------- ^^^^^^^^^^^^^^^^^^^^^^^^^ expected `f64`, found `Option<String>`
+     |              |
+     |              arguments to this method are incorrect
+     |
+     = note: expected type `f64`
+                found enum `Option<std::string::String>`
+note: method defined here
+--
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1457:23
+     |
+1457 |         let results = SearchRepository::search(&pool, &query).await.expect("Query should not error");
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^---------------
+     |                                               |       |
+     |                                               |       expected `SearchQuery`, found `&SearchQuery`
+     |                                               two arguments of type `i64` and `i64` are missing
+     |
+note: associated function defined here
+    --> /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/db/repositories/search_repository.rs:33:18
+--
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_import_test.rs:2485:14
+     |
+2485 |     let r1 = import_single_file(file_path.to_str().unwrap().to_string(), None, state, MockWindow::new()).await;
+     |              ^^^^^^^^^^^^^^^^^^
+     |
+note: expected `State<'_, AppState>`, found `AppState`
+    --> pipeline/src-tauri/tests/file_import_test.rs:2485:80
+     |
+2485 |     let r1 = import_single_file(file_path.to_str().unwrap().to_string(), None, state, MockWindow::new()).await;
+     |                                                                                ^^^^^
+--
+error[E0425]: cannot find function `create_test_file` in this scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1469:23
+     |
+1469 |         let file_id = create_test_file(&pool, "test.mid").await;
+     |                       ^^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_import_test.rs:2487:14
+     |
+2487 |     let r2 = import_single_file(file_path.to_str().unwrap().to_string(), None, state, MockWindow::new()).await;
+     |              ^^^^^^^^^^^^^^^^^^
+     |
+note: expected `State<'_, AppState>`, found `AppState`
+    --> pipeline/src-tauri/tests/file_import_test.rs:2487:80
+     |
+2487 |     let r2 = import_single_file(file_path.to_str().unwrap().to_string(), None, state, MockWindow::new()).await;
+     |                                                                                ^^^^^
+--
+error[E0425]: cannot find function `insert_metadata` in this scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1470:9
+     |
+1470 |         insert_metadata(&pool, file_id, Some("120.0"), None, None).await;
+     |         ^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0599]: no method named `add_tag_to_file` found for struct `TagRepository` in the current scope
+    --> pipeline/src-tauri/tests/tag_repository_test.rs:1542:27
+     |
+1542 |         let result = repo.add_tag_to_file(&pool, file_id, "test_tag").await;
+     |                           ^^^^^^^^^^^^^^^
+     |
+help: there is a method `add_tags_to_file` with a similar name, but with different arguments
+    --> /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/db/repositories/tag_repository.rs:115:5
+     |
+ 115 |     pub async fn add_tags_to_file(&self, file_id: i64, tag_ids: &[i32]) -> Result<()> {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+--
+error[E0061]: this function takes 1 argument but 0 arguments were supplied
+    --> pipeline/src-tauri/tests/tag_repository_test.rs:1556:20
+     |
+1556 |         let repo = TagRepository::new();
+     |                    ^^^^^^^^^^^^^^^^^^-- argument #1 of type `Pool<Postgres>` is missing
+     |
+note: associated function defined here
+    --> /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/db/repositories/tag_repository.rs:47:12
+     |
+  47 |     pub fn new(pool: PgPool) -> Self {
+     |            ^^^
+--
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_import_test.rs:2500:18
+     |
+2500 |     let result = import_single_file(file_path.to_str().unwrap().to_string(), None, state, MockWindow::new()).await;
+     |                  ^^^^^^^^^^^^^^^^^^
+     |
+note: expected `State<'_, AppState>`, found `AppState`
+    --> pipeline/src-tauri/tests/file_import_test.rs:2500:84
+     |
+2500 |     let result = import_single_file(file_path.to_str().unwrap().to_string(), None, state, MockWindow::new()).await;
+     |                                                                                    ^^^^^
+--
+error[E0599]: no function or associated item named `update_filename` found for struct `FileRepository` in the current scope
+    --> pipeline/src-tauri/tests/file_repository_test.rs:2170:38
+     |
+2170 |         let result = FileRepository::update_filename(&pool, 999999, "new.mid").await;
+     |                                      ^^^^^^^^^^^^^^^ function or associated item not found in `FileRepository`
+
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_import_test.rs:2513:18
+     |
+2513 |     let result = import_single_file(file_path.to_str().unwrap().to_string(), None, state, MockWindow::new()).await;
+     |                  ^^^^^^^^^^^^^^^^^^
+     |
+note: expected `State<'_, AppState>`, found `AppState`
+    --> pipeline/src-tauri/tests/file_import_test.rs:2513:84
+     |
+2513 |     let result = import_single_file(file_path.to_str().unwrap().to_string(), None, state, MockWindow::new()).await;
+     |                                                                                    ^^^^^
+--
+error[E0308]: mismatched types
+    --> pipeline/src-tauri/tests/file_import_test.rs:2529:93
+     |
+2529 |             import_single_file(path.to_str().unwrap().to_string(), None, tauri::State::from(&*st), MockWindow::new()).await
+     |                                                                          ------------------ ^^^^ expected `State<'_, AppState>`, found `&AppState`
+     |                                                                          |
+     |                                                                          arguments to this function are incorrect
+     |
+     = note: expected struct `tauri::State<'_, AppState>`
+             found reference `&AppState`
+note: associated function defined here
+--
+error[E0308]: mismatched types
+    --> pipeline/src-tauri/tests/file_import_test.rs:2529:100
+     |
+2529 |             import_single_file(path.to_str().unwrap().to_string(), None, tauri::State::from(&*st), MockWindow::new()).await
+     |             ------------------ arguments to this function are incorrect                            ^^^^^^^^^^^^^^^^^ expected `Window`, found `MockWindow`
+     |
+     = note: expected struct `tauri::Window`
+                found struct `MockWindow`
+note: function defined here
+    --> /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/commands/file_import.rs:150:14
+     |
+--
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_import_test.rs:2547:18
+     |
+2547 |     let result = import_single_file(file_path.to_str().unwrap().to_string(), None, state, MockWindow::new()).await;
+     |                  ^^^^^^^^^^^^^^^^^^
+     |
+note: expected `State<'_, AppState>`, found `AppState`
+    --> pipeline/src-tauri/tests/file_import_test.rs:2547:84
+     |
+2547 |     let result = import_single_file(file_path.to_str().unwrap().to_string(), None, state, MockWindow::new()).await;
+     |                                                                                    ^^^^^
+--
+error[E0308]: mismatched types
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1474:22
+     |
+1474 |             .min_bpm(Some("-50.0".to_string()))
+     |              ------- ^^^^^^^^^^^^^^^^^^^^^^^^^ expected `f64`, found `Option<String>`
+     |              |
+     |              arguments to this method are incorrect
+     |
+     = note: expected type `f64`
+                found enum `Option<std::string::String>`
+note: method defined here
+--
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1477:23
+     |
+1477 |         let results = SearchRepository::search(&pool, &query).await.expect("Query should not error");
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^---------------
+     |                                               |       |
+     |                                               |       expected `SearchQuery`, found `&SearchQuery`
+     |                                               two arguments of type `i64` and `i64` are missing
+     |
+note: associated function defined here
+    --> /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/db/repositories/search_repository.rs:33:18
+--
+error[E0425]: cannot find function `create_test_file` in this scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1490:23
+     |
+1490 |         let file_id = create_test_file(&pool, "test.mid").await;
+     |                       ^^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_import_test.rs:2558:18
+     |
+2558 |     let result = import_single_file(file_path.to_str().unwrap().to_string(), None, state, MockWindow::new()).await;
+     |                  ^^^^^^^^^^^^^^^^^^
+     |
+note: expected `State<'_, AppState>`, found `AppState`
+    --> pipeline/src-tauri/tests/file_import_test.rs:2558:84
+     |
+2558 |     let result = import_single_file(file_path.to_str().unwrap().to_string(), None, state, MockWindow::new()).await;
+     |                                                                                    ^^^^^
+--
+error[E0425]: cannot find function `insert_metadata` in this scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1491:9
+     |
+1491 |         insert_metadata(&pool, file_id, None, Some("C".to_string()), None).await;
+     |         ^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0599]: no method named `add_tag_to_file` found for struct `TagRepository` in the current scope
+    --> pipeline/src-tauri/tests/tag_repository_test.rs:1558:27
+     |
+1558 |         let result = repo.add_tag_to_file(&pool, file_id, &long_tag).await;
+     |                           ^^^^^^^^^^^^^^^
+     |
+help: there is a method `add_tags_to_file` with a similar name, but with different arguments
+    --> /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/db/repositories/tag_repository.rs:115:5
+     |
+ 115 |     pub async fn add_tags_to_file(&self, file_id: i64, tag_ids: &[i32]) -> Result<()> {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+--
+error[E0061]: this function takes 1 argument but 0 arguments were supplied
+    --> pipeline/src-tauri/tests/tag_repository_test.rs:1571:20
+     |
+1571 |         let repo = TagRepository::new();
+     |                    ^^^^^^^^^^^^^^^^^^-- argument #1 of type `Pool<Postgres>` is missing
+     |
+note: associated function defined here
+    --> /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/db/repositories/tag_repository.rs:47:12
+     |
+  47 |     pub fn new(pool: PgPool) -> Self {
+     |            ^^^
+--
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_import_test.rs:2569:17
+     |
+2569 |         let r = import_single_file(path.to_string(), None, state, MockWindow::new()).await;
+     |                 ^^^^^^^^^^^^^^^^^^
+     |
+note: expected `State<'_, AppState>`, found `AppState`
+    --> pipeline/src-tauri/tests/file_import_test.rs:2569:60
+     |
+2569 |         let r = import_single_file(path.to_string(), None, state, MockWindow::new()).await;
+     |                                                            ^^^^^
+--
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_repository_test.rs:2255:22
+     |
+2255 |         let result = FileRepository::list(&pool, Some(-1), Some(10)).await;
+     |                      ^^^^^^^^^^^^^^^^^^^^
+     |
+note: expected `i64`, found `Option<{integer}>`
+    --> pipeline/src-tauri/tests/file_repository_test.rs:2255:50
+     |
+2255 |         let result = FileRepository::list(&pool, Some(-1), Some(10)).await;
+     |                                                  ^^^^^^^^
+--
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_import_test.rs:2582:18
+     |
+2582 |     let result = import_directory(fixtures.path().to_str().unwrap().to_string(), false, None, state, MockWindow::new()).await;
+     |                  ^^^^^^^^^^^^^^^^
+     |
+note: expected `State<'_, AppState>`, found `AppState`
+    --> pipeline/src-tauri/tests/file_import_test.rs:2582:95
+     |
+2582 |     let result = import_directory(fixtures.path().to_str().unwrap().to_string(), false, None, state, MockWindow::new()).await;
+     |                                                                                               ^^^^^
+--
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_import_test.rs:2599:18
+     |
+2599 |     let result = import_single_file(file_path.to_str().unwrap().to_string(), None, state, MockWindow::new()).await;
+     |                  ^^^^^^^^^^^^^^^^^^
+     |
+note: expected `State<'_, AppState>`, found `AppState`
+    --> pipeline/src-tauri/tests/file_import_test.rs:2599:84
+     |
+2599 |     let result = import_single_file(file_path.to_str().unwrap().to_string(), None, state, MockWindow::new()).await;
+     |                                                                                    ^^^^^
+--
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_repository_test.rs:2276:22
+     |
+2276 |         let result = FileRepository::list(&pool, Some(0), Some(0)).await;
+     |                      ^^^^^^^^^^^^^^^^^^^^
+     |
+note: expected `i64`, found `Option<{integer}>`
+    --> pipeline/src-tauri/tests/file_repository_test.rs:2276:50
+     |
+2276 |         let result = FileRepository::list(&pool, Some(0), Some(0)).await;
+     |                                                  ^^^^^^^
+--
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_import_test.rs:2611:18
+     |
+2611 |     let result = import_directory(fixtures.path().to_str().unwrap().to_string(), false, None, state, window.clone()).await;
+     |                  ^^^^^^^^^^^^^^^^
+     |
+note: expected `State<'_, AppState>`, found `AppState`
+    --> pipeline/src-tauri/tests/file_import_test.rs:2611:95
+     |
+2611 |     let result = import_directory(fixtures.path().to_str().unwrap().to_string(), false, None, state, window.clone()).await;
+     |                                                                                               ^^^^^
+--
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_repository_test.rs:2297:22
+     |
+2297 |         let result = FileRepository::list(&pool, Some(1000), Some(10)).await;
+     |                      ^^^^^^^^^^^^^^^^^^^^
+     |
+note: expected `i64`, found `Option<{integer}>`
+    --> pipeline/src-tauri/tests/file_repository_test.rs:2297:50
+     |
+2297 |         let result = FileRepository::list(&pool, Some(1000), Some(10)).await;
+     |                                                  ^^^^^^^^^^
+--
+error[E0599]: no method named `keys` found for struct `SearchQueryBuilder` in the current scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1495:14
+     |
+  68 |   struct SearchQueryBuilder {
+     |   ------------------------- method `keys` not found for this struct
+...
+1494 |           let query = SearchQueryBuilder::new()
+     |  _____________________-
+1495 | |             .keys(Some(vec!["H".to_string()])) // Invalid key
+     | |_____________-^^^^
+     |
+--
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1498:23
+     |
+1498 |         let results = SearchRepository::search(&pool, &query).await;
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^--------------- two arguments of type `i64` and `i64` are missing
+     |
+note: associated function defined here
+    --> /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/db/repositories/search_repository.rs:33:18
+     |
+  33 |     pub async fn search(
+     |                  ^^^^^^
+--
+error[E0425]: cannot find function `create_test_file` in this scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1513:23
+     |
+1513 |         let file_id = create_test_file(&pool, "test.mid").await;
+     |                       ^^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_import_test.rs:2626:18
+     |
+2626 |     let result = import_single_file(file_path.to_str().unwrap().to_string(), None, state, MockWindow::new()).await;
+     |                  ^^^^^^^^^^^^^^^^^^
+     |
+note: expected `State<'_, AppState>`, found `AppState`
+    --> pipeline/src-tauri/tests/file_import_test.rs:2626:84
+     |
+2626 |     let result = import_single_file(file_path.to_str().unwrap().to_string(), None, state, MockWindow::new()).await;
+     |                                                                                    ^^^^^
+--
+error[E0425]: cannot find function `insert_metadata` in this scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1514:9
+     |
+1514 |         insert_metadata(&pool, file_id, None, None, None).await;
+     |         ^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_repository_test.rs:2318:21
+     |
+2318 |         let page1 = FileRepository::list(&pool, Some(0), Some(10)).await.expect("Page 1 failed");
+     |                     ^^^^^^^^^^^^^^^^^^^^
+     |
+note: expected `i64`, found `Option<{integer}>`
+    --> pipeline/src-tauri/tests/file_repository_test.rs:2318:49
+     |
+2318 |         let page1 = FileRepository::list(&pool, Some(0), Some(10)).await.expect("Page 1 failed");
+     |                                                 ^^^^^^^
+--
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_repository_test.rs:2319:21
+     |
+2319 |         let page2 = FileRepository::list(&pool, Some(10), Some(10)).await.expect("Page 2 failed");
+     |                     ^^^^^^^^^^^^^^^^^^^^
+     |
+note: expected `i64`, found `Option<{integer}>`
+    --> pipeline/src-tauri/tests/file_repository_test.rs:2319:49
+     |
+2319 |         let page2 = FileRepository::list(&pool, Some(10), Some(10)).await.expect("Page 2 failed");
+     |                                                 ^^^^^^^^
+--
+error[E0609]: no field `file_id` on type `&midi_pipeline::File`
+    --> pipeline/src-tauri/tests/file_repository_test.rs:2324:51
+     |
+2324 |         let ids1: Vec<_> = page1.iter().map(|f| f.file_id).collect();
+     |                                                   ^^^^^^^ unknown field
+     |
+     = note: available fields are: `id`, `filename`, `filepath`, `original_filename`, `content_hash` ... and 17 others
+
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_import_test.rs:2638:18
+     |
+2638 |     let result = import_single_file(dir.to_str().unwrap().to_string(), None, state, MockWindow::new()).await;
+     |                  ^^^^^^^^^^^^^^^^^^
+     |
+note: expected `State<'_, AppState>`, found `AppState`
+    --> pipeline/src-tauri/tests/file_import_test.rs:2638:78
+     |
+2638 |     let result = import_single_file(dir.to_str().unwrap().to_string(), None, state, MockWindow::new()).await;
+     |                                                                              ^^^^^
+--
+error[E0609]: no field `file_id` on type `&midi_pipeline::File`
+    --> pipeline/src-tauri/tests/file_repository_test.rs:2325:51
+     |
+2325 |         let ids2: Vec<_> = page2.iter().map(|f| f.file_id).collect();
+     |                                                   ^^^^^^^ unknown field
+     |
+     = note: available fields are: `id`, `filename`, `filepath`, `original_filename`, `content_hash` ... and 17 others
+
+warning: unused variable: `window`
+    --> pipeline/src-tauri/tests/file_import_test.rs:1892:9
+     |
+--
+error[E0382]: use of moved value: `write_result`
+    --> pipeline/src-tauri/tests/file_import_test.rs:1914:17
+     |
+1910 |     let write_result = tokio::fs::write(&large_path, large_data).await;
+     |         ------------ move occurs because `write_result` has type `Result<(), std::io::Error>`, which does not implement the `Copy` trait
+...
+1913 |         assert!(write_result.unwrap_err().to_string().contains("No space") ||
+     |                 ------------ ------------ `write_result` moved due to this method call
+     |                 |
+     |                 help: consider calling `.as_ref()` or `.as_mut()` to borrow the type's contents
+1914 |                 write_result.unwrap_err().to_string().contains("space"),
+--
+error[E0599]: no method named `insert` found for struct `TagRepository` in the current scope
+    --> pipeline/src-tauri/tests/tag_repository_test.rs:1579:27
+     |
+1579 |         let result = repo.insert(&pool, new_tag).await;
+     |                           ^^^^^^ method not found in `TagRepository`
+
+error[E0061]: this function takes 1 argument but 0 arguments were supplied
+    --> pipeline/src-tauri/tests/tag_repository_test.rs:1591:20
+     |
+1591 |         let repo = TagRepository::new();
+     |                    ^^^^^^^^^^^^^^^^^^-- argument #1 of type `Pool<Postgres>` is missing
+     |
+note: associated function defined here
+    --> /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/db/repositories/tag_repository.rs:47:12
+     |
+  47 |     pub fn new(pool: PgPool) -> Self {
+     |            ^^^
+--
+error[E0599]: no method named `offset` found for struct `SearchQueryBuilder` in the current scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1518:14
+     |
+  68 |   struct SearchQueryBuilder {
+     |   ------------------------- method `offset` not found for this struct
+...
+1517 |           let query = SearchQueryBuilder::new()
+     |  _____________________-
+1518 | |             .offset(-10)
+     | |             -^^^^^^ method not found in `SearchQueryBuilder`
+     | |_____________|
+--
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1521:23
+     |
+1521 |         let results = SearchRepository::search(&pool, &query).await;
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^--------------- two arguments of type `i64` and `i64` are missing
+     |
+note: associated function defined here
+    --> /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/db/repositories/search_repository.rs:33:18
+     |
+  33 |     pub async fn search(
+     |                  ^^^^^^
+--
+error[E0425]: cannot find function `create_test_file` in this scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1536:23
+     |
+1536 |         let file_id = create_test_file(&pool, "test.mid").await;
+     |                       ^^^^^^^^^^^^^^^^ not found in this scope
+
+warning: `midi-pipeline` (test "file_import_test") generated 5 warnings
+error: could not compile `midi-pipeline` (test "file_import_test") due to 82 previous errors; 5 warnings emitted
+error[E0425]: cannot find function `insert_metadata` in this scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1537:9
+     |
+1537 |         insert_metadata(&pool, file_id, None, None, None).await;
+     |         ^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0599]: no function or associated item named `delete_by_id` found for struct `FileRepository` in the current scope
+    --> pipeline/src-tauri/tests/file_repository_test.rs:2398:38
+     |
+2398 |         let result = FileRepository::delete_by_id(&pool, 999999).await;
+     |                                      ^^^^^^^^^^^^ function or associated item not found in `FileRepository`
+     |
+help: there is an associated function `delete` with a similar name
+     |
+2398 -         let result = FileRepository::delete_by_id(&pool, 999999).await;
+2398 +         let result = FileRepository::delete(&pool, 999999).await;
+     |
+--
+error[E0308]: arguments to this function are incorrect
+    --> pipeline/src-tauri/tests/file_repository_test.rs:2435:22
+     |
+2435 |         let result = FileRepository::list(&pool, Some(0), Some(10000)).await;
+     |                      ^^^^^^^^^^^^^^^^^^^^
+     |
+note: expected `i64`, found `Option<{integer}>`
+    --> pipeline/src-tauri/tests/file_repository_test.rs:2435:50
+     |
+2435 |         let result = FileRepository::list(&pool, Some(0), Some(10000)).await;
+     |                                                  ^^^^^^^
+--
+error[E0599]: no method named `add_tag_to_file` found for struct `TagRepository` in the current scope
+    --> pipeline/src-tauri/tests/tag_repository_test.rs:1592:27
+     |
+1592 |         let result = repo.add_tag_to_file(&pool, 999999, "test_tag").await;
+     |                           ^^^^^^^^^^^^^^^
+     |
+help: there is a method `add_tags_to_file` with a similar name, but with different arguments
+    --> /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/db/repositories/tag_repository.rs:115:5
+     |
+ 115 |     pub async fn add_tags_to_file(&self, file_id: i64, tag_ids: &[i32]) -> Result<()> {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+--
+error[E0599]: no method named `limit` found for struct `SearchQueryBuilder` in the current scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1541:14
+     |
+  68 |   struct SearchQueryBuilder {
+     |   ------------------------- method `limit` not found for this struct
+...
+1540 |           let query = SearchQueryBuilder::new()
+     |  _____________________-
+1541 | |             .limit(-10)
+     | |             -^^^^^ method not found in `SearchQueryBuilder`
+     | |_____________|
+--
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1544:23
+     |
+1544 |         let results = SearchRepository::search(&pool, &query).await;
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^--------------- two arguments of type `i64` and `i64` are missing
+     |
+note: associated function defined here
+    --> /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/db/repositories/search_repository.rs:33:18
+     |
+  33 |     pub async fn search(
+     |                  ^^^^^^
+--
+error[E0061]: this function takes 1 argument but 0 arguments were supplied
+    --> pipeline/src-tauri/tests/tag_repository_test.rs:1605:20
+     |
+1605 |         let repo = TagRepository::new();
+     |                    ^^^^^^^^^^^^^^^^^^-- argument #1 of type `Pool<Postgres>` is missing
+     |
+note: associated function defined here
+    --> /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/db/repositories/tag_repository.rs:47:12
+     |
+  47 |     pub fn new(pool: PgPool) -> Self {
+     |            ^^^
+--
+error[E0425]: cannot find function `create_test_file` in this scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1561:27
+     |
+1561 |             let file_id = create_test_file(&pool, &format!("test{}.mid", i)).await;
+     |                           ^^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find function `insert_metadata` in this scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1562:13
+     |
+1562 |             insert_metadata(&pool, file_id, Some("100.0"), None, None).await;
+     |             ^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1568:23
+     |
+1568 |         let results = SearchRepository::search(&pool, &query).await.expect("Query failed");
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^---------------
+     |                                               |       |
+     |                                               |       expected `SearchQuery`, found `&SearchQuery`
+     |                                               two arguments of type `i64` and `i64` are missing
+     |
+note: associated function defined here
+    --> /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/db/repositories/search_repository.rs:33:18
+--
+error[E0425]: cannot find function `create_test_file` in this scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1581:27
+     |
+1581 |             let file_id = create_test_file(&pool, &format!("test{}.mid", i)).await;
+     |                           ^^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find function `insert_metadata` in this scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1582:13
+     |
+1582 |             insert_metadata(&pool, file_id, None, None, None).await;
+     |             ^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0308]: mismatched types
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1586:67
+     |
+1586 |         let count = SearchRepository::count_search_results(&pool, &query).await.expect("Count failed");
+     |                     --------------------------------------        ^^^^^^ expected `SearchQuery`, found `&SearchQuery`
+     |                     |
+     |                     arguments to this function are incorrect
+     |
+note: associated function defined here
+    --> /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/db/repositories/search_repository.rs:101:18
+     |
+--
+error[E0425]: cannot find function `create_test_file` in this scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1598:23
+     |
+1598 |         let file_id = create_test_file(&pool, "test.mid").await;
+     |                       ^^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find function `insert_metadata` in this scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1599:9
+     |
+1599 |         insert_metadata(&pool, file_id, None, None, None).await;
+     |         ^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0599]: no method named `limit` found for struct `SearchQueryBuilder` in the current scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1602:14
+     |
+  68 |   struct SearchQueryBuilder {
+     |   ------------------------- method `limit` not found for this struct
+...
+1601 |           let query = SearchQueryBuilder::new()
+     |  _____________________-
+1602 | |             .limit(0)
+     | |             -^^^^^ method not found in `SearchQueryBuilder`
+     | |_____________|
+--
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1605:23
+     |
+1605 |         let results = SearchRepository::search(&pool, &query).await.expect("Query failed");
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^--------------- two arguments of type `i64` and `i64` are missing
+     |
+note: associated function defined here
+    --> /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/db/repositories/search_repository.rs:33:18
+     |
+  33 |     pub async fn search(
+     |                  ^^^^^^
+--
+error[E0425]: cannot find function `create_test_file` in this scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1619:27
+     |
+1619 |             let file_id = create_test_file(&pool, &format!("test{}.mid", i)).await;
+     |                           ^^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find function `insert_metadata` in this scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1620:13
+     |
+1620 |             insert_metadata(&pool, file_id, None, None, None).await;
+     |             ^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0599]: no method named `limit` found for struct `SearchQueryBuilder` in the current scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1624:14
+     |
+  68 |   struct SearchQueryBuilder {
+     |   ------------------------- method `limit` not found for this struct
+...
+1623 |           let query = SearchQueryBuilder::new()
+     |  _____________________-
+1624 | |             .limit(1_000_000)
+     | |             -^^^^^ method not found in `SearchQueryBuilder`
+     | |_____________|
+--
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1627:23
+     |
+1627 |         let results = SearchRepository::search(&pool, &query).await.expect("Query failed");
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^--------------- two arguments of type `i64` and `i64` are missing
+     |
+note: associated function defined here
+    --> /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/db/repositories/search_repository.rs:33:18
+     |
+  33 |     pub async fn search(
+     |                  ^^^^^^
+--
+error[E0425]: cannot find function `create_test_file` in this scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1639:23
+     |
+1639 |         let file_id = create_test_file(&pool, "test.mid").await;
+     |                       ^^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find function `insert_metadata` in this scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1640:9
+     |
+1640 |         insert_metadata(&pool, file_id, None, None, None).await;
+     |         ^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0061]: this method takes 2 arguments but 3 arguments were supplied
+    --> pipeline/src-tauri/tests/tag_repository_test.rs:1608:27
+     |
+1608 |         let result = repo.remove_tag_from_file(&pool, file_id, "nonexistent").await;
+     |                           ^^^^^^^^^^^^^^^^^^^^ -----           ------------- expected `i32`, found `&str`
+     |                                                |
+     |                                                unexpected argument #1 of type `&Pool<Postgres>`
+     |
+note: method defined here
+    --> /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/db/repositories/tag_repository.rs:244:18
+     |
+--
+error[E0061]: this function takes 1 argument but 0 arguments were supplied
+    --> pipeline/src-tauri/tests/tag_repository_test.rs:1620:20
+     |
+1620 |         let repo = TagRepository::new();
+     |                    ^^^^^^^^^^^^^^^^^^-- argument #1 of type `Pool<Postgres>` is missing
+     |
+note: associated function defined here
+    --> /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/db/repositories/tag_repository.rs:47:12
+     |
+  47 |     pub fn new(pool: PgPool) -> Self {
+     |            ^^^
+--
+error[E0599]: no method named `offset` found for struct `SearchQueryBuilder` in the current scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1643:14
+     |
+  68 |   struct SearchQueryBuilder {
+     |   ------------------------- method `offset` not found for this struct
+...
+1642 |           let query = SearchQueryBuilder::new()
+     |  _____________________-
+1643 | |             .offset(100)
+     | |             -^^^^^^ method not found in `SearchQueryBuilder`
+     | |_____________|
+--
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1646:23
+     |
+1646 |         let results = SearchRepository::search(&pool, &query).await.expect("Query failed");
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^--------------- two arguments of type `i64` and `i64` are missing
+     |
+note: associated function defined here
+    --> /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/db/repositories/search_repository.rs:33:18
+     |
+  33 |     pub async fn search(
+     |                  ^^^^^^
+--
+error[E0425]: cannot find function `create_test_file` in this scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1659:21
+     |
+1659 |         let file1 = create_test_file(&pool, "file1.mid").await;
+     |                     ^^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find function `insert_metadata` in this scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1660:9
+     |
+1660 |         insert_metadata(&pool, file1, Some("120.0"), Some("C".to_string()), None).await;
+     |         ^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find function `create_test_file` in this scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1663:21
+     |
+1663 |         let file2 = create_test_file(&pool, "file2.mid").await;
+     |                     ^^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find function `insert_metadata` in this scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1664:9
+     |
+1664 |         insert_metadata(&pool, file2, Some("140.0"), Some("C".to_string()), None).await;
+     |         ^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0599]: no method named `delete` found for struct `TagRepository` in the current scope
+    --> pipeline/src-tauri/tests/tag_repository_test.rs:1621:27
+     |
+1621 |         let result = repo.delete(&pool, "nonexistent_tag").await;
+     |                           ^^^^^^ method not found in `TagRepository`
+
+error[E0061]: this function takes 1 argument but 0 arguments were supplied
+    --> pipeline/src-tauri/tests/tag_repository_test.rs:1633:20
+     |
+1633 |         let repo = TagRepository::new();
+     |                    ^^^^^^^^^^^^^^^^^^-- argument #1 of type `Pool<Postgres>` is missing
+     |
+note: associated function defined here
+    --> /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/db/repositories/tag_repository.rs:47:12
+     |
+  47 |     pub fn new(pool: PgPool) -> Self {
+     |            ^^^
+--
+error[E0308]: mismatched types
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1668:22
+     |
+1668 |             .min_bpm(Some("130.0".to_string()))
+     |              ------- ^^^^^^^^^^^^^^^^^^^^^^^^^ expected `f64`, found `Option<String>`
+     |              |
+     |              arguments to this method are incorrect
+     |
+     = note: expected type `f64`
+                found enum `Option<std::string::String>`
+note: method defined here
+--
+error[E0599]: no method named `get_tags_for_file` found for struct `TagRepository` in the current scope
+    --> pipeline/src-tauri/tests/tag_repository_test.rs:1634:27
+     |
+1634 |         let result = repo.get_tags_for_file(&pool, 999999).await;
+     |                           ^^^^^^^^^^^^^^^^^
+     |
+help: there is a method `add_tags_to_file` with a similar name
+     |
+1634 -         let result = repo.get_tags_for_file(&pool, 999999).await;
+1634 +         let result = repo.add_tags_to_file(&pool, 999999).await;
+     |
+--
+error[E0061]: this function takes 1 argument but 0 arguments were supplied
+    --> pipeline/src-tauri/tests/tag_repository_test.rs:1648:20
+     |
+1648 |         let repo = TagRepository::new();
+     |                    ^^^^^^^^^^^^^^^^^^-- argument #1 of type `Pool<Postgres>` is missing
+     |
+note: associated function defined here
+    --> /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/db/repositories/tag_repository.rs:47:12
+     |
+  47 |     pub fn new(pool: PgPool) -> Self {
+     |            ^^^
+--
+error[E0599]: no method named `keys` found for struct `SearchQueryBuilder` in the current scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1669:14
+     |
+  68 |   struct SearchQueryBuilder {
+     |   ------------------------- method `keys` not found for this struct
+...
+1667 |           let query = SearchQueryBuilder::new()
+     |  _____________________-
+1668 | |             .min_bpm(Some("130.0".to_string()))
+1669 | |             .keys(Some(vec!["C".to_string()]))
+     | |_____________-^^^^
+--
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1672:23
+     |
+1672 |         let results = SearchRepository::search(&pool, &query).await.expect("Query failed");
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^--------------- two arguments of type `i64` and `i64` are missing
+     |
+note: associated function defined here
+    --> /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/db/repositories/search_repository.rs:33:18
+     |
+  33 |     pub async fn search(
+     |                  ^^^^^^
+--
+error[E0609]: no field `file_id` on type `midi_pipeline::File`
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1674:31
+     |
+1674 |         assert_eq!(results[0].file_id, file2, "Should be file2");
+     |                               ^^^^^^^ unknown field
+     |
+     = note: available fields are: `id`, `filename`, `filepath`, `original_filename`, `content_hash` ... and 17 others
+
+error[E0425]: cannot find function `create_test_file` in this scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1686:20
+     |
+1686 |         let file = create_test_file(&pool, "test.mid").await;
+     |                    ^^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find function `insert_metadata` in this scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1687:9
+     |
+1687 |         insert_metadata(&pool, file, Some("100.0"), None, None).await;
+     |         ^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0599]: no method named `add_tag_to_file` found for struct `TagRepository` in the current scope
+    --> pipeline/src-tauri/tests/tag_repository_test.rs:1650:27
+     |
+1650 |         let result = repo.add_tag_to_file(&pool, file_id, "").await;
+     |                           ^^^^^^^^^^^^^^^
+     |
+help: there is a method `add_tags_to_file` with a similar name, but with different arguments
+    --> /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/db/repositories/tag_repository.rs:115:5
+     |
+ 115 |     pub async fn add_tags_to_file(&self, file_id: i64, tag_ids: &[i32]) -> Result<()> {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+--
+error[E0308]: mismatched types
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1690:22
+     |
+1690 |             .min_bpm(Some("200.0".to_string()))
+     |              ------- ^^^^^^^^^^^^^^^^^^^^^^^^^ expected `f64`, found `Option<String>`
+     |              |
+     |              arguments to this method are incorrect
+     |
+     = note: expected type `f64`
+                found enum `Option<std::string::String>`
+note: method defined here
+--
+error[E0061]: this function takes 1 argument but 0 arguments were supplied
+    --> pipeline/src-tauri/tests/tag_repository_test.rs:1663:20
+     |
+1663 |         let repo = TagRepository::new();
+     |                    ^^^^^^^^^^^^^^^^^^-- argument #1 of type `Pool<Postgres>` is missing
+     |
+note: associated function defined here
+    --> /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/db/repositories/tag_repository.rs:47:12
+     |
+  47 |     pub fn new(pool: PgPool) -> Self {
+     |            ^^^
+--
+error[E0308]: mismatched types
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1691:22
+     |
+1691 |             .max_bpm(Some("50.0".to_string()))
+     |              ------- ^^^^^^^^^^^^^^^^^^^^^^^^ expected `f64`, found `Option<String>`
+     |              |
+     |              arguments to this method are incorrect
+     |
+     = note: expected type `f64`
+                found enum `Option<std::string::String>`
+note: method defined here
+--
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1694:23
+     |
+1694 |         let results = SearchRepository::search(&pool, &query).await.unwrap_or_default();
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^---------------
+     |                                               |       |
+     |                                               |       expected `SearchQuery`, found `&SearchQuery`
+     |                                               two arguments of type `i64` and `i64` are missing
+     |
+note: associated function defined here
+    --> /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/db/repositories/search_repository.rs:33:18
+--
+error[E0425]: cannot find function `create_test_file` in this scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1704:20
+     |
+1704 |         let file = create_test_file(&pool, "test.mid").await;
+     |                    ^^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find function `insert_metadata` in this scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1705:9
+     |
+1705 |         insert_metadata(&pool, file, Some("-120.0"), None, None).await;
+     |         ^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1708:23
+     |
+1708 |         let results = SearchRepository::search(&pool, &query).await.expect("Query should handle negative BPM");
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^---------------
+     |                                               |       |
+     |                                               |       expected `SearchQuery`, found `&SearchQuery`
+     |                                               two arguments of type `i64` and `i64` are missing
+     |
+note: associated function defined here
+    --> /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/db/repositories/search_repository.rs:33:18
+--
+error[E0425]: cannot find function `create_test_file` in this scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1718:24
+     |
+1718 |             let file = create_test_file(&pool, &format!("file{}.mid", i)).await;
+     |                        ^^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find function `insert_metadata` in this scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1719:13
+     |
+1719 |             insert_metadata(&pool, file, None, None, None).await;
+     |             ^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0599]: no method named `upsert_tags_for_file` found for struct `TagRepository` in the current scope
+    --> pipeline/src-tauri/tests/tag_repository_test.rs:1670:27
+     |
+1670 |         let result = repo.upsert_tags_for_file(&pool, file_id, tags).await;
+     |                           ^^^^^^^^^^^^^^^^^^^^
+     |
+help: there is a method `add_tags_to_file` with a similar name, but with different arguments
+    --> /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/db/repositories/tag_repository.rs:115:5
+     |
+ 115 |     pub async fn add_tags_to_file(&self, file_id: i64, tag_ids: &[i32]) -> Result<()> {
+     |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+--
+error[E0061]: this function takes 1 argument but 0 arguments were supplied
+    --> pipeline/src-tauri/tests/tag_repository_test.rs:1682:20
+     |
+1682 |         let repo = TagRepository::new();
+     |                    ^^^^^^^^^^^^^^^^^^-- argument #1 of type `Pool<Postgres>` is missing
+     |
+note: associated function defined here
+    --> /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/db/repositories/tag_repository.rs:47:12
+     |
+  47 |     pub fn new(pool: PgPool) -> Self {
+     |            ^^^
+--
+error[E0599]: no method named `offset` found for struct `SearchQueryBuilder` in the current scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1723:14
+     |
+  68 |   struct SearchQueryBuilder {
+     |   ------------------------- method `offset` not found for this struct
+...
+1722 |           let query = SearchQueryBuilder::new()
+     |  _____________________-
+1723 | |             .offset(-1)
+     | |             -^^^^^^ method not found in `SearchQueryBuilder`
+     | |_____________|
+--
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1726:23
+     |
+1726 |         let results = SearchRepository::search(&pool, &query).await.unwrap_or_default();
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^--------------- two arguments of type `i64` and `i64` are missing
+     |
+note: associated function defined here
+    --> /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/db/repositories/search_repository.rs:33:18
+     |
+  33 |     pub async fn search(
+     |                  ^^^^^^
+--
+error[E0425]: cannot find function `create_test_file` in this scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1737:24
+     |
+1737 |             let file = create_test_file(&pool, &format!("file{}.mid", i)).await;
+     |                        ^^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find function `insert_metadata` in this scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1738:13
+     |
+1738 |             insert_metadata(&pool, file, None, None, None).await;
+     |             ^^^^^^^^^^^^^^^ not found in this scope
+
+warning: unused import: `midi_library_shared::core::midi::parser::parse_midi_file`
+  --> pipeline/src-tauri/tests/analyze_test.rs:36:5
+   |
+36 | use midi_library_shared::core::midi::parser::parse_midi_file;
+   |     ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+--
+error[E0599]: no method named `limit` found for struct `SearchQueryBuilder` in the current scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1742:14
+     |
+  68 |   struct SearchQueryBuilder {
+     |   ------------------------- method `limit` not found for this struct
+...
+1741 |           let query = SearchQueryBuilder::new()
+     |  _____________________-
+1742 | |             .limit(0)
+     | |             -^^^^^ method not found in `SearchQueryBuilder`
+     | |_____________|
+--
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1745:23
+     |
+1745 |         let results = SearchRepository::search(&pool, &query).await.unwrap_or_default();
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^--------------- two arguments of type `i64` and `i64` are missing
+     |
+note: associated function defined here
+    --> /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/db/repositories/search_repository.rs:33:18
+     |
+  33 |     pub async fn search(
+     |                  ^^^^^^
+--
+error[E0425]: cannot find function `create_test_file` in this scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1755:20
+     |
+1755 |         let file = create_test_file(&pool, "test.mid").await;
+     |                    ^^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find function `insert_metadata` in this scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1756:9
+     |
+1756 |         insert_metadata(&pool, file, None, None, None).await;
+     |         ^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0061]: this method takes 1 argument but 2 arguments were supplied
+    --> pipeline/src-tauri/tests/tag_repository_test.rs:1683:27
+     |
+1683 |         let result = repo.get_popular_tags(&pool, -10).await;
+     |                           ^^^^^^^^^^^^^^^^ ----- unexpected argument #1 of type `&Pool<Postgres>`
+     |
+note: method defined here
+    --> /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/db/repositories/tag_repository.rs:172:18
+     |
+ 172 |     pub async fn get_popular_tags(&self, limit: i32) -> Result<Vec<TagWithCount>> {
+     |                  ^^^^^^^^^^^^^^^^
+--
+error[E0061]: this function takes 1 argument but 0 arguments were supplied
+    --> pipeline/src-tauri/tests/tag_repository_test.rs:1695:20
+     |
+1695 |         let repo = TagRepository::new();
+     |                    ^^^^^^^^^^^^^^^^^^-- argument #1 of type `Pool<Postgres>` is missing
+     |
+note: associated function defined here
+    --> /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/db/repositories/tag_repository.rs:47:12
+     |
+  47 |     pub fn new(pool: PgPool) -> Self {
+     |            ^^^
+--
+error[E0599]: no method named `offset` found for struct `SearchQueryBuilder` in the current scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1759:14
+     |
+  68 |   struct SearchQueryBuilder {
+     |   ------------------------- method `offset` not found for this struct
+...
+1758 |           let query = SearchQueryBuilder::new()
+     |  _____________________-
+1759 | |             .offset(1000000)
+     | |             -^^^^^^ method not found in `SearchQueryBuilder`
+     | |_____________|
+--
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1762:23
+     |
+1762 |         let results = SearchRepository::search(&pool, &query).await.unwrap_or_default();
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^--------------- two arguments of type `i64` and `i64` are missing
+     |
+note: associated function defined here
+    --> /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/db/repositories/search_repository.rs:33:18
+     |
+  33 |     pub async fn search(
+     |                  ^^^^^^
+--
+error[E0425]: cannot find function `create_test_file` in this scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1772:20
+     |
+1772 |         let file = create_test_file(&pool, "test.mid").await;
+     |                    ^^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find function `insert_metadata` in this scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1773:9
+     |
+1773 |         insert_metadata(&pool, file, None, None, Some(-100i32)).await;
+     |         ^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1776:23
+     |
+1776 |         let results = SearchRepository::search(&pool, &query).await.expect("Query should handle negative duration");
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^---------------
+     |                                               |       |
+     |                                               |       expected `SearchQuery`, found `&SearchQuery`
+     |                                               two arguments of type `i64` and `i64` are missing
+     |
+note: associated function defined here
+    --> /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/db/repositories/search_repository.rs:33:18
+--
+error[E0425]: cannot find function `create_test_file` in this scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1785:20
+     |
+1785 |         let file = create_test_file(&pool, "test.mid").await;
+     |                    ^^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0107]: missing generics for trait `Emitter`
+   --> pipeline/src-tauri/tests/analyze_test.rs:76:6
+    |
+ 76 | impl Emitter for TestWindow {
+    |      ^^^^^^^ expected 1 generic argument
+    |
+note: trait defined here, with 1 generic parameter: `R`
+   --> /home/dojevou/.cargo/registry/src/index.crates.io-1949cf8c6b5b557f/tauri-2.9.2/src/lib.rs:967:11
+    |
+967 | pub trait Emitter<R: Runtime>: sealed::ManagerBase<R> {
+    |           ^^^^^^^ -
+--
+error[E0425]: cannot find function `insert_metadata` in this scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1786:9
+     |
+1786 |         insert_metadata(&pool, file, None, None, Some(120)).await;
+     |         ^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0599]: no method named `min_duration` found for struct `SearchQueryBuilder` in the current scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1789:14
+     |
+  68 |   struct SearchQueryBuilder {
+     |   ------------------------- method `min_duration` not found for this struct
+...
+1788 |           let query = SearchQueryBuilder::new()
+     |  _____________________-
+1789 | |             .min_duration(Some("200".to_string()))
+     | |             -^^^^^^^^^^^^ method not found in `SearchQueryBuilder`
+     | |_____________|
+--
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1793:23
+     |
+1793 |         let results = SearchRepository::search(&pool, &query).await.unwrap_or_default();
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^--------------- two arguments of type `i64` and `i64` are missing
+     |
+note: associated function defined here
+    --> /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/db/repositories/search_repository.rs:33:18
+     |
+  33 |     pub async fn search(
+     |                  ^^^^^^
+--
+error[E0425]: cannot find function `create_test_file` in this scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1803:20
+     |
+1803 |         let file = create_test_file(&pool, "test.mid").await;
+     |                    ^^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find function `insert_metadata` in this scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1804:9
+     |
+1804 |         insert_metadata(&pool, file, None, Some("H".to_string()), None).await;
+     |         ^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0599]: no method named `insert` found for struct `TagRepository` in the current scope
+    --> pipeline/src-tauri/tests/tag_repository_test.rs:1696:14
+     |
+1696 |         repo.insert(&pool, midi_pipeline::db::models::NewTag {
+     |         -----^^^^^^ method not found in `TagRepository`
+
+error[E0599]: no method named `keys` found for struct `SearchQueryBuilder` in the current scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1807:14
+     |
+  68 |   struct SearchQueryBuilder {
+     |   ------------------------- method `keys` not found for this struct
+...
+1806 |           let query = SearchQueryBuilder::new()
+     |  _____________________-
+1807 | |             .keys(Some(vec!["H".to_string()]))
+     | |_____________-^^^^
+     |
+--
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1810:23
+     |
+1810 |         let results = SearchRepository::search(&pool, &query).await.unwrap_or_default();
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^--------------- two arguments of type `i64` and `i64` are missing
+     |
+note: associated function defined here
+    --> /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/db/repositories/search_repository.rs:33:18
+     |
+  33 |     pub async fn search(
+     |                  ^^^^^^
+--
+error[E0425]: cannot find function `create_test_file` in this scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1821:24
+     |
+1821 |             let file = create_test_file(&pool, &format!("file{:02}.mid", i)).await;
+     |                        ^^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find function `insert_metadata` in this scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1822:13
+     |
+1822 |             insert_metadata(&pool, file, None, None, None).await;
+     |             ^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0599]: no method named `limit` found for struct `SearchQueryBuilder` in the current scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1825:48
+     |
+  68 | struct SearchQueryBuilder {
+     | ------------------------- method `limit` not found for this struct
+...
+1825 |         let query1 = SearchQueryBuilder::new().limit(10).offset(0).build();
+     |                                                ^^^^^ method not found in `SearchQueryBuilder`
+     |
+     = help: items from traits can only be used if the trait is implemented and in scope
+     = note: the following traits define an item `limit`, perhaps you need to implement one of them:
+--
+error[E0599]: no method named `limit` found for struct `SearchQueryBuilder` in the current scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1826:48
+     |
+  68 | struct SearchQueryBuilder {
+     | ------------------------- method `limit` not found for this struct
+...
+1826 |         let query2 = SearchQueryBuilder::new().limit(10).offset(10).build();
+     |                                                ^^^^^ method not found in `SearchQueryBuilder`
+     |
+     = help: items from traits can only be used if the trait is implemented and in scope
+     = note: the following traits define an item `limit`, perhaps you need to implement one of them:
+--
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1828:21
+     |
+1828 |         let page1 = SearchRepository::search(&pool, &query1).await.expect("Page 1 query failed");
+     |                     ^^^^^^^^^^^^^^^^^^^^^^^^---------------- two arguments of type `i64` and `i64` are missing
+     |
+note: associated function defined here
+    --> /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/db/repositories/search_repository.rs:33:18
+     |
+  33 |     pub async fn search(
+     |                  ^^^^^^
+--
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1829:21
+     |
+1829 |         let page2 = SearchRepository::search(&pool, &query2).await.expect("Page 2 query failed");
+     |                     ^^^^^^^^^^^^^^^^^^^^^^^^---------------- two arguments of type `i64` and `i64` are missing
+     |
+note: associated function defined here
+    --> /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/db/repositories/search_repository.rs:33:18
+     |
+  33 |     pub async fn search(
+     |                  ^^^^^^
+--
+error[E0609]: no field `file_id` on type `&midi_pipeline::File`
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1834:56
+     |
+1834 |         let file_ids1: Vec<_> = page1.iter().map(|f| f.file_id).collect();
+     |                                                        ^^^^^^^ unknown field
+     |
+     = note: available fields are: `id`, `filename`, `filepath`, `original_filename`, `content_hash` ... and 17 others
+
+error[E0599]: no method named `insert` found for struct `TagRepository` in the current scope
+    --> pipeline/src-tauri/tests/tag_repository_test.rs:1704:14
+     |
+1704 |         repo.insert(&pool, midi_pipeline::db::models::NewTag {
+     |         -----^^^^^^ method not found in `TagRepository`
+
+error[E0609]: no field `file_id` on type `&midi_pipeline::File`
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1835:56
+     |
+1835 |         let file_ids2: Vec<_> = page2.iter().map(|f| f.file_id).collect();
+     |                                                        ^^^^^^^ unknown field
+     |
+     = note: available fields are: `id`, `filename`, `filepath`, `original_filename`, `content_hash` ... and 17 others
+
+error[E0425]: cannot find function `create_test_file` in this scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1850:24
+     |
+1850 |             let file = create_test_file(&pool, &format!("file{}.mid", i)).await;
+     |                        ^^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find function `insert_metadata` in this scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1851:13
+     |
+1851 |             insert_metadata(&pool, file, Some(&format!("{}.0", 100 + i * 5)), None, None).await;
+     |             ^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0599]: no method named `search` found for struct `TagRepository` in the current scope
+    --> pipeline/src-tauri/tests/tag_repository_test.rs:1712:27
+     |
+1712 |         let result = repo.search(&pool, "").await;
+     |                           ^^^^^^
+     |
+help: there is a method `search_tags` with a similar name
+     |
+1712 |         let result = repo.search_tags(&pool, "").await;
+     |                                 +++++
+
+error[E0308]: mismatched types
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1859:30
+     |
+1859 |                     .min_bpm(Some("100.0".to_string()))
+     |                      ------- ^^^^^^^^^^^^^^^^^^^^^^^^^ expected `f64`, found `Option<String>`
+     |                      |
+     |                      arguments to this method are incorrect
+     |
+     = note: expected type `f64`
+                found enum `Option<std::string::String>`
+note: method defined here
+--
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1861:17
+     |
+1861 |                 SearchRepository::search(&pool_clone, &query).await
+     |                 ^^^^^^^^^^^^^^^^^^^^^^^^---------------------
+     |                                         |             |
+     |                                         |             expected `SearchQuery`, found `&SearchQuery`
+     |                                         two arguments of type `i64` and `i64` are missing
+     |
+note: associated function defined here
+    --> /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/db/repositories/search_repository.rs:33:18
+--
+error[E0308]: mismatched types
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1882:22
+     |
+1882 |             .min_bpm(Some("500.0".to_string()))
+     |              ------- ^^^^^^^^^^^^^^^^^^^^^^^^^ expected `f64`, found `Option<String>`
+     |              |
+     |              arguments to this method are incorrect
+     |
+     = note: expected type `f64`
+                found enum `Option<std::string::String>`
+note: method defined here
+--
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1885:23
+     |
+1885 |         let results = SearchRepository::search(&pool, &query).await.expect("Query failed");
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^---------------
+     |                                               |       |
+     |                                               |       expected `SearchQuery`, found `&SearchQuery`
+     |                                               two arguments of type `i64` and `i64` are missing
+     |
+note: associated function defined here
+    --> /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/db/repositories/search_repository.rs:33:18
+--
+error[E0425]: cannot find function `create_test_file` in this scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1896:24
+     |
+1896 |             let file = create_test_file(&pool, &format!("file{:03}.mid", i)).await;
+     |                        ^^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find function `insert_metadata` in this scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1897:13
+     |
+1897 |             insert_metadata(&pool, file, None, None, None).await;
+     |             ^^^^^^^^^^^^^^^ not found in this scope
+
+Some errors have detailed explanations: E0308, E0433, E0599, E0609.
+For more information about an error, try `rustc --explain E0308`.
+warning: `midi-pipeline` (test "file_repository_test") generated 4 warnings (1 duplicate)
+error: could not compile `midi-pipeline` (test "file_repository_test") due to 18 previous errors; 4 warnings emitted
+error[E0599]: no method named `limit` found for struct `SearchQueryBuilder` in the current scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1901:14
+     |
+  68 |   struct SearchQueryBuilder {
+     |   ------------------------- method `limit` not found for this struct
+...
+1900 |           let query = SearchQueryBuilder::new()
+     |  _____________________-
+1901 | |             .limit(10000)
+     | |             -^^^^^ method not found in `SearchQueryBuilder`
+     | |_____________|
+--
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1904:23
+     |
+1904 |         let results = SearchRepository::search(&pool, &query).await.expect("Query failed");
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^--------------- two arguments of type `i64` and `i64` are missing
+     |
+note: associated function defined here
+    --> /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/db/repositories/search_repository.rs:33:18
+     |
+  33 |     pub async fn search(
+     |                  ^^^^^^
+--
+error[E0425]: cannot find function `create_test_file` in this scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1915:24
+     |
+1915 |             let file = create_test_file(&pool, &format!("file{}.mid", i)).await;
+     |                        ^^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0425]: cannot find function `insert_metadata` in this scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1916:13
+     |
+1916 |             insert_metadata(&pool, file, None, None, None).await;
+     |             ^^^^^^^^^^^^^^^ not found in this scope
+
+error[E0599]: no method named `offset` found for struct `SearchQueryBuilder` in the current scope
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1920:14
+     |
+  68 |   struct SearchQueryBuilder {
+     |   ------------------------- method `offset` not found for this struct
+...
+1919 |           let query = SearchQueryBuilder::new()
+     |  _____________________-
+1920 | |             .offset(10)
+     | |             -^^^^^^ method not found in `SearchQueryBuilder`
+     | |_____________|
+--
+error[E0061]: this function takes 4 arguments but 2 arguments were supplied
+    --> pipeline/src-tauri/tests/search_repository_test.rs:1923:23
+     |
+1923 |         let results = SearchRepository::search(&pool, &query).await.expect("Query failed");
+     |                       ^^^^^^^^^^^^^^^^^^^^^^^^--------------- two arguments of type `i64` and `i64` are missing
+     |
+note: associated function defined here
+    --> /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/db/repositories/search_repository.rs:33:18
+     |
+  33 |     pub async fn search(
+     |                  ^^^^^^
