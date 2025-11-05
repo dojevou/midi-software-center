@@ -427,18 +427,6 @@ async fn test_get_or_create_tags_batch_transaction_atomicity() {
 // SECTION 3: File-Tag Associations (10 tests)
 // ============================================================================
 
-async fn create_test_file(pool: &PgPool, filename: &str) -> i64 {
-    let new_file = NewFileBuilder::new()
-        .filename(filename)
-        .filepath(&format!("/test/{}", filename))
-        .content_hash(random_hash())
-        .build();
-
-    FileRepository::insert(pool, new_file)
-        .await
-        .expect("Failed to create test file")
-}
-
 #[tokio::test]
 async fn test_add_tags_to_file_single_tag() {
     let pool = setup_test_pool().await;

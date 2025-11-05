@@ -72,9 +72,16 @@ pub async fn setup_test_state() -> midi_pipeline::AppState {
         .await
         .expect("Failed to verify database connection");
 
+    let database_url = std::env::var("TEST_DATABASE_URL")
+        .or_else(|_| std::env::var("DATABASE_URL"))
+        .unwrap_or_else(|_| "postgres://localhost/test_db".to_string());
+
+    let database = midi_pipeline::Database::new(&database_url)
+        .await
+        .expect("Failed to initialize test database");
+
     midi_pipeline::AppState {
-        db_pool: Some(pool),
-        // Add other AppState fields as needed with defaults
+        database,
     }
 }
 
@@ -89,8 +96,10 @@ pub async fn import_and_analyze_file(
 
 /// Builder for test MIDI file metadata
 pub struct MidiFileBuilder {
-    file_path: String,
-    blake3_hash: String,
+    filename: String,
+    filepath: String,
+    original_filename: String,
+    content_hash: String,
     file_size_bytes: i64,
     manufacturer: Option<String>,
     collection_name: Option<String>,
@@ -99,21 +108,23 @@ pub struct MidiFileBuilder {
 impl MidiFileBuilder {
     pub fn new() -> Self {
         Self {
-            file_path: "/test/default.mid".to_string(),
-            blake3_hash: format!("{:064x}", 0),
+            filename: "test.mid".to_string(),
+            filepath: "/test/default.mid".to_string(),
+            original_filename: "test.mid".to_string(),
+            content_hash: format!("{:064x}", 0),
             file_size_bytes: 1024,
             manufacturer: None,
             collection_name: None,
         }
     }
-    
+
     pub fn with_path(mut self, path: &str) -> Self {
-        self.file_path = path.to_string();
+        self.filepath = path.to_string();
         self
     }
-    
+
     pub fn with_hash(mut self, hash: &str) -> Self {
-        self.blake3_hash = hash.to_string();
+        self.content_hash = hash.to_string();
         self
     }
     
@@ -134,11 +145,13 @@ impl MidiFileBuilder {
     
     pub async fn insert(self, pool: &PgPool) -> i64 {
         sqlx::query_scalar::<_, i64>(
-            "INSERT INTO files (file_path, blake3_hash, file_size_bytes, manufacturer, collection_name) 
-             VALUES ($1, $2, $3, $4, $5) RETURNING file_id"
+            "INSERT INTO files (filename, filepath, original_filename, content_hash, file_size_bytes, manufacturer, collection_name)
+             VALUES ($1, $2, $3, $4, $5, $6, $7) RETURNING id"
         )
-        .bind(self.file_path)
-        .bind(self.blake3_hash)
+        .bind(self.filename)
+        .bind(self.filepath)
+        .bind(self.original_filename)
+        .bind(self.content_hash)
         .bind(self.file_size_bytes)
         .bind(self.manufacturer)
         .bind(self.collection_name)
@@ -158,7 +171,7 @@ impl Default for MidiFileBuilder {
 pub struct MetadataBuilder {
     file_id: i64,
     bpm: Option<f64>,
-    detected_key: Option<String>,
+    key_signature: Option<String>,
     time_signature: Option<String>,
 }
 
@@ -167,18 +180,18 @@ impl MetadataBuilder {
         Self {
             file_id,
             bpm: None,
-            detected_key: None,
+            key_signature: None,
             time_signature: None,
         }
     }
-    
+
     pub fn with_bpm(mut self, bpm: f64) -> Self {
         self.bpm = Some(bpm);
         self
     }
-    
+
     pub fn with_key(mut self, key: &str) -> Self {
-        self.detected_key = Some(key.to_string());
+        self.key_signature = Some(key.to_string());
         self
     }
     
@@ -189,12 +202,12 @@ impl MetadataBuilder {
     
     pub async fn insert(self, pool: &PgPool) -> i64 {
         sqlx::query_scalar::<_, i64>(
-            "INSERT INTO musical_metadata (file_id, bpm, detected_key, time_signature) 
-             VALUES ($1, $2, $3, $4) RETURNING metadata_id"
+            "INSERT INTO musical_metadata (file_id, bpm, key_signature, time_signature)
+             VALUES ($1, $2, $3, $4) RETURNING file_id"
         )
         .bind(self.file_id)
         .bind(self.bpm)
-        .bind(self.detected_key)
+        .bind(self.key_signature)
         .bind(self.time_signature)
         .fetch_one(pool)
         .await
@@ -204,31 +217,31 @@ impl MetadataBuilder {
 
 /// Builder for test tags
 pub struct TagBuilder {
-    tag_name: String,
-    tag_category: Option<String>,
+    name: String,
+    category: Option<String>,
 }
 
 impl TagBuilder {
     pub fn new(tag_name: &str) -> Self {
         Self {
-            tag_name: tag_name.to_string(),
-            tag_category: None,
+            name: tag_name.to_string(),
+            category: None,
         }
     }
-    
+
     pub fn with_category(mut self, category: &str) -> Self {
-        self.tag_category = Some(category.to_string());
+        self.category = Some(category.to_string());
         self
     }
-    
+
     pub async fn insert(self, pool: &PgPool) -> i64 {
         sqlx::query_scalar::<_, i64>(
-            "INSERT INTO tags (tag_name, tag_category) VALUES ($1, $2) 
-             ON CONFLICT (tag_name) DO UPDATE SET tag_name = EXCLUDED.tag_name
-             RETURNING tag_id"
+            "INSERT INTO tags (name, category) VALUES ($1, $2)
+             ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
+             RETURNING id"
         )
-        .bind(self.tag_name)
-        .bind(self.tag_category)
+        .bind(self.name)
+        .bind(self.category)
         .fetch_one(pool)
         .await
         .expect("Failed to insert test tag")

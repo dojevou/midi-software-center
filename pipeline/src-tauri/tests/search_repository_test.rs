@@ -1789,7 +1789,6 @@ async fn test_empty_database() {
         insert_metadata(&pool, file, None, None, Some(120)).await;
 
         let query = SearchQueryBuilder::new()
-            ))
             .max_duration(Some("50".to_string()))
             .build();
 
