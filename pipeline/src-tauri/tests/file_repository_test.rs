@@ -25,6 +25,7 @@
 //! - Track count validation (0-128 tracks)
 //! - Filepath/filename length limits (VARCHAR(500) and VARCHAR(255))
 
+mod common;
 use midi_pipeline::db::models::{File, NewFile};
 use midi_pipeline::db::repositories::FileRepository;
 use sqlx::PgPool;
@@ -1021,7 +1022,7 @@ async fn test_update_metadata_fields_format0_to_format1() {
         file_id,
         Some(1),
         4,
-        Some(480),
+        480,
         None,
         None,
     )
@@ -1060,7 +1061,7 @@ async fn test_update_metadata_fields_updates_timestamp() {
         file_id,
         Some(1),
         2,
-        Some(960),
+        960,
         None,
         None,
     )
@@ -1088,7 +1089,7 @@ async fn test_update_metadata_fields_nonexistent_file() {
         99999,
         Some(1),
         1,
-        Some(480),
+        480,
         None,
         None,
     )
@@ -1147,7 +1148,7 @@ async fn test_update_metadata_fields_zero_tracks() {
         file_id,
         Some(0),
         0,
-        Some(0),
+        0,
         None,
         None,
     )

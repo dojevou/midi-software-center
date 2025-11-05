@@ -2160,8 +2160,7 @@ async fn test_import_directory_database_pool_exhaustion() {
                 dir_path.to_str().unwrap().to_string(),
                 false,
                 None,
-                tauri::State::from(&state_clone),
-                window_clone,
+                &state_clone,
             )
             .await
         });
@@ -2296,7 +2295,7 @@ async fn test_error_file_not_found() {
     let state = AppState {
         database: Database::new(&db.database_url()).await.expect("DB"),
     };
-    let result = import_single_file_impl("/nonexistent/path/file.mid".to_string(), None, state, window).await;
+    let result = import_single_file_impl("/nonexistent/path/file.mid".to_string(), None, &state).await;
     assert!(result.is_err());
     db.cleanup().await;
 }
@@ -2307,9 +2306,9 @@ async fn test_error_duplicate_file() {
     let fixtures = MidiFixtures::new().await;
     let file_path = fixtures.create_simple_midi("duplicate.mid").await;
     let state = AppState { database: Database::new(&db.database_url()).await.expect("DB") };
-    let r1 = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, state, MockWindow::new()).await;
+    let r1 = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state).await;
     assert!(r1.is_ok());
-    let r2 = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, state, MockWindow::new()).await;
+    let r2 = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state).await;
     assert!(r2.is_err());
     db.cleanup().await;
 }
@@ -2322,7 +2321,7 @@ async fn test_error_corrupted_midi() {
     let file_path = fixtures.temp_dir.path().join("corrupt.mid");
     tokio::fs::write(&file_path, corrupt_bytes).await.expect("Write");
     let state = AppState { database: Database::new(&db.database_url()).await.expect("DB") };
-    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, state, MockWindow::new()).await;
+    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state).await;
     assert!(result.is_err());
     db.cleanup().await;
 }
@@ -2335,7 +2334,7 @@ async fn test_error_truncated_file() {
     let file_path = fixtures.temp_dir.path().join("truncated.mid");
     tokio::fs::write(&file_path, truncated).await.expect("Write");
     let state = AppState { database: Database::new(&db.database_url()).await.expect("DB") };
-    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, state, MockWindow::new()).await;
+    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state).await;
     assert!(result.is_err());
     db.cleanup().await;
 }
@@ -2351,7 +2350,7 @@ async fn test_error_concurrent_race() {
         let path = file_path.clone();
         let st = Arc::clone(&state);
         let h = tokio::spawn(async move {
-            import_single_file_impl(path.to_str().unwrap().to_string(), None, tauri::State::from(&*st), MockWindow::new()).await
+            import_single_file_impl(path.to_str().unwrap().to_string(), None, &*st).await
         });
         handles.push(h);
     }
@@ -2369,7 +2368,7 @@ async fn test_error_metadata_graceful() {
     let file_path = fixtures.temp_dir.path().join("minimal.mid");
     tokio::fs::write(&file_path, minimal).await.expect("Write");
     let state = AppState { database: Database::new(&db.database_url()).await.expect("DB") };
-    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, state, MockWindow::new()).await;
+    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state).await;
     assert!(result.is_ok() || result.is_err());
     db.cleanup().await;
 }
@@ -2380,7 +2379,7 @@ async fn test_error_unicode_filename() {
     let fixtures = MidiFixtures::new().await;
     let file_path = fixtures.create_simple_midi("音楽_файл_🎵.mid").await;
     let state = AppState { database: Database::new(&db.database_url()).await.expect("DB") };
-    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, state, MockWindow::new()).await;
+    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state).await;
     assert!(result.is_ok());
     db.cleanup().await;
 }
@@ -2391,7 +2390,7 @@ async fn test_error_path_traversal() {
     let state = AppState { database: Database::new(&db.database_url()).await.expect("DB") };
     let paths = vec!["../../../etc/passwd", "..\\..\\..\\windows\\system32"];
     for path in paths {
-        let r = import_single_file_impl(path.to_string(), None, state, MockWindow::new()).await;
+        let r = import_single_file_impl(path.to_string(), None, &state).await;
         assert!(r.is_err());
     }
     db.cleanup().await;
@@ -2404,7 +2403,7 @@ async fn test_error_batch_partial_failure() {
     for i in 0..8 { fixtures.create_simple_midi(&format!("v_{}.mid", i)).await; }
     for i in 0..4 { fixtures.create_invalid_midi(&format!("inv_{}.mid", i)).await; }
     let state = AppState { database: Database::new(&db.database_url()).await.expect("DB") };
-    let result = import_directory_impl(fixtures.path().to_str().unwrap().to_string(), false, None, state, MockWindow::new()).await;
+    let result = import_directory_impl(fixtures.path().to_str().unwrap().to_string(), false, None, &state).await;
     assert!(result.is_ok());
     let summary = result.unwrap();
     assert_eq!(summary.total_files, 12);
@@ -2421,7 +2420,7 @@ async fn test_error_file_size_limits() {
     let state = AppState { database: Database::new(&db.database_url()).await.expect("DB") };
     let meta = tokio::fs::metadata(&file_path).await.expect("Meta");
     assert!(meta.len() < 2_147_483_648);
-    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, state, MockWindow::new()).await;
+    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state).await;
     assert!(result.is_ok());
     db.cleanup().await;
 }
@@ -2433,7 +2432,7 @@ async fn test_error_progress_events() {
     fixtures.create_midi_files(50).await;
     let window = MockWindow::new();
     let state = AppState { database: Database::new(&db.database_url()).await.expect("DB") };
-    let result = import_directory_impl(fixtures.path().to_str().unwrap().to_string(), false, None, state, window.clone()).await;
+    let result = import_directory_impl(fixtures.path().to_str().unwrap().to_string(), false, None, &state).await;
     assert!(result.is_ok());
     assert!(window.event_count("import-progress").await >= 2);
     db.cleanup().await;
@@ -2448,7 +2447,7 @@ async fn test_error_large_file() {
     let file_path = fixtures.temp_dir.path().join("large.mid");
     tokio::fs::write(&file_path, large).await.expect("Write");
     let state = AppState { database: Database::new(&db.database_url()).await.expect("DB") };
-    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, state, MockWindow::new()).await;
+    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state).await;
     assert!(result.is_ok());
     db.cleanup().await;
 }
@@ -2460,7 +2459,7 @@ async fn test_error_directory_not_file() {
     let dir = fixtures.temp_dir.path().join("dir");
     tokio::fs::create_dir(&dir).await.expect("Mkdir");
     let state = AppState { database: Database::new(&db.database_url()).await.expect("DB") };
-    let result = import_single_file_impl(dir.to_str().unwrap().to_string(), None, state, MockWindow::new()).await;
+    let result = import_single_file_impl(dir.to_str().unwrap().to_string(), None, &state).await;
     assert!(result.is_err());
     db.cleanup().await;
 }

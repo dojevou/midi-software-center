@@ -1021,8 +1021,8 @@ async fn test_workflow_concurrent_import_same_file() {
     fs::write(&file_path, &create_midi_bytes(120, "C_MAJOR")).await.unwrap();
 
     let path_str = file_path.to_str().unwrap().to_string();
-    let r1 = import_single_file_impl(path_str.clone());
-    let r2 = import_single_file_impl(path_str.clone());
+    let r1 = import_single_file_impl(path_str.clone(), None, &state);
+    let r2 = import_single_file_impl(path_str.clone(), None, &state);
 
     let (result1, result2) = tokio::join!(r1, r2);
 
@@ -1037,7 +1037,7 @@ async fn test_workflow_empty_tag_list() {
     let file_path = temp_dir.path().join("empty_tags.mid");
     fs::write(&file_path, &create_midi_bytes(120, "C_MAJOR")).await.unwrap();
 
-    let result = import_single_file_impl(file_path.to_str().unwrap().to_string()).await.unwrap();
+    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state).await.unwrap();
     let tags = add_tags_to_file_impl(result.id, vec![], &state).await;
 
     assert!(tags.is_ok(), "Empty tag list should be handled gracefully");
@@ -1051,7 +1051,7 @@ async fn test_workflow_delete_with_tags() {
     let file_path = temp_dir.path().join("delete_tagged.mid");
     fs::write(&file_path, &create_midi_bytes(120, "C_MAJOR")).await.unwrap();
 
-    let result = import_single_file_impl(file_path.to_str().unwrap().to_string()).await.unwrap();
+    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state).await.unwrap();
     add_tags_to_file_impl(result.id, vec!["test".to_string()], &state).await.unwrap();
 
     let delete_result = delete_file(&state, result.id).await;
@@ -1067,7 +1067,7 @@ async fn test_workflow_search_after_analysis() {
     fs::write(&file_path, &create_midi_bytes(140, "G_MAJOR")).await.unwrap();
 
     let _ = import_and_analyze_file(&state, file_path.to_str().unwrap().to_string()).await;
-    let search_results = search_files_impl("".to_string(), Some(120), Some(160), None).await;
+    let search_results = search_files_impl("".to_string(), SearchFilters { min_bpm: Some(120), max_bpm: Some(160), keys: None }, 0, 10, &state).await;
 
     assert!(search_results.is_ok(), "Search after analysis should succeed");
     cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
@@ -1080,7 +1080,7 @@ async fn test_workflow_duplicate_tag_deduplication() {
     let file_path = temp_dir.path().join("dup_tags.mid");
     fs::write(&file_path, &create_midi_bytes(120, "C_MAJOR")).await.unwrap();
 
-    let result = import_single_file_impl(file_path.to_str().unwrap().to_string()).await.unwrap();
+    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state).await.unwrap();
     let tags = add_tags_to_file_impl(result.id, vec!["tag".to_string(), "tag".to_string()], &state).await.unwrap();
 
     assert_eq!(tags.len(), 1, "Duplicate tags should be deduplicated");
@@ -1094,7 +1094,7 @@ async fn test_workflow_analysis_on_corrupted() {
     let file_path = temp_dir.path().join("corrupt.mid");
     fs::write(&file_path, b"NOT_VALID_MIDI").await.unwrap();
 
-    let import_result = import_single_file_impl(file_path.to_str().unwrap().to_string()).await;
+    let import_result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state).await;
 
     assert!(import_result.is_err(), "Corrupted file should fail gracefully");
     cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
@@ -1111,7 +1111,7 @@ async fn test_workflow_rapid_fire_operations() {
         let temp_path = temp_dir.path().join(format!("rapid{}.mid", i));
         let handle = tokio::spawn(async move {
             let _ = fs::write(&temp_path, &create_midi_bytes(100 + i * 10, "C_MAJOR")).await;
-            import_single_file_impl(tauri::State(&state_clone), temp_path.to_str().unwrap().to_string()).await
+            import_single_file_impl(temp_path.to_str().unwrap().to_string(), None, &state_clone).await
         });
         handles.push(handle);
     }
@@ -1132,10 +1132,10 @@ async fn test_workflow_large_batch_consistency() {
         fs::write(&file_path, &create_midi_bytes(100 + i as u32 * 5, "C_MAJOR")).await.unwrap();
     }
 
-    let batch_result = import_directory(
-        &state,
+    let batch_result = import_directory_impl(
+        
         temp_dir.path().to_str().unwrap().to_string(),
-        false,
+        false, None, &state
     ).await;
 
     assert!(batch_result.is_ok(), "Batch import should complete");
@@ -1160,7 +1160,7 @@ async fn test_workflow_search_filter_combination() {
         let _ = import_and_analyze_file(&state, file_path.to_str().unwrap().to_string()).await;
     }
 
-    let results = search_files_impl("".to_string(), Some(120), Some(160), Some(vec!["C_MAJOR".to_string()])).await;
+    let results = search_files_impl("".to_string(), SearchFilters { min_bpm: Some(120), max_bpm: Some(160), keys: Some(vec!["C_MAJOR".to_string()]) }, 0, 10, &state).await;
     assert!(results.is_ok(), "Complex filter search should succeed");
     cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }

@@ -28,6 +28,7 @@
 //!
 //! Total: 74 tests
 
+mod common;
 use midi_pipeline::db::repositories::tag_repository::{TagRepository, TagRepositoryError};
 use midi_pipeline::db::repositories::FileRepository;
 use midi_pipeline::db::models::NewFile;
@@ -1608,7 +1609,7 @@ async fn test_get_files_by_tags_and_performance() {
         let repo = TagRepository::new(&pool);
 
         // Remove tag that was never added - should not error
-        let result = repo.remove_tag_from_file(&pool, file_id, "nonexistent").await;
+        let result = repo.remove_tag_from_file(file_id, "nonexistent").await;
         assert!(result.is_ok(), "Removing non-existent tag should be idempotent");
 
         cleanup_database(&pool).await.expect("Cleanup failed");
@@ -1683,7 +1684,7 @@ async fn test_get_files_by_tags_and_performance() {
         cleanup_database(&pool).await.expect("Cleanup failed");
 
         let repo = TagRepository::new(&pool);
-        let result = repo.get_popular_tags(&pool, -10).await;
+        let result = repo.get_popular_tags(-10).await;
         assert!(result.is_err(), "Negative limit should fail");
 
         cleanup_database(&pool).await.expect("Cleanup failed");

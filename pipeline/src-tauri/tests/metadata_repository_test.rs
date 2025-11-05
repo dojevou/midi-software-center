@@ -25,6 +25,7 @@
 //! - Upsert pattern (ON CONFLICT DO UPDATE)
 //! - 11 optional fields requiring NULL handling
 
+mod common;
 use midi_pipeline::db::repositories::MetadataRepository;
 use midi_pipeline::db::models::{MusicalMetadata, NewMusicalMetadata};
 use sqlx::PgPool;
