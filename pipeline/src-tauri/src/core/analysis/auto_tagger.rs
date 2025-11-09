@@ -49,7 +49,7 @@ pub struct AutoTagger {
 }
 
 /// Tag with category, confidence, and priority (enhanced for database integration)
-#[derive(Debug, Clone, PartialEq)]
+#[derive(Debug, Clone)]
 pub struct Tag {
     pub name: String,
     pub category: Option<String>,
@@ -95,12 +95,20 @@ impl Tag {
     }
 }
 
-// Manual Hash implementation (since we removed auto-derive due to f64)
+// Manual Hash and PartialEq implementations for deduplication
+// Tags are considered equal if name/category match, regardless of confidence/priority/detection_method
 impl std::hash::Hash for Tag {
     fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
         self.name.hash(state);
         self.category.hash(state);
         // Don't hash confidence/priority for deduplication
+    }
+}
+
+impl PartialEq for Tag {
+    fn eq(&self, other: &Self) -> bool {
+        self.name == other.name && self.category == other.category
+        // Explicitly ignore confidence/priority/detection_method for deduplication
     }
 }
 
@@ -1185,7 +1193,7 @@ mod tests {
         // Should have instrument
         assert!(tag_names.iter().any(|t| t.starts_with("instrument:")));
         // Should have BPM
-        assert!(tag_names.contains(&"bpm:128".to_string()));
+        assert!(tag_names.contains(&"tempo:128".to_string()));
         // Should have key
         assert!(tag_names.contains(&"key:c".to_string()));
     }
@@ -1459,7 +1467,7 @@ mod tests {
         let tags = tagger.extract_tags("", "001 170 BPM E.mid", &[], Some(170.0), None);
         let tag_names: Vec<String> = tags.iter().map(|t| t.full_name()).collect();
 
-        assert!(tag_names.contains(&"bpm:170".to_string()));
+        assert!(tag_names.contains(&"tempo:170".to_string()));
     }
 
     #[test]
@@ -1471,7 +1479,7 @@ mod tests {
         let tag_names: Vec<String> = tags.iter().map(|t| t.full_name()).collect();
 
         // Should round to 129
-        assert!(tag_names.contains(&"bpm:129".to_string()));
+        assert!(tag_names.contains(&"tempo:129".to_string()));
     }
 
     #[test]
@@ -1482,7 +1490,7 @@ mod tests {
         let tag_names: Vec<String> = tags.iter().map(|t| t.full_name()).collect();
 
         // No BPM tag should be added
-        assert!(!tag_names.iter().any(|t| t.starts_with("bpm:")));
+        assert!(!tag_names.iter().any(|t| t.starts_with("tempo:")));
     }
 
     #[test]
@@ -1559,7 +1567,7 @@ mod tests {
         let tags = tagger.extract_tags("", "174bpm C.mid", &[], Some(174.0), Some("C"));
         let tag_names: Vec<String> = tags.iter().map(|t| t.full_name()).collect();
 
-        assert!(tag_names.contains(&"bpm:174".to_string()));
+        assert!(tag_names.contains(&"tempo:174".to_string()));
         assert!(tag_names.contains(&"key:c".to_string()));
     }
 
@@ -1570,12 +1578,12 @@ mod tests {
         // Very slow tempo
         let tags1 = tagger.extract_tags("", "file.mid", &[], Some(40.0), None);
         let names1: Vec<String> = tags1.iter().map(|t| t.full_name()).collect();
-        assert!(names1.contains(&"bpm:40".to_string()));
+        assert!(names1.contains(&"tempo:40".to_string()));
 
         // Very fast tempo
         let tags2 = tagger.extract_tags("", "file.mid", &[], Some(300.0), None);
         let names2: Vec<String> = tags2.iter().map(|t| t.full_name()).collect();
-        assert!(names2.contains(&"bpm:300".to_string()));
+        assert!(names2.contains(&"tempo:300".to_string()));
     }
 
     #[test]
@@ -1634,7 +1642,7 @@ mod tests {
         let tag_names: Vec<String> = tags.iter().map(|t| t.full_name()).collect();
 
         // Should have BPM, key
-        assert!(tag_names.contains(&"bpm:174".to_string()));
+        assert!(tag_names.contains(&"tempo:174".to_string()));
         assert!(tag_names.contains(&"key:c".to_string()));
         // May or may not have instrument tags depending on matching
         // Note: "Zenhiser" is not in manufacturer_keywords, so it won't be extracted
@@ -1655,7 +1663,7 @@ mod tests {
 
         let tag_names: Vec<String> = tags.iter().map(|t| t.full_name()).collect();
 
-        assert!(tag_names.contains(&"bpm:140".to_string()));
+        assert!(tag_names.contains(&"tempo:140".to_string()));
         assert!(tag_names.iter().any(|t| t.contains("riser") || t.contains("fx")));
     }
 
@@ -1674,7 +1682,7 @@ mod tests {
 
         let tag_names: Vec<String> = tags.iter().map(|t| t.full_name()).collect();
 
-        assert!(tag_names.contains(&"bpm:140".to_string()));
+        assert!(tag_names.contains(&"tempo:140".to_string()));
         assert!(tag_names.contains(&"key:am".to_string()));
         assert!(tag_names.contains(&"genre:ambient".to_string()));
         // May have instrument tags
@@ -1700,7 +1708,7 @@ mod tests {
         assert!(tag_names.iter().any(|t| t.contains("house"))); // deephouse or house
         assert!(tag_names.contains(&"deep".to_string())); // Style tag
         assert!(tag_names.iter().any(|t| t.contains("kick")));
-        assert!(tag_names.contains(&"bpm:128".to_string()));
+        assert!(tag_names.contains(&"tempo:128".to_string()));
         assert!(tag_names.contains(&"key:c".to_string()));
     }
 
@@ -1722,7 +1730,7 @@ mod tests {
         assert!(tag_names.contains(&"genre:techno".to_string()));
         assert!(tag_names.contains(&"dark".to_string()));
         assert!(tag_names.contains(&"instrument:bass".to_string()));
-        assert!(tag_names.contains(&"bpm:125".to_string()));
+        assert!(tag_names.contains(&"tempo:125".to_string()));
         assert!(tag_names.contains(&"key:am".to_string()));
     }
 
@@ -1779,7 +1787,7 @@ mod tests {
         assert!(tag_names.contains(&"brand:cymatics".to_string()));
         assert!(tag_names.contains(&"heavy".to_string()));
         assert!(tag_names.contains(&"instrument:snare".to_string()));
-        assert!(tag_names.contains(&"bpm:140".to_string()));
+        assert!(tag_names.contains(&"tempo:140".to_string()));
         assert!(tag_names.contains(&"key:e".to_string()));
     }
 
