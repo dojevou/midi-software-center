@@ -1021,3 +1021,432 @@ fn test_generate_drum_tags_detection_methods() {
 // - Phase 5: Integration Tests (10 tests)
 // - Phase 6: Real-World Validation (1000+ files)
 // ============================================================================
+
+// ============================================================================
+// PHASE 5: AUTOTAGGER INTEGRATION TESTS
+// ============================================================================
+// Tests for integration with AutoTagger (v2.1 enhancement)
+// Validates backward compatibility, drum tag generation, and tag merging
+// ============================================================================
+
+use super::super::auto_tagger::AutoTagger;
+
+/// Test backward compatibility - extract_tags with None works as before
+#[test]
+fn test_autotagger_backward_compatibility_none_parameter() {
+    let auto_tagger = AutoTagger::new().unwrap();
+
+    // Call extract_tags with None for midi_file (v2.0 behavior)
+    let tags = auto_tagger.extract_tags(
+        "/music/drums/174_Gmin_Bass.mid",
+        "174_Gmin_Bass.mid",
+        &["Drums".to_string()],
+        Some(174.0),
+        Some("G minor"),
+        None, // v2.0 compatibility
+    );
+
+    // Should still generate tags from path, filename, instruments, BPM, key
+    assert!(!tags.is_empty(), "Should generate tags even without MIDI file");
+
+    // Should have BPM tag
+    assert!(tags.iter().any(|t| t.name == "174"), "Should have BPM tag");
+
+    // Should have tempo range tag
+    assert!(tags.iter().any(|t| t.name == "very-fast"), "Should have tempo range tag");
+
+    // Should have key tag
+    assert!(tags.iter().any(|t| t.name == "g minor"), "Should have key tag");
+
+    // Should have drums tag from instruments
+    assert!(tags.iter().any(|t| t.name == "drums"), "Should have drums tag from instruments");
+
+    // Should NOT have drum-specific tags (no MIDI file provided)
+    assert!(!tags.iter().any(|t| t.name == "kick"), "Should not have kick tag without MIDI");
+    assert!(!tags.iter().any(|t| t.name == "snare"), "Should not have snare tag without MIDI");
+    assert!(!tags.iter().any(|t| t.name == "closed-hat"), "Should not have cymbal tags without MIDI");
+}
+
+/// Test drum file detection and tag generation with MidiFile
+#[test]
+fn test_autotagger_drum_file_generates_drum_tags() {
+    let auto_tagger = AutoTagger::new().unwrap();
+
+    // Create a drum MIDI file
+    let midi_file = create_drum_midi_file();
+
+    // Call extract_tags with midi_file (v2.1 enhancement)
+    let tags = auto_tagger.extract_tags(
+        "/music/drums/174_Gmin_Bass.mid",
+        "174_Gmin_Bass.mid",
+        &["Drums".to_string()],
+        Some(174.0),
+        Some("G minor"),
+        Some(&midi_file),
+    );
+
+    // Should have standard tags
+    assert!(!tags.is_empty(), "Should generate tags");
+
+    // Should have drum-specific tags from MIDI analysis
+    assert!(tags.iter().any(|t| t.name == "kick"), "Should have kick tag from MIDI");
+    assert!(tags.iter().any(|t| t.name == "snare"), "Should have snare tag from MIDI");
+    assert!(tags.iter().any(|t| t.name == "hihat"), "Should have hihat tag from MIDI");
+    assert!(tags.iter().any(|t| t.name == "closed-hat"), "Should have closed-hat cymbal tag");
+
+    // Should have drums tag (from channel 10 detection)
+    assert!(tags.iter().any(|t| t.name == "drums"), "Should have drums tag from channel-10 detection");
+}
+
+/// Test non-drum file handling - non-drum files don't get drum tags
+#[test]
+fn test_autotagger_non_drum_file_no_drum_tags() {
+    let auto_tagger = AutoTagger::new().unwrap();
+
+    // Create a non-drum MIDI file (piano on channel 0)
+    let midi_file = create_piano_midi_file();
+
+    // Call extract_tags with non-drum midi_file
+    let tags = auto_tagger.extract_tags(
+        "/music/piano/Piano_Melody.mid",
+        "Piano_Melody.mid",
+        &["Piano".to_string()],
+        Some(120.0),
+        Some("C major"),
+        Some(&midi_file),
+    );
+
+    // Should have standard tags
+    assert!(!tags.is_empty(), "Should generate tags");
+
+    // Should NOT have drum-specific tags (not a drum file)
+    assert!(!tags.iter().any(|t| t.name == "kick"), "Should not have kick tag");
+    assert!(!tags.iter().any(|t| t.name == "snare"), "Should not have snare tag");
+    assert!(!tags.iter().any(|t| t.name == "hihat"), "Should not have hihat tag");
+    assert!(!tags.iter().any(|t| t.name == "closed-hat"), "Should not have cymbal tags");
+    assert!(!tags.iter().any(|t| t.name == "channel-10"), "Should not have channel-10 tag");
+}
+
+/// Test tag deduplication - HashSet properly deduplicates drum tags
+#[test]
+fn test_autotagger_tag_deduplication() {
+    let auto_tagger = AutoTagger::new().unwrap();
+
+    // Create a drum MIDI file
+    let midi_file = create_drum_midi_file();
+
+    // Call extract_tags with "drums" in both filename AND instruments
+    // This should trigger potential duplicates
+    let tags = auto_tagger.extract_tags(
+        "/music/drums/DrumGroove_174bpm.mid",
+        "DrumGroove_174bpm.mid", // "drums" in filename
+        &["Drums".to_string()],   // "drums" in instruments
+        Some(174.0),
+        None,
+        Some(&midi_file),
+    );
+
+    // Count "drums" tags - should only have ONE due to HashSet deduplication
+    let drums_count = tags.iter().filter(|t| t.name == "drums").count();
+    assert_eq!(drums_count, 1, "Should deduplicate 'drums' tag");
+
+    // Count "174" tags - should only have ONE
+    let bpm_count = tags.iter().filter(|t| t.name == "174").count();
+    assert_eq!(bpm_count, 1, "Should deduplicate BPM tag");
+}
+
+/// Test full workflow with all drum features enabled
+#[test]
+fn test_autotagger_full_drum_workflow() {
+    let auto_tagger = AutoTagger::new().unwrap();
+
+    // Create a comprehensive drum MIDI file with all features
+    let midi_file = create_comprehensive_drum_midi_file();
+
+    // Call extract_tags with all parameters
+    let tags = auto_tagger.extract_tags(
+        "/music/drums/9-8_Swing_Groove_174bpm.mid",
+        "9-8_Swing_Groove_174bpm.mid",
+        &["Drums".to_string()],
+        Some(174.0),
+        Some("G minor"),
+        Some(&midi_file),
+    );
+
+    // Should have standard tags
+    assert!(tags.iter().any(|t| t.name == "174"), "Should have BPM");
+    assert!(tags.iter().any(|t| t.name == "g minor"), "Should have key");
+    assert!(tags.iter().any(|t| t.name == "drums"), "Should have drums tag");
+
+    // Should have drum-specific tags
+    assert!(tags.iter().any(|t| t.name == "kick"), "Should have kick");
+    assert!(tags.iter().any(|t| t.name == "snare"), "Should have snare");
+    assert!(tags.iter().any(|t| t.name == "hihat"), "Should have hihat");
+
+    // Should have cymbal tags
+    assert!(tags.iter().any(|t| t.name == "closed-hat"), "Should have closed-hat");
+    assert!(tags.iter().any(|t| t.name == "ride"), "Should have ride");
+    assert!(tags.iter().any(|t| t.name == "crash"), "Should have crash");
+
+    // Should have time signature from MIDI meta event
+    assert!(tags.iter().any(|t| t.name == "9-8"), "Should have time signature");
+
+    // Should have pattern type from filename
+    assert!(tags.iter().any(|t| t.name == "groove"), "Should have pattern type");
+
+    // Should have rhythmic feel from filename
+    assert!(tags.iter().any(|t| t.name == "swing"), "Should have rhythmic feel");
+
+    // Should have drums tag (from channel 10 detection)
+    assert!(tags.iter().any(|t| t.name == "drums"), "Should have drums tag from channel-10 detection");
+}
+
+/// Test tag metadata - drum tags have correct categories
+#[test]
+fn test_autotagger_drum_tag_categories() {
+    let auto_tagger = AutoTagger::new().unwrap();
+
+    let midi_file = create_drum_midi_file();
+
+    let tags = auto_tagger.extract_tags(
+        "/music/drums/Groove_174bpm.mid",
+        "Groove_174bpm.mid",
+        &["Drums".to_string()],
+        Some(174.0),
+        None,
+        Some(&midi_file),
+    );
+
+    // Find specific drum tags and check their categories
+    let kick_tag = tags.iter().find(|t| t.name == "kick");
+    let snare_tag = tags.iter().find(|t| t.name == "snare");
+    let hihat_tag = tags.iter().find(|t| t.name == "hihat");
+    let groove_tag = tags.iter().find(|t| t.name == "groove");
+
+    // Drum instrument tags should have "instrument" category
+    if let Some(tag) = kick_tag {
+        assert_eq!(tag.category.as_deref(), Some("instrument"), "Kick should be instrument category");
+    }
+    if let Some(tag) = snare_tag {
+        assert_eq!(tag.category.as_deref(), Some("instrument"), "Snare should be instrument category");
+    }
+    if let Some(tag) = hihat_tag {
+        assert_eq!(tag.category.as_deref(), Some("instrument"), "Hihat should be instrument category");
+    }
+
+    // Pattern type tags should have "pattern-type" category
+    if let Some(tag) = groove_tag {
+        assert_eq!(tag.category.as_deref(), Some("pattern-type"), "Groove should be pattern-type category");
+    }
+}
+
+/// Test tag metadata - drum tags have correct confidence scores
+#[test]
+fn test_autotagger_drum_tag_confidence_scores() {
+    let auto_tagger = AutoTagger::new().unwrap();
+
+    let midi_file = create_drum_midi_file();
+
+    let tags = auto_tagger.extract_tags(
+        "/music/drums/Groove.mid",
+        "Groove.mid",
+        &["Drums".to_string()],
+        None,
+        None,
+        Some(&midi_file),
+    );
+
+    // All drum tags should have confidence in valid range (0.60-0.95)
+    for tag in tags.iter().filter(|t| {
+        t.name == "kick" || t.name == "snare" || t.name == "hihat" ||
+        t.name == "closed-hat" || t.name == "drums"
+    }) {
+        assert!(tag.confidence >= 0.60 && tag.confidence <= 0.95,
+            "Tag '{}' confidence {} should be in range 0.60-0.95",
+            tag.name, tag.confidence);
+    }
+}
+
+/// Test tag metadata - drum tags have correct priority ordering
+#[test]
+fn test_autotagger_drum_tag_priorities() {
+    let auto_tagger = AutoTagger::new().unwrap();
+
+    let midi_file = create_drum_midi_file();
+
+    let tags = auto_tagger.extract_tags(
+        "/music/drums/Groove.mid",
+        "Groove.mid",
+        &["Drums".to_string()],
+        None,
+        None,
+        Some(&midi_file),
+    );
+
+    // All drum tags should have priority in valid range (10-90)
+    for tag in tags.iter().filter(|t| {
+        t.name == "kick" || t.name == "snare" || t.name == "hihat" ||
+        t.name == "drums"
+    }) {
+        assert!(tag.priority >= 10 && tag.priority <= 90,
+            "Tag '{}' priority {} should be in range 10-90",
+            tag.name, tag.priority);
+    }
+}
+
+/// Test tag metadata - drum tags have correct detection methods
+#[test]
+fn test_autotagger_drum_tag_detection_methods() {
+    let auto_tagger = AutoTagger::new().unwrap();
+
+    let midi_file = create_drum_midi_file();
+
+    let tags = auto_tagger.extract_tags(
+        "/music/drums/Groove.mid",
+        "Groove.mid",
+        &["Drums".to_string()],
+        None,
+        None,
+        Some(&midi_file),
+    );
+
+    // Valid detection methods for drum tags
+    let valid_methods = vec![
+        "midi_channel_10", "midi_notes", "midi_meta_event",
+        "filename_exact", "filename_bpm", "time_sig_derived",
+        "midi_pattern_analysis", "cymbal_notes", "midi_drum_notes"
+    ];
+
+    // All drum tags should have valid detection methods
+    for tag in tags.iter().filter(|t| {
+        t.name == "kick" || t.name == "snare" || t.name == "hihat" ||
+        t.name == "closed-hat" || t.name == "drums"
+    }) {
+        assert!(valid_methods.iter().any(|&m| tag.detection_method.contains(m)),
+            "Tag '{}' has unexpected detection method: {}", tag.name, tag.detection_method);
+    }
+}
+
+/// Test edge case - empty MIDI file
+#[test]
+fn test_autotagger_empty_midi_file() {
+    let auto_tagger = AutoTagger::new().unwrap();
+
+    // Create an empty MIDI file (no events)
+    let midi_file = create_test_midi(vec![]);
+
+    // Should not crash, should handle gracefully
+    let tags = auto_tagger.extract_tags(
+        "/music/empty.mid",
+        "empty.mid",
+        &[],
+        None,
+        None,
+        Some(&midi_file),
+    );
+
+    // Should generate at least filename tags (even if file is empty)
+    // No drum tags should be present
+    assert!(!tags.iter().any(|t| t.name == "kick"), "Empty file should not have kick");
+    assert!(!tags.iter().any(|t| t.name == "snare"), "Empty file should not have snare");
+}
+
+// ============================================================================
+// HELPER FUNCTIONS FOR PHASE 5 TESTS
+// ============================================================================
+
+/// Helper to create a drum MIDI file for testing
+fn create_drum_midi_file() -> MidiFile {
+    let mut events = vec![];
+
+    // Add time signature meta event (9/8) - denominator is power of 2 (2^3 = 8)
+    events.push((0, time_signature(9, 3)));
+
+    // Add drum notes on channel 10 (index 9)
+    // Kick (note 36) - 50 hits
+    for i in 0..50_u32 {
+        events.push((i * 480, note_on(9, 36, 100)));
+    }
+
+    // Snare (note 38) - 40 hits
+    for i in 0..40_u32 {
+        events.push((i * 480, note_on(9, 38, 90)));
+    }
+
+    // Closed Hi-Hat (note 42) - 100 hits
+    for i in 0..100_u32 {
+        events.push((i * 240, note_on(9, 42, 80)));
+    }
+
+    create_test_midi(events)
+}
+
+/// Helper to create a comprehensive drum MIDI file with all features
+fn create_comprehensive_drum_midi_file() -> MidiFile {
+    let mut events = vec![];
+
+    // Add time signature meta event (9/8) - denominator is power of 2 (2^3 = 8)
+    events.push((0, time_signature(9, 3)));
+
+    // Add all drum types on channel 10
+    // Kick (note 36) - 50 hits
+    for i in 0..50_u32 {
+        events.push((i * 480, note_on(9, 36, 100)));
+    }
+
+    // Snare (note 38) - 40 hits
+    for i in 0..40_u32 {
+        events.push((i * 480, note_on(9, 38, 90)));
+    }
+
+    // Closed Hi-Hat (note 42) - 100 hits
+    for i in 0..100_u32 {
+        events.push((i * 240, note_on(9, 42, 80)));
+    }
+
+    // Ride Cymbal (note 51) - 30 hits
+    for i in 0..30_u32 {
+        events.push((i * 480, note_on(9, 51, 70)));
+    }
+
+    // Crash Cymbal (note 49) - 10 hits
+    for i in 0..10_u32 {
+        events.push((i * 1920, note_on(9, 49, 110)));
+    }
+
+    create_test_midi(events)
+}
+
+/// Helper to create a piano (non-drum) MIDI file for testing
+fn create_piano_midi_file() -> MidiFile {
+    let mut events = vec![];
+
+    // Add piano notes on channel 0 (NOT channel 10)
+    // C major scale
+    let mut tick = 0;
+    for note in [60, 62, 64, 65, 67, 69, 71, 72] {
+        // Note on
+        events.push((tick, note_on(0, note, 80)));
+        tick += 480;
+
+        // Note off
+        events.push((tick, note_off(0, note, 0)));
+        tick += 0;
+    }
+
+    create_test_midi(events)
+}
+
+// ============================================================================
+// PHASE 1-5 SUMMARY
+// ============================================================================
+// Total tests: 70
+// - Phase 1 (GM Drum Note Mapping & Channel Detection): 20 tests
+// - Phase 2 (Filename/Path Metadata Extraction): 15 tests
+// - Phase 3 (Pattern Analysis & Technique Detection): 15 tests
+// - Phase 4 (Tag Generation & Integration): 10 tests
+// - Phase 5 (AutoTagger Integration): 10 tests
+//
+// Next phase:
+// - Phase 6: Real-World Validation (1000+ files)
+// ============================================================================

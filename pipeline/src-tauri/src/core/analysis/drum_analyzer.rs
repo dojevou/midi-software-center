@@ -334,9 +334,11 @@ pub fn extract_time_signature_from_meta(midi_file: &MidiFile) -> Option<TimeSign
     for track in &midi_file.tracks {
         for timed_event in &track.events {
             if let Event::TimeSignature { numerator, denominator, .. } = timed_event.event {
+                // MIDI stores denominator as power of 2 (e.g., 3 means 2^3 = 8)
+                // Use saturating_pow to prevent overflow in debug mode
                 return Some(TimeSignature {
                     numerator,
-                    denominator: 2u8.pow(denominator as u32),
+                    denominator: 2u8.saturating_pow(denominator as u32),
                 });
             }
         }

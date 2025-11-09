@@ -159,16 +159,30 @@ impl AutoTagger {
     ) -> Vec<Tag> {
         let mut tags = HashSet::new();
 
-        // 1. Extract from file name
+        // 1. Add drum-specific tags FIRST if MIDI file provided (v2.1 enhancement)
+        //    This ensures drum analyzer tags take precedence over generic path/filename/instrument tags
+        //    Drum analyzer runs first because it provides higher-confidence, MIDI-based detection
+        if let Some(midi) = midi_file {
+            let drum_analysis = drum_analyzer::analyze_drum_midi(midi);
+            if drum_analysis.is_drum_file {
+                tags.extend(drum_analyzer::generate_drum_tags(
+                    &drum_analysis,
+                    file_path,
+                    file_name,
+                ));
+            }
+        }
+
+        // 2. Extract from file name
         tags.extend(self.extract_from_filename(file_name));
 
-        // 2. Extract from folder path
+        // 3. Extract from folder path
         tags.extend(self.extract_from_path(file_path));
 
-        // 3. Extract from MIDI instruments
+        // 4. Extract from MIDI instruments
         tags.extend(self.extract_from_instruments(midi_instruments));
 
-        // 4. Add BPM tag if available (high confidence from analysis)
+        // 5. Add BPM tag if available (high confidence from analysis)
         if let Some(bpm_val) = bpm {
             let bpm_rounded = bpm_val.round() as i32;
             tags.insert(Tag::with_metadata(
@@ -213,18 +227,6 @@ impl AutoTagger {
                     0.80, // Confidence from key detection algorithm
                     40,   // Key priority
                     "key_analysis",
-                ));
-            }
-        }
-
-        // 6. Add drum-specific tags if MIDI file provided (v2.1 enhancement)
-        if let Some(midi) = midi_file {
-            let drum_analysis = drum_analyzer::analyze_drum_midi(midi);
-            if drum_analysis.is_drum_file {
-                tags.extend(drum_analyzer::generate_drum_tags(
-                    &drum_analysis,
-                    file_path,
-                    file_name,
                 ));
             }
         }
@@ -627,7 +629,7 @@ impl AutoTagger {
             "sequence", "seq",
             "backing",
             "construction",
-            "groove",
+            // Note: "groove" removed - now handled by drum analyzer with category "pattern-type"
 
             // Guitar
             "guitar",
@@ -1200,6 +1202,7 @@ mod tests {
             &["Acoustic Bass Drum".to_string()],
             Some(128.0),
             Some("C"),
+            None, // No MIDI file for backward compatibility test
         );
 
         let tag_names: Vec<String> = tags.iter().map(|t| t.full_name()).collect();
@@ -1482,7 +1485,7 @@ mod tests {
         let tagger = AutoTagger::new().unwrap();
 
         // Real example: "001 170 BPM E.mid"
-        let tags = tagger.extract_tags("", "001 170 BPM E.mid", &[], Some(170.0), None);
+        let tags = tagger.extract_tags("", "001 170 BPM E.mid", &[], Some(170.0), None, None);
         let tag_names: Vec<String> = tags.iter().map(|t| t.full_name()).collect();
 
         assert!(tag_names.contains(&"tempo:170".to_string()));
@@ -1493,7 +1496,7 @@ mod tests {
         let tagger = AutoTagger::new().unwrap();
 
         // Real example: BPM detector returns 128.5
-        let tags = tagger.extract_tags("", "kick.mid", &[], Some(128.5), None);
+        let tags = tagger.extract_tags("", "kick.mid", &[], Some(128.5), None, None);
         let tag_names: Vec<String> = tags.iter().map(|t| t.full_name()).collect();
 
         // Should round to 129
@@ -1504,7 +1507,7 @@ mod tests {
     fn test_bpm_tag_none() {
         let tagger = AutoTagger::new().unwrap();
 
-        let tags = tagger.extract_tags("", "kick.mid", &[], None, None);
+        let tags = tagger.extract_tags("", "kick.mid", &[], None, None, None);
         let tag_names: Vec<String> = tags.iter().map(|t| t.full_name()).collect();
 
         // No BPM tag should be added
@@ -1516,7 +1519,7 @@ mod tests {
         let tagger = AutoTagger::new().unwrap();
 
         // Real example: "001 170 BPM E.mid"
-        let tags = tagger.extract_tags("", "001 170 BPM E.mid", &[], None, Some("E"));
+        let tags = tagger.extract_tags("", "001 170 BPM E.mid", &[], None, Some("E"), None);
         let tag_names: Vec<String> = tags.iter().map(|t| t.full_name()).collect();
 
         assert!(tag_names.contains(&"key:e".to_string()));
@@ -1527,7 +1530,7 @@ mod tests {
         let tagger = AutoTagger::new().unwrap();
 
         // Real example: "CS2_140_Am_Behind_The_Photo.mid"
-        let tags = tagger.extract_tags("", "CS2_140_Am_Behind_The_Photo.mid", &[], None, Some("Am"));
+        let tags = tagger.extract_tags("", "CS2_140_Am_Behind_The_Photo.mid", &[], None, Some("Am"), None);
         let tag_names: Vec<String> = tags.iter().map(|t| t.full_name()).collect();
 
         assert!(tag_names.contains(&"key:am".to_string()));
@@ -1538,7 +1541,7 @@ mod tests {
         let tagger = AutoTagger::new().unwrap();
 
         // Real example: "001 BASS LOOP G#.mid"
-        let tags = tagger.extract_tags("", "001 BASS LOOP G#.mid", &[], None, Some("G#"));
+        let tags = tagger.extract_tags("", "001 BASS LOOP G#.mid", &[], None, Some("G#"), None);
         let tag_names: Vec<String> = tags.iter().map(|t| t.full_name()).collect();
 
         assert!(tag_names.contains(&"key:g#".to_string()));
@@ -1549,7 +1552,7 @@ mod tests {
         let tagger = AutoTagger::new().unwrap();
 
         // Real example: "CS2_160_A#m_Belong_Here.mid"
-        let tags = tagger.extract_tags("", "file.mid", &[], None, Some("Bb"));
+        let tags = tagger.extract_tags("", "file.mid", &[], None, Some("Bb"), None);
         let tag_names: Vec<String> = tags.iter().map(|t| t.full_name()).collect();
 
         assert!(tag_names.contains(&"key:bb".to_string()));
@@ -1560,7 +1563,7 @@ mod tests {
         let tagger = AutoTagger::new().unwrap();
 
         // Unknown keys should be filtered out
-        let tags = tagger.extract_tags("", "file.mid", &[], None, Some("Unknown"));
+        let tags = tagger.extract_tags("", "file.mid", &[], None, Some("Unknown"), None);
         let tag_names: Vec<String> = tags.iter().map(|t| t.full_name()).collect();
 
         assert!(!tag_names.iter().any(|t| t.starts_with("key:")));
@@ -1570,7 +1573,7 @@ mod tests {
     fn test_key_tag_none() {
         let tagger = AutoTagger::new().unwrap();
 
-        let tags = tagger.extract_tags("", "file.mid", &[], None, None);
+        let tags = tagger.extract_tags("", "file.mid", &[], None, None, None);
         let tag_names: Vec<String> = tags.iter().map(|t| t.full_name()).collect();
 
         // No key tag should be added
@@ -1582,7 +1585,7 @@ mod tests {
         let tagger = AutoTagger::new().unwrap();
 
         // Real example: "001 Midi 174bpm C - SUBLIMEDNB Zenhiser.mid"
-        let tags = tagger.extract_tags("", "174bpm C.mid", &[], Some(174.0), Some("C"));
+        let tags = tagger.extract_tags("", "174bpm C.mid", &[], Some(174.0), Some("C"), None);
         let tag_names: Vec<String> = tags.iter().map(|t| t.full_name()).collect();
 
         assert!(tag_names.contains(&"tempo:174".to_string()));
@@ -1594,12 +1597,12 @@ mod tests {
         let tagger = AutoTagger::new().unwrap();
 
         // Very slow tempo
-        let tags1 = tagger.extract_tags("", "file.mid", &[], Some(40.0), None);
+        let tags1 = tagger.extract_tags("", "file.mid", &[], Some(40.0), None, None);
         let names1: Vec<String> = tags1.iter().map(|t| t.full_name()).collect();
         assert!(names1.contains(&"tempo:40".to_string()));
 
         // Very fast tempo
-        let tags2 = tagger.extract_tags("", "file.mid", &[], Some(300.0), None);
+        let tags2 = tagger.extract_tags("", "file.mid", &[], Some(300.0), None, None);
         let names2: Vec<String> = tags2.iter().map(|t| t.full_name()).collect();
         assert!(names2.contains(&"tempo:300".to_string()));
     }
@@ -1608,9 +1611,9 @@ mod tests {
     fn test_key_case_normalization() {
         let tagger = AutoTagger::new().unwrap();
 
-        let tags1 = tagger.extract_tags("", "file.mid", &[], None, Some("C#"));
-        let tags2 = tagger.extract_tags("", "file.mid", &[], None, Some("c#"));
-        let tags3 = tagger.extract_tags("", "file.mid", &[], None, Some("C♯")); // Won't match (# only)
+        let tags1 = tagger.extract_tags("", "file.mid", &[], None, Some("C#"), None);
+        let tags2 = tagger.extract_tags("", "file.mid", &[], None, Some("c#"), None);
+        let tags3 = tagger.extract_tags("", "file.mid", &[], None, Some("C♯"), None); // Won't match (# only)
 
         let names1: Vec<String> = tags1.iter().map(|t| t.full_name()).collect();
         let names2: Vec<String> = tags2.iter().map(|t| t.full_name()).collect();
@@ -1655,6 +1658,7 @@ mod tests {
             &["Synth Bass".to_string()],
             Some(174.0),
             Some("C"),
+            None,
         );
 
         let tag_names: Vec<String> = tags.iter().map(|t| t.full_name()).collect();
@@ -1677,6 +1681,7 @@ mod tests {
             &[],
             Some(140.0),
             None,
+            None,
         );
 
         let tag_names: Vec<String> = tags.iter().map(|t| t.full_name()).collect();
@@ -1696,6 +1701,7 @@ mod tests {
             &["Pad Synth".to_string()],
             Some(140.0),
             Some("Am"),
+            None,
         );
 
         let tag_names: Vec<String> = tags.iter().map(|t| t.full_name()).collect();
@@ -1717,6 +1723,7 @@ mod tests {
             &["Acoustic Bass Drum".to_string()],
             Some(128.0),
             Some("C"),
+            None,
         );
 
         let tag_names: Vec<String> = tags.iter().map(|t| t.full_name()).collect();
@@ -1740,6 +1747,7 @@ mod tests {
             &["Synth Bass 1".to_string()],
             Some(125.0),
             Some("Am"),
+            None,
         );
 
         let tag_names: Vec<String> = tags.iter().map(|t| t.full_name()).collect();
@@ -1763,6 +1771,7 @@ mod tests {
             &["Bass Drum".to_string(), "Synth Bass".to_string()],
             None,
             None,
+            None,
         );
 
         // Should deduplicate "bass" tags (using HashSet)
@@ -1779,7 +1788,7 @@ mod tests {
         let tagger = AutoTagger::new().unwrap();
 
         // Minimal information
-        let tags = tagger.extract_tags("", "file.mid", &[], None, None);
+        let tags = tagger.extract_tags("", "file.mid", &[], None, None, None);
 
         // Should return empty or very minimal tags
         assert!(tags.is_empty());
@@ -1796,6 +1805,7 @@ mod tests {
             &["Acoustic Snare".to_string(), "Reverb Snare".to_string()],
             Some(140.0),
             Some("E"),
+            None,
         );
 
         let tag_names: Vec<String> = tags.iter().map(|t| t.full_name()).collect();
@@ -1820,6 +1830,7 @@ mod tests {
             &[],
             None,
             None,
+            None, // No MIDI file for backward compatibility test
         );
 
         // Should handle unicode gracefully (lowercase conversion)
@@ -1834,7 +1845,7 @@ mod tests {
         let tagger = AutoTagger::new().unwrap();
 
         // All sources provide no useful information
-        let tags = tagger.extract_tags("", "", &[], None, None);
+        let tags = tagger.extract_tags("", "", &[], None, None, None);
 
         assert_eq!(tags.len(), 0);
     }
