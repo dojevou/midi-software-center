@@ -1,22 +1,22 @@
-//! Phase 7.2: Performance Regression Tests (10-12 tests)
-//!
-//! Baseline performance benchmarks with assertions to prevent regressions.
-//! All tests include performance bounds and are marked with #[ignore] for
-//! optional execution in CI/CD pipelines.
-//!
-//! Performance Targets:
-//! - Import 10 files: < 2 seconds
-//! - Import 100 files: < 15 seconds
-//! - Import 1000 files: < 120 seconds
-//! - Analyze 100 files: < 30 seconds
-//! - Search 10k database: < 1 second
-//! - Memory for 10k files: < 2GB
-//! - Export 100 files: < 10 seconds
-//! - Realtime playback: No dropouts
-//! - Concurrent 10 tasks: < 45 seconds
-//! - UI responsiveness: < 100ms
-//! - Complex filters: < 2 seconds
-//! - Bulk tag update: < 5 seconds
+   /// Phase 7.2: Performance Regression Tests (10-12 tests)
+   ///
+   /// Baseline performance benchmarks with assertions to prevent regressions.
+   /// All tests include performance bounds and are marked with #[ignore] for
+   /// optional execution in CI/CD pipelines.
+   ///
+   /// Performance Targets:
+   /// - Import 10 files: < 2 seconds
+   /// - Import 100 files: < 15 seconds
+   /// - Import 1000 files: < 120 seconds
+   /// - Analyze 100 files: < 30 seconds
+   /// - Search 10k database: < 1 second
+   /// - Memory for 10k files: < 2GB
+   /// - Export 100 files: < 10 seconds
+   /// - Realtime playback: No dropouts
+   /// - Concurrent 10 tasks: < 45 seconds
+   /// - UI responsiveness: < 100ms
+   /// - Complex filters: < 2 seconds
+   /// - Bulk tag update: < 5 seconds
 
 use midi_pipeline::commands::file_import::{import_single_file, import_directory};
 use midi_pipeline::commands::files::{get_file_count, list_files};

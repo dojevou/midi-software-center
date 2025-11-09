@@ -1,5 +1,5 @@
-//! Search operations repository
-//! Aligned with actual schema from 001_initial_schema.sql
+   /// Search operations repository
+   /// Aligned with actual schema from 001_initial_schema.sql
 
 use crate::db::models::File;
 use sqlx::PgPool;

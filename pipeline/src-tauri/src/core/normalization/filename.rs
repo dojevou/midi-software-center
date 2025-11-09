@@ -1,35 +1,35 @@
-//! Filename normalization utilities for MIDI files.
-//!
-//! This module provides pure functions for normalizing MIDI filenames,
-//! specifically converting `.midi` extensions to `.mid` and replacing
-//! spaces with underscores.
-//!
-//! # Archetype: Trusty Module
-//!
-//! This is a pure logic module with NO side effects:
-//! - ❌ NO file I/O
-//! - ❌ NO database access
-//! - ❌ NO printing/logging
-//! - ✅ Pure functions only
-//! - ✅ Comprehensive tests
-//!
-//! # Examples
-//!
-//! ```
-//! use pipeline::core::normalization::filename::normalize_midi_filename;
-//!
-//! // Extension normalization
-//! let normalized = normalize_midi_filename("song.midi");
-//! assert_eq!(normalized, "song.mid");
-//!
-//! // Space replacement
-//! let normalized = normalize_midi_filename("my song.mid");
-//! assert_eq!(normalized, "my_song.mid");
-//!
-//! // Both transformations
-//! let normalized = normalize_midi_filename("Cool Track.midi");
-//! assert_eq!(normalized, "Cool_Track.mid");
-//! ```
+   /// Filename normalization utilities for MIDI files.
+   ///
+   /// This module provides pure functions for normalizing MIDI filenames,
+   /// specifically converting `.midi` extensions to `.mid` and replacing
+   /// spaces with underscores.
+   ///
+   /// # Archetype: Trusty Module
+   ///
+   /// This is a pure logic module with NO side effects:
+   /// - ❌ NO file I/O
+   /// - ❌ NO database access
+   /// - ❌ NO printing/logging
+   /// - ✅ Pure functions only
+   /// - ✅ Comprehensive tests
+   ///
+   /// # Examples
+   ///
+   /// ```
+   /// use pipeline::core::normalization::filename::normalize_midi_filename;
+   ///
+   /// // Extension normalization
+   /// let normalized = normalize_midi_filename("song.midi");
+   /// assert_eq!(normalized, "song.mid");
+   ///
+   /// // Space replacement
+   /// let normalized = normalize_midi_filename("my song.mid");
+   /// assert_eq!(normalized, "my_song.mid");
+   ///
+   /// // Both transformations
+   /// let normalized = normalize_midi_filename("Cool Track.midi");
+   /// assert_eq!(normalized, "Cool_Track.mid");
+   /// ```
 
 /// Normalize a MIDI filename by converting `.midi` extension to `.mid`
 /// and replacing all spaces with underscores.

@@ -1,21 +1,21 @@
-//! Comprehensive tests for DAW model layer (Phase 4 + Phase 6)
-//!
-//! Tests all model files in daw/src-tauri/src/models/:
-//! - analysis.rs: CompatibleFile, Key, Mode
-//! - error.rs: AppError variants and conversions
-//! - midi_file.rs: MidiFile, FileDetails
-//! - midi.rs: MidiDevice, MidiEvent, MidiNote, MidiPattern, ConnectionStatus
-//! - search.rs: SearchFilters, SearchResponse, Suggestion, FilterOption
-//! - sequencer.rs: Track, TrackProperties, PlaybackPosition, SequencerState
-//!
-//! **PHASE 4: Error Path Testing (21 new tests)**
-//! - SECTION 7: Constraint validation, boundary testing, error scenarios
-//! - Covers MIDI spec compliance (pitch 0-127, velocity 0-127, channels 0-15)
-//! - Tests for field validation gaps and invalid state combinations
-//! - Error coverage: ~22% for DAW models layer
-//!
-//! Coverage target: 90%+ error path testing across all models
-//! Test count: 73 → 94 tests (baseline + error paths)
+   /// Comprehensive tests for DAW model layer (Phase 4 + Phase 6)
+   ///
+   /// Tests all model files in daw/src-tauri/src/models/:
+   /// - analysis.rs: CompatibleFile, Key, Mode
+   /// - error.rs: AppError variants and conversions
+   /// - midi_file.rs: MidiFile, FileDetails
+   /// - midi.rs: MidiDevice, MidiEvent, MidiNote, MidiPattern, ConnectionStatus
+   /// - search.rs: SearchFilters, SearchResponse, Suggestion, FilterOption
+   /// - sequencer.rs: Track, TrackProperties, PlaybackPosition, SequencerState
+   ///
+   /// **PHASE 4: Error Path Testing (21 new tests)**
+   /// - SECTION 7: Constraint validation, boundary testing, error scenarios
+   /// - Covers MIDI spec compliance (pitch 0-127, velocity 0-127, channels 0-15)
+   /// - Tests for field validation gaps and invalid state combinations
+   /// - Error coverage: ~22% for DAW models layer
+   ///
+   /// Coverage target: 90%+ error path testing across all models
+   /// Test count: 73 → 94 tests (baseline + error paths)
 
 use midi_daw::models::*;
 use serde_json;
@@ -1893,46 +1893,46 @@ fn test_connection_status_all_variants() {
 // ============================================================================
 // SECTION 9: COMPREHENSIVE ERROR PATH TESTING (118 TESTS)
 // ============================================================================
-//! Phase 9 Enhancement: Complete error coverage for 100% quality
-//!
-//! **analysis.rs Error Tests (22 tests)**
-//! - CompatibleFile score validation (0-100 range)
-//! - BPM difference boundary testing (-inf to +inf, NaN, infinity)
-//! - BPM multiplier edge cases (zero, negative, overflow)
-//! - Key signature parsing validation (empty, case sensitivity, invalid combinations)
-//! - Mode parsing edge cases (misleading suffixes, long strings)
-//!
-//! **midi_file.rs Error Tests (26 tests)**
-//! - File size boundaries (0, negative, overflow)
-//! - Track count validation (0, negative, overflow)
-//! - Duration violations (0, negative, NaN, infinity)
-//! - BPM violations (0, negative, unrealistic ranges, NaN)
-//! - Note count boundaries
-//! - FileDetails consistency checks
-//!
-//! **midi.rs Error Tests (48 tests - CRITICAL MIDI SPEC COMPLIANCE)**
-//! - Pitch validation (MIDI spec: 0-127)
-//! - Velocity validation (MIDI spec: 0-127)
-//! - Channel validation (MIDI spec: 0-15)
-//! - Controller validation (CC: 0-119, reserved: 120-127)
-//! - Program number validation (0-127)
-//! - Timing validation (negative ticks, overflow)
-//! - Pattern violations (zero TPQN, timing inconsistencies)
-//! - Device validation (empty name, length limits)
-//!
-//! **search.rs Error Tests (12 tests)**
-//! - BPM range validation (min > max, NaN)
-//! - Note range validation (inverted, negative)
-//! - Duration range validation (negative, inverted)
-//! - Pagination validation (negative limit/offset, zero limit)
-//! - Response consistency checks
-//!
-//! **sequencer.rs Error Tests (10 tests)**
-//! - Track channel validation (0-15)
-//! - Track volume validation (0-127)
-//! - Track pan validation (0-127)
-//! - SequencerState validation (zero/negative tempo)
-//! - PlaybackPosition validation (negative values)
+   /// Phase 9 Enhancement: Complete error coverage for 100% quality
+   ///
+   /// **analysis.rs Error Tests (22 tests)**
+   /// - CompatibleFile score validation (0-100 range)
+   /// - BPM difference boundary testing (-inf to +inf, NaN, infinity)
+   /// - BPM multiplier edge cases (zero, negative, overflow)
+   /// - Key signature parsing validation (empty, case sensitivity, invalid combinations)
+   /// - Mode parsing edge cases (misleading suffixes, long strings)
+   ///
+   /// **midi_file.rs Error Tests (26 tests)**
+   /// - File size boundaries (0, negative, overflow)
+   /// - Track count validation (0, negative, overflow)
+   /// - Duration violations (0, negative, NaN, infinity)
+   /// - BPM violations (0, negative, unrealistic ranges, NaN)
+   /// - Note count boundaries
+   /// - FileDetails consistency checks
+   ///
+   /// **midi.rs Error Tests (48 tests - CRITICAL MIDI SPEC COMPLIANCE)**
+   /// - Pitch validation (MIDI spec: 0-127)
+   /// - Velocity validation (MIDI spec: 0-127)
+   /// - Channel validation (MIDI spec: 0-15)
+   /// - Controller validation (CC: 0-119, reserved: 120-127)
+   /// - Program number validation (0-127)
+   /// - Timing validation (negative ticks, overflow)
+   /// - Pattern violations (zero TPQN, timing inconsistencies)
+   /// - Device validation (empty name, length limits)
+   ///
+   /// **search.rs Error Tests (12 tests)**
+   /// - BPM range validation (min > max, NaN)
+   /// - Note range validation (inverted, negative)
+   /// - Duration range validation (negative, inverted)
+   /// - Pagination validation (negative limit/offset, zero limit)
+   /// - Response consistency checks
+   ///
+   /// **sequencer.rs Error Tests (10 tests)**
+   /// - Track channel validation (0-15)
+   /// - Track volume validation (0-127)
+   /// - Track pan validation (0-127)
+   /// - SequencerState validation (zero/negative tempo)
+   /// - PlaybackPosition validation (negative values)
 
 // SUBSECTION 9.1: analysis.rs Error Tests (22 tests)
 #[test]
@@ -2964,13 +2964,13 @@ fn test_playback_position_negative_values() {
 // ============================================================================
 // SECTION 8: Module Documentation Update
 // ============================================================================
-//!
-//! **Phase 9: Complete Error Path Testing & 100% Quality Achievement**
-//! - Section 9 adds 118 comprehensive error path tests
-//! - CRITICAL: Phase 4 error coverage: 22% → 100%
-//! - Total tests: 94 → 212 (+118 new error tests)
-//! - All MIDI spec compliance validated (pitch 0-127, velocity 0-127, channels 0-15, CC 0-119)
-//! - All boundary conditions tested (negative, zero, overflow, NaN, infinity)
-//! - All cross-field constraint violations validated
-//! - Error coverage: 22% → 95%+ for DAW models layer
-//!
+   ///
+   /// **Phase 9: Complete Error Path Testing & 100% Quality Achievement**
+   /// - Section 9 adds 118 comprehensive error path tests
+   /// - CRITICAL: Phase 4 error coverage: 22% → 100%
+   /// - Total tests: 94 → 212 (+118 new error tests)
+   /// - All MIDI spec compliance validated (pitch 0-127, velocity 0-127, channels 0-15, CC 0-119)
+   /// - All boundary conditions tested (negative, zero, overflow, NaN, infinity)
+   /// - All cross-field constraint violations validated
+   /// - Error coverage: 22% → 95%+ for DAW models layer
+   ///

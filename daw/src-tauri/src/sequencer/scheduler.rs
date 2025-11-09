@@ -1,6 +1,6 @@
-//! Event scheduling for sequencer
-//!
-//! Grown-up Script: Manages priority queue of MIDI events for precise playback timing.
+   /// Event scheduling for sequencer
+   ///
+   /// Grown-up Script: Manages priority queue of MIDI events for precise playback timing.
 
 use crate::core::midi::types::MidiMessage;
 use std::cmp::Ordering;

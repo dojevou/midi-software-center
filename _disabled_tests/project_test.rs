@@ -1,11 +1,11 @@
-//! Project management command integration tests (25 tests)
-//!
-//! Tests for project.rs commands covering:
-//! - Loading multiple tracks from database
-//! - Track clearing and management
-//! - Database integration
-//! - Error handling for missing files
-//! - Performance with multiple tracks
+   /// Project management command integration tests (25 tests)
+   ///
+   /// Tests for project.rs commands covering:
+   /// - Loading multiple tracks from database
+   /// - Track clearing and management
+   /// - Database integration
+   /// - Error handling for missing files
+   /// - Performance with multiple tracks
 
 use crate::common::*;
 use midi_daw::commands::AppState;

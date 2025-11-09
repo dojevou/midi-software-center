@@ -1,7 +1,7 @@
-//! Test macros for common testing patterns
-//!
-//! Provides convenience macros for database testing, error handling,
-//! and performance benchmarking in tests.
+   /// Test macros for common testing patterns
+   ///
+   /// Provides convenience macros for database testing, error handling,
+   /// and performance benchmarking in tests.
 
 /// Execute a test within a database transaction that automatically rolls back
 ///

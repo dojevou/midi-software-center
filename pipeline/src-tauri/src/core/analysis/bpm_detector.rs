@@ -1,13 +1,13 @@
-//! BPM Detection Module
-//!
-//! This module provides BPM (Beats Per Minute) detection for MIDI files.
-//! It analyzes tempo change events and provides confidence scores.
-//!
-//! # Archetype: Trusty Module
-//! - Pure functions with no side effects
-//! - No I/O operations
-//! - Highly testable
-//! - Reusable across the application
+   /// BPM Detection Module
+   ///
+   /// This module provides BPM (Beats Per Minute) detection for MIDI files.
+   /// It analyzes tempo change events and provides confidence scores.
+   ///
+   /// # Archetype: Trusty Module
+   /// - Pure functions with no side effects
+   /// - No I/O operations
+   /// - Highly testable
+   /// - Reusable across the application
 
 use midi_library_shared::core::midi::types::{Event, MidiFile};
 

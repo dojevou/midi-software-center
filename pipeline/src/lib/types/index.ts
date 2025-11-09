@@ -108,3 +108,6 @@ export interface ApiError {
   code?: string;
   details?: unknown;
 }
+
+// Re-export tag suggestion types
+export * from './tagSuggestions';

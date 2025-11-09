@@ -1,6 +1,6 @@
-//! Track Editor Undo/Redo Commands - Trusty Module
-//!
-//! Commands for track operations: add/remove/rename tracks, set properties.
+   /// Track Editor Undo/Redo Commands - Trusty Module
+   ///
+   /// Commands for track operations: add/remove/rename tracks, set properties.
 
 use super::core::{Command, UndoRedoError, UndoRedoResult};
 use crate::windows::state::TrackInfo;

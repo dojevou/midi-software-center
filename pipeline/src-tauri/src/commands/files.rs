@@ -152,7 +152,7 @@ pub async fn get_file_count_impl(state: &AppState) -> Result<i64, String> {
 /// ```
 #[tauri::command]
 pub async fn get_file_count(state: State<'_, AppState>) -> Result<i64, String> {
-    get_file_count_impl(&*state).await
+    get_file_count_impl(&state).await
 }
 
 /// Get file details by ID (implementation for tests and reuse)
@@ -226,7 +226,7 @@ pub async fn get_file_details(
     file_id: i64,
     state: State<'_, AppState>,
 ) -> Result<MidiFile, String> {
-    get_file_details_impl(file_id, &*state).await
+    get_file_details_impl(file_id, &state).await
 }
 
 /// Get file by ID (alias for get_file_details for frontend compatibility)
@@ -319,7 +319,7 @@ pub async fn list_files(
     offset: Option<i64>,
     state: State<'_, AppState>,
 ) -> Result<Vec<MidiFile>, String> {
-    list_files_impl(limit, offset, &*state).await
+    list_files_impl(limit, offset, &state).await
 }
 
 /// Get files by category
@@ -459,9 +459,7 @@ pub async fn delete_file(
     Ok(())
 }
 
-/// Update file tags
-///
-// update_file_tags moved to commands/tags.rs to use TagRepository
+// Update file tags moved to commands/tags.rs to use TagRepository
 
 // =============================================================================
 // TESTS - MANAGER ARCHETYPE TESTING

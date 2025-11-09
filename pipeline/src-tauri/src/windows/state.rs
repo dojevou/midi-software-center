@@ -1,7 +1,7 @@
-//! Window state structures and types
-//!
-//! Defines the core data structures for tracking window state,
-//! including window types, positions, and docking information.
+   /// Window state structures and types
+   ///
+   /// Defines the core data structures for tracking window state,
+   /// including window types, positions, and docking information.
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

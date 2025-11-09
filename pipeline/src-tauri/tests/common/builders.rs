@@ -1,4 +1,4 @@
-//! Test data builders with fluent API for easy test setup
+   /// Test data builders with fluent API for easy test setup
 
 use sqlx::PgPool;
 

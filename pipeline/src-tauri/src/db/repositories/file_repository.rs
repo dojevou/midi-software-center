@@ -1,5 +1,5 @@
-//! File repository - CRUD operations for files table
-//! Aligned with actual schema from 001_initial_schema.sql
+   /// File repository - CRUD operations for files table
+   /// Aligned with actual schema from 001_initial_schema.sql
 
 use crate::db::models::{File, NewFile};
 use sqlx::PgPool;

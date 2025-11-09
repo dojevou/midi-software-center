@@ -1,15 +1,39 @@
-//! Auto-Tagging System for MIDI Files
-//!
-//! This module provides intelligent tag extraction from:
-//! - File names (splitting on _, -, space, camelCase)
-//! - Folder paths (manufacturer, genre, category)
-//! - MIDI content (instrument names, track names)
-//!
-//! Tags are categorized as:
-//! - genre:house, genre:techno, etc.
-//! - instrument:kick, instrument:bass, etc.
-//! - brand:vengeance, brand:splice, etc.
-//! - Style tags: deep, dark, melodic, etc.
+   /// Auto-Tagging System for MIDI Files (Enhanced - v2.0)
+   ///
+   /// Based on real-world analysis of 1,566,480 MIDI files from production archives.
+   /// Implements confidence-based tagging with 350+ tag patterns across 10 categories.
+   ///
+   /// **Tag Extraction Sources:**
+   /// - File names (splitting on _, -, space) → confidence 0.85-0.90
+   /// - Folder paths (pack/folder hierarchy) → confidence 0.90-0.95
+   /// - MIDI content (GM instrument names) → confidence 0.75
+   /// - BPM analysis (tempo detection) → confidence 0.80
+   /// - Key analysis (key signature) → confidence 0.80
+   ///
+   /// **Tag Categories with Priorities:**
+   /// - genre (priority 10) - dubstep, house, techno, jazz, hip-hop, etc. (77+ tags)
+   /// - instrument (priority 20) - kick, tabla, djembe, synth, etc. (120+ tags)
+   /// - element (priority 30) - loop, sequence, pattern, etc.
+   /// - key (priority 40) - c, am, g#, etc. (24 keys)
+   /// - tempo (priority 50) - slow, mid-tempo, upbeat, fast, very-fast
+   /// - mood (priority 60) - dark, melodic, energetic, etc.
+   /// - structure (priority 80) - intro, verse, chorus, bridge, breakdown
+   /// - brand (priority 85) - vengeance, ezdrummer, splice, etc. (45+ tags)
+   /// - world (priority 90) - africa, asia, middle-east, etc.
+   ///
+   /// **Confidence Scoring:**
+   /// - Pack-level detection: 0.95 (highest)
+   /// - Folder-level detection: 0.90
+   /// - Filename exact match: 0.90
+   /// - Filename fuzzy match: 0.85
+   /// - BPM/Key analysis: 0.80
+   /// - MIDI GM instruments: 0.75
+   /// - Generic/derived: 0.70
+   ///
+   /// **Detection Methods:**
+   /// - pack_level, folder_level, filename_exact, filename_fuzzy
+   /// - bpm_analysis, bpm_derived, key_analysis, midi_gm
+   /// - filename_generic
 
 use regex::Regex;
 use std::collections::HashSet;
@@ -24,11 +48,14 @@ pub struct AutoTagger {
     split_pattern: Regex,
 }
 
-/// Tag with optional category prefix
-#[derive(Debug, Clone, PartialEq, Eq, Hash)]
+/// Tag with category, confidence, and priority (enhanced for database integration)
+#[derive(Debug, Clone, PartialEq)]
 pub struct Tag {
     pub name: String,
     pub category: Option<String>,
+    pub confidence: f64, // 0.60-0.95 confidence score
+    pub priority: i32,   // 10-90 priority (lower = higher priority)
+    pub detection_method: String,
 }
 
 impl Tag {
@@ -36,6 +63,26 @@ impl Tag {
         Self {
             name: name.into(),
             category: category.map(|c| c.into()),
+            confidence: 0.85, // Default confidence
+            priority: 50,     // Default priority
+            detection_method: "filename".to_string(),
+        }
+    }
+
+    /// Create tag with full metadata
+    pub fn with_metadata(
+        name: impl Into<String>,
+        category: Option<impl Into<String>>,
+        confidence: f64,
+        priority: i32,
+        detection_method: impl Into<String>,
+    ) -> Self {
+        Self {
+            name: name.into(),
+            category: category.map(|c| c.into()),
+            confidence,
+            priority,
+            detection_method: detection_method.into(),
         }
     }
 
@@ -47,6 +94,17 @@ impl Tag {
         }
     }
 }
+
+// Manual Hash implementation (since we removed auto-derive due to f64)
+impl std::hash::Hash for Tag {
+    fn hash<H: std::hash::Hasher>(&self, state: &mut H) {
+        self.name.hash(state);
+        self.category.hash(state);
+        // Don't hash confidence/priority for deduplication
+    }
+}
+
+impl Eq for Tag {}
 
 impl AutoTagger {
     /// Create a new auto-tagger with default keyword dictionaries
@@ -96,17 +154,52 @@ impl AutoTagger {
         // 3. Extract from MIDI instruments
         tags.extend(self.extract_from_instruments(midi_instruments));
 
-        // 4. Add BPM tag if available
+        // 4. Add BPM tag if available (high confidence from analysis)
         if let Some(bpm_val) = bpm {
             let bpm_rounded = bpm_val.round() as i32;
-            tags.insert(Tag::new(bpm_rounded.to_string(), Some("bpm")));
+            tags.insert(Tag::with_metadata(
+                bpm_rounded.to_string(),
+                Some("tempo"),
+                0.80, // Confidence from BPM detection algorithm
+                50,   // Tempo priority
+                "bpm_analysis",
+            ));
+
+            // Add tempo range tags based on BPM
+            let tempo_tag = if bpm_val < 90.0 {
+                Some(("slow", 50))
+            } else if bpm_val < 120.0 {
+                Some(("mid-tempo", 50))
+            } else if bpm_val < 140.0 {
+                Some(("upbeat", 50))
+            } else if bpm_val < 170.0 {
+                Some(("fast", 50))
+            } else {
+                Some(("very-fast", 50))
+            };
+
+            if let Some((tempo_name, priority)) = tempo_tag {
+                tags.insert(Tag::with_metadata(
+                    tempo_name,
+                    Some("tempo"),
+                    0.75, // Derived from BPM
+                    priority,
+                    "bpm_derived",
+                ));
+            }
         }
 
-        // 5. Add key signature tag if available
+        // 5. Add key signature tag if available (high confidence from analysis)
         if let Some(key) = key_signature {
             let key_normalized = key.to_lowercase();
             if key_normalized != "unknown" {
-                tags.insert(Tag::new(key_normalized, Some("key")));
+                tags.insert(Tag::with_metadata(
+                    key_normalized,
+                    Some("key"),
+                    0.80, // Confidence from key detection algorithm
+                    40,   // Key priority
+                    "key_analysis",
+                ));
             }
         }
 
@@ -114,6 +207,7 @@ impl AutoTagger {
     }
 
     /// Extract tags from filename by splitting on common separators
+    /// Returns tags with confidence scores and priorities based on detection method
     fn extract_from_filename(&self, filename: &str) -> Vec<Tag> {
         let mut tags = Vec::new();
 
@@ -137,60 +231,150 @@ impl AutoTagger {
 
             // PRIORITY 1: Check for exact matches first (prevents fuzzy match conflicts)
             if self.genre_keywords.contains(&word_lower) {
-                tags.push(Tag::new(word_lower.clone(), Some("genre")));
+                tags.push(Tag::with_metadata(
+                    word_lower.clone(),
+                    Some("genre"),
+                    0.90, // Exact filename match
+                    10,   // Genre priority
+                    "filename_exact",
+                ));
             } else if self.instrument_keywords.contains(&word_lower) {
-                tags.push(Tag::new(word_lower.clone(), Some("instrument")));
+                tags.push(Tag::with_metadata(
+                    word_lower.clone(),
+                    Some("instrument"),
+                    0.90,
+                    20, // Instrument priority
+                    "filename_exact",
+                ));
             } else if self.manufacturer_keywords.contains(&word_lower) {
-                tags.push(Tag::new(word_lower.clone(), Some("brand")));
+                tags.push(Tag::with_metadata(
+                    word_lower.clone(),
+                    Some("brand"),
+                    0.90,
+                    85, // Library/brand priority
+                    "filename_exact",
+                ));
             } else if self.style_keywords.contains(&word_lower) {
-                tags.push(Tag::new(word_lower.clone(), None::<String>)); // Style tags have no category prefix
+                // Detect category based on style keyword
+                let (category, priority) = if ["intro", "outro", "verse", "chorus", "bridge",
+                    "breakdown", "pre-chorus", "cha", "chb", "ch3", "bkdn", "ta",
+                    "middle-8", "mid-8", "all"].contains(&word_lower.as_str()) {
+                    (Some("structure"), 80) // Song structure priority
+                } else {
+                    (Some("mood"), 60) // Mood/style priority
+                };
+
+                tags.push(Tag::with_metadata(
+                    word_lower.clone(),
+                    category,
+                    0.90,
+                    priority,
+                    "filename_exact",
+                ));
             }
             // PRIORITY 2: Try fuzzy matching only if no exact match found
             else if let Some(matched_genre) = self.fuzzy_match(&word_lower, &self.genre_keywords) {
-                tags.push(Tag::new(matched_genre, Some("genre")));
+                tags.push(Tag::with_metadata(
+                    matched_genre,
+                    Some("genre"),
+                    0.85, // Fuzzy match lower confidence
+                    10,
+                    "filename_fuzzy",
+                ));
             } else if let Some(matched_instrument) =
                 self.fuzzy_match(&word_lower, &self.instrument_keywords)
             {
-                tags.push(Tag::new(matched_instrument, Some("instrument")));
+                tags.push(Tag::with_metadata(
+                    matched_instrument,
+                    Some("instrument"),
+                    0.85,
+                    20,
+                    "filename_fuzzy",
+                ));
             } else if let Some(matched_brand) =
                 self.fuzzy_match(&word_lower, &self.manufacturer_keywords)
             {
-                tags.push(Tag::new(matched_brand, Some("brand")));
+                tags.push(Tag::with_metadata(
+                    matched_brand,
+                    Some("brand"),
+                    0.85,
+                    85,
+                    "filename_fuzzy",
+                ));
             } else if let Some(matched_style) = self.fuzzy_match(&word_lower, &self.style_keywords)
             {
-                tags.push(Tag::new(matched_style, None::<String>)); // Style tags have no category prefix
+                tags.push(Tag::with_metadata(
+                    matched_style,
+                    Some("mood"),
+                    0.85,
+                    60,
+                    "filename_fuzzy",
+                ));
             }
             // PRIORITY 3: Generic tags as fallback
             else if word.len() > 3 && word.chars().all(|c| c.is_alphanumeric()) {
                 // Add as generic tag if it's meaningful (>3 chars, alphanumeric)
-                tags.push(Tag::new(word_lower, None::<String>));
+                tags.push(Tag::with_metadata(
+                    word_lower,
+                    Some("element"),
+                    0.70, // Low confidence for generic
+                    70,   // Technical/generic priority
+                    "filename_generic",
+                ));
             }
         }
 
         tags
     }
 
-    /// Extract tags from folder path
+    /// Extract tags from folder path (pack/folder-level detection)
+    /// Folder-level tags get slightly lower confidence than exact matches
     fn extract_from_path(&self, path: &str) -> Vec<Tag> {
         let mut tags = Vec::new();
 
         // Split path into components
         let parts: Vec<&str> = path.split('/').filter(|s| !s.is_empty()).collect();
 
-        for part in parts {
+        for (idx, part) in parts.iter().enumerate() {
             let part_lower = part.to_lowercase();
+
+            // First folder = pack level (highest confidence: 0.95)
+            // Later folders = sub-genre/category level (confidence: 0.90)
+            let (confidence, method) = if idx == 0 || idx == 1 {
+                (0.95, "pack_level")
+            } else {
+                (0.90, "folder_level")
+            };
 
             // Check against dictionaries
             if let Some(matched_genre) = self.fuzzy_match(&part_lower, &self.genre_keywords) {
-                tags.push(Tag::new(matched_genre, Some("genre")));
+                tags.push(Tag::with_metadata(
+                    matched_genre,
+                    Some("genre"),
+                    confidence,
+                    10,
+                    method,
+                ));
             } else if let Some(matched_instrument) =
                 self.fuzzy_match(&part_lower, &self.instrument_keywords)
             {
-                tags.push(Tag::new(matched_instrument, Some("category")));
+                tags.push(Tag::with_metadata(
+                    matched_instrument,
+                    Some("instrument"),
+                    confidence,
+                    20,
+                    method,
+                ));
             } else if let Some(matched_brand) =
                 self.fuzzy_match(&part_lower, &self.manufacturer_keywords)
             {
-                tags.push(Tag::new(matched_brand, Some("brand")));
+                tags.push(Tag::with_metadata(
+                    matched_brand,
+                    Some("brand"),
+                    confidence,
+                    85,
+                    method,
+                ));
             }
         }
 
@@ -198,6 +382,7 @@ impl AutoTagger {
     }
 
     /// Extract tags from MIDI instrument names
+    /// GM instrument detection gets moderate confidence (0.75)
     fn extract_from_instruments(&self, instruments: &[String]) -> Vec<Tag> {
         let mut tags = Vec::new();
 
@@ -206,7 +391,13 @@ impl AutoTagger {
 
             // Map MIDI GM instrument names to our keywords
             if let Some(matched) = self.fuzzy_match(&inst_lower, &self.instrument_keywords) {
-                tags.push(Tag::new(matched, Some("instrument")));
+                tags.push(Tag::with_metadata(
+                    matched,
+                    Some("instrument"),
+                    0.75, // Moderate confidence for GM instruments
+                    20,
+                    "midi_gm",
+                ));
             }
         }
 
@@ -243,17 +434,13 @@ impl AutoTagger {
 
     fn load_genre_keywords() -> HashSet<String> {
         [
-            "house",
-            "deephouse",
-            "deep_house",
-            "techhouse",
-            "tech_house",
+            // Electronic/EDM (expanded from 1.5M+ file analysis)
+            "house", "deephouse", "deep_house", "deep-house",
+            "techhouse", "tech_house", "tech-house",
             "techno",
-            "trance",
+            "trance", "psy_trance", "psy-trance", "psytrance",
             "dubstep",
-            "dnb",
-            "drum_and_bass",
-            "drumnbass",
+            "dnb", "drum_and_bass", "drumnbass", "drum-and-bass",
             "edm",
             "electro",
             "progressive",
@@ -261,17 +448,51 @@ impl AutoTagger {
             "acid",
             "ambient",
             "breakbeat",
-            "garage",
-            "trap",
-            "hip_hop",
-            "hiphop",
-            "lofi",
-            "chillout",
-            "downtempo",
-            "industrial",
+            "garage", "speed_garage", "speed-garage", "uk-garage",
+            "trap", "melodic_trap", "melodic-trap",
+            "future_bass", "future-bass",
+            "glitch", "idm",
+            "jungle",
             "hardstyle",
             "hardcore",
-            "jungle",
+            "lofi", "lo-fi",
+            "chillout", "chill-out",
+            "downtempo",
+            "industrial",
+
+            // Urban/Contemporary
+            "hip_hop", "hiphop", "hip-hop",
+            "rap",
+            "rnb", "r&b", "r-and-b",
+            "soul",
+            "pop",
+            "disco",
+            "funk",
+
+            // Traditional/Acoustic
+            "jazz",
+            "blues",
+            "rock",
+            "metal",
+            "country",
+            "classical",
+            "cinematic", "film-score",
+            "acoustic",
+
+            // World Music
+            "africa", "african",
+            "asia", "asian",
+            "middle_east", "middle-east",
+            "latin",
+            "world",
+
+            // Sub-genres & styles (from real MIDI collection)
+            "jazzy_hip-hop", "jazzy-hip-hop",
+            "future_rnb", "future-rnb",
+            "liquid_dnb", "liquid-dnb",
+            "neurofunk",
+            "bass-music", "bass_music",
+            "atmospheric",
         ]
         .iter()
         .map(|s| s.to_string())
@@ -280,63 +501,113 @@ impl AutoTagger {
 
     fn load_instrument_keywords() -> HashSet<String> {
         [
-            // Drums
-            "kick",
-            "bass_drum",
-            "bassdrum",
+            // Drums (Western)
+            "kick", "bass_drum", "bassdrum",
             "snare",
-            "hihat",
-            "hat",
-            "clap",
-            "tom",
-            "cymbal",
-            "percussion",
-            "perc",
-            "drum",
-            "drums",
+            "hihat", "hat", "hi-hat",
+            "clap", "handclap",
+            "tom", "toms",
+            "cymbal", "crash", "ride",
+            "percussion", "perc",
+            "drum", "drums",
+            "cowbell",
+            "tambourine",
+            "shaker",
+            "conga", "congas",
+            "bongo", "bongos",
+
+            // World Instruments - African (from real collection)
+            "djembe",
+            "talking_drum", "talking-drum",
+            "dun", "dun-set",
+            "banana_bells", "banana-bells",
+            "shakere",
+            "trash_dun", "trash-dun",
+
+            // World Instruments - Asian (from real collection)
+            "tabla",
+            "dayon", "bayon", // Tabla variations
+            "samul_nori", "samul-nori",
+            "kkwaenggwari",
+            "janggu",
+            "buk", "kkwaenggwari",
+            "rebana",
+            "kendang",
+            "ghatam",
+            "dhol",
+            "korean_woodblock", "korean-woodblock",
+            "korean_cymbal", "korean-cymbal", "mudang-cymbal",
+
+            // World Instruments - Middle Eastern (from real collection)
+            "darabuka",
+            "riq",
+            "duff",
+            "tabal",
+            "tupan",
+            "muzhar",
+            "finger_bells", "finger-bells",
+
             // Bass
             "bass",
-            "sub",
-            "subbass",
+            "sub", "subbass", "sub-bass",
             "reese",
+
             // Synths
-            "pluck",
+            "pluck", "plucked",
             "lead",
             "synth",
-            "pad",
-            "chord",
+            "pad", "sub-pad", "strings-pad",
+            "chord", "chords",
             "stab",
-            "arp",
-            "arpeggiated",
-            "melody",
-            "melodic",
+            "arp", "arpeggiated", "arp-loop",
+            "melody", "melodic", "melody-loop",
+
             // Keys
             "piano",
             "keys",
             "organ",
             "rhodes",
             "wurlitzer",
+            "electric_piano", "electric-piano",
+
             // Orchestral
-            "strings",
-            "string",
+            "strings", "string",
             "brass",
             "woodwind",
             "orchestra",
+            "violin", "viola", "cello", "contrabass",
+            "trumpet", "trombone", "horn",
+            "flute", "oboe", "clarinet", "bassoon",
+
             // Vocals
-            "vocal",
+            "vocal", "vocals",
             "vox",
             "voice",
+            "choir",
+
             // FX
-            "fx",
-            "effect",
+            "fx", "effect",
             "riser",
             "impact",
             "sweep",
             "transition",
-            // Loops
+            "zap",
+            "whistle",
+            "waterfalling", "wobbly", "wobble",
+
+            // Loops & Elements
             "loop",
             "pattern",
-            "sequence",
+            "sequence", "seq",
+            "backing",
+            "construction",
+            "groove",
+
+            // Guitar
+            "guitar",
+            "acoustic_guitar", "acoustic-guitar",
+            "electric_guitar", "electric-guitar",
+            "bass_guitar", "bass-guitar",
         ]
         .iter()
         .map(|s| s.to_string())
@@ -345,30 +616,48 @@ impl AutoTagger {
 
     fn load_manufacturer_keywords() -> HashSet<String> {
         [
+            // Sample Pack Manufacturers
             "vengeance",
             "splice",
             "loopmasters",
-            "sample_magic",
-            "samplemagic",
-            "black_octopus",
-            "blackoctopus",
+            "sample_magic", "samplemagic",
+            "black_octopus", "blackoctopus",
             "cymatics",
-            "production_master",
-            "productionmaster",
+            "production_master", "productionmaster",
+            "zero_g", "zero-g",
+            "vir2",
+
+            // Drum Libraries (from Mega Drums Pack analysis)
+            "ezdrummer", "ez_drummer", "ez-drummer",
+            "superior_drummer", "superior-drummer",
+            "groove_monkey", "groove-monkey",
+            "stage_1_drums", "stage-1-drums",
+            "reelfeel_drums", "reelfeel-drums",
+            "la_drum_studio", "la-drum-studio",
+            "nice_beats", "nice-beats",
+            "sly_dunbar", "sly-dunbar",
+            "x_filez", "x-filez",
+
+            // Hardware Manufacturers
             "roland",
             "korg",
             "moog",
             "arturia",
-            "native_instruments",
+            "native_instruments", "native-instruments",
             "native",
+
+            // Software Synths
             "serum",
             "massive",
             "sylenth",
             "spire",
-            "abletonlive",
-            "ableton",
-            "flstudio",
+
+            // DAWs
+            "abletonlive", "ableton",
+            "flstudio", "fl_studio", "fl-studio",
             "logic",
+            "cubase",
+            "pro_tools", "pro-tools",
         ]
         .iter()
         .map(|s| s.to_string())
@@ -377,6 +666,7 @@ impl AutoTagger {
 
     fn load_style_keywords() -> HashSet<String> {
         [
+            // Mood/Atmosphere
             "dark",
             "melodic",
             "aggressive",
@@ -405,6 +695,42 @@ impl AutoTagger {
             "energetic",
             "chill",
             "relaxed",
+
+            // Song Structure (from Piano Collection analysis)
+            "intro",
+            "outro",
+            "verse", "verse-1", "verse-2", "verse-3",
+            "chorus", "chorus-a", "chorus-b", "chorus-3",
+            "cha", "chb", "ch3", // Short forms
+            "pre-chorus", "prechorus",
+            "bridge",
+            "breakdown", "bkdn",
+            "turnaround", "ta",
+            "middle-8", "mid-8",
+            "all", // Complete arrangement
+
+            // Musical Styles (from Chords Collection)
+            "ballad",
+            "straight",
+            "swing",
+            "shuffle",
+            "waltz",
+            "valse",
+
+            // Psy Trance Descriptors
+            "flowing",
+            "intense",
+            "psychedelic",
+            "hypnotic",
+
+            // Production Styles
+            "phatter",
+            "phunkier",
+            "original",
+            "better-now-style",
+            "sicko-mode-style",
+            "stargazing-style",
+            "in-my-feelings-style",
         ]
         .iter()
         .map(|s| s.to_string())
@@ -769,7 +1095,7 @@ mod tests {
         // Should deduplicate because tags are in a HashSet in extract_tags()
         // But extract_from_filename returns Vec, so we might get duplicates here
         // Let's check behavior
-        assert!(tags.len() > 0);
+        assert!(!tags.is_empty());
 
         // Actually, we're returning Vec<Tag>, not HashSet, so duplicates are possible
         // The deduplication happens in extract_tags() which uses HashSet
@@ -927,7 +1253,7 @@ mod tests {
 
         // Won't extract properly with backslashes (documented limitation)
         // In production, paths should be normalized to forward slashes
-        assert!(tags.len() == 0); // No extraction from Windows paths
+        assert!(tags.is_empty()); // No extraction from Windows paths
     }
 
     #[test]
@@ -1010,7 +1336,7 @@ mod tests {
 
         // Numbers should be ignored (no meaningful tags)
         // This test documents current behavior
-        assert!(tags.len() == 0 || tags.iter().all(|t| !t.name.chars().all(|c| c.is_numeric())));
+        assert!(tags.is_empty() || tags.iter().all(|t| !t.name.chars().all(|c| c.is_numeric())));
     }
 
     // =============================================================================
@@ -1106,7 +1432,7 @@ mod tests {
         let tags = tagger.extract_from_instruments(&instruments);
 
         // Should handle duplicates (extract_tags() uses HashSet for deduplication)
-        assert!(tags.len() > 0);
+        assert!(!tags.is_empty());
     }
 
     #[test]
@@ -1430,7 +1756,7 @@ mod tests {
         let tags = tagger.extract_tags("", "file.mid", &[], None, None);
 
         // Should return empty or very minimal tags
-        assert!(tags.len() == 0);
+        assert!(tags.is_empty());
     }
 
     #[test]
@@ -1496,7 +1822,7 @@ mod tests {
         let tagger = AutoTagger::new().unwrap();
 
         // Verify dictionary is populated
-        assert!(tagger.genre_keywords.len() > 0);
+        assert!(!tagger.genre_keywords.is_empty());
         assert!(tagger.genre_keywords.len() >= 20); // At least 20 genres
 
         // Verify some expected keywords
@@ -1510,7 +1836,7 @@ mod tests {
     fn test_dictionary_instrument_count() {
         let tagger = AutoTagger::new().unwrap();
 
-        assert!(tagger.instrument_keywords.len() > 0);
+        assert!(!tagger.instrument_keywords.is_empty());
         assert!(tagger.instrument_keywords.len() >= 30); // At least 30 instruments
 
         // Verify common instruments
@@ -1525,7 +1851,7 @@ mod tests {
     fn test_dictionary_manufacturer_count() {
         let tagger = AutoTagger::new().unwrap();
 
-        assert!(tagger.manufacturer_keywords.len() > 0);
+        assert!(!tagger.manufacturer_keywords.is_empty());
         assert!(tagger.manufacturer_keywords.len() >= 15); // At least 15 brands
 
         // Verify major brands
@@ -1538,7 +1864,7 @@ mod tests {
     fn test_dictionary_style_count() {
         let tagger = AutoTagger::new().unwrap();
 
-        assert!(tagger.style_keywords.len() > 0);
+        assert!(!tagger.style_keywords.is_empty());
         assert!(tagger.style_keywords.len() >= 20); // At least 20 styles
 
         // Verify common styles
@@ -1552,7 +1878,7 @@ mod tests {
     fn test_dictionary_common_words_count() {
         let tagger = AutoTagger::new().unwrap();
 
-        assert!(tagger.common_words.len() > 0);
+        assert!(!tagger.common_words.is_empty());
         assert!(tagger.common_words.len() >= 10); // At least 10 stopwords
 
         // Verify common stopwords
@@ -1628,11 +1954,11 @@ mod tests {
         let tagger = result.unwrap();
 
         // All dictionaries should be initialized
-        assert!(tagger.genre_keywords.len() > 0);
-        assert!(tagger.instrument_keywords.len() > 0);
-        assert!(tagger.manufacturer_keywords.len() > 0);
-        assert!(tagger.style_keywords.len() > 0);
-        assert!(tagger.common_words.len() > 0);
+        assert!(!tagger.genre_keywords.is_empty());
+        assert!(!tagger.instrument_keywords.is_empty());
+        assert!(!tagger.manufacturer_keywords.is_empty());
+        assert!(!tagger.style_keywords.is_empty());
+        assert!(!tagger.common_words.is_empty());
     }
 
     // =============================================================================
@@ -1649,7 +1975,7 @@ mod tests {
         let tags = tagger.extract_from_filename(long_name);
 
         // Should handle long filenames without crashing
-        assert!(tags.len() > 0);
+        assert!(!tags.is_empty());
     }
 
     #[test]
@@ -1662,7 +1988,7 @@ mod tests {
         let tags = tagger.extract_from_path(deep_path);
 
         // Should handle deep paths
-        assert!(tags.len() > 0);
+        assert!(!tags.is_empty());
         let tag_names: Vec<String> = tags.iter().map(|t| t.full_name()).collect();
         assert!(tag_names.contains(&"brand:vengeance".to_string()));
         assert!(tag_names.contains(&"genre:techno".to_string()));

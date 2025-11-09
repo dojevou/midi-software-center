@@ -1,14 +1,14 @@
-//! Performance Profiling Module
-//!
-//! Comprehensive memory profiling, caching, and rendering optimization.
-//!
-//! # Modules
-//!
-//! - [`query_analyzer`]: Database query profiling and optimization
-//! - [`memory`]: Memory metrics tracking and allocation pools
-//! - [`query_cache`]: Database query result caching (disabled - needs refactoring)
-//! - [`render_metrics`]: UI rendering performance tracking
-//! - [`commands`]: Tauri command implementations
+   /// Performance Profiling Module
+   ///
+   /// Comprehensive memory profiling, caching, and rendering optimization.
+   ///
+   /// # Modules
+   ///
+   /// - [`query_analyzer`]: Database query profiling and optimization
+   /// - [`memory`]: Memory metrics tracking and allocation pools
+   /// - [`query_cache`]: Database query result caching (disabled - needs refactoring)
+   /// - [`render_metrics`]: UI rendering performance tracking
+   /// - [`commands`]: Tauri command implementations
 
 pub mod query_analyzer;
 pub mod memory;

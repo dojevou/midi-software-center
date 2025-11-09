@@ -1,21 +1,21 @@
-//! UI rendering metrics and optimization
-//!
-//! Provides frame timing, FPS tracking, and virtual scrolling metrics
-//! for optimizing DAW UI rendering performance.
-//!
-//! # Architecture
-//!
-//! This is a **Trusty Module** - pure metric calculation with no I/O:
-//! - Frame timing and FPS calculation
-//! - Virtual scrolling viewport tracking
-//! - DOM update batching metrics
-//! - Debounce timing analysis
-//!
-//! # Components
-//!
-//! - [`RenderMetrics`]: Frame timing and FPS tracking
-//! - [`VirtualScrollMetrics`]: Virtual scrolling statistics
-//! - [`DomUpdateMetrics`]: DOM update batching tracking
+   /// UI rendering metrics and optimization
+   ///
+   /// Provides frame timing, FPS tracking, and virtual scrolling metrics
+   /// for optimizing DAW UI rendering performance.
+   ///
+   /// # Architecture
+   ///
+   /// This is a **Trusty Module** - pure metric calculation with no I/O:
+   /// - Frame timing and FPS calculation
+   /// - Virtual scrolling viewport tracking
+   /// - DOM update batching metrics
+   /// - Debounce timing analysis
+   ///
+   /// # Components
+   ///
+   /// - [`RenderMetrics`]: Frame timing and FPS tracking
+   /// - [`VirtualScrollMetrics`]: Virtual scrolling statistics
+   /// - [`DomUpdateMetrics`]: DOM update batching tracking
 
 use std::collections::VecDeque;
 use std::time::Instant;

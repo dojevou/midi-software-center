@@ -1,10 +1,10 @@
-//! Archive Extraction Logic
-//!
-//! # Archetype: Grown-up Script
-//! - Performs I/O operations (file extraction)
-//! - Separates I/O logic from business logic
-//! - Both runnable AND importable
-//! - Returns Result types for error handling
+   /// Archive Extraction Logic
+   ///
+   /// # Archetype: Grown-up Script
+   /// - Performs I/O operations (file extraction)
+   /// - Separates I/O logic from business logic
+   /// - Both runnable AND importable
+   /// - Returns Result types for error handling
 
 use std::fs::{self, File};
 use std::io;

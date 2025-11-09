@@ -1,7 +1,7 @@
-//! Sequencer playback engine
-//!
-//! Grown-up Script: Coordinates playback, timing, and MIDI output.
-//! Integrates TrackManager, EventScheduler, and MidiManager.
+   /// Sequencer playback engine
+   ///
+   /// Grown-up Script: Coordinates playback, timing, and MIDI output.
+   /// Integrates TrackManager, EventScheduler, and MidiManager.
 
 use crate::core::sequencer::timing;
 use crate::midi::MidiManager;

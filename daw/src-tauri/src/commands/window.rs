@@ -1,7 +1,7 @@
-//! Tauri command handlers for DAW windows
-//!
-//! Grown-up Scripts: Expose DAW window operations to frontend.
-//! All commands use proper error handling with Result<T, String>.
+   /// Tauri command handlers for DAW windows
+   ///
+   /// Grown-up Scripts: Expose DAW window operations to frontend.
+   /// All commands use proper error handling with Result<T, String>.
 
 use crate::windows::{
     DAWWindowState, MixerWindowState, PlaybackPosition, PlaybackState, TrackInfo,
@@ -459,8 +459,6 @@ pub async fn reset_daw_state(state: tauri::State<'_, DAWState>) -> Result<(), St
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     // Temporarily disabled - Tauri State mocking needs proper setup
     /*
     fn create_test_state() -> DAWState {

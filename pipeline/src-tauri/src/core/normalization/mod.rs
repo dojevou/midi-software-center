@@ -1,7 +1,7 @@
-//! Filename and path normalization utilities.
-//!
-//! This module provides utilities for normalizing MIDI filenames and paths,
-//! ensuring consistency across the system.
+   /// Filename and path normalization utilities.
+   ///
+   /// This module provides utilities for normalizing MIDI filenames and paths,
+   /// ensuring consistency across the system.
 
 pub mod filename;
 

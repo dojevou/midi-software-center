@@ -1,10 +1,10 @@
-//! Musical analysis modules
-//!
-//! This module provides:
-//! - BPM detection
-//! - Key detection
-//! - Auto-tagging
-//! - Key profile data
+   /// Musical analysis modules
+   ///
+   /// This module provides:
+   /// - BPM detection
+   /// - Key detection
+   /// - Auto-tagging
+   /// - Key profile data
 
 pub mod bpm_detector;
 pub mod key_detector;

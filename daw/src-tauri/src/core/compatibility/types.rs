@@ -1,6 +1,6 @@
-//! Compatibility types - Music theory data structures
-//!
-//! Trusty Module: Pure data types for compatibility calculations.
+   /// Compatibility types - Music theory data structures
+   ///
+   /// Trusty Module: Pure data types for compatibility calculations.
 
 use serde::{Deserialize, Serialize};
 

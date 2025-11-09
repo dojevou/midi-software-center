@@ -1,12 +1,12 @@
-//! Statistics command handlers - GROWN-UP SCRIPT ARCHETYPE
-//!
-//! PURPOSE: Database statistics and metrics
-//! ARCHETYPE: Grown-up Script (I/O operations)
-//!
-//! ✅ CAN: Perform database I/O
-//! ✅ CAN: Have side effects (complex queries)
-//! ✅ SHOULD: Handle errors properly
-//! ❌ NO: Complex business logic (delegate to Trusty Modules)
+   /// Statistics command handlers - GROWN-UP SCRIPT ARCHETYPE
+   ///
+   /// PURPOSE: Database statistics and metrics
+   /// ARCHETYPE: Grown-up Script (I/O operations)
+   ///
+   /// ✅ CAN: Perform database I/O
+   /// ✅ CAN: Have side effects (complex queries)
+   /// ✅ SHOULD: Handle errors properly
+   /// ❌ NO: Complex business logic (delegate to Trusty Modules)
 
 use crate::AppState;
 use tauri::State;
@@ -56,7 +56,7 @@ pub async fn get_category_stats_impl(
 pub async fn get_category_stats(
     state: State<'_, AppState>,
 ) -> Result<HashMap<String, i64>, String> {
-    get_category_stats_impl(&*state).await
+    get_category_stats_impl(&state).await
 }
 
 /// Get file count breakdown by manufacturer
@@ -217,7 +217,7 @@ pub async fn get_database_size_impl(state: &AppState) -> Result<String, String> 
 pub async fn get_database_size(
     state: State<'_, AppState>,
 ) -> Result<String, String> {
-    get_database_size_impl(&*state).await
+    get_database_size_impl(&state).await
 }
 
 /// Check database health status

@@ -1,20 +1,20 @@
-//! Phase 7.1: Full Workflow Integration Tests (45-55 tests)
-//!
-//! Extended multi-step workflows testing real-world scenarios:
-//! - Music production workflows (8 tests)
-//! - Library management workflows (7 tests)
-//! - Collaborative workflows (6 tests)
-//! - Search and curation workflows (6 tests)
-//! - Performance and optimization workflows (6 tests)
-//! - Error recovery workflows (6 tests)
-//! - Advanced feature workflows (6 tests)
-//!
-//! All tests use real database operations, actual MIDI files, and complete
-//! end-to-end workflow validation with performance assertions.
+   /// Phase 7.1: Full Workflow Integration Tests (45-55 tests)
+   ///
+   /// Extended multi-step workflows testing real-world scenarios:
+   /// - Music production workflows (8 tests)
+   /// - Library management workflows (7 tests)
+   /// - Collaborative workflows (6 tests)
+   /// - Search and curation workflows (6 tests)
+   /// - Performance and optimization workflows (6 tests)
+   /// - Error recovery workflows (6 tests)
+   /// - Advanced feature workflows (6 tests)
+   ///
+   /// All tests use real database operations, actual MIDI files, and complete
+   /// end-to-end workflow validation with performance assertions.
 
 use midi_pipeline::commands::file_import::{import_single_file, import_directory, import_single_file_impl, import_directory_impl};
 use midi_pipeline::commands::files::{get_file_count, get_file_details, delete_file, list_files, get_file_count_impl, get_file_details_impl, list_files_impl};
-use midi_pipeline::commands::search::{search_files, get_all_tags, get_files_by_tag, search_files_impl, get_all_tags_impl};
+use midi_pipeline::commands::search::{search_files, get_all_tags, get_files_by_tag, search_files_impl, get_all_tags_impl, SearchFilters};
 use midi_pipeline::commands::tags::{add_tags_to_file, get_file_tags, update_file_tags, get_file_tags_impl, add_tags_to_file_impl};
 use midi_pipeline::commands::analyze::start_analysis;
 use midi_pipeline::commands::stats::{get_category_stats, get_database_size};
@@ -331,8 +331,8 @@ async fn test_workflow_remix_existing() {
     let tags_original = get_file_tags_impl(original_id, &state).await.unwrap();
     let tags_remix = get_file_tags_impl(remix_id, &state).await.unwrap();
 
-    assert!(tags.iter().any(|tag| tag == "original"));
-    assert!(tags.iter().any(|tag| tag == "remix"));
+    assert!(tags_original.iter().any(|tag| tag == "original"));
+    assert!(tags_remix.iter().any(|tag| tag == "remix"));
 
     cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
@@ -1005,8 +1005,8 @@ async fn test_workflow_data_migration() {
     let old_tags = get_file_tags_impl(old_result.id, &state).await.unwrap();
     let new_tags = get_file_tags_impl(new_result.id, &state).await.unwrap();
 
-    assert!(old_tags.iter().any(|tag| tag == "old_format"));
-    assert!(new_tags.iter().any(|tag| tag == "migrated"));
+    assert!(old_tags.iter().any(|tag| tag.name == "old_format"));
+    assert!(new_tags.iter().any(|tag| tag.name == "migrated"));
 
     cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
@@ -1054,7 +1054,8 @@ async fn test_workflow_delete_with_tags() {
     let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state).await.unwrap();
     add_tags_to_file_impl(result.id, vec!["test".to_string()], &state).await.unwrap();
 
-    let delete_result = delete_file(&state, result.id).await;
+    use midi_pipeline::db::repositories::FileRepository;
+    let delete_result = FileRepository::delete(&state.database.pool().await, result.id).await;
     assert!(delete_result.is_ok(), "Delete with tags should succeed");
     cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
@@ -1067,7 +1068,7 @@ async fn test_workflow_search_after_analysis() {
     fs::write(&file_path, &create_midi_bytes(140, "G_MAJOR")).await.unwrap();
 
     let _ = import_and_analyze_file(&state, file_path.to_str().unwrap().to_string()).await;
-    let search_results = search_files_impl("".to_string(), SearchFilters { min_bpm: Some(120), max_bpm: Some(160), keys: None }, 0, 10, &state).await;
+    let search_results = search_files_impl("".to_string(), SearchFilters { min_bpm: Some(120), max_bpm: Some(160), key_signatures: None, category: None, min_duration: None, max_duration: None }, 0, 10, &state).await;
 
     assert!(search_results.is_ok(), "Search after analysis should succeed");
     cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
@@ -1081,8 +1082,9 @@ async fn test_workflow_duplicate_tag_deduplication() {
     fs::write(&file_path, &create_midi_bytes(120, "C_MAJOR")).await.unwrap();
 
     let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state).await.unwrap();
-    let tags = add_tags_to_file_impl(result.id, vec!["tag".to_string(), "tag".to_string()], &state).await.unwrap();
+    add_tags_to_file_impl(result.id, vec!["tag".to_string(), "tag".to_string()], &state).await.unwrap();
 
+    let tags = get_file_tags_impl(result.id, &state).await.unwrap();
     assert_eq!(tags.len(), 1, "Duplicate tags should be deduplicated");
     cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }
@@ -1160,7 +1162,7 @@ async fn test_workflow_search_filter_combination() {
         let _ = import_and_analyze_file(&state, file_path.to_str().unwrap().to_string()).await;
     }
 
-    let results = search_files_impl("".to_string(), SearchFilters { min_bpm: Some(120), max_bpm: Some(160), keys: Some(vec!["C_MAJOR".to_string()]) }, 0, 10, &state).await;
+    let results = search_files_impl("".to_string(), SearchFilters { min_bpm: Some(120), max_bpm: Some(160), key_signatures: Some(vec!["C_MAJOR".to_string()]), category: None, min_duration: None, max_duration: None }, 0, 10, &state).await;
     assert!(results.is_ok(), "Complex filter search should succeed");
     cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
 }

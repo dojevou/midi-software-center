@@ -211,6 +211,9 @@ benchmarks/results/
 perf.data*
 flamegraph*.svg
 
+# Analysis outputs (large files)
+quantum_analysis.json
+
 #=============================================================================
 # DOCKER
 #=============================================================================
@@ -286,3 +289,4 @@ ENV/
 !.claude/commands/
 !.claude/settings.json
 !.claude/README.md
+.env

@@ -1,6 +1,6 @@
-//! MIDI event and device models
-//!
-//! Trusty Module: Pure data structures for MIDI hardware and events.
+   /// MIDI event and device models
+   ///
+   /// Trusty Module: Pure data structures for MIDI hardware and events.
 
 use serde::{Deserialize, Serialize};
 

@@ -1,7 +1,7 @@
-//! MIDI Core - Trusty Modules
-//!
-//! Pure functions for MIDI event encoding, decoding, and validation.
-//! NO I/O operations - all functions are deterministic and testable.
+   /// MIDI Core - Trusty Modules
+   ///
+   /// Pure functions for MIDI event encoding, decoding, and validation.
+   /// NO I/O operations - all functions are deterministic and testable.
 
 pub mod parser;
 pub mod types;

@@ -1,5 +1,5 @@
-//! Musical metadata repository
-//! Aligned with actual schema from 001_initial_schema.sql
+   /// Musical metadata repository
+   /// Aligned with actual schema from 001_initial_schema.sql
 
 use crate::db::models::{MusicalMetadata, NewMusicalMetadata};
 use sqlx::PgPool;

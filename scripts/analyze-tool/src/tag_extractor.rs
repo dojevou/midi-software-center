@@ -1,6 +1,6 @@
 ///! Tag Extractor - Trusty Module
-//!
-//! Extracts tags from file paths and folder names
+   ///
+   /// Extracts tags from file paths and folder names
 
 use std::path::Path;
 

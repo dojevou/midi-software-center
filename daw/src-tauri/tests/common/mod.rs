@@ -1,5 +1,5 @@
-//! Common test infrastructure for DAW command tests
-//! Provides database mocks, MIDI device mocks, fixtures, builders, and assertions
+   /// Common test infrastructure for DAW command tests
+   /// Provides database mocks, MIDI device mocks, fixtures, builders, and assertions
 
 pub mod database;
 pub mod mocks;

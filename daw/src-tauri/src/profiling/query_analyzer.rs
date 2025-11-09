@@ -1,32 +1,32 @@
-//! Query Performance Analyzer - Comprehensive Database Query Profiling
-//!
-//! This module provides comprehensive profiling and optimization analysis for all
-//! database queries in the MIDI Software Center system.
-//!
-//! Architecture: Task-O-Matic (Analysis & Reporting Tool)
-//! Purpose: Measure, analyze, and optimize database query performance
-//!
-//! ## Query Categories Analyzed:
-//!
-//! 1. **Search Queries (DatabaseWindow)** - Full-text search with filters
-//! 2. **File Import Queries** - Batch insert operations
-//! 3. **Track List Queries (DAW)** - Multi-track loading
-//! 4. **Metadata Queries** - Musical analysis data retrieval
-//!
-//! ## Performance Targets:
-//!
-//! - Search queries: < 500ms for 100K+ files
-//! - File imports: > 1,000 files/sec with batching
-//! - Track loading: < 10ms per query
-//! - Count queries: < 100ms with proper indexing
-//!
-//! ## Optimization Strategies:
-//!
-//! - Index analysis and recommendations
-//! - Query plan examination (EXPLAIN ANALYZE)
-//! - Connection pool tuning
-//! - Query caching strategies
-//! - Batch operation optimization
+   /// Query Performance Analyzer - Comprehensive Database Query Profiling
+   ///
+   /// This module provides comprehensive profiling and optimization analysis for all
+   /// database queries in the MIDI Software Center system.
+   ///
+   /// Architecture: Task-O-Matic (Analysis & Reporting Tool)
+   /// Purpose: Measure, analyze, and optimize database query performance
+   ///
+   /// ## Query Categories Analyzed:
+   ///
+   /// 1. **Search Queries (DatabaseWindow)** - Full-text search with filters
+   /// 2. **File Import Queries** - Batch insert operations
+   /// 3. **Track List Queries (DAW)** - Multi-track loading
+   /// 4. **Metadata Queries** - Musical analysis data retrieval
+   ///
+   /// ## Performance Targets:
+   ///
+   /// - Search queries: < 500ms for 100K+ files
+   /// - File imports: > 1,000 files/sec with batching
+   /// - Track loading: < 10ms per query
+   /// - Count queries: < 100ms with proper indexing
+   ///
+   /// ## Optimization Strategies:
+   ///
+   /// - Index analysis and recommendations
+   /// - Query plan examination (EXPLAIN ANALYZE)
+   /// - Connection pool tuning
+   /// - Query caching strategies
+   /// - Batch operation optimization
 
 use serde::{Deserialize, Serialize};
 use sqlx::{PgPool, Row};

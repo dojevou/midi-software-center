@@ -1,6 +1,6 @@
-//! Track management for sequencer
-//!
-//! Grown-up Script: Manages collection of tracks with their properties and MIDI events.
+   /// Track management for sequencer
+   ///
+   /// Grown-up Script: Manages collection of tracks with their properties and MIDI events.
 
 use crate::models::sequencer::{Track, TrackProperties};
 use crate::models::midi::MidiEvent;

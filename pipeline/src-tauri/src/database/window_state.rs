@@ -1,7 +1,7 @@
-//! Database Window State
-//!
-//! Trusty Module: Pure data structures for database window state including
-//! search filters, results, and pagination. No I/O, no side effects.
+   /// Database Window State
+   ///
+   /// Trusty Module: Pure data structures for database window state including
+   /// search filters, results, and pagination. No I/O, no side effects.
 
 use serde::{Deserialize, Serialize};
 
@@ -114,10 +114,12 @@ impl SearchFilters {
 /// Sort field options
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[derive(Default)]
 pub enum SortField {
     /// Sort by file name
     FileName,
     /// Sort by date added to database
+    #[default]
     DateAdded,
     /// Sort by BPM
     Bpm,
@@ -129,27 +131,19 @@ pub enum SortField {
     LastAccessed,
 }
 
-impl Default for SortField {
-    fn default() -> Self {
-        SortField::DateAdded
-    }
-}
 
 /// Sort order
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
+#[derive(Default)]
 pub enum SortOrder {
     /// Ascending order (A-Z, 0-9, oldest-newest)
     Ascending,
     /// Descending order (Z-A, 9-0, newest-oldest)
+    #[default]
     Descending,
 }
 
-impl Default for SortOrder {
-    fn default() -> Self {
-        SortOrder::Descending
-    }
-}
 
 /// Search result item
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -226,7 +220,7 @@ impl PaginationInfo {
     /// Create pagination info
     pub fn new(total_results: usize, current_page: usize, page_size: usize) -> Self {
         let total_pages = if page_size > 0 {
-            (total_results + page_size - 1) / page_size
+            total_results.div_ceil(page_size)
         } else {
             0
         };
@@ -373,8 +367,10 @@ impl DatabaseWindowState {
 /// View mode for database window
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
+#[derive(Default)]
 pub enum ViewMode {
     /// List view (compact rows)
+    #[default]
     List,
     /// Grid view (thumbnails/cards)
     Grid,
@@ -382,11 +378,6 @@ pub enum ViewMode {
     Details,
 }
 
-impl Default for ViewMode {
-    fn default() -> Self {
-        ViewMode::List
-    }
-}
 
 #[cfg(test)]
 mod tests {

@@ -1,6 +1,6 @@
-//! Error types for the DAW application
-//!
-//! Trusty Module: Centralized error handling with proper type definitions.
+   /// Error types for the DAW application
+   ///
+   /// Trusty Module: Centralized error handling with proper type definitions.
 
 use thiserror::Error;
 

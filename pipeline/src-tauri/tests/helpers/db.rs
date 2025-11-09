@@ -1,7 +1,7 @@
-//! Database test helpers
-//!
-//! Provides utilities for setting up test databases, managing transactions,
-//! and performing common database operations in tests.
+   /// Database test helpers
+   ///
+   /// Provides utilities for setting up test databases, managing transactions,
+   /// and performing common database operations in tests.
 
 use sqlx::{PgPool, Postgres, Transaction, Row};
 use std::env;

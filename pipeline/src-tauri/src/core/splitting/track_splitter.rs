@@ -1,19 +1,19 @@
-//! Track Splitter - TRUSTY MODULE
-//!
-//! Pure logic for splitting multi-track MIDI files into individual single-track files.
-//!
-//! This module operates on byte arrays (no I/O) and provides functions to:
-//! - Parse multi-track MIDI files (Format 1)
-//! - Split into separate Format 0 (single-track) MIDI files
-//! - Extract metadata (track name, channel, instrument, note count)
-//! - Handle tempo tracks and edge cases
-//!
-//! # Archetype: TRUSTY MODULE
-//! - ✅ Pure functions, no side effects
-//! - ✅ No I/O operations
-//! - ✅ Operates on byte slices
-//! - ✅ Comprehensive error handling
-//! - ✅ Well-tested
+   /// Track Splitter - TRUSTY MODULE
+   ///
+   /// Pure logic for splitting multi-track MIDI files into individual single-track files.
+   ///
+   /// This module operates on byte arrays (no I/O) and provides functions to:
+   /// - Parse multi-track MIDI files (Format 1)
+   /// - Split into separate Format 0 (single-track) MIDI files
+   /// - Extract metadata (track name, channel, instrument, note count)
+   /// - Handle tempo tracks and edge cases
+   ///
+   /// # Archetype: TRUSTY MODULE
+   /// - ✅ Pure functions, no side effects
+   /// - ✅ No I/O operations
+   /// - ✅ Operates on byte slices
+   /// - ✅ Comprehensive error handling
+   /// - ✅ Well-tested
 
 use midly::{Format, Header, MetaMessage, Smf, Track, TrackEvent, TrackEventKind};
 use thiserror::Error;
@@ -222,7 +222,7 @@ pub fn create_single_track_midi(
                 TrackEventKind::Meta(MetaMessage::Tempo(_))
                 | TrackEventKind::Meta(MetaMessage::TimeSignature(..))
                 | TrackEventKind::Meta(MetaMessage::KeySignature(..)) => {
-                    new_track_events.push(event.clone());
+                    new_track_events.push(*event);
                 }
                 _ => {}
             }

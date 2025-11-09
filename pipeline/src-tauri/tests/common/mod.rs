@@ -21,7 +21,7 @@ pub use tokio::sync::Mutex;
 /// Helper to search with default pagination (limit=1000, offset=0)
 pub async fn search_default(
     pool: &PgPool,
-    query: midi_pipeline::db::models::SearchQuery,
+    query: midi_pipeline::db::SearchQuery,
 ) -> Result<Vec<midi_pipeline::File>, sqlx::Error> {
     midi_pipeline::db::repositories::SearchRepository::search(pool, query, 1000, 0).await
 }
@@ -29,7 +29,7 @@ pub async fn search_default(
 /// Helper to search with custom pagination
 pub async fn search_paginated(
     pool: &PgPool,
-    query: midi_pipeline::db::models::SearchQuery,
+    query: midi_pipeline::db::SearchQuery,
     limit: i64,
     offset: i64,
 ) -> Result<Vec<midi_pipeline::File>, sqlx::Error> {

@@ -1,17 +1,17 @@
-//! Track Splitting Commands - GROWN-UP SCRIPT
-//!
-//! Architecture: Grown-up Script
-//! Purpose: I/O wrapper around track_splitter Trusty Module
-//!
-//! This module provides Tauri commands for splitting multi-track MIDI files
-//! into individual single-track files. It handles:
-//! - Database queries (fetch file info)
-//! - File I/O (read original, write splits)
-//! - Database transactions (insert splits, create relationships)
-//! - Error handling and user-friendly messages
-//!
-//! The actual splitting logic is delegated to the track_splitter Trusty Module,
-//! which operates on byte arrays with no I/O.
+   /// Track Splitting Commands - GROWN-UP SCRIPT
+   ///
+   /// Architecture: Grown-up Script
+   /// Purpose: I/O wrapper around track_splitter Trusty Module
+   ///
+   /// This module provides Tauri commands for splitting multi-track MIDI files
+   /// into individual single-track files. It handles:
+   /// - Database queries (fetch file info)
+   /// - File I/O (read original, write splits)
+   /// - Database transactions (insert splits, create relationships)
+   /// - Error handling and user-friendly messages
+   ///
+   /// The actual splitting logic is delegated to the track_splitter Trusty Module,
+   /// which operates on byte arrays with no I/O.
 
 use crate::core::hash::calculate_file_hash;
 use midi_library_shared::core::midi::parser::parse_midi_file;

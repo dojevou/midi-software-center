@@ -1,16 +1,16 @@
-//! Musical Analysis Commands - HIGH-PERFORMANCE PARALLEL IMPLEMENTATION
-//!
-//! Architecture: Grown-up Script
-//! Purpose: Analyze all imported MIDI files using existing analysis modules
-//!
-//! This module processes 1.1M+ imported files by:
-//! - Reading unanalyzed files from database in batches
-//! - Parallel processing with buffer_unordered (32 workers)
-//! - Running BPM detection, key detection, and auto-tagging
-//! - Batch database inserts for musical_metadata
-//! - Real-time progress updates
-//!
-//! Performance Target: 400-500 files/sec (complete 1.1M files in ~40-60 minutes)
+   /// Musical Analysis Commands - HIGH-PERFORMANCE PARALLEL IMPLEMENTATION
+   ///
+   /// Architecture: Grown-up Script
+   /// Purpose: Analyze all imported MIDI files using existing analysis modules
+   ///
+   /// This module processes 1.1M+ imported files by:
+   /// - Reading unanalyzed files from database in batches
+   /// - Parallel processing with buffer_unordered (32 workers)
+   /// - Running BPM detection, key detection, and auto-tagging
+   /// - Batch database inserts for musical_metadata
+   /// - Real-time progress updates
+   ///
+   /// Performance Target: 400-500 files/sec (complete 1.1M files in ~40-60 minutes)
 
 use crate::AppState;
 use midi_library_shared::core::midi::parser::parse_midi_file;
@@ -224,7 +224,7 @@ pub async fn start_analysis(
                     let current = current_index.fetch_add(1, Ordering::SeqCst) + 1;
 
                     // Emit progress every 10 files
-                    if current % 10 == 0 || current == total_usize {
+                    if current.is_multiple_of(10) || current == total_usize {
                         let elapsed = start_time.elapsed().as_secs_f64();
                         let rate = if elapsed > 0.0 { current as f64 / elapsed } else { 0.0 };
                         let remaining = total_usize - current;
@@ -239,7 +239,7 @@ pub async fn start_analysis(
                         });
 
                         // Print progress every 100 files
-                        if current % 100 == 0 {
+                        if current.is_multiple_of(100) {
                             println!(
                                 "Analyzing: {}/{} ({:.1}%) - {:.1} files/sec - ETA: {:.0}s",
                                 current,
@@ -648,11 +648,10 @@ fn extract_instrument_names(midi_file: &MidiFile) -> Vec<String> {
         for timed_event in &track.events {
             match &timed_event.event {
                 Event::Text { text_type, text } => {
-                    if matches!(text_type, TextType::InstrumentName | TextType::TrackName) {
-                        if !instruments.contains(text) {
+                    if matches!(text_type, TextType::InstrumentName | TextType::TrackName)
+                        && !instruments.contains(text) {
                             instruments.push(text.clone());
                         }
-                    }
                 }
                 Event::ProgramChange { program, .. } => {
                     if let Some(instrument_name) = program_to_instrument_name(*program) {

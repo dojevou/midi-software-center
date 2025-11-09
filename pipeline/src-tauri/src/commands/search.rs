@@ -1,12 +1,12 @@
-//! Search command handlers - GROWN-UP SCRIPT ARCHETYPE
-//!
-//! PURPOSE: Advanced search functionality with filters and pagination
-//! ARCHETYPE: Grown-up Script (I/O operations, reusable logic)
-//!
-//! ✅ CAN: Perform database I/O
-//! ✅ CAN: Have side effects (complex queries)
-//! ✅ SHOULD: Handle errors properly
-//! ❌ NO: Complex business logic (delegate to Trusty Modules)
+   /// Search command handlers - GROWN-UP SCRIPT ARCHETYPE
+   ///
+   /// PURPOSE: Advanced search functionality with filters and pagination
+   /// ARCHETYPE: Grown-up Script (I/O operations, reusable logic)
+   ///
+   /// ✅ CAN: Perform database I/O
+   /// ✅ CAN: Have side effects (complex queries)
+   /// ✅ SHOULD: Handle errors properly
+   /// ❌ NO: Complex business logic (delegate to Trusty Modules)
 
 use crate::AppState;
 use tauri::State;
@@ -102,7 +102,7 @@ pub async fn search_files_impl(
     if page < 1 {
         return Err("Page must be >= 1".to_string());
     }
-    if page_size < 1 || page_size > 100 {
+    if !(1..=100).contains(&page_size) {
         return Err("Page size must be between 1 and 100".to_string());
     }
 
@@ -182,7 +182,7 @@ pub async fn search_files(
     page_size: i32,
     state: State<'_, AppState>,
 ) -> Result<SearchResults, String> {
-    search_files_impl(query, filters, page, page_size, &*state).await
+    search_files_impl(query, filters, page, page_size, &state).await
 }
 
 /// Get all unique tags from database (implementation for tests and reuse)
@@ -214,7 +214,7 @@ pub async fn get_all_tags_impl(state: &AppState) -> Result<Vec<String>, String> 
 pub async fn get_all_tags(
     state: State<'_, AppState>,
 ) -> Result<Vec<String>, String> {
-    get_all_tags_impl(&*state).await
+    get_all_tags_impl(&state).await
 }
 
 /// Get files by tag
@@ -294,7 +294,7 @@ pub async fn get_bpm_range_impl(state: &AppState) -> Result<BpmRange, String> {
 pub async fn get_bpm_range(
     state: State<'_, AppState>,
 ) -> Result<BpmRange, String> {
-    get_bpm_range_impl(&*state).await
+    get_bpm_range_impl(&state).await
 }
 
 /// Get all unique key signatures from database

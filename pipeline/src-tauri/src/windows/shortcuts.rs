@@ -1,4 +1,4 @@
-//! Global keyboard shortcuts for window management
+   /// Global keyboard shortcuts for window management
 
 use tauri::{AppHandle, GlobalShortcutManager};
 

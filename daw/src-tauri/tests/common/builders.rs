@@ -1,4 +1,4 @@
-//! Test data builders for fluent test construction
+   /// Test data builders for fluent test construction
 
 use midi_daw::models::{MidiEvent, MidiEventType};
 

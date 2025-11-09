@@ -1,8 +1,7 @@
-//! Window manager - core logic for managing application windows
-//!
-//! Handles creation, destruction, positioning, and layout management of windows.
+   /// Window manager - core logic for managing application windows
+   ///
+   /// Handles creation, destruction, positioning, and layout management of windows.
 
-use std::collections::HashMap;
 
 use crate::windows::state::{WindowInfo, WindowState, WindowType, Position, DockSide};
 use crate::windows::layout::{Layout, LayoutStorage};
@@ -222,7 +221,7 @@ impl WindowManager {
                 w.docking
                     .docked_to
                     .as_ref()
-                    .map_or(false, |p| p == parent)
+                    .is_some_and(|p| p == parent)
             })
             .cloned()
             .collect()

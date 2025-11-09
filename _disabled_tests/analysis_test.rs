@@ -1,10 +1,10 @@
-//! Analysis command integration tests (20 tests)
-//!
-//! Tests for analysis.rs commands covering:
-//! - Musical compatibility analysis
-//! - Favorite management (add, remove, check, list)
-//! - Usage statistics
-//! - Database integration
+   /// Analysis command integration tests (20 tests)
+   ///
+   /// Tests for analysis.rs commands covering:
+   /// - Musical compatibility analysis
+   /// - Favorite management (add, remove, check, list)
+   /// - Usage statistics
+   /// - Database integration
 
 use crate::common::*;
 use midi_daw::commands::AppState;

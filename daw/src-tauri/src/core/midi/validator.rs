@@ -1,7 +1,7 @@
-//! MIDI message validation
-//!
-//! Trusty Module: Pure validation functions for MIDI data.
-//! No I/O operations - all functions are deterministic and testable.
+   /// MIDI message validation
+   ///
+   /// Trusty Module: Pure validation functions for MIDI data.
+   /// No I/O operations - all functions are deterministic and testable.
 
 use super::types::{MidiMessage, MidiEventType};
 

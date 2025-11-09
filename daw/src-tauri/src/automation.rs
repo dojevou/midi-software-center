@@ -1,10 +1,10 @@
-//! Automation Lane System
-//!
-//! Provides automation for track parameters (volume, pan, MIDI CC, custom parameters).
-//! Implements point-based automation curves with multiple interpolation types.
-//!
-//! Trusty Module: Pure data structures and algorithms for automation curves.
-//! Grown-up Script: Tauri commands for automation lane management with side effects.
+   /// Automation Lane System
+   ///
+   /// Provides automation for track parameters (volume, pan, MIDI CC, custom parameters).
+   /// Implements point-based automation curves with multiple interpolation types.
+   ///
+   /// Trusty Module: Pure data structures and algorithms for automation curves.
+   /// Grown-up Script: Tauri commands for automation lane management with side effects.
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

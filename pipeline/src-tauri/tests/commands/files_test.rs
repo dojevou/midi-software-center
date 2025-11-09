@@ -1,5 +1,5 @@
-//! Tests for pipeline/src-tauri/src/commands/files.rs
-//! Commands: test_db_connection, get_file_count, get_file_details, list_files, etc.
+   /// Tests for pipeline/src-tauri/src/commands/files.rs
+   /// Commands: test_db_connection, get_file_count, get_file_details, list_files, etc.
 
 use crate::common::*;
 

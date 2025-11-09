@@ -1,6 +1,6 @@
-//! Filename Generator
-//!
-//! Generates intelligent filenames from MIDI file metadata.
+   /// Filename Generator
+   ///
+   /// Generates intelligent filenames from MIDI file metadata.
 
 use crate::core::analysis::{BpmDetectionResult, KeyDetectionResult};
 use crate::core::naming::{sanitizer, templates};

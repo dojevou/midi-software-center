@@ -1,7 +1,7 @@
-//! Sequencer timing calculations
-//!
-//! Trusty Module: Pure timing functions for MIDI sequencing.
-//! All functions are deterministic and thoroughly tested.
+   /// Sequencer timing calculations
+   ///
+   /// Trusty Module: Pure timing functions for MIDI sequencing.
+   /// All functions are deterministic and thoroughly tested.
 
 /// Bar position structure
 ///

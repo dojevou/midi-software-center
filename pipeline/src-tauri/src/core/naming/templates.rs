@@ -1,6 +1,6 @@
-//! Naming Templates
-//!
-//! Provides different template formats for filename generation.
+   /// Naming Templates
+   ///
+   /// Provides different template formats for filename generation.
 
 /// Naming template format
 #[derive(Debug, Clone, PartialEq, Default)]

@@ -1,6 +1,6 @@
-//! Music theory utilities - Pure functions for musical analysis
-//!
-//! Trusty Module: All functions are pure - no I/O, fully deterministic.
+   /// Music theory utilities - Pure functions for musical analysis
+   ///
+   /// Trusty Module: All functions are pure - no I/O, fully deterministic.
 
 use super::types::{Key, KeySignature, Mode};
 

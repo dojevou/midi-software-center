@@ -1,7 +1,7 @@
-//! Krumhansl-Schmuckler Key Profiles
-//!
-//! These profiles represent the expected distribution of pitch classes
-//! in major and minor keys, derived from music theory research.
+   /// Krumhansl-Schmuckler Key Profiles
+   ///
+   /// These profiles represent the expected distribution of pitch classes
+   /// in major and minor keys, derived from music theory research.
 
 /// Major key profile (Krumhansl & Kessler, 1982)
 /// Indexed by pitch class: C, C#, D, D#, E, F, F#, G, G#, A, A#, B

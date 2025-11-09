@@ -1,10 +1,10 @@
-//! Tag Commands - Tauri commands for tag operations
-//!
-//! This module provides frontend-facing commands for:
-//! - Retrieving tags for files
-//! - Getting popular tags (for tag cloud)
-//! - Searching tags (for autocomplete)
-//! - Updating file tags
+   /// Tag Commands - Tauri commands for tag operations
+   ///
+   /// This module provides frontend-facing commands for:
+   /// - Retrieving tags for files
+   /// - Getting popular tags (for tag cloud)
+   /// - Searching tags (for autocomplete)
+   /// - Updating file tags
 
 use crate::AppState;
 use crate::db::repositories::tag_repository::{DbTag, TagRepository, TagWithCount};
@@ -16,7 +16,7 @@ use tauri::State;
 // =============================================================================
 
 /// Tag for JSON serialization (frontend-friendly)
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
 pub struct TagResponse {
     pub id: i32,
     pub name: String,
@@ -72,7 +72,7 @@ pub async fn get_file_tags(
     file_id: i64,
     state: State<'_, AppState>,
 ) -> Result<Vec<TagResponse>, String> {
-    get_file_tags_impl(file_id, &*state).await
+    get_file_tags_impl(file_id, &state).await
 }
 
 /// Get popular tags with usage counts (implementation for tests and reuse)
@@ -102,7 +102,7 @@ pub async fn get_popular_tags(
     limit: Option<i32>,
     state: State<'_, AppState>,
 ) -> Result<Vec<TagResponse>, String> {
-    get_popular_tags_impl(limit, &*state).await
+    get_popular_tags_impl(limit, &state).await
 }
 
 /// Search tags by name prefix (implementation for tests and reuse)
@@ -135,7 +135,7 @@ pub async fn search_tags(
     limit: Option<i32>,
     state: State<'_, AppState>,
 ) -> Result<Vec<TagResponse>, String> {
-    search_tags_impl(query, limit, &*state).await
+    search_tags_impl(query, limit, &state).await
 }
 
 /// Get all unique tag categories
@@ -239,7 +239,7 @@ pub async fn add_tags_to_file(
     tag_names: Vec<String>,
     state: State<'_, AppState>,
 ) -> Result<(), String> {
-    add_tags_to_file_impl(file_id, tag_names, &*state).await
+    add_tags_to_file_impl(file_id, tag_names, &state).await
 }
 
 /// Remove a specific tag from a file

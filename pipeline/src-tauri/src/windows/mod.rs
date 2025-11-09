@@ -1,17 +1,17 @@
-//! Window Management System for MIDI Software Center
-//!
-//! Provides a comprehensive window management system similar to Pro Tools,
-//! featuring multi-window support, docking, layout persistence, and keyboard shortcuts.
-//!
-//! # Architecture
-//!
-//! - `manager`: Core window management logic
-//! - `state`: Window state structures
-//! - `commands`: Tauri command handlers
-//! - `menu`: Menu creation functions
-//! - `shortcuts`: Global shortcut registration
-//! - `layout`: Layout persistence
-//! - `pipeline_state`: Pipeline window-specific state (processing, progress)
+   /// Window Management System for MIDI Software Center
+   ///
+   /// Provides a comprehensive window management system similar to Pro Tools,
+   /// featuring multi-window support, docking, layout persistence, and keyboard shortcuts.
+   ///
+   /// # Architecture
+   ///
+   /// - `manager`: Core window management logic
+   /// - `state`: Window state structures
+   /// - `commands`: Tauri command handlers
+   /// - `menu`: Menu creation functions
+   /// - `shortcuts`: Global shortcut registration
+   /// - `layout`: Layout persistence
+   /// - `pipeline_state`: Pipeline window-specific state (processing, progress)
 
 pub mod manager;
 pub mod state;

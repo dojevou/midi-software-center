@@ -1,6 +1,6 @@
-//! Command Serialization - Trusty Module
-//!
-//! Support for serializing/deserializing commands for persistence across sessions.
+   /// Command Serialization - Trusty Module
+   ///
+   /// Support for serializing/deserializing commands for persistence across sessions.
 
 use super::core::{Command, UndoRedoError, UndoRedoResult};
 use serde::{Deserialize, Serialize};

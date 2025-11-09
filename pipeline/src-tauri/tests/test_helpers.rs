@@ -1,4 +1,4 @@
-//! Test helper utilities for MIDI software tests
+   /// Test helper utilities for MIDI software tests
 
 use midi_pipeline::{AppState, Database};
 use sqlx::PgPool;

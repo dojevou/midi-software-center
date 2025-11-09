@@ -1,0 +1,2222 @@
+{
+  "timestamp": 1762633554.0070782,
+  "total_errors": 194,
+  "summary": {
+    "Format String Errors": 12,
+    "Unresolved Imports": 37,
+    "Missing Type Definitions": 10,
+    "Missing Type/Value Definitions": 7,
+    "Trait Bound & Type Mismatch": 6,
+    "Other/Uncategorized": 47,
+    "Missing Repository Methods": 20,
+    "Iterator & Type Conversion": 4,
+    "Documentation Comment Errors": 51
+  },
+  "categories": [
+    {
+      "category": "Format String Errors",
+      "count": 12,
+      "errors": [
+        {
+          "error_id": 0,
+          "category": "Format String Errors",
+          "severity": "CRITICAL",
+          "error_type": "format_string",
+          "error_message": "invalid reference to positional argument 1 (no arguments were given)",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 1,
+          "category": "Format String Errors",
+          "severity": "CRITICAL",
+          "error_type": "format_string",
+          "error_message": "invalid reference to positional argument 0 (no arguments were given)",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 2,
+          "category": "Format String Errors",
+          "severity": "CRITICAL",
+          "error_type": "format_string",
+          "error_message": "invalid reference to positional argument 1 (no arguments were given)",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 3,
+          "category": "Format String Errors",
+          "severity": "CRITICAL",
+          "error_type": "format_string",
+          "error_message": "invalid reference to positional argument 10 (no arguments were given)",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 4,
+          "category": "Format String Errors",
+          "severity": "CRITICAL",
+          "error_type": "format_string",
+          "error_message": "invalid reference to positional argument 100 (no arguments were given)",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 5,
+          "category": "Format String Errors",
+          "severity": "CRITICAL",
+          "error_type": "format_string",
+          "error_message": "invalid reference to positional argument 1 (no arguments were given)",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 6,
+          "category": "Format String Errors",
+          "severity": "CRITICAL",
+          "error_type": "format_string",
+          "error_message": "invalid reference to positional argument 10 (no arguments were given)",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 20,
+          "category": "Format String Errors",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "1 positional argument in format string, but no arguments were given",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 21,
+          "category": "Format String Errors",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "1 positional argument in format string, but no arguments were given",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 22,
+          "category": "Format String Errors",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "1 positional argument in format string, but no arguments were given",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 23,
+          "category": "Format String Errors",
+          "severity": "CRITICAL",
+          "error_type": "format_string",
+          "error_message": "invalid reference to positional argument 1 (no arguments were given)",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 24,
+          "category": "Format String Errors",
+          "severity": "CRITICAL",
+          "error_type": "format_string",
+          "error_message": "invalid reference to positional argument 2 (no arguments were given)",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        }
+      ]
+    },
+    {
+      "category": "Unresolved Imports",
+      "count": 37,
+      "errors": [
+        {
+          "error_id": 7,
+          "category": "Unresolved Imports",
+          "severity": "CRITICAL",
+          "error_type": "unresolved_import",
+          "error_message": "unresolved import `common`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "common"
+          ]
+        },
+        {
+          "error_id": 31,
+          "category": "Unresolved Imports",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "failed to resolve: use of unresolved module or unlinked crate `common`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "common"
+          ]
+        },
+        {
+          "error_id": 32,
+          "category": "Unresolved Imports",
+          "severity": "CRITICAL",
+          "error_type": "unresolved_import",
+          "error_message": "unresolved import `common`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "common"
+          ]
+        },
+        {
+          "error_id": 95,
+          "category": "Unresolved Imports",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "failed to resolve: use of unresolved module or unlinked crate `midi_daw`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "midi_daw"
+          ]
+        },
+        {
+          "error_id": 96,
+          "category": "Unresolved Imports",
+          "severity": "CRITICAL",
+          "error_type": "unresolved_import",
+          "error_message": "unresolved import `crate::common`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 97,
+          "category": "Unresolved Imports",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "failed to resolve: use of unresolved module or unlinked crate `midi_daw`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "midi_daw"
+          ]
+        },
+        {
+          "error_id": 98,
+          "category": "Unresolved Imports",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "failed to resolve: use of unresolved module or unlinked crate `midi_daw`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "midi_daw"
+          ]
+        },
+        {
+          "error_id": 99,
+          "category": "Unresolved Imports",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "failed to resolve: use of unresolved module or unlinked crate `midi_daw`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "midi_daw"
+          ]
+        },
+        {
+          "error_id": 100,
+          "category": "Unresolved Imports",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "failed to resolve: use of unresolved module or unlinked crate `midi_daw`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "midi_daw"
+          ]
+        },
+        {
+          "error_id": 101,
+          "category": "Unresolved Imports",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "failed to resolve: use of unresolved module or unlinked crate `midi_daw`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "midi_daw"
+          ]
+        },
+        {
+          "error_id": 102,
+          "category": "Unresolved Imports",
+          "severity": "CRITICAL",
+          "error_type": "unresolved_import",
+          "error_message": "unresolved import `crate::common`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 126,
+          "category": "Unresolved Imports",
+          "severity": "CRITICAL",
+          "error_type": "unresolved_import",
+          "error_message": "unresolved import `crate::automation`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 127,
+          "category": "Unresolved Imports",
+          "severity": "CRITICAL",
+          "error_type": "unresolved_import",
+          "error_message": "unresolved import `commands::AutomationState`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 128,
+          "category": "Unresolved Imports",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "failed to resolve: could not find `automation` in `commands`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "commands",
+            "automation"
+          ]
+        },
+        {
+          "error_id": 129,
+          "category": "Unresolved Imports",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "failed to resolve: could not find `automation` in `commands`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "commands",
+            "automation"
+          ]
+        },
+        {
+          "error_id": 130,
+          "category": "Unresolved Imports",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "failed to resolve: could not find `automation` in `commands`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "commands",
+            "automation"
+          ]
+        },
+        {
+          "error_id": 131,
+          "category": "Unresolved Imports",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "failed to resolve: could not find `automation` in `commands`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "commands",
+            "automation"
+          ]
+        },
+        {
+          "error_id": 132,
+          "category": "Unresolved Imports",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "failed to resolve: could not find `automation` in `commands`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "commands",
+            "automation"
+          ]
+        },
+        {
+          "error_id": 133,
+          "category": "Unresolved Imports",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "failed to resolve: could not find `automation` in `commands`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "commands",
+            "automation"
+          ]
+        },
+        {
+          "error_id": 134,
+          "category": "Unresolved Imports",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "failed to resolve: could not find `automation` in `commands`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "commands",
+            "automation"
+          ]
+        },
+        {
+          "error_id": 135,
+          "category": "Unresolved Imports",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "failed to resolve: could not find `automation` in `commands`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "commands",
+            "automation"
+          ]
+        },
+        {
+          "error_id": 136,
+          "category": "Unresolved Imports",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "failed to resolve: could not find `automation` in `commands`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "commands",
+            "automation"
+          ]
+        },
+        {
+          "error_id": 137,
+          "category": "Unresolved Imports",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "failed to resolve: could not find `automation` in `commands`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "commands",
+            "automation"
+          ]
+        },
+        {
+          "error_id": 138,
+          "category": "Unresolved Imports",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "failed to resolve: could not find `automation` in `commands`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "commands",
+            "automation"
+          ]
+        },
+        {
+          "error_id": 147,
+          "category": "Unresolved Imports",
+          "severity": "CRITICAL",
+          "error_type": "unresolved_import",
+          "error_message": "unresolved import `crate::automation`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 148,
+          "category": "Unresolved Imports",
+          "severity": "CRITICAL",
+          "error_type": "unresolved_import",
+          "error_message": "unresolved import `commands::AutomationState`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 149,
+          "category": "Unresolved Imports",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "failed to resolve: could not find `automation` in `commands`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "commands",
+            "automation"
+          ]
+        },
+        {
+          "error_id": 150,
+          "category": "Unresolved Imports",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "failed to resolve: could not find `automation` in `commands`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "commands",
+            "automation"
+          ]
+        },
+        {
+          "error_id": 151,
+          "category": "Unresolved Imports",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "failed to resolve: could not find `automation` in `commands`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "commands",
+            "automation"
+          ]
+        },
+        {
+          "error_id": 152,
+          "category": "Unresolved Imports",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "failed to resolve: could not find `automation` in `commands`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "commands",
+            "automation"
+          ]
+        },
+        {
+          "error_id": 153,
+          "category": "Unresolved Imports",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "failed to resolve: could not find `automation` in `commands`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "commands",
+            "automation"
+          ]
+        },
+        {
+          "error_id": 154,
+          "category": "Unresolved Imports",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "failed to resolve: could not find `automation` in `commands`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "commands",
+            "automation"
+          ]
+        },
+        {
+          "error_id": 155,
+          "category": "Unresolved Imports",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "failed to resolve: could not find `automation` in `commands`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "commands",
+            "automation"
+          ]
+        },
+        {
+          "error_id": 156,
+          "category": "Unresolved Imports",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "failed to resolve: could not find `automation` in `commands`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "commands",
+            "automation"
+          ]
+        },
+        {
+          "error_id": 157,
+          "category": "Unresolved Imports",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "failed to resolve: could not find `automation` in `commands`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "commands",
+            "automation"
+          ]
+        },
+        {
+          "error_id": 158,
+          "category": "Unresolved Imports",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "failed to resolve: could not find `automation` in `commands`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "commands",
+            "automation"
+          ]
+        },
+        {
+          "error_id": 159,
+          "category": "Unresolved Imports",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "failed to resolve: could not find `automation` in `commands`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "commands",
+            "automation"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Missing Type Definitions",
+      "count": 10,
+      "errors": [
+        {
+          "error_id": 8,
+          "category": "Missing Type Definitions",
+          "severity": "CRITICAL",
+          "error_type": "missing_type",
+          "error_message": "cannot find type `SearchQuery` in module `midi_pipeline::db::models`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "SearchQuery"
+          ]
+        },
+        {
+          "error_id": 9,
+          "category": "Missing Type Definitions",
+          "severity": "CRITICAL",
+          "error_type": "missing_type",
+          "error_message": "cannot find type `SearchQuery` in module `midi_pipeline::db::models`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "SearchQuery"
+          ]
+        },
+        {
+          "error_id": 10,
+          "category": "Missing Type Definitions",
+          "severity": "CRITICAL",
+          "error_type": "missing_type",
+          "error_message": "cannot find type `SearchQuery` in module `midi_pipeline::db::models`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "SearchQuery"
+          ]
+        },
+        {
+          "error_id": 11,
+          "category": "Missing Type Definitions",
+          "severity": "CRITICAL",
+          "error_type": "missing_type",
+          "error_message": "cannot find type `SearchQuery` in module `midi_pipeline::db::models`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "SearchQuery"
+          ]
+        },
+        {
+          "error_id": 12,
+          "category": "Missing Type Definitions",
+          "severity": "CRITICAL",
+          "error_type": "missing_type",
+          "error_message": "cannot find type `SearchQuery` in module `midi_pipeline::db::models`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "SearchQuery"
+          ]
+        },
+        {
+          "error_id": 13,
+          "category": "Missing Type Definitions",
+          "severity": "CRITICAL",
+          "error_type": "missing_type",
+          "error_message": "cannot find type `SearchQuery` in module `midi_pipeline::db::models`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "SearchQuery"
+          ]
+        },
+        {
+          "error_id": 14,
+          "category": "Missing Type Definitions",
+          "severity": "CRITICAL",
+          "error_type": "missing_type",
+          "error_message": "cannot find type `SearchQuery` in module `midi_pipeline::db::models`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "SearchQuery"
+          ]
+        },
+        {
+          "error_id": 15,
+          "category": "Missing Type Definitions",
+          "severity": "CRITICAL",
+          "error_type": "missing_type",
+          "error_message": "cannot find type `SearchQuery` in module `midi_pipeline::db::models`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "SearchQuery"
+          ]
+        },
+        {
+          "error_id": 26,
+          "category": "Missing Type Definitions",
+          "severity": "CRITICAL",
+          "error_type": "missing_type",
+          "error_message": "cannot find type `SearchQuery` in module `midi_pipeline::db::models`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "SearchQuery"
+          ]
+        },
+        {
+          "error_id": 27,
+          "category": "Missing Type Definitions",
+          "severity": "CRITICAL",
+          "error_type": "missing_type",
+          "error_message": "cannot find type `SearchQuery` in module `midi_pipeline::db::models`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "SearchQuery"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Missing Type/Value Definitions",
+      "count": 7,
+      "errors": [
+        {
+          "error_id": 16,
+          "category": "Missing Type/Value Definitions",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "cannot find value `tags` in this scope",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "tags"
+          ]
+        },
+        {
+          "error_id": 17,
+          "category": "Missing Type/Value Definitions",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "cannot find value `tags` in this scope",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "tags"
+          ]
+        },
+        {
+          "error_id": 18,
+          "category": "Missing Type/Value Definitions",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "cannot find struct, variant or union type `SearchFilters` in this scope",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "SearchFilters"
+          ]
+        },
+        {
+          "error_id": 19,
+          "category": "Missing Type/Value Definitions",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "cannot find struct, variant or union type `SearchFilters` in this scope",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "SearchFilters"
+          ]
+        },
+        {
+          "error_id": 28,
+          "category": "Missing Type/Value Definitions",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "cannot find struct, variant or union type `NewTag` in module `midi_pipeline::db::models`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "NewTag"
+          ]
+        },
+        {
+          "error_id": 29,
+          "category": "Missing Type/Value Definitions",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "cannot find struct, variant or union type `NewTag` in module `midi_pipeline::db::models`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "NewTag"
+          ]
+        },
+        {
+          "error_id": 30,
+          "category": "Missing Type/Value Definitions",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "cannot find struct, variant or union type `NewTag` in module `midi_pipeline::db::models`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "NewTag"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Trait Bound & Type Mismatch",
+      "count": 6,
+      "errors": [
+        {
+          "error_id": 25,
+          "category": "Trait Bound & Type Mismatch",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "missing generics for trait `Emitter`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "Emitter"
+          ]
+        },
+        {
+          "error_id": 35,
+          "category": "Trait Bound & Type Mismatch",
+          "severity": "CRITICAL",
+          "error_type": "trait_bound",
+          "error_message": "the trait bound `ImportProgress: serde::Deserialize<'de>` is not satisfied",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 123,
+          "category": "Trait Bound & Type Mismatch",
+          "severity": "CRITICAL",
+          "error_type": "trait_bound",
+          "error_message": "the trait bound `std::string::String: From<Option<Vec<std::string::String>>>` is not satisfied",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 163,
+          "category": "Trait Bound & Type Mismatch",
+          "severity": "CRITICAL",
+          "error_type": "trait_bound",
+          "error_message": "the trait bound `std::string::String: From<Option<Vec<std::string::String>>>` is not satisfied",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 172,
+          "category": "Trait Bound & Type Mismatch",
+          "severity": "CRITICAL",
+          "error_type": "trait_bound",
+          "error_message": "the trait bound `std::string::String: From<Option<Vec<std::string::String>>>` is not satisfied",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 193,
+          "category": "Trait Bound & Type Mismatch",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "missing generics for trait `Emitter`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "Emitter"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Other/Uncategorized",
+      "count": 47,
+      "errors": [
+        {
+          "error_id": 33,
+          "category": "Other/Uncategorized",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "no variant or associated item named `Emit` found for enum `tauri::Error` in the current scope",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "Emit"
+          ]
+        },
+        {
+          "error_id": 34,
+          "category": "Other/Uncategorized",
+          "severity": "CRITICAL",
+          "error_type": "binary_op",
+          "error_message": "binary operation `==` cannot be applied to type `&TagResponse`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 36,
+          "category": "Other/Uncategorized",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "arguments to this function are incorrect",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 37,
+          "category": "Other/Uncategorized",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "can't compare `TagResponse` with `TagResponse`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "TagResponse"
+          ]
+        },
+        {
+          "error_id": 39,
+          "category": "Other/Uncategorized",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "mismatched types",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 41,
+          "category": "Other/Uncategorized",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "arguments to this function are incorrect",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 42,
+          "category": "Other/Uncategorized",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "arguments to this function are incorrect",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 103,
+          "category": "Other/Uncategorized",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "use of moved value: `result`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "result"
+          ]
+        },
+        {
+          "error_id": 105,
+          "category": "Other/Uncategorized",
+          "severity": "CRITICAL",
+          "error_type": "binary_op",
+          "error_message": "binary operation `==` cannot be applied to type `&TagResponse`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 106,
+          "category": "Other/Uncategorized",
+          "severity": "CRITICAL",
+          "error_type": "binary_op",
+          "error_message": "binary operation `==` cannot be applied to type `&TagResponse`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 108,
+          "category": "Other/Uncategorized",
+          "severity": "CRITICAL",
+          "error_type": "binary_op",
+          "error_message": "binary operation `==` cannot be applied to type `&TagResponse`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 109,
+          "category": "Other/Uncategorized",
+          "severity": "CRITICAL",
+          "error_type": "binary_op",
+          "error_message": "binary operation `==` cannot be applied to type `&TagResponse`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 110,
+          "category": "Other/Uncategorized",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "arguments to this function are incorrect",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 111,
+          "category": "Other/Uncategorized",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "mismatched types",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 112,
+          "category": "Other/Uncategorized",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "mismatched types",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 113,
+          "category": "Other/Uncategorized",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "mismatched types",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 114,
+          "category": "Other/Uncategorized",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "mismatched types",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 115,
+          "category": "Other/Uncategorized",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "mismatched types",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 116,
+          "category": "Other/Uncategorized",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "mismatched types",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 117,
+          "category": "Other/Uncategorized",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "mismatched types",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 119,
+          "category": "Other/Uncategorized",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "mismatched types",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 121,
+          "category": "Other/Uncategorized",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "mismatched types",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 139,
+          "category": "Other/Uncategorized",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "use of moved value: `write_result`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "write_result"
+          ]
+        },
+        {
+          "error_id": 140,
+          "category": "Other/Uncategorized",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "mismatched types",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 141,
+          "category": "Other/Uncategorized",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "use of moved value: `result`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "result"
+          ]
+        },
+        {
+          "error_id": 142,
+          "category": "Other/Uncategorized",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "use of moved value: `result`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "result"
+          ]
+        },
+        {
+          "error_id": 143,
+          "category": "Other/Uncategorized",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "use of moved value: `result`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "result"
+          ]
+        },
+        {
+          "error_id": 145,
+          "category": "Other/Uncategorized",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "use of moved value: `result`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "result"
+          ]
+        },
+        {
+          "error_id": 160,
+          "category": "Other/Uncategorized",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "use of moved value: `result`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "result"
+          ]
+        },
+        {
+          "error_id": 161,
+          "category": "Other/Uncategorized",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "mismatched types",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 162,
+          "category": "Other/Uncategorized",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "use of moved value: `result`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "result"
+          ]
+        },
+        {
+          "error_id": 164,
+          "category": "Other/Uncategorized",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "no field `file_id` on type `midi_pipeline::File`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "file_id"
+          ]
+        },
+        {
+          "error_id": 166,
+          "category": "Other/Uncategorized",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "mismatched types",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 168,
+          "category": "Other/Uncategorized",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "mismatched types",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 173,
+          "category": "Other/Uncategorized",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "no field `file_id` on type `&midi_pipeline::File`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "file_id"
+          ]
+        },
+        {
+          "error_id": 174,
+          "category": "Other/Uncategorized",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "no field `file_id` on type `&midi_pipeline::File`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "file_id"
+          ]
+        },
+        {
+          "error_id": 175,
+          "category": "Other/Uncategorized",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "no function or associated item named `update_filename` found for struct `FileRepository` in the current scope",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "FileRepository",
+            "update_filename"
+          ]
+        },
+        {
+          "error_id": 176,
+          "category": "Other/Uncategorized",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "arguments to this function are incorrect",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 177,
+          "category": "Other/Uncategorized",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "arguments to this function are incorrect",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 178,
+          "category": "Other/Uncategorized",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "mismatched types",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 179,
+          "category": "Other/Uncategorized",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "arguments to this function are incorrect",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 180,
+          "category": "Other/Uncategorized",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "mismatched types",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 181,
+          "category": "Other/Uncategorized",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "arguments to this function are incorrect",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 182,
+          "category": "Other/Uncategorized",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "arguments to this function are incorrect",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 183,
+          "category": "Other/Uncategorized",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "mismatched types",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 185,
+          "category": "Other/Uncategorized",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "no function or associated item named `delete_by_id` found for struct `FileRepository` in the current scope",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "delete_by_id",
+            "FileRepository"
+          ]
+        },
+        {
+          "error_id": 186,
+          "category": "Other/Uncategorized",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "arguments to this function are incorrect",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        }
+      ]
+    },
+    {
+      "category": "Missing Repository Methods",
+      "count": 20,
+      "errors": [
+        {
+          "error_id": 38,
+          "category": "Missing Repository Methods",
+          "severity": "CRITICAL",
+          "error_type": "missing_method",
+          "error_message": "no method named `clone` found for struct `AppState` in the current scope",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "AppState",
+            "clone"
+          ]
+        },
+        {
+          "error_id": 118,
+          "category": "Missing Repository Methods",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "no method named `len` found for unit type `()` in the current scope",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "len"
+          ]
+        },
+        {
+          "error_id": 120,
+          "category": "Missing Repository Methods",
+          "severity": "CRITICAL",
+          "error_type": "missing_method",
+          "error_message": "no method named `add_tag_to_file` found for struct `TagRepository` in the current scope",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "TagRepository",
+            "add_tag_to_file"
+          ]
+        },
+        {
+          "error_id": 122,
+          "category": "Missing Repository Methods",
+          "severity": "CRITICAL",
+          "error_type": "missing_method",
+          "error_message": "no method named `clone` found for struct `AppState` in the current scope",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "AppState",
+            "clone"
+          ]
+        },
+        {
+          "error_id": 124,
+          "category": "Missing Repository Methods",
+          "severity": "CRITICAL",
+          "error_type": "missing_method",
+          "error_message": "no method named `add_tag_to_file` found for struct `TagRepository` in the current scope",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "TagRepository",
+            "add_tag_to_file"
+          ]
+        },
+        {
+          "error_id": 125,
+          "category": "Missing Repository Methods",
+          "severity": "CRITICAL",
+          "error_type": "missing_method",
+          "error_message": "no method named `limit` found for struct `SearchQueryBuilder` in the current scope",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "limit",
+            "SearchQueryBuilder"
+          ]
+        },
+        {
+          "error_id": 144,
+          "category": "Missing Repository Methods",
+          "severity": "CRITICAL",
+          "error_type": "missing_method",
+          "error_message": "no method named `add_tag_to_file` found for struct `TagRepository` in the current scope",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "TagRepository",
+            "add_tag_to_file"
+          ]
+        },
+        {
+          "error_id": 146,
+          "category": "Missing Repository Methods",
+          "severity": "CRITICAL",
+          "error_type": "missing_method",
+          "error_message": "no method named `limit` found for struct `SearchQueryBuilder` in the current scope",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "limit",
+            "SearchQueryBuilder"
+          ]
+        },
+        {
+          "error_id": 165,
+          "category": "Missing Repository Methods",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "no method named `midi_format` found for struct `fixtures::NewFileBuilder` in the current scope",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "midi_format"
+          ]
+        },
+        {
+          "error_id": 167,
+          "category": "Missing Repository Methods",
+          "severity": "CRITICAL",
+          "error_type": "missing_method",
+          "error_message": "no method named `insert` found for struct `TagRepository` in the current scope",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "insert",
+            "TagRepository"
+          ]
+        },
+        {
+          "error_id": 169,
+          "category": "Missing Repository Methods",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "no method named `midi_format` found for struct `fixtures::NewFileBuilder` in the current scope",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "midi_format"
+          ]
+        },
+        {
+          "error_id": 170,
+          "category": "Missing Repository Methods",
+          "severity": "CRITICAL",
+          "error_type": "missing_method",
+          "error_message": "no method named `add_tag_to_file` found for struct `TagRepository` in the current scope",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "TagRepository",
+            "add_tag_to_file"
+          ]
+        },
+        {
+          "error_id": 171,
+          "category": "Missing Repository Methods",
+          "severity": "CRITICAL",
+          "error_type": "missing_method",
+          "error_message": "no method named `max_duration` found for struct `SearchQueryBuilder` in the current scope",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "SearchQueryBuilder",
+            "max_duration"
+          ]
+        },
+        {
+          "error_id": 184,
+          "category": "Missing Repository Methods",
+          "severity": "CRITICAL",
+          "error_type": "missing_method",
+          "error_message": "no method named `delete` found for struct `TagRepository` in the current scope",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "delete",
+            "TagRepository"
+          ]
+        },
+        {
+          "error_id": 187,
+          "category": "Missing Repository Methods",
+          "severity": "CRITICAL",
+          "error_type": "missing_method",
+          "error_message": "no method named `get_tags_for_file` found for struct `TagRepository` in the current scope",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "get_tags_for_file",
+            "TagRepository"
+          ]
+        },
+        {
+          "error_id": 188,
+          "category": "Missing Repository Methods",
+          "severity": "CRITICAL",
+          "error_type": "missing_method",
+          "error_message": "no method named `add_tag_to_file` found for struct `TagRepository` in the current scope",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "TagRepository",
+            "add_tag_to_file"
+          ]
+        },
+        {
+          "error_id": 189,
+          "category": "Missing Repository Methods",
+          "severity": "CRITICAL",
+          "error_type": "missing_method",
+          "error_message": "no method named `upsert_tags_for_file` found for struct `TagRepository` in the current scope",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "upsert_tags_for_file",
+            "TagRepository"
+          ]
+        },
+        {
+          "error_id": 190,
+          "category": "Missing Repository Methods",
+          "severity": "CRITICAL",
+          "error_type": "missing_method",
+          "error_message": "no method named `insert` found for struct `TagRepository` in the current scope",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "insert",
+            "TagRepository"
+          ]
+        },
+        {
+          "error_id": 191,
+          "category": "Missing Repository Methods",
+          "severity": "CRITICAL",
+          "error_type": "missing_method",
+          "error_message": "no method named `insert` found for struct `TagRepository` in the current scope",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "insert",
+            "TagRepository"
+          ]
+        },
+        {
+          "error_id": 192,
+          "category": "Missing Repository Methods",
+          "severity": "CRITICAL",
+          "error_type": "missing_method",
+          "error_message": "no method named `search` found for struct `TagRepository` in the current scope",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": [
+            "search",
+            "TagRepository"
+          ]
+        }
+      ]
+    },
+    {
+      "category": "Iterator & Type Conversion",
+      "count": 4,
+      "errors": [
+        {
+          "error_id": 40,
+          "category": "Iterator & Type Conversion",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "a value of type `&AppState` cannot be built from an iterator over elements of type `std::string::String`",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 94,
+          "category": "Iterator & Type Conversion",
+          "severity": "CRITICAL",
+          "error_type": "iterator",
+          "error_message": "`tokio::fs::ReadDir` is not an iterator",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 104,
+          "category": "Iterator & Type Conversion",
+          "severity": "CRITICAL",
+          "error_type": "iterator",
+          "error_message": "`tokio::fs::ReadDir` is not an iterator",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 107,
+          "category": "Iterator & Type Conversion",
+          "severity": "CRITICAL",
+          "error_type": "iterator",
+          "error_message": "`tokio::fs::ReadDir` is not an iterator",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        }
+      ]
+    },
+    {
+      "category": "Documentation Comment Errors",
+      "count": 51,
+      "errors": [
+        {
+          "error_id": 43,
+          "category": "Documentation Comment Errors",
+          "severity": "CRITICAL",
+          "error_type": "doc_comment",
+          "error_message": "expected outer doc comment",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 44,
+          "category": "Documentation Comment Errors",
+          "severity": "CRITICAL",
+          "error_type": "doc_comment",
+          "error_message": "expected outer doc comment",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 45,
+          "category": "Documentation Comment Errors",
+          "severity": "CRITICAL",
+          "error_type": "doc_comment",
+          "error_message": "expected outer doc comment",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 46,
+          "category": "Documentation Comment Errors",
+          "severity": "CRITICAL",
+          "error_type": "doc_comment",
+          "error_message": "expected outer doc comment",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 47,
+          "category": "Documentation Comment Errors",
+          "severity": "CRITICAL",
+          "error_type": "doc_comment",
+          "error_message": "expected outer doc comment",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 48,
+          "category": "Documentation Comment Errors",
+          "severity": "CRITICAL",
+          "error_type": "doc_comment",
+          "error_message": "expected outer doc comment",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 49,
+          "category": "Documentation Comment Errors",
+          "severity": "CRITICAL",
+          "error_type": "doc_comment",
+          "error_message": "expected outer doc comment",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 50,
+          "category": "Documentation Comment Errors",
+          "severity": "CRITICAL",
+          "error_type": "doc_comment",
+          "error_message": "expected outer doc comment",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 51,
+          "category": "Documentation Comment Errors",
+          "severity": "CRITICAL",
+          "error_type": "doc_comment",
+          "error_message": "expected outer doc comment",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 52,
+          "category": "Documentation Comment Errors",
+          "severity": "CRITICAL",
+          "error_type": "doc_comment",
+          "error_message": "expected outer doc comment",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 53,
+          "category": "Documentation Comment Errors",
+          "severity": "CRITICAL",
+          "error_type": "doc_comment",
+          "error_message": "expected outer doc comment",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 54,
+          "category": "Documentation Comment Errors",
+          "severity": "CRITICAL",
+          "error_type": "doc_comment",
+          "error_message": "expected outer doc comment",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 55,
+          "category": "Documentation Comment Errors",
+          "severity": "CRITICAL",
+          "error_type": "doc_comment",
+          "error_message": "expected outer doc comment",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 56,
+          "category": "Documentation Comment Errors",
+          "severity": "CRITICAL",
+          "error_type": "doc_comment",
+          "error_message": "expected outer doc comment",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 57,
+          "category": "Documentation Comment Errors",
+          "severity": "CRITICAL",
+          "error_type": "doc_comment",
+          "error_message": "expected outer doc comment",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 58,
+          "category": "Documentation Comment Errors",
+          "severity": "CRITICAL",
+          "error_type": "doc_comment",
+          "error_message": "expected outer doc comment",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 59,
+          "category": "Documentation Comment Errors",
+          "severity": "CRITICAL",
+          "error_type": "doc_comment",
+          "error_message": "expected outer doc comment",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 60,
+          "category": "Documentation Comment Errors",
+          "severity": "CRITICAL",
+          "error_type": "doc_comment",
+          "error_message": "expected outer doc comment",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 61,
+          "category": "Documentation Comment Errors",
+          "severity": "CRITICAL",
+          "error_type": "doc_comment",
+          "error_message": "expected outer doc comment",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 62,
+          "category": "Documentation Comment Errors",
+          "severity": "CRITICAL",
+          "error_type": "doc_comment",
+          "error_message": "expected outer doc comment",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 63,
+          "category": "Documentation Comment Errors",
+          "severity": "CRITICAL",
+          "error_type": "doc_comment",
+          "error_message": "expected outer doc comment",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 64,
+          "category": "Documentation Comment Errors",
+          "severity": "CRITICAL",
+          "error_type": "doc_comment",
+          "error_message": "expected outer doc comment",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 65,
+          "category": "Documentation Comment Errors",
+          "severity": "CRITICAL",
+          "error_type": "doc_comment",
+          "error_message": "expected outer doc comment",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 66,
+          "category": "Documentation Comment Errors",
+          "severity": "CRITICAL",
+          "error_type": "doc_comment",
+          "error_message": "expected outer doc comment",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 67,
+          "category": "Documentation Comment Errors",
+          "severity": "CRITICAL",
+          "error_type": "doc_comment",
+          "error_message": "expected outer doc comment",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 68,
+          "category": "Documentation Comment Errors",
+          "severity": "CRITICAL",
+          "error_type": "doc_comment",
+          "error_message": "expected outer doc comment",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 69,
+          "category": "Documentation Comment Errors",
+          "severity": "CRITICAL",
+          "error_type": "doc_comment",
+          "error_message": "expected outer doc comment",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 70,
+          "category": "Documentation Comment Errors",
+          "severity": "CRITICAL",
+          "error_type": "doc_comment",
+          "error_message": "expected outer doc comment",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 71,
+          "category": "Documentation Comment Errors",
+          "severity": "CRITICAL",
+          "error_type": "doc_comment",
+          "error_message": "expected outer doc comment",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 72,
+          "category": "Documentation Comment Errors",
+          "severity": "CRITICAL",
+          "error_type": "doc_comment",
+          "error_message": "expected outer doc comment",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 73,
+          "category": "Documentation Comment Errors",
+          "severity": "CRITICAL",
+          "error_type": "doc_comment",
+          "error_message": "expected outer doc comment",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 74,
+          "category": "Documentation Comment Errors",
+          "severity": "CRITICAL",
+          "error_type": "doc_comment",
+          "error_message": "expected outer doc comment",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 75,
+          "category": "Documentation Comment Errors",
+          "severity": "CRITICAL",
+          "error_type": "doc_comment",
+          "error_message": "expected outer doc comment",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 76,
+          "category": "Documentation Comment Errors",
+          "severity": "CRITICAL",
+          "error_type": "doc_comment",
+          "error_message": "expected outer doc comment",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 77,
+          "category": "Documentation Comment Errors",
+          "severity": "CRITICAL",
+          "error_type": "doc_comment",
+          "error_message": "expected outer doc comment",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 78,
+          "category": "Documentation Comment Errors",
+          "severity": "CRITICAL",
+          "error_type": "doc_comment",
+          "error_message": "expected outer doc comment",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 79,
+          "category": "Documentation Comment Errors",
+          "severity": "CRITICAL",
+          "error_type": "doc_comment",
+          "error_message": "expected outer doc comment",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 80,
+          "category": "Documentation Comment Errors",
+          "severity": "CRITICAL",
+          "error_type": "doc_comment",
+          "error_message": "expected outer doc comment",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 81,
+          "category": "Documentation Comment Errors",
+          "severity": "CRITICAL",
+          "error_type": "doc_comment",
+          "error_message": "expected outer doc comment",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 82,
+          "category": "Documentation Comment Errors",
+          "severity": "CRITICAL",
+          "error_type": "doc_comment",
+          "error_message": "expected outer doc comment",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 83,
+          "category": "Documentation Comment Errors",
+          "severity": "CRITICAL",
+          "error_type": "doc_comment",
+          "error_message": "expected outer doc comment",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 84,
+          "category": "Documentation Comment Errors",
+          "severity": "CRITICAL",
+          "error_type": "doc_comment",
+          "error_message": "expected outer doc comment",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 85,
+          "category": "Documentation Comment Errors",
+          "severity": "CRITICAL",
+          "error_type": "doc_comment",
+          "error_message": "expected outer doc comment",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 86,
+          "category": "Documentation Comment Errors",
+          "severity": "CRITICAL",
+          "error_type": "doc_comment",
+          "error_message": "expected outer doc comment",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 87,
+          "category": "Documentation Comment Errors",
+          "severity": "CRITICAL",
+          "error_type": "doc_comment",
+          "error_message": "expected outer doc comment",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 88,
+          "category": "Documentation Comment Errors",
+          "severity": "CRITICAL",
+          "error_type": "doc_comment",
+          "error_message": "expected outer doc comment",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 89,
+          "category": "Documentation Comment Errors",
+          "severity": "CRITICAL",
+          "error_type": "doc_comment",
+          "error_message": "expected outer doc comment",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 90,
+          "category": "Documentation Comment Errors",
+          "severity": "CRITICAL",
+          "error_type": "doc_comment",
+          "error_message": "expected outer doc comment",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 91,
+          "category": "Documentation Comment Errors",
+          "severity": "CRITICAL",
+          "error_type": "doc_comment",
+          "error_message": "expected outer doc comment",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 92,
+          "category": "Documentation Comment Errors",
+          "severity": "CRITICAL",
+          "error_type": "doc_comment",
+          "error_message": "expected outer doc comment",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        },
+        {
+          "error_id": 93,
+          "category": "Documentation Comment Errors",
+          "severity": "CRITICAL",
+          "error_type": "unknown",
+          "error_message": "expected item after doc comment",
+          "file_path": "",
+          "line_number": 0,
+          "affected_items": []
+        }
+      ]
+    }
+  ]
+}

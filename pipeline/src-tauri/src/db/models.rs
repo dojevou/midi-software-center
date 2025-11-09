@@ -1,7 +1,7 @@
-//! Database models aligned with actual schema
-//!
-//! These models match the database schema from 001_initial_schema.sql
-//! Database: midi_library on port 5433
+   /// Database models aligned with actual schema
+   ///
+   /// These models match the database schema from 001_initial_schema.sql
+   /// Database: midi_library on port 5433
 
 use chrono::{DateTime, Utc};
 use serde::Deserialize;
@@ -213,5 +213,5 @@ pub fn bigdecimal_to_f64(bd: Option<BigDecimal>) -> Option<f64> {
 /// Convert f64 to BigDecimal
 pub fn f64_to_bigdecimal(val: Option<f64>) -> Option<BigDecimal> {
     use num_traits::FromPrimitive;
-    val.and_then(|v| BigDecimal::from_f64(v))
+    val.and_then(BigDecimal::from_f64)
 }

@@ -1,4 +1,4 @@
-//! Menu creation for window management
+   /// Menu creation for window management
 
 use tauri::{Menu, Submenu, MenuItem, CustomMenuItem};
 

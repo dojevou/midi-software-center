@@ -1,6 +1,6 @@
-//! Velocity Editor Undo/Redo Commands - Trusty Module
-//!
-//! Commands for velocity editor operations: set range, interpolate, reset velocities.
+   /// Velocity Editor Undo/Redo Commands - Trusty Module
+   ///
+   /// Commands for velocity editor operations: set range, interpolate, reset velocities.
 
 use super::core::{Command, UndoRedoError, UndoRedoResult};
 use serde::{Deserialize, Serialize};

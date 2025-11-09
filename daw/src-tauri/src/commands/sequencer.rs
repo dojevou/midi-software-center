@@ -1,6 +1,6 @@
-//! Sequencer Tauri commands
-//!
-//! Thin wrappers that expose sequencer functionality to the frontend.
+   /// Sequencer Tauri commands
+   ///
+   /// Thin wrappers that expose sequencer functionality to the frontend.
 
 use crate::commands::AppState;
 use crate::core::midi::loader::load_midi_file;

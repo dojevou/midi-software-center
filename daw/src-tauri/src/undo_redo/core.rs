@@ -1,7 +1,7 @@
-//! Core Undo/Redo System - Trusty Module
-//!
-//! Pure command pattern implementation with no I/O or side effects.
-//! Provides Command trait and CommandHistory for managing undo/redo operations.
+   /// Core Undo/Redo System - Trusty Module
+   ///
+   /// Pure command pattern implementation with no I/O or side effects.
+   /// Provides Command trait and CommandHistory for managing undo/redo operations.
 
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;

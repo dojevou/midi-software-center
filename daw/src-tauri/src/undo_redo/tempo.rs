@@ -1,6 +1,6 @@
-//! Tempo Editor Undo/Redo Commands - Trusty Module
-//!
-//! Commands for tempo editor operations: add/remove markers, set tempo, create ramps.
+   /// Tempo Editor Undo/Redo Commands - Trusty Module
+   ///
+   /// Commands for tempo editor operations: add/remove markers, set tempo, create ramps.
 
 use super::core::{Command, UndoRedoError, UndoRedoResult};
 use serde::{Deserialize, Serialize};

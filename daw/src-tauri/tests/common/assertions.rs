@@ -1,4 +1,4 @@
-//! Custom assertions for DAW command tests
+   /// Custom assertions for DAW command tests
 
 use sqlx::PgPool;
 use sqlx::types::BigDecimal;

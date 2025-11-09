@@ -1,24 +1,24 @@
-//! Phase 5.5: Integration Tests - Cross-Command Workflow Testing
-//!
-//! These tests verify that multiple commands work together correctly,
-//! testing complete user workflows from import to search to analysis.
-//!
-//! ⚠️  NOTE: These integration tests require a running Tauri application instance.
-//! They are marked #[ignore] by default and should be run manually with:
-//! ```bash
-//! cargo test --test integration_test -- --ignored --test-threads=1
-//! ```
-//!
-//! Test Coverage:
-//! - Complete import → analysis pipelines (4 tests)
-//! - File search and retrieval workflows (3 tests)
-//! - File management and splitting operations (3 tests)
-//! - Project management workflows (3 tests)
-//! - Statistics and reporting accuracy (2 tests)
-//! - Error recovery scenarios (2 tests)
-//! - Performance under load (1 test)
-//!
-//! Total Tests: 18 production-ready integration test scenarios
+   /// Phase 5.5: Integration Tests - Cross-Command Workflow Testing
+   ///
+   /// These tests verify that multiple commands work together correctly,
+   /// testing complete user workflows from import to search to analysis.
+   ///
+   /// ⚠️  NOTE: These integration tests require a running Tauri application instance.
+   /// They are marked #[ignore] by default and should be run manually with:
+   /// ```bash
+   /// cargo test --test integration_test -- --ignored --test-threads=1
+   /// ```
+   ///
+   /// Test Coverage:
+   /// - Complete import → analysis pipelines (4 tests)
+   /// - File search and retrieval workflows (3 tests)
+   /// - File management and splitting operations (3 tests)
+   /// - Project management workflows (3 tests)
+   /// - Statistics and reporting accuracy (2 tests)
+   /// - Error recovery scenarios (2 tests)
+   /// - Performance under load (1 test)
+   ///
+   /// Total Tests: 18 production-ready integration test scenarios
 
 mod common;
 use common::{TestDatabase, FileFixtures};

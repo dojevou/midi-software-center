@@ -1,21 +1,21 @@
-//! Phase 7.4: User Journey Tests (10-12 tests)
-//!
-//! Real user scenarios and complete paths through the application.
-//! Tests represent actual user workflows from start to finish.
-//!
-//! User Personas:
-//! - First-time user (onboarding journey)
-//! - Professional DJ (library management & performance)
-//! - Music producer (creation & export workflow)
-//! - Music educator (analysis & teaching)
-//! - Sample digger (discovery & curation)
-//! - Music publisher (catalog management)
-//! - Casual user (quick operations)
-//! - Power user (advanced features & automation)
-//! - Mobile user (simplified workflow)
-//! - Enterprise user (bulk operations & reporting)
-//! - Collaboration team (multi-user workflow)
-//! - Learning path (progressive feature adoption)
+   /// Phase 7.4: User Journey Tests (10-12 tests)
+   ///
+   /// Real user scenarios and complete paths through the application.
+   /// Tests represent actual user workflows from start to finish.
+   ///
+   /// User Personas:
+   /// - First-time user (onboarding journey)
+   /// - Professional DJ (library management & performance)
+   /// - Music producer (creation & export workflow)
+   /// - Music educator (analysis & teaching)
+   /// - Sample digger (discovery & curation)
+   /// - Music publisher (catalog management)
+   /// - Casual user (quick operations)
+   /// - Power user (advanced features & automation)
+   /// - Mobile user (simplified workflow)
+   /// - Enterprise user (bulk operations & reporting)
+   /// - Collaboration team (multi-user workflow)
+   /// - Learning path (progressive feature adoption)
 
 use midi_pipeline::commands::file_import::{import_single_file, import_directory};
 use midi_pipeline::commands::files::{get_file_count, get_file_details, list_files};

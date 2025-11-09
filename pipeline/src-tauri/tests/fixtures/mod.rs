@@ -1,7 +1,7 @@
-//! Test fixtures for database testing
-//!
-//! Provides builder patterns for creating realistic test data for MIDI files,
-//! musical metadata, tags, and other database entities.
+   /// Test fixtures for database testing
+   ///
+   /// Provides builder patterns for creating realistic test data for MIDI files,
+   /// musical metadata, tags, and other database entities.
 
 use sqlx::types::BigDecimal;
 use std::str::FromStr;

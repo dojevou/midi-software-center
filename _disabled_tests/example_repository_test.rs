@@ -1,7 +1,7 @@
-//! Example repository tests demonstrating the test infrastructure
-//!
-//! This file shows how to use the test fixtures, helpers, and macros
-//! for comprehensive repository testing.
+   /// Example repository tests demonstrating the test infrastructure
+   ///
+   /// This file shows how to use the test fixtures, helpers, and macros
+   /// for comprehensive repository testing.
 
 mod common;
 mod fixtures;

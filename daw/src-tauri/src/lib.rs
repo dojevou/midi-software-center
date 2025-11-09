@@ -1,6 +1,6 @@
-//! MIDI Library DAW Interface
-//!
-//! Core library for DAW functionality including MIDI playback, sequencing, and search.
+   /// MIDI Library DAW Interface
+   ///
+   /// Core library for DAW functionality including MIDI playback, sequencing, and search.
 
 pub mod automation;
 pub mod browsers;

@@ -1,35 +1,35 @@
-//! Comprehensive tests for pipeline/src-tauri/src/commands/file_import.rs
-//! Commands: import_single_file, import_directory
-//!
-//! **Target Coverage:** 90%+ (Trusty Module requirement: 80%+)
-//! **Total Tests:** 62 (42 original + 20 advanced error path tests)
-//!
-//! This test suite validates the high-performance parallel import system that processes
-//! MIDI files with batch database operations, concurrent workers, and robust error handling.
-//!
-//! **Test Categories:**
-//! 1. SECTION 1: import_single_file() Tests (12 tests) - Single file import workflow
-//! 2. SECTION 2: import_directory() Tests (18 tests) - Batch import with concurrency
-//! 3. SECTION 3: Additional Edge Cases & Performance (20 tests) - Batch boundaries, Unicode, large files
-//! 4. SECTION 4: Advanced Error Scenarios (12-15 tests) - Database errors, race conditions, security
-//!
-//! **Performance Characteristics:**
-//! - Batch database inserts (100-file batches for optimal throughput)
-//! - Parallel processing with Arc<Semaphore> concurrency limiting
-//! - Arc<AtomicUsize> thread-safe counters for progress tracking
-//! - Arc<Mutex<Vec<String>>> for error collection across threads
-//! - Progress event emission throttling (every 10 files)
-//! - Achieves 100+ files/sec for batch imports, 200+ files/sec for 10K+ datasets
-//!
-//! **Special Considerations:**
-//! - BLAKE3 content hashing for duplicate detection (64-char hex)
-//! - Metadata extraction: BPM detection, key signature, duration analysis
-//! - Auto-tagging pipeline with category assignment
-//! - Recursive directory traversal with configurable depth
-//! - Database constraint validation (unique content_hash)
-//! - Transaction rollback on partial failures
-//! - File size overflow handling (> 2GB edge case)
-//! - Unicode filename normalization and path sanitization
+   /// Comprehensive tests for pipeline/src-tauri/src/commands/file_import.rs
+   /// Commands: import_single_file, import_directory
+   ///
+   /// **Target Coverage:** 90%+ (Trusty Module requirement: 80%+)
+   /// **Total Tests:** 62 (42 original + 20 advanced error path tests)
+   ///
+   /// This test suite validates the high-performance parallel import system that processes
+   /// MIDI files with batch database operations, concurrent workers, and robust error handling.
+   ///
+   /// **Test Categories:**
+   /// 1. SECTION 1: import_single_file() Tests (12 tests) - Single file import workflow
+   /// 2. SECTION 2: import_directory() Tests (18 tests) - Batch import with concurrency
+   /// 3. SECTION 3: Additional Edge Cases & Performance (20 tests) - Batch boundaries, Unicode, large files
+   /// 4. SECTION 4: Advanced Error Scenarios (12-15 tests) - Database errors, race conditions, security
+   ///
+   /// **Performance Characteristics:**
+   /// - Batch database inserts (100-file batches for optimal throughput)
+   /// - Parallel processing with Arc<Semaphore> concurrency limiting
+   /// - Arc<AtomicUsize> thread-safe counters for progress tracking
+   /// - Arc<Mutex<Vec<String>>> for error collection across threads
+   /// - Progress event emission throttling (every 10 files)
+   /// - Achieves 100+ files/sec for batch imports, 200+ files/sec for 10K+ datasets
+   ///
+   /// **Special Considerations:**
+   /// - BLAKE3 content hashing for duplicate detection (64-char hex)
+   /// - Metadata extraction: BPM detection, key signature, duration analysis
+   /// - Auto-tagging pipeline with category assignment
+   /// - Recursive directory traversal with configurable depth
+   /// - Database constraint validation (unique content_hash)
+   /// - Transaction rollback on partial failures
+   /// - File size overflow handling (> 2GB edge case)
+   /// - Unicode filename normalization and path sanitization
 
 use midi_pipeline::commands::file_import::{import_single_file, import_directory, ImportProgress, ImportSummary, FileMetadata};
 use midi_pipeline::{AppState, Database};

@@ -1,20 +1,20 @@
-//! Comprehensive tests for search.rs
-//! Commands: search_files, get_all_tags, get_files_by_tag, get_bpm_range, get_all_keys
-//!
-//! Coverage: 85%+ target
-//! Tests: 25 comprehensive tests
-//!
-//! Key Testing Areas:
-//! - Text search (filename/filepath)
-//! - Filter combinations (category + BPM + key)
-//! - Pagination (limit/offset)
-//! - Sorting (name, BPM, modified)
-//! - Unicode and special characters
-//! - Fuzzy/case-insensitive matching
-//! - Performance with large datasets
-//! - Meilisearch integration
-//! - SQL injection prevention
-//! - Complex query logic
+   /// Comprehensive tests for search.rs
+   /// Commands: search_files, get_all_tags, get_files_by_tag, get_bpm_range, get_all_keys
+   ///
+   /// Coverage: 85%+ target
+   /// Tests: 25 comprehensive tests
+   ///
+   /// Key Testing Areas:
+   /// - Text search (filename/filepath)
+   /// - Filter combinations (category + BPM + key)
+   /// - Pagination (limit/offset)
+   /// - Sorting (name, BPM, modified)
+   /// - Unicode and special characters
+   /// - Fuzzy/case-insensitive matching
+   /// - Performance with large datasets
+   /// - Meilisearch integration
+   /// - SQL injection prevention
+   /// - Complex query logic
 
 #[cfg(test)]
 mod tests {

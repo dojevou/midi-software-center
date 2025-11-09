@@ -1,15 +1,17 @@
-//! Pipeline Window State
-//!
-//! Trusty Module: Pure data structures for pipeline processing state including
-//! processing status, progress tracking, and statistics. No I/O, no side effects.
+   /// Pipeline Window State
+   ///
+   /// Trusty Module: Pure data structures for pipeline processing state including
+   /// processing status, progress tracking, and statistics. No I/O, no side effects.
 
 use serde::{Deserialize, Serialize};
 
 /// Processing status for pipeline operations
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
+#[derive(Default)]
 pub enum ProcessingStatus {
     /// Pipeline is idle, no operations running
+    #[default]
     Idle,
     /// Pipeline is actively processing files
     Processing,
@@ -21,11 +23,6 @@ pub enum ProcessingStatus {
     Error,
 }
 
-impl Default for ProcessingStatus {
-    fn default() -> Self {
-        ProcessingStatus::Idle
-    }
-}
 
 impl ProcessingStatus {
     /// Check if pipeline is currently active (processing or paused)
@@ -54,6 +51,7 @@ impl ProcessingStatus {
 
 /// Processing statistics
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Default)]
 pub struct ProcessingStats {
     /// Total files to process
     pub total_files: usize,
@@ -73,20 +71,6 @@ pub struct ProcessingStats {
     pub estimated_time_remaining: Option<f32>,
 }
 
-impl Default for ProcessingStats {
-    fn default() -> Self {
-        ProcessingStats {
-            total_files: 0,
-            processed_count: 0,
-            skipped_count: 0,
-            error_count: 0,
-            current_file_name: String::new(),
-            start_time: None,
-            end_time: None,
-            estimated_time_remaining: None,
-        }
-    }
-}
 
 impl ProcessingStats {
     /// Create new processing stats
@@ -166,8 +150,10 @@ impl ProcessingStats {
 /// Operation type for pipeline
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "snake_case")]
+#[derive(Default)]
 pub enum OperationType {
     /// Single file import
+    #[default]
     SingleFileImport,
     /// Directory import (batch)
     DirectoryImport,
@@ -183,11 +169,6 @@ pub enum OperationType {
     DatabaseMaintenance,
 }
 
-impl Default for OperationType {
-    fn default() -> Self {
-        OperationType::SingleFileImport
-    }
-}
 
 /// Pipeline window state
 #[derive(Debug, Clone, Serialize, Deserialize)]

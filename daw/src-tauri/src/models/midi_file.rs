@@ -1,7 +1,7 @@
-//! MIDI file database models
-//!
-//! Trusty Module: Pure data structures for MIDI file records.
-//! Updated to match actual database schema with proper JOINs.
+   /// MIDI file database models
+   ///
+   /// Trusty Module: Pure data structures for MIDI file records.
+   /// Updated to match actual database schema with proper JOINs.
 
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;

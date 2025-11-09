@@ -1,26 +1,26 @@
-//! Batch Database Insert Operations
-//!
-//! Architecture: Grown-up Script (service layer with database access)
-//! Purpose: High-performance batch insertion of MIDI file records and metadata
-//!
-//! This module provides batched database operations for importing large numbers
-//! of MIDI files. It uses chunked transactions to achieve 10-50x speedup over
-//! individual INSERT statements.
-//!
-//! # Performance
-//!
-//! - Individual INSERT: ~200 rows/sec
-//! - Batched INSERT: ~10,000-50,000 rows/sec
-//!
-//! # Examples
-//!
-//! ```rust
-//! use batch_insert::BatchInserter;
-//!
-//! let inserter = BatchInserter::new(pool, 1000);
-//! let file_ids = inserter.insert_files_batch(file_records).await?;
-//! inserter.insert_metadata_batch(metadata_records).await?;
-//! ```
+   /// Batch Database Insert Operations
+   ///
+   /// Architecture: Grown-up Script (service layer with database access)
+   /// Purpose: High-performance batch insertion of MIDI file records and metadata
+   ///
+   /// This module provides batched database operations for importing large numbers
+   /// of MIDI files. It uses chunked transactions to achieve 10-50x speedup over
+   /// individual INSERT statements.
+   ///
+   /// # Performance
+   ///
+   /// - Individual INSERT: ~200 rows/sec
+   /// - Batched INSERT: ~10,000-50,000 rows/sec
+   ///
+   /// # Examples
+   ///
+   /// ```rust
+   /// use batch_insert::BatchInserter;
+   ///
+   /// let inserter = BatchInserter::new(pool, 1000);
+   /// let file_ids = inserter.insert_files_batch(file_records).await?;
+   /// inserter.insert_metadata_batch(metadata_records).await?;
+   /// ```
 
 use crate::core::performance::concurrency::calculate_all_settings;
 use sqlx::{PgPool, Postgres, Transaction};
@@ -160,7 +160,7 @@ impl MusicalMetadata {
             return Err(BatchInsertError::InvalidData("file_id must be positive".to_string()));
         }
         if let Some(bpm) = self.bpm {
-            if bpm < 20 || bpm > 300 {
+            if !(20..=300).contains(&bpm) {
                 return Err(BatchInsertError::InvalidData(
                     format!("BPM {} out of range (20-300)", bpm)
                 ));
@@ -623,6 +623,6 @@ mod tests {
     #[test]
     fn test_calculate_optimal_batch_size() {
         let size = calculate_optimal_batch_size();
-        assert!(size >= 100 && size <= 5000);
+        assert!((100..=5000).contains(&size));
     }
 }

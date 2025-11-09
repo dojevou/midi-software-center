@@ -1,15 +1,15 @@
-//! Error Handling Module - PURE FUNCTION ARCHETYPE
-//!
-//! PURPOSE: Transform and convert error types for Tauri commands
-//! ARCHETYPE: Pure Function (deterministic transformations, no I/O)
-//! LOCATION: pipeline/src-tauri/src/error.rs
-//!
-//! ✅ CAN: Transform errors (sqlx::Error → AppError)
-//! ✅ CAN: Convert types (AppError → String)
-//! ✅ SHOULD: Be deterministic
-//! ❌ NO: I/O operations
-//! ❌ NO: Side effects
-//! ❌ NO: State
+   /// Error Handling Module - PURE FUNCTION ARCHETYPE
+   ///
+   /// PURPOSE: Transform and convert error types for Tauri commands
+   /// ARCHETYPE: Pure Function (deterministic transformations, no I/O)
+   /// LOCATION: pipeline/src-tauri/src/error.rs
+   ///
+   /// ✅ CAN: Transform errors (sqlx::Error → AppError)
+   /// ✅ CAN: Convert types (AppError → String)
+   /// ✅ SHOULD: Be deterministic
+   /// ❌ NO: I/O operations
+   /// ❌ NO: Side effects
+   /// ❌ NO: State
 
 use std::fmt;
 

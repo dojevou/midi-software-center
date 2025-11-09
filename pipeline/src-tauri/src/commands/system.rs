@@ -1,12 +1,12 @@
-//! System command handlers - GROWN-UP SCRIPT ARCHETYPE
-//!
-//! PURPOSE: System-level operations and information
-//! ARCHETYPE: Grown-up Script (I/O operations)
-//!
-//! ✅ CAN: Perform system I/O
-//! ✅ CAN: Have side effects
-//! ✅ SHOULD: Handle errors properly
-//! ❌ NO: Complex business logic
+   /// System command handlers - GROWN-UP SCRIPT ARCHETYPE
+   ///
+   /// PURPOSE: System-level operations and information
+   /// ARCHETYPE: Grown-up Script (I/O operations)
+   ///
+   /// ✅ CAN: Perform system I/O
+   /// ✅ CAN: Have side effects
+   /// ✅ SHOULD: Handle errors properly
+   /// ❌ NO: Complex business logic
 
 use serde::Serialize;
 use tauri::State;

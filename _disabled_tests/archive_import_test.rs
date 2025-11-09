@@ -1,34 +1,34 @@
-//! Comprehensive tests for pipeline/src-tauri/src/commands/archive_import.rs
-//! Commands: import_archive_collection, process_single_archive
-//!
-//! **Target Coverage:** 90%+ (Trusty Module requirement: 80%+)
-//! **Total Tests:** 20 (comprehensive suite)
-//!
-//! This test suite validates the archive collection import pipeline including ZIP extraction,
-//! recursive nested archive processing, and robust security validation.
-//!
-//! **Test Categories:**
-//! 1. SECTION 1: Basic Archive Operations (6 tests) - Single/batch extraction, nested archives
-//! 2. SECTION 2: Error Handling & Security (10 tests) - Corruption, path traversal, depth limits
-//! 3. SECTION 3: Integration & Performance (4 tests) - Progress events, database verification, performance
-//!
-//! **Archive Processing Features:**
-//! - ZIP archive extraction with configurable depth limits
-//! - Recursive nested archive processing (archives containing archives)
-//! - Mixed file type handling (extracts only .mid/.midi files)
-//! - Category auto-tagging from archive names
-//! - Progress event emission for batch operations
-//! - Database integration with imported file verification
-//!
-//! **Special Considerations:**
-//! - Path traversal attack prevention (sanitize extracted paths)
-//! - Maximum recursion depth protection (default: 10 levels)
-//! - Corrupted archive error handling and recovery
-//! - Empty archive graceful handling
-//! - Unsupported format detection (e.g., RAR files)
-//! - Duplicate filename collision resolution
-//! - Temporary file cleanup after extraction
-//! - Performance benchmarks (100+ files in <30s)
+   /// Comprehensive tests for pipeline/src-tauri/src/commands/archive_import.rs
+   /// Commands: import_archive_collection, process_single_archive
+   ///
+   /// **Target Coverage:** 90%+ (Trusty Module requirement: 80%+)
+   /// **Total Tests:** 20 (comprehensive suite)
+   ///
+   /// This test suite validates the archive collection import pipeline including ZIP extraction,
+   /// recursive nested archive processing, and robust security validation.
+   ///
+   /// **Test Categories:**
+   /// 1. SECTION 1: Basic Archive Operations (6 tests) - Single/batch extraction, nested archives
+   /// 2. SECTION 2: Error Handling & Security (10 tests) - Corruption, path traversal, depth limits
+   /// 3. SECTION 3: Integration & Performance (4 tests) - Progress events, database verification, performance
+   ///
+   /// **Archive Processing Features:**
+   /// - ZIP archive extraction with configurable depth limits
+   /// - Recursive nested archive processing (archives containing archives)
+   /// - Mixed file type handling (extracts only .mid/.midi files)
+   /// - Category auto-tagging from archive names
+   /// - Progress event emission for batch operations
+   /// - Database integration with imported file verification
+   ///
+   /// **Special Considerations:**
+   /// - Path traversal attack prevention (sanitize extracted paths)
+   /// - Maximum recursion depth protection (default: 10 levels)
+   /// - Corrupted archive error handling and recovery
+   /// - Empty archive graceful handling
+   /// - Unsupported format detection (e.g., RAR files)
+   /// - Duplicate filename collision resolution
+   /// - Temporary file cleanup after extraction
+   /// - Performance benchmarks (100+ files in <30s)
 
 #[cfg(test)]
 mod tests {

@@ -1,7 +1,7 @@
-//! Sequencer Core - Trusty Modules
-//!
-//! Pure functions for timing calculations and sequencer logic.
-//! NO I/O operations - all functions are deterministic and testable.
+   /// Sequencer Core - Trusty Modules
+   ///
+   /// Pure functions for timing calculations and sequencer logic.
+   /// NO I/O operations - all functions are deterministic and testable.
 
 pub mod timing;
 

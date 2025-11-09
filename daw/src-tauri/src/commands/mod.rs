@@ -1,8 +1,9 @@
-//! Tauri command handlers
-//!
-//! Grown-up Scripts: Thin wrappers that expose backend functionality to frontend.
-//! All commands delegate business logic to Trusty Modules or Grown-up Scripts.
+   /// Tauri command handlers
+   ///
+   /// Grown-up Scripts: Thin wrappers that expose backend functionality to frontend.
+   /// All commands delegate business logic to Trusty Modules or Grown-up Scripts.
 
+pub mod automation;
 pub mod midi;
 pub mod sequencer;
 pub mod search;
@@ -10,6 +11,9 @@ pub mod analysis;
 pub mod export;
 pub mod project;
 pub mod window;
+
+// Re-export commonly used types
+pub use automation::AutomationState;
 
 /// Shared application state across all commands
 ///
@@ -87,12 +91,8 @@ pub use window::{
     get_daw_state, reset_daw_state,
 };
 
-// Automation commands
+// Automation types (commands not yet implemented)
 #[allow(unused_imports)]
-pub use automation::{
-    AutomationState,
-    create_automation_lane, delete_automation_lane,
-    add_automation_point, remove_automation_point, move_automation_point,
-    set_automation_curve_type, get_automation_lane, get_track_automation,
-    get_automation_value, clear_track_automation, clear_all_automation,
+pub use crate::automation::{
+    AutomationLane, AutomationPoint, AutomationCurve, CurveType, ParameterType,
 };

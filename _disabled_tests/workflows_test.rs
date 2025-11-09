@@ -1,16 +1,16 @@
-//! Phase 7.1: Full Workflow Integration Tests (45-55 tests)
-//!
-//! Extended multi-step workflows testing real-world scenarios:
-//! - Music production workflows (8 tests)
-//! - Library management workflows (7 tests)
-//! - Collaborative workflows (6 tests)
-//! - Search and curation workflows (6 tests)
-//! - Performance and optimization workflows (6 tests)
-//! - Error recovery workflows (6 tests)
-//! - Advanced feature workflows (6 tests)
-//!
-//! All tests use real database operations, actual MIDI files, and complete
-//! end-to-end workflow validation with performance assertions.
+   /// Phase 7.1: Full Workflow Integration Tests (45-55 tests)
+   ///
+   /// Extended multi-step workflows testing real-world scenarios:
+   /// - Music production workflows (8 tests)
+   /// - Library management workflows (7 tests)
+   /// - Collaborative workflows (6 tests)
+   /// - Search and curation workflows (6 tests)
+   /// - Performance and optimization workflows (6 tests)
+   /// - Error recovery workflows (6 tests)
+   /// - Advanced feature workflows (6 tests)
+   ///
+   /// All tests use real database operations, actual MIDI files, and complete
+   /// end-to-end workflow validation with performance assertions.
 
 use midi_pipeline::commands::file_import::{import_single_file, import_directory};
 use midi_pipeline::commands::files::{get_file_count, get_file_details, delete_file, list_files};

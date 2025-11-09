@@ -1,7 +1,7 @@
-//! Piano Roll Undo/Redo Commands - Trusty Module
-//!
-//! Commands for piano roll operations: add/delete/move notes, set velocity, quantize, transpose.
-//! All commands are pure data transformations without I/O.
+   /// Piano Roll Undo/Redo Commands - Trusty Module
+   ///
+   /// Commands for piano roll operations: add/delete/move notes, set velocity, quantize, transpose.
+   /// All commands are pure data transformations without I/O.
 
 use super::core::{Command, UndoRedoError, UndoRedoResult};
 use crate::editors::piano_roll::{MidiNote, PianoRollState};

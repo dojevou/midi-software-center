@@ -1,12 +1,12 @@
-//! Archive Collection Import Command
-//!
-//! Processes entire collections of nested archives, extracting and importing
-//! all MIDI files with automatic tagging.
-//!
-//! # Archetype: Grown-up Script (Tauri Command Wrapper)
-//! - Thin wrapper around core functionality
-//! - Coordinates decompressor + file import modules
-//! - Provides progress feedback to UI
+   /// Archive Collection Import Command
+   ///
+   /// Processes entire collections of nested archives, extracting and importing
+   /// all MIDI files with automatic tagging.
+   ///
+   /// # Archetype: Grown-up Script (Tauri Command Wrapper)
+   /// - Thin wrapper around core functionality
+   /// - Coordinates decompressor + file import modules
+   /// - Provides progress feedback to UI
 
 use crate::AppState;
 use crate::io::decompressor::extractor::{extract_archive, ExtractionConfig};

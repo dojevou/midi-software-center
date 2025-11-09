@@ -1,6 +1,6 @@
-//! Sequencer models
-//!
-//! Trusty Module: Pure data structures for sequencer state and tracks.
+   /// Sequencer models
+   ///
+   /// Trusty Module: Pure data structures for sequencer state and tracks.
 
 use serde::{Deserialize, Serialize};
 use super::midi::MidiEvent;

@@ -1,6 +1,6 @@
-//! Window layout persistence and management
-//!
-//! Handles saving, loading, and managing window layouts.
+   /// Window layout persistence and management
+   ///
+   /// Handles saving, loading, and managing window layouts.
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -157,7 +157,7 @@ impl LayoutStorage {
                 .map_err(|e| format!("Failed to read directory entry: {}", e))?;
 
             let path = entry.path();
-            if path.extension().map_or(false, |ext| ext == "json") {
+            if path.extension().is_some_and(|ext| ext == "json") {
                 if let Some(name) = path.file_stem().and_then(|n| n.to_str()) {
                     layouts.push(name.to_string());
                 }

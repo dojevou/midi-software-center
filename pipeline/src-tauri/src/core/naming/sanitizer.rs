@@ -1,6 +1,6 @@
-//! Filename Sanitization
-//!
-//! Ensures filenames are valid across all operating systems.
+   /// Filename Sanitization
+   ///
+   /// Ensures filenames are valid across all operating systems.
 
 /// Sanitizes a string for use in filenames
 ///

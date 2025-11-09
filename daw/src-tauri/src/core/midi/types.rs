@@ -1,7 +1,7 @@
-//! MIDI types and message encoding/decoding
-//!
-//! Trusty Module: Pure data structures and conversion functions.
-//! No I/O operations - all functions are pure and deterministic.
+   /// MIDI types and message encoding/decoding
+   ///
+   /// Trusty Module: Pure data structures and conversion functions.
+   /// No I/O operations - all functions are pure and deterministic.
 
 // Re-export from models for convenience
 pub use crate::models::MidiEventType;

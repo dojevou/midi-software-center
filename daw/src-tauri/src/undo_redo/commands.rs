@@ -1,6 +1,6 @@
-//! Tauri Command Handlers - Task-O-Matic
-//!
-//! Entry points for undo/redo operations exposed to frontend.
+   /// Tauri Command Handlers - Task-O-Matic
+   ///
+   /// Entry points for undo/redo operations exposed to frontend.
 
 use super::core::CommandHistory;
 use std::sync::Mutex;

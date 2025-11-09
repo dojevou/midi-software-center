@@ -1,7 +1,7 @@
-//! DAW window state structures
-//!
-//! Defines state for DAW windows including transport controls, playback position,
-//! track information, and mixer state.
+   /// DAW window state structures
+   ///
+   /// Defines state for DAW windows including transport controls, playback position,
+   /// track information, and mixer state.
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

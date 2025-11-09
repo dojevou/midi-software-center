@@ -1,6 +1,6 @@
-//! MIDI Analyzer - Trusty Module
-//!
-//! Extracts complete musical metadata from MIDI files
+   /// MIDI Analyzer - Trusty Module
+   ///
+   /// Extracts complete musical metadata from MIDI files
 
 use midly::{Smf, Timing, MetaMessage, TrackEventKind, MidiMessage};
 use std::collections::HashMap;

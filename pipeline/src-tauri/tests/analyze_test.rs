@@ -1,36 +1,36 @@
-//! Comprehensive tests for pipeline/src-tauri/src/commands/analyze.rs
-//! Commands: start_analysis
-//!
-//! **Target Coverage:** 90%+ (Trusty Module requirement: 80%+)
-//! **Total Tests:** 35 (original comprehensive suite)
-//!
-//! This test suite validates the high-performance parallel analysis system that processes
-//! 1.1M+ MIDI files using 32 concurrent workers with batch database operations.
-//!
-//! **Test Categories:**
-//! 1. Musical Analysis Operations - BPM detection, key detection, duration calculation
-//! 2. Parallel Processing - 32 worker pool with Arc<Semaphore> limiting
-//! 3. Batch Database Operations - 1000-file fetch chunks, 100-file insert batches
-//! 4. Progress Tracking - Arc<AtomicUsize> counters, event emission
-//! 5. Error Handling - Arc<Mutex<Vec>>> error collection, graceful recovery
-//!
-//! **Performance Characteristics:**
-//! - Batch fetching in 1000-file chunks from database
-//! - Parallel analysis with 32 concurrent workers
-//! - Arc<Semaphore> concurrency control for resource limiting
-//! - Arc<AtomicUsize> thread-safe counters for progress tracking
-//! - Arc<Mutex<Vec<>>> for error collection across workers
-//! - Progress event emission throttling (every 10 files)
-//! - Batch metadata insertion (100-file batches for optimal throughput)
-//!
-//! **Special Considerations:**
-//! - BPM detector accuracy (within ±5 BPM tolerance)
-//! - Key detector using Krumhansl-Schmuckler algorithm
-//! - Duration analysis in both seconds and MIDI ticks
-//! - Worker pool saturation and semaphore backpressure
-//! - Database transaction batching for high throughput
-//! - Progress event rate limiting to avoid UI overload
-//! - Error recovery without stopping entire analysis batch
+   /// Comprehensive tests for pipeline/src-tauri/src/commands/analyze.rs
+   /// Commands: start_analysis
+   ///
+   /// **Target Coverage:** 90%+ (Trusty Module requirement: 80%+)
+   /// **Total Tests:** 35 (original comprehensive suite)
+   ///
+   /// This test suite validates the high-performance parallel analysis system that processes
+   /// 1.1M+ MIDI files using 32 concurrent workers with batch database operations.
+   ///
+   /// **Test Categories:**
+   /// 1. Musical Analysis Operations - BPM detection, key detection, duration calculation
+   /// 2. Parallel Processing - 32 worker pool with Arc<Semaphore> limiting
+   /// 3. Batch Database Operations - 1000-file fetch chunks, 100-file insert batches
+   /// 4. Progress Tracking - Arc<AtomicUsize> counters, event emission
+   /// 5. Error Handling - Arc<Mutex<Vec>>> error collection, graceful recovery
+   ///
+   /// **Performance Characteristics:**
+   /// - Batch fetching in 1000-file chunks from database
+   /// - Parallel analysis with 32 concurrent workers
+   /// - Arc<Semaphore> concurrency control for resource limiting
+   /// - Arc<AtomicUsize> thread-safe counters for progress tracking
+   /// - Arc<Mutex<Vec<>>> for error collection across workers
+   /// - Progress event emission throttling (every 10 files)
+   /// - Batch metadata insertion (100-file batches for optimal throughput)
+   ///
+   /// **Special Considerations:**
+   /// - BPM detector accuracy (within ±5 BPM tolerance)
+   /// - Key detector using Krumhansl-Schmuckler algorithm
+   /// - Duration analysis in both seconds and MIDI ticks
+   /// - Worker pool saturation and semaphore backpressure
+   /// - Database transaction batching for high throughput
+   /// - Progress event rate limiting to avoid UI overload
+   /// - Error recovery without stopping entire analysis batch
 
 use common::*;
 use midi_library_shared::core::midi::parser::parse_midi_file;
@@ -73,7 +73,7 @@ impl TestWindow {
     }
 }
 
-impl Emitter for TestWindow {
+impl<R: tauri::Runtime> Emitter<R> for TestWindow {
     fn emit<S: serde::Serialize + Clone>(&self, event: &str, payload: S) -> tauri::Result<()> {
         let events = self.events.clone();
         let event_name = event.to_string();

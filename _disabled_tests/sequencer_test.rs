@@ -1,11 +1,11 @@
-//! Sequencer command integration tests (45 tests)
-//!
-//! Tests for sequencer.rs commands covering:
-//! - Playback control (start, stop, pause, resume)
-//! - Tempo and position management
-//! - Track operations (add, remove, update)
-//! - State management and concurrency
-//! - Performance and stress testing
+   /// Sequencer command integration tests (45 tests)
+   ///
+   /// Tests for sequencer.rs commands covering:
+   /// - Playback control (start, stop, pause, resume)
+   /// - Tempo and position management
+   /// - Track operations (add, remove, update)
+   /// - State management and concurrency
+   /// - Performance and stress testing
 
 use crate::common::*;
 use midi_daw::commands::AppState;

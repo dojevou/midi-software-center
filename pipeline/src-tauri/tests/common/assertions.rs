@@ -1,4 +1,4 @@
-//! Custom assertion helpers for common test validations
+   /// Custom assertion helpers for common test validations
 
 use sqlx::PgPool;
 

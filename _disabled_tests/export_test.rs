@@ -1,11 +1,11 @@
-//! Export command integration tests (25 tests)
-//!
-//! Tests for export.rs commands covering:
-//! - MIDI file export (Format 0 and 1)
-//! - Path validation and error handling
-//! - File system operations
-//! - MIDI data generation
-//! - Performance testing
+   /// Export command integration tests (25 tests)
+   ///
+   /// Tests for export.rs commands covering:
+   /// - MIDI file export (Format 0 and 1)
+   /// - Path validation and error handling
+   /// - File system operations
+   /// - MIDI data generation
+   /// - Performance testing
 
 use crate::common::*;
 use midi_daw::commands::export::*;

@@ -1,27 +1,27 @@
-//! Comprehensive tests for pipeline/src-tauri/src/commands/split_file.rs
-//! Commands: split_and_import
-//!
-//! **Target Coverage:** 90%+ (Trusty Module requirement: 80%+)
-//! **Total Tests:** 39 (27 original + 12 advanced error path tests)
-//!
-//! This test suite covers the split_and_import command with comprehensive edge case testing,
-//! error path coverage, filesystem safety validation, and database transaction verification.
-//!
-//! **Test Categories:**
-//! 1. FUNCTION 1: split_and_import() (15-18 tests) - Success paths, various track counts
-//! 2. UTILITY FUNCTION TESTS (5 tests) - Filename generation, sanitization
-//! 3. ERROR HANDLING TESTS (6 tests) - Transaction rollback, constraints, content hash
-//! 4. SECTION 3: Advanced Error Scenarios (12 tests) - Security, filesystem, concurrency
-//!
-//! **Special Considerations:**
-//! - Output directory creation and permissions handling
-//! - Track metadata extraction (tempo, key, instrument)
-//! - Filename sanitization (Unicode, path traversal, length limits)
-//! - Database transaction rollback on constraint violations
-//! - Concurrent split operations and race conditions
-//! - Split file deduplication via content_hash uniqueness
-//! - CASCADE deletion of track_splits when parent file deleted
-//! - Filesystem path length limits (255 chars for filenames)
+   /// Comprehensive tests for pipeline/src-tauri/src/commands/split_file.rs
+   /// Commands: split_and_import
+   ///
+   /// **Target Coverage:** 90%+ (Trusty Module requirement: 80%+)
+   /// **Total Tests:** 39 (27 original + 12 advanced error path tests)
+   ///
+   /// This test suite covers the split_and_import command with comprehensive edge case testing,
+   /// error path coverage, filesystem safety validation, and database transaction verification.
+   ///
+   /// **Test Categories:**
+   /// 1. FUNCTION 1: split_and_import() (15-18 tests) - Success paths, various track counts
+   /// 2. UTILITY FUNCTION TESTS (5 tests) - Filename generation, sanitization
+   /// 3. ERROR HANDLING TESTS (6 tests) - Transaction rollback, constraints, content hash
+   /// 4. SECTION 3: Advanced Error Scenarios (12 tests) - Security, filesystem, concurrency
+   ///
+   /// **Special Considerations:**
+   /// - Output directory creation and permissions handling
+   /// - Track metadata extraction (tempo, key, instrument)
+   /// - Filename sanitization (Unicode, path traversal, length limits)
+   /// - Database transaction rollback on constraint violations
+   /// - Concurrent split operations and race conditions
+   /// - Split file deduplication via content_hash uniqueness
+   /// - CASCADE deletion of track_splits when parent file deleted
+   /// - Filesystem path length limits (255 chars for filenames)
 
 use midi_pipeline::commands::split_file::{split_and_import, SplitResult};
 use std::path::PathBuf;

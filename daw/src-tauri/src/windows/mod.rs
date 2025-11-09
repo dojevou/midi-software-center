@@ -1,19 +1,19 @@
-//! Window Management System for DAW
-//!
-//! Provides window state management, specialized for DAW windows including
-//! the main DAW window, Mixer, and integration with Database/Pipeline windows.
-//!
-//! # Architecture
-//!
-//! - `state`: DAW-specific window state structures (playback, tracks, transport)
-//! - Commands are in `commands::window` module
-//!
-//! # Window Types
-//!
-//! - **DAW Window**: Main sequencer/piano roll window with transport controls
-//! - **Mixer Window**: Channel strip mixer with routing and effects
-//! - **Database Window**: File browser and search (shared from Pipeline)
-//! - **Pipeline Window**: Batch import and analysis (shared from Pipeline)
+   /// Window Management System for DAW
+   ///
+   /// Provides window state management, specialized for DAW windows including
+   /// the main DAW window, Mixer, and integration with Database/Pipeline windows.
+   ///
+   /// # Architecture
+   ///
+   /// - `state`: DAW-specific window state structures (playback, tracks, transport)
+   /// - Commands are in `commands::window` module
+   ///
+   /// # Window Types
+   ///
+   /// - **DAW Window**: Main sequencer/piano roll window with transport controls
+   /// - **Mixer Window**: Channel strip mixer with routing and effects
+   /// - **Database Window**: File browser and search (shared from Pipeline)
+   /// - **Pipeline Window**: Batch import and analysis (shared from Pipeline)
 
 pub mod state;
 

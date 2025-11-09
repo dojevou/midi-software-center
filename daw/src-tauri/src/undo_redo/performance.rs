@@ -1,6 +1,6 @@
-//! Performance Optimization - Trusty Module
-//!
-//! Command compression and memory management for optimal performance.
+   /// Performance Optimization - Trusty Module
+   ///
+   /// Command compression and memory management for optimal performance.
 
 use super::core::{Command, UndoRedoResult};
 

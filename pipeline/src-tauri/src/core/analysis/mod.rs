@@ -1,4 +1,4 @@
-//! Analysis modules for MIDI file processing
+   /// Analysis modules for MIDI file processing
 
 pub mod auto_tagger;
 pub mod bpm_detector;

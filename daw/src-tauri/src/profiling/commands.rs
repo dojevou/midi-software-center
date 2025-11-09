@@ -1,21 +1,21 @@
-//! Tauri commands for memory profiling
-//!
-//! Provides frontend access to memory metrics, cache management,
-//! and rendering statistics.
-//!
-//! # Architecture
-//!
-//! This is a **Grown-up Script** - Tauri command wrappers with error handling:
-//! - Entry point for profiling operations
-//! - State management for memory tracker and caches
-//! - Error conversion to String for Tauri
-//!
-//! # Commands
-//!
-//! - `get_memory_metrics` - Get current memory usage
-//! - `get_cache_stats` - Get cache statistics
-//! - `cache_clear` - Clear all caches
-//! - `get_render_metrics` - Get rendering performance
+   /// Tauri commands for memory profiling
+   ///
+   /// Provides frontend access to memory metrics, cache management,
+   /// and rendering statistics.
+   ///
+   /// # Architecture
+   ///
+   /// This is a **Grown-up Script** - Tauri command wrappers with error handling:
+   /// - Entry point for profiling operations
+   /// - State management for memory tracker and caches
+   /// - Error conversion to String for Tauri
+   ///
+   /// # Commands
+   ///
+   /// - `get_memory_metrics` - Get current memory usage
+   /// - `get_cache_stats` - Get cache statistics
+   /// - `cache_clear` - Clear all caches
+   /// - `get_render_metrics` - Get rendering performance
 
 use crate::profiling::{MemoryMetrics, MemoryTracker, RenderMetrics};
 use std::sync::Arc;

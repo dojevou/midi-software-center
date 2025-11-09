@@ -1,5 +1,5 @@
-//! Tauri mocking framework for testing IPC commands
-//! Captures event emissions and provides assertions
+   /// Tauri mocking framework for testing IPC commands
+   /// Captures event emissions and provides assertions
 
 use std::sync::Arc;
 use tokio::sync::Mutex;

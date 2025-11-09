@@ -1,7 +1,7 @@
-//! Export Tauri commands
-//!
-//! Grown-up Script: Handles exporting sequencer projects and MIDI data.
-//! Delegates MIDI file generation to Trusty Modules (pure functions).
+   /// Export Tauri commands
+   ///
+   /// Grown-up Script: Handles exporting sequencer projects and MIDI data.
+   /// Delegates MIDI file generation to Trusty Modules (pure functions).
 
 use crate::core::midi::writer;
 use crate::models::midi::{MidiEvent, MidiEventType};

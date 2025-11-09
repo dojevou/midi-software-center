@@ -1,10 +1,10 @@
-//! Phase 7.1 Extended: Search, Performance, Error Recovery, and Advanced Workflows
-//!
-//! Continuation of workflows_test.rs with:
-//! - Search and curation workflows (6 tests)
-//! - Performance and optimization workflows (6 tests)
-//! - Error recovery workflows (6 tests)
-//! - Advanced feature workflows (6 tests)
+   /// Phase 7.1 Extended: Search, Performance, Error Recovery, and Advanced Workflows
+   ///
+   /// Continuation of workflows_test.rs with:
+   /// - Search and curation workflows (6 tests)
+   /// - Performance and optimization workflows (6 tests)
+   /// - Error recovery workflows (6 tests)
+   /// - Advanced feature workflows (6 tests)
 
 use midi_pipeline::commands::file_import::{import_single_file, import_directory};
 use midi_pipeline::commands::files::{get_file_count, get_file_details, list_files};

@@ -1,11 +1,11 @@
-//! MIDI hardware command integration tests (20 tests)
-//!
-//! Tests for midi.rs commands covering:
-//! - Device listing and discovery
-//! - Connection management
-//! - MIDI message sending (Note On/Off, CC, Program Change)
-//! - Device status checking
-//! - Error handling and edge cases
+   /// MIDI hardware command integration tests (20 tests)
+   ///
+   /// Tests for midi.rs commands covering:
+   /// - Device listing and discovery
+   /// - Connection management
+   /// - MIDI message sending (Note On/Off, CC, Program Change)
+   /// - Device status checking
+   /// - Error handling and edge cases
 
 use crate::common::*;
 use midi_daw::midi::MidiManager;

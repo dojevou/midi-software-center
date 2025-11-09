@@ -1,7 +1,7 @@
-//! MIDI connection manager
-//!
-//! Grown-up Script: Handles MIDI device connections and message transmission.
-//! Delegates validation and encoding to Trusty Modules.
+   /// MIDI connection manager
+   ///
+   /// Grown-up Script: Handles MIDI device connections and message transmission.
+   /// Delegates validation and encoding to Trusty Modules.
 
 use midir::{MidiOutput, MidiOutputConnection};
 use std::sync::Arc;

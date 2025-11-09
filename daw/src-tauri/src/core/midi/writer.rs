@@ -1,7 +1,7 @@
-//! MIDI File Writer - Trusty Module
-//!
-//! Pure functions for writing MIDI files from event data structures.
-//! NO I/O - caller receives bytes and writes to file.
+   /// MIDI File Writer - Trusty Module
+   ///
+   /// Pure functions for writing MIDI files from event data structures.
+   /// NO I/O - caller receives bytes and writes to file.
 
 use crate::models::midi::{MidiEvent, MidiEventType};
 

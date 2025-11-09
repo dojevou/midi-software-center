@@ -1,33 +1,33 @@
-//! BLAKE3 hashing module for file content deduplication and integrity verification.
-//!
-//! This is a **Trusty Module** with pure hashing logic.
-//!
-//! # Architecture Pattern
-//!
-//! Core functions are pure (no I/O):
-//! - `calculate_content_hash()` - Pure hash calculation
-//! - `hash_to_hex()` - Pure conversion
-//!
-//! Convenience wrapper (does I/O):
-//! - `calculate_file_hash()` - Reads file and calculates hash
-//!
-//! # Performance
-//!
-//! BLAKE3 provides significant performance improvements over SHA-256:
-//! - **Single-threaded**: ~3,000 MB/s (vs SHA-256 ~400 MB/s)
-//! - **Multi-threaded**: ~10,000 MB/s with parallel tree hashing
-//! - **7x faster** than SHA-256 for typical file sizes
-//!
-//! # Examples
-//!
-//! ```rust
-//! use pipeline::core::hash::blake3::{calculate_content_hash, hash_to_hex};
-//!
-//! let data = b"Hello, MIDI Library System!";
-//! let hash = calculate_content_hash(data);
-//! let hex_string = hash_to_hex(&hash);
-//! println!("Hash: {}", hex_string);
-//! ```
+   /// BLAKE3 hashing module for file content deduplication and integrity verification.
+   ///
+   /// This is a **Trusty Module** with pure hashing logic.
+   ///
+   /// # Architecture Pattern
+   ///
+   /// Core functions are pure (no I/O):
+   /// - `calculate_content_hash()` - Pure hash calculation
+   /// - `hash_to_hex()` - Pure conversion
+   ///
+   /// Convenience wrapper (does I/O):
+   /// - `calculate_file_hash()` - Reads file and calculates hash
+   ///
+   /// # Performance
+   ///
+   /// BLAKE3 provides significant performance improvements over SHA-256:
+   /// - **Single-threaded**: ~3,000 MB/s (vs SHA-256 ~400 MB/s)
+   /// - **Multi-threaded**: ~10,000 MB/s with parallel tree hashing
+   /// - **7x faster** than SHA-256 for typical file sizes
+   ///
+   /// # Examples
+   ///
+   /// ```rust
+   /// use pipeline::core::hash::blake3::{calculate_content_hash, hash_to_hex};
+   ///
+   /// let data = b"Hello, MIDI Library System!";
+   /// let hash = calculate_content_hash(data);
+   /// let hex_string = hash_to_hex(&hash);
+   /// println!("Hash: {}", hex_string);
+   /// ```
 
 use std::fs::File;
 use std::io::{self, Read};

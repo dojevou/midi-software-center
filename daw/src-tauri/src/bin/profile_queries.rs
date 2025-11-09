@@ -1,19 +1,19 @@
-//! Database Query Profiling CLI Tool
-//!
-//! This binary analyzes all database queries in the MIDI Software Center
-//! and generates a comprehensive profiling report with optimization recommendations.
-//!
-//! Usage:
-//!   cargo run --bin profile_queries
-//!   cargo run --bin profile_queries -- --output report.md
-//!   cargo run --bin profile_queries -- --no-load-tests
-//!
-//! Output:
-//!   - Markdown report with query analysis
-//!   - Index recommendations with SQL
-//!   - Cache strategy recommendations
-//!   - Load test results
-//!   - Connection pool metrics
+   /// Database Query Profiling CLI Tool
+   ///
+   /// This binary analyzes all database queries in the MIDI Software Center
+   /// and generates a comprehensive profiling report with optimization recommendations.
+   ///
+   /// Usage:
+   ///   cargo run --bin profile_queries
+   ///   cargo run --bin profile_queries -- --output report.md
+   ///   cargo run --bin profile_queries -- --no-load-tests
+   ///
+   /// Output:
+   ///   - Markdown report with query analysis
+   ///   - Index recommendations with SQL
+   ///   - Cache strategy recommendations
+   ///   - Load test results
+   ///   - Connection pool metrics
 
 use clap::Parser;
 use sqlx::postgres::PgPoolOptions;

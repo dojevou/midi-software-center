@@ -1,15 +1,15 @@
-//! Performance optimization modules
-//!
-//! This module contains pure logic for optimizing file processing performance
-//! based on system resources and workload characteristics.
-//!
-//! # Architecture
-//!
-//! All modules in this package are **Trusty Modules** - pure logic with no I/O.
-//!
-//! # Modules
-//!
-//! - `concurrency`: Dynamic concurrency tuning based on system resources
+   /// Performance optimization modules
+   ///
+   /// This module contains pure logic for optimizing file processing performance
+   /// based on system resources and workload characteristics.
+   ///
+   /// # Architecture
+   ///
+   /// All modules in this package are **Trusty Modules** - pure logic with no I/O.
+   ///
+   /// # Modules
+   ///
+   /// - `concurrency`: Dynamic concurrency tuning based on system resources
 
 pub mod concurrency;
 

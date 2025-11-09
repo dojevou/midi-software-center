@@ -1,7 +1,7 @@
-//! MIDI file loading and parsing
-//!
-//! Trusty Module: Pure functions for loading and parsing MIDI files.
-//! Uses midly crate for efficient MIDI parsing.
+   /// MIDI file loading and parsing
+   ///
+   /// Trusty Module: Pure functions for loading and parsing MIDI files.
+   /// Uses midly crate for efficient MIDI parsing.
 
 use midly::{Smf, Timing, TrackEventKind, MidiMessage as MidlyMessage};
 use std::fs;

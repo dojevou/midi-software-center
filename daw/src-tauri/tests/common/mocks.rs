@@ -1,5 +1,5 @@
-//! Tauri and MIDI mocking framework for testing IPC commands
-//! Captures event emissions and provides MIDI device simulation
+   /// Tauri and MIDI mocking framework for testing IPC commands
+   /// Captures event emissions and provides MIDI device simulation
 
 use std::sync::Arc;
 use tokio::sync::{Mutex, RwLock};

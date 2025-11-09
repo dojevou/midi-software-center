@@ -1,18 +1,18 @@
-//! File Import Commands - HIGH-PERFORMANCE PARALLEL IMPLEMENTATION
-//!
-//! Architecture: Grown-up Script
-//! Purpose: Tauri commands for importing MIDI files with parallel processing
-//!
-//! This module integrates ALL optimizations:
-//! - BLAKE3 hashing (7x faster than SHA-256)
-//! - Parallel processing with buffer_unordered (40x speedup)
-//! - Batch database inserts (10x faster writes)
-//! - Dynamic concurrency tuning (optimal for any system)
-//!
-//! Performance Targets:
-//! - 1,000 files: < 2 seconds
-//! - 10,000 files: ~25 seconds
-//! - 3,000,000 files: 1.5-2 hours (400-500 files/sec)
+   /// File Import Commands - HIGH-PERFORMANCE PARALLEL IMPLEMENTATION
+   ///
+   /// Architecture: Grown-up Script
+   /// Purpose: Tauri commands for importing MIDI files with parallel processing
+   ///
+   /// This module integrates ALL optimizations:
+   /// - BLAKE3 hashing (7x faster than SHA-256)
+   /// - Parallel processing with buffer_unordered (40x speedup)
+   /// - Batch database inserts (10x faster writes)
+   /// - Dynamic concurrency tuning (optimal for any system)
+   ///
+   /// Performance Targets:
+   /// - 1,000 files: < 2 seconds
+   /// - 10,000 files: ~25 seconds
+   /// - 3,000,000 files: 1.5-2 hours (400-500 files/sec)
 
 use crate::AppState;
 use crate::core::hash::calculate_file_hash;
@@ -36,7 +36,7 @@ use tokio::sync::Mutex;
 //=============================================================================
 
 /// Progress event for real-time UI updates
-#[derive(Debug, Clone, Serialize)]
+#[derive(Clone, Debug, Deserialize, Serialize)]
 pub struct ImportProgress {
     pub current: usize,
     pub total: usize,
@@ -153,7 +153,7 @@ pub async fn import_single_file(
     state: State<'_, AppState>,
     window: Window,
 ) -> Result<FileMetadata, String> {
-    let file = import_single_file_impl(file_path, category, &*state).await?;
+    let file = import_single_file_impl(file_path, category, &state).await?;
 
     // Emit progress event
     let _ = window.emit("import-progress", ImportProgress {
@@ -365,7 +365,7 @@ pub async fn import_directory(
     state: State<'_, AppState>,
     window: Window,
 ) -> Result<ImportSummary, String> {
-    import_directory_impl(directory_path, recursive, category, &*state).await
+    import_directory_impl(directory_path, recursive, category, &state).await
 }
 
 //=============================================================================

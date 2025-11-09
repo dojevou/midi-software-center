@@ -1,29 +1,29 @@
-//! Comprehensive tests for FileRepository
-//!
-//! **Target Coverage:** 90%+ (Trusty Module requirement: 80%+)
-//! **Total Tests:** 91 (78 original + 13 error path tests)
-//!
-//! This test suite covers all 8 public methods of FileRepository with comprehensive
-//! edge case testing, constraint violation handling, and performance verification.
-//!
-//! **Test Categories:**
-//! 1. Insert Operations (15 tests) - Basic, all fields, edge cases, constraints
-//! 2. Find Operations (12 tests) - By ID, hash, path, not found
-//! 3. Duplicate Detection (8 tests) - Duplicate hashes, paths, uniqueness
-//! 4. Update Operations (15 tests) - Mark analyzed, metadata updates
-//! 5. Delete Operations (10 tests) - Single, bulk, nonexistent, idempotent
-//! 6. Count Operations (8 tests) - With filters, empty results
-//! 7. List Operations (8 tests) - Pagination, sorting, filtering
-//! 8. Edge Cases (10 tests) - Not found, large data, boundary values
-//! 9. Error Path Tests (12 tests) - Constraint violations, value overflow
-//! 10. Performance Tests (3 tests) - Batch operations, large datasets
-//!
-//! **Special Considerations:**
-//! - Unique constraint on content_hash (no duplicates allowed)
-//! - File size validation (≥ 0 bytes)
-//! - MIDI format validation (0, 1, or 2 only)
-//! - Track count validation (0-128 tracks)
-//! - Filepath/filename length limits (VARCHAR(500) and VARCHAR(255))
+   /// Comprehensive tests for FileRepository
+   ///
+   /// **Target Coverage:** 90%+ (Trusty Module requirement: 80%+)
+   /// **Total Tests:** 91 (78 original + 13 error path tests)
+   ///
+   /// This test suite covers all 8 public methods of FileRepository with comprehensive
+   /// edge case testing, constraint violation handling, and performance verification.
+   ///
+   /// **Test Categories:**
+   /// 1. Insert Operations (15 tests) - Basic, all fields, edge cases, constraints
+   /// 2. Find Operations (12 tests) - By ID, hash, path, not found
+   /// 3. Duplicate Detection (8 tests) - Duplicate hashes, paths, uniqueness
+   /// 4. Update Operations (15 tests) - Mark analyzed, metadata updates
+   /// 5. Delete Operations (10 tests) - Single, bulk, nonexistent, idempotent
+   /// 6. Count Operations (8 tests) - With filters, empty results
+   /// 7. List Operations (8 tests) - Pagination, sorting, filtering
+   /// 8. Edge Cases (10 tests) - Not found, large data, boundary values
+   /// 9. Error Path Tests (12 tests) - Constraint violations, value overflow
+   /// 10. Performance Tests (3 tests) - Batch operations, large datasets
+   ///
+   /// **Special Considerations:**
+   /// - Unique constraint on content_hash (no duplicates allowed)
+   /// - File size validation (≥ 0 bytes)
+   /// - MIDI format validation (0, 1, or 2 only)
+   /// - Track count validation (0-128 tracks)
+   /// - Filepath/filename length limits (VARCHAR(500) and VARCHAR(255))
 
 mod common;
 use midi_pipeline::db::models::{File, NewFile};

@@ -1,21 +1,21 @@
-//! Comprehensive tests for DAW model layer (Phase 4 + Phase 6)
-//!
-//! Tests all model files in daw/src-tauri/src/models/:
-//! - analysis.rs: CompatibleFile, Key, Mode
-//! - error.rs: AppError variants and conversions
-//! - midi_file.rs: MidiFile, FileDetails
-//! - midi.rs: MidiDevice, MidiEvent, MidiNote, MidiPattern, ConnectionStatus
-//! - search.rs: SearchFilters, SearchResponse, Suggestion, FilterOption
-//! - sequencer.rs: Track, TrackProperties, PlaybackPosition, SequencerState
-//!
-//! **PHASE 4: Error Path Testing (21 new tests)**
-//! - SECTION 7: Constraint validation, boundary testing, error scenarios
-//! - Covers MIDI spec compliance (pitch 0-127, velocity 0-127, channels 0-15)
-//! - Tests for field validation gaps and invalid state combinations
-//! - Error coverage: ~22% for DAW models layer
-//!
-//! Coverage target: 90%+ error path testing across all models
-//! Test count: 73 → 94 tests (baseline + error paths)
+   /// Comprehensive tests for DAW model layer (Phase 4 + Phase 6)
+   ///
+   /// Tests all model files in daw/src-tauri/src/models/:
+   /// - analysis.rs: CompatibleFile, Key, Mode
+   /// - error.rs: AppError variants and conversions
+   /// - midi_file.rs: MidiFile, FileDetails
+   /// - midi.rs: MidiDevice, MidiEvent, MidiNote, MidiPattern, ConnectionStatus
+   /// - search.rs: SearchFilters, SearchResponse, Suggestion, FilterOption
+   /// - sequencer.rs: Track, TrackProperties, PlaybackPosition, SequencerState
+   ///
+   /// **PHASE 4: Error Path Testing (21 new tests)**
+   /// - SECTION 7: Constraint validation, boundary testing, error scenarios
+   /// - Covers MIDI spec compliance (pitch 0-127, velocity 0-127, channels 0-15)
+   /// - Tests for field validation gaps and invalid state combinations
+   /// - Error coverage: ~22% for DAW models layer
+   ///
+   /// Coverage target: 90%+ error path testing across all models
+   /// Test count: 73 → 94 tests (baseline + error paths)
 
 use midi_daw::models::*;
 use serde_json;
@@ -1893,12 +1893,12 @@ fn test_connection_status_all_variants() {
 // ============================================================================
 // SECTION 8: Module Documentation Update
 // ============================================================================
-//!
-//! **Phase 4.2: Error Path Testing Complete**
-//! - Section 7 adds 21 new error path tests
-//! - Covers constraint violations, boundary conditions, and invalid states
-//! - Tests validate MIDI spec compliance (pitch 0-127, velocity 0-127, channels 0-15)
-//! - Identifies validation gaps in data structures (e.g., negative scores allowed)
-//! - Total tests: 73 → 94 (+21 error tests)
-//! - Error coverage: 0% → ~22% for DAW models layer
-//!
+   ///
+   /// **Phase 4.2: Error Path Testing Complete**
+   /// - Section 7 adds 21 new error path tests
+   /// - Covers constraint violations, boundary conditions, and invalid states
+   /// - Tests validate MIDI spec compliance (pitch 0-127, velocity 0-127, channels 0-15)
+   /// - Identifies validation gaps in data structures (e.g., negative scores allowed)
+   /// - Total tests: 73 → 94 (+21 error tests)
+   /// - Error coverage: 0% → ~22% for DAW models layer
+   ///

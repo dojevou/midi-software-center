@@ -1,13 +1,13 @@
-//! MIDI Analysis CLI Tool
-//!
-//! Standalone binary to analyze all imported MIDI files
-//!
-//! Usage:
-//!   cargo run --bin analyze
-//!
-//! Environment Variables:
-//!   DATABASE_URL - PostgreSQL connection string
-//!                  Default: postgresql://midiuser:145278963@localhost:5433/midi_library
+   /// MIDI Analysis CLI Tool
+   ///
+   /// Standalone binary to analyze all imported MIDI files
+   ///
+   /// Usage:
+   ///   cargo run --bin analyze
+   ///
+   /// Environment Variables:
+   ///   DATABASE_URL - PostgreSQL connection string
+   ///                  Default: postgresql://midiuser:145278963@localhost:5433/midi_library
 
 use std::env;
 use std::sync::Arc;

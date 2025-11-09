@@ -1,9 +1,9 @@
-//! MIDI file parsing and types
-//!
-//! This module provides:
-//! - MIDI file parsing
-//! - MIDI data types
-//! - Error handling
+   /// MIDI file parsing and types
+   ///
+   /// This module provides:
+   /// - MIDI file parsing
+   /// - MIDI data types
+   /// - Error handling
 
 pub mod parser;
 pub mod types;

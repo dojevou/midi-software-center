@@ -1,4 +1,4 @@
-//! Import binary - standalone executable for batch importing MIDI files
+   /// Import binary - standalone executable for batch importing MIDI files
 
 use anyhow::{Context, Result};
 use clap::Parser;

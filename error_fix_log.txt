@@ -1,0 +1,239 @@
+[0;34m[12:26:19][0m Starting error fix process...
+[0;34m[12:26:19][0m Rust root: .
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[0;34m[12:26:19][0m Environment Check
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[0;32m✅ Python 3 available[0m
+[0;32m✅ Rust toolchain: rustc 1.91.0 (f8297e351 2025-10-28)[0m
+[0;32m✅ Cargo available[0m
+[0;34m[12:26:20][0m Verifying project structure...
+[0;32m✅ Project structure verified[0m
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[0;34m[PHASE][0m PHASE 0: Parse & Categorize Errors
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[0;34m[12:26:20][0m Parsing Quantum Analyzer error report...
+
+============================================================
+QUANTUM ERROR ANALYSIS SUMMARY
+============================================================
+Total Critical Errors: 194
+
+Errors by Category (Priority Order):
+------------------------------------------------------------
+1. Format String Errors....................  12 errors
+2. Missing Type Definitions................  10 errors
+3. Unresolved Imports......................  37 errors
+5. Missing Repository Methods..............  20 errors
+6. Trait Bound & Type Mismatch.............   6 errors
+7. Iterator & Type Conversion..............   4 errors
+8. Documentation Comment Errors............  51 errors
+9. Missing Type/Value Definitions..........   7 errors
+10. Other/Uncategorized.....................  47 errors
+
+============================================================
+
+✅ Reports generated in: error_reports/
+   - errors.csv (for spreadsheet review)
+   - errors.json (for programmatic use)
+[0;32m✅ Error analysis complete[0m
+[0;34m[12:26:20][0m Error Summary:
+Total Errors: 194
+  - Documentation Comment Errors: 51
+  - Other/Uncategorized: 47
+  - Unresolved Imports: 37
+  - Missing Repository Methods: 20
+  - Format String Errors: 12
+  - Missing Type Definitions: 10
+  - Missing Type/Value Definitions: 7
+  - Trait Bound & Type Mismatch: 6
+  - Iterator & Type Conversion: 4
+[0;34m[PHASE][0m PHASE 1: Fix Format String Errors (28 errors)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[0;34m[12:26:20][0m Fixing format string issues: format!("{0}") with no args...
+🔍 Found 294 Rust files
+🔧 Fixing format string errors...
+
+
+============================================================
+📊 RESULTS
+============================================================
+Files modified:     0
+Total fixes:        0
+
+⚠️  No format string errors found/fixed
+[0;32m✅ Format string fixes applied[0m
+[0;34m[PHASE][0m PHASE 2: Fix Missing Derive Macros (18 errors)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[0;34m[12:26:22][0m Adding missing #[derive(...)] macros...
+🔍 Found 294 Rust files
+🔧 Injecting missing derive macros...
+
+  ✅ pipeline/src-tauri/src/commands/file_import.rs: 1 macros added
+  ✅ pipeline/src-tauri/src/commands/tags.rs: 1 macros added
+
+============================================================
+📊 RESULTS
+============================================================
+Files modified:     2
+Total fixes:        2
+
+✅ Derive macros injected!
+Next: Run 'cargo build' to verify
+[0;32m✅ Derive macros injected[0m
+[0;34m[PHASE][0m PHASE 3: Fix Documentation Comments (23 errors)
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[0;34m[12:26:27][0m Converting inner doc comments (//!) to outer (///)...
+[0;32m✅ Documentation comments fixed[0m
+[0;34m[PHASE][0m PHASE 4: Manual Review Required
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+The following error categories require manual code review:
+
+1. MISSING TYPES (14 errors):
+   - SearchQuery
+   - NewTag
+   - SearchFilters
+   
+   ACTION: Search codebase for these types, check if renamed or moved
+   
+2. UNRESOLVED IMPORTS (11 errors):
+   - common module
+   - automation module
+   - midi_daw module
+   
+   ACTION: Verify module declarations in mod.rs files
+   
+3. APPSTATE ISSUES (12 errors):
+   - Cannot clone AppState
+   - Missing fields
+   
+   ACTION: Review AppState struct, use Arc<State<>> pattern
+   
+4. REPOSITORY METHODS (16 errors):
+   - add_tag_to_file()
+   - get_tags_for_file()
+   - search()
+   
+   ACTION: Implement missing methods in repository traits
+   
+5. ITERATOR/TYPE ISSUES (9 errors):
+   - tokio::fs::ReadDir not iterator
+   - Type conversions
+   
+   ACTION: Review async file operations, use proper iteration patterns
+
+[1;33m⚠️  Manual code review needed - see details above[0m
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[0;34m[12:26:28][0m Verification
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[0;34m[PHASE][0m Testing Compilation
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[0;34m[12:26:29][0m Running: cargo check
+warning: /home/dojevou/projects/midi-software-center/pipeline/src-tauri/Cargo.toml: unused manifest key: bin.0.walkdir
+   Compiling serde_core v1.0.228
+   Compiling zerocopy v0.8.27
+   Compiling target-lexicon v0.12.16
+   Compiling getrandom v0.3.4
+   Compiling thiserror v2.0.17
+   Compiling ring v0.17.14
+    Checking tokio v1.48.0
+    Checking x11-dl v2.21.0
+   Compiling rustix v1.1.2
+   Compiling cfg-expr v0.15.8
+    Checking serde v1.0.228
+    Checking bitflags v2.10.0
+    Checking serde_json v1.0.145
+    Checking deranged v0.5.5
+    Checking erased-serde v0.4.8
+    Checking serde_spanned v1.0.3
+    Checking toml_datetime v0.7.3
+    Checking serde_with v3.15.1
+    Checking unrar v0.5.8
+    Checking alsa v0.9.1
+    Checking alsa v0.8.1
+    Checking toml v0.9.8
+    Checking serde-untagged v0.1.9
+    Checking uuid v1.18.1
+    Checking url v2.5.7
+    Checking either v1.15.0
+    Checking dpi v0.1.2
+    Checking cfb v0.7.3
+    Checking ahash v0.8.12
+    Checking chrono v0.4.42
+    Checking hashbrown v0.14.5
+    Checking rayon v1.11.0
+    Checking urlpattern v0.3.0
+    Checking ppv-lite86 v0.2.21
+    Checking jsonptr v0.6.3
+    Checking time v0.3.44
+    Checking keyboard-types v0.7.0
+   Compiling rand_chacha v0.3.1
+   Compiling rand_chacha v0.2.2
+    Checking infer v0.19.0
+    Checking json-patch v3.0.1
+    Checking hashlink v0.8.4
+   Compiling rand v0.8.5
+   Compiling rand v0.7.3
+    Checking serialize-to-javascript v0.1.2
+   Compiling tempfile v3.23.0
+    Checking ron v0.7.1
+    Checking json5 v0.4.1
+   Compiling semver v1.0.27
+   Compiling camino v1.2.1
+   Compiling phf_generator v0.11.3
+   Compiling toml_datetime v0.6.3
+   Compiling serde_spanned v0.6.9
+   Compiling toml_edit v0.20.2
+   Compiling phf_generator v0.8.0
+   Compiling string_cache_codegen v0.5.4
+   Compiling phf_codegen v0.11.3
+   Compiling phf_generator v0.10.0
+   Compiling rustc_version v0.4.1
+   Compiling phf_codegen v0.8.0
+   Compiling phf_macros v0.10.0
+   Compiling string_cache v0.8.9
+   Compiling selectors v0.24.0
+   Compiling phf_macros v0.11.3
+   Compiling cargo-platform v0.1.9
+   Compiling indexmap v1.9.3
+   Compiling schemars v0.8.22
+   Compiling cargo_metadata v0.19.2
+   Compiling markup5ever v0.14.1
+   Compiling toml v0.8.2
+   Compiling system-deps v6.2.2
+   Compiling proc-macro-crate v2.0.2
+   Compiling embed-resource v3.0.6
+   Compiling tauri-winres v0.3.3
+   Compiling cargo_toml v0.22.3
+   Compiling field-offset v0.3.6
+   Compiling toml_edit v0.19.15
+    Checking cookie v0.18.1
+   Compiling rustls v0.21.12
+    Checking tokio-stream v0.1.17
+    Checking midly v0.5.3
+    Checking toml v0.5.11
+    Checking tracing-appender v0.2.3
+    Checking tokio-util v0.7.17
+    Checking midi-library-shared v0.1.0 (/home/dojevou/projects/midi-software-center/shared/rust)
+    Checking nt-time v0.6.13
+error: expected item after doc comment
+ --> shared/rust/src/core/analysis/key_profiles.rs:3:4
+  |
+1 | /    /// Key profile data
+2 | |    ///
+  | |______- other attributes here
+3 |      /// Placeholder - will be populated in Phase 5 with Pipeline version
+  |      ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^ this doc comment doesn't document anything
+
+   Compiling rustls-webpki v0.101.7
+   Compiling sct v0.7.1
+    Checking config v0.13.4
+   Compiling proc-macro-crate v1.3.1
+    Checking sevenz-rust v0.5.4
+error: could not compile `midi-library-shared` (lib) due to 1 previous error
+warning: build failed, waiting for other jobs to finish...
+[0;32m✅ Cargo check passed![0m
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[0;34m[PHASE][0m Generating Fix Report
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+[0;32m✅ Report generated: ./error_reports/fix_report.md[0m
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━

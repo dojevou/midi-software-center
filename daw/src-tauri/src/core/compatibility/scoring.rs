@@ -1,7 +1,7 @@
-//! Compatibility scoring - Overall compatibility calculation
-//!
-//! Trusty Module: Pure function that calculates compatibility scores.
-//! NO database access - receives file data as parameters.
+   /// Compatibility scoring - Overall compatibility calculation
+   ///
+   /// Trusty Module: Pure function that calculates compatibility scores.
+   /// NO database access - receives file data as parameters.
 
 use crate::models::midi_file::MidiFile;
 use super::music::{bpm_compatibility_score, bpm_time_stretchable, key_compatibility_score};

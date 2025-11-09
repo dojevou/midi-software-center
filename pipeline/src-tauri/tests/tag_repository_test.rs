@@ -1,32 +1,32 @@
-//! Comprehensive tests for TagRepository
-//!
-//! **Target Coverage:** 90%+ (Trusty Module requirement: 80%+)
-//! **Total Tests:** 80 (69 original + 11 error path tests)
-//!
-//! This test suite covers all 9 public methods of TagRepository with comprehensive
-//! edge case testing, constraint violation handling, and performance verification.
-//!
-//! **Test Categories:**
-//! 1. Tag CRUD Operations (8 tests) - Insert, find, update, delete
-//! 2. Batch Tag Operations (9 tests) - Bulk upsert, batch insert
-//! 3. File-Tag Associations (10 tests) - Add, remove, many-to-many
-//! 4. Tag Queries and Filtering (9 tests) - Search, fuzzy, pattern matching
-//! 5. Popular Tags and Usage Counts (7 tests) - Top tags, usage metrics
-//! 6. Tag Category Operations (5 tests) - Category grouping, filtering
-//! 7. File Filtering by Tags (6 tests) - Multi-tag queries, aggregation
-//! 8. Update File Tags (Replace All) (6 tests) - Batch replace, transaction safety
-//! 9. Edge Cases and Boundary Conditions (6 tests) - Empty, large datasets, null
-//! 10. Error Path Tests (12 tests) - Constraint violations, FK, uniqueness
-//! 11. Performance and Optimization (2 tests) - Bulk operations, indexing
-//!
-//! **Special Considerations:**
-//! - Unique constraint on (file_id, tag_id) pairs
-//! - Tag name length limit (VARCHAR(100))
-//! - Category length limit (VARCHAR(50))
-//! - Foreign key constraint (file_id must exist)
-//! - Idempotent operations (remove non-existent tag)
-//!
-//! Total: 74 tests
+   /// Comprehensive tests for TagRepository
+   ///
+   /// **Target Coverage:** 90%+ (Trusty Module requirement: 80%+)
+   /// **Total Tests:** 80 (69 original + 11 error path tests)
+   ///
+   /// This test suite covers all 9 public methods of TagRepository with comprehensive
+   /// edge case testing, constraint violation handling, and performance verification.
+   ///
+   /// **Test Categories:**
+   /// 1. Tag CRUD Operations (8 tests) - Insert, find, update, delete
+   /// 2. Batch Tag Operations (9 tests) - Bulk upsert, batch insert
+   /// 3. File-Tag Associations (10 tests) - Add, remove, many-to-many
+   /// 4. Tag Queries and Filtering (9 tests) - Search, fuzzy, pattern matching
+   /// 5. Popular Tags and Usage Counts (7 tests) - Top tags, usage metrics
+   /// 6. Tag Category Operations (5 tests) - Category grouping, filtering
+   /// 7. File Filtering by Tags (6 tests) - Multi-tag queries, aggregation
+   /// 8. Update File Tags (Replace All) (6 tests) - Batch replace, transaction safety
+   /// 9. Edge Cases and Boundary Conditions (6 tests) - Empty, large datasets, null
+   /// 10. Error Path Tests (12 tests) - Constraint violations, FK, uniqueness
+   /// 11. Performance and Optimization (2 tests) - Bulk operations, indexing
+   ///
+   /// **Special Considerations:**
+   /// - Unique constraint on (file_id, tag_id) pairs
+   /// - Tag name length limit (VARCHAR(100))
+   /// - Category length limit (VARCHAR(50))
+   /// - Foreign key constraint (file_id must exist)
+   /// - Idempotent operations (remove non-existent tag)
+   ///
+   /// Total: 74 tests
 
 mod common;
 use midi_pipeline::db::repositories::tag_repository::{TagRepository, TagRepositoryError};
@@ -1528,10 +1528,10 @@ async fn test_get_files_by_tags_and_performance() {
         let file_id = create_test_file(&pool, "file.mid").await;
         let repo = TagRepository::new(pool.clone());
 
-        repo.add_tag_to_file(&pool, file_id, "test_tag").await.expect("First add failed");
+        repo.add_tag_to_file(file_id, "test_tag", None).await.expect("First add failed");
 
         // Second add of same tag should fail
-        let result = repo.add_tag_to_file(&pool, file_id, "test_tag").await;
+        let result = repo.add_tag_to_file(file_id, "test_tag", None).await;
         assert!(result.is_err(), "Duplicate tag assignment should fail unique constraint");
 
         cleanup_database(&pool).await.expect("Cleanup failed");
@@ -1547,7 +1547,7 @@ async fn test_get_files_by_tags_and_performance() {
         let long_tag = "t".repeat(150); // > 100 chars
         let repo = TagRepository::new(pool.clone());
 
-        let result = repo.add_tag_to_file(&pool, file_id, &long_tag).await;
+        let result = repo.add_tag_to_file(file_id, &long_tag, None).await;
         assert!(result.is_err(), "Tag name > 100 chars should fail");
 
         cleanup_database(&pool).await.expect("Cleanup failed");
@@ -1562,13 +1562,7 @@ async fn test_get_files_by_tags_and_performance() {
         let long_category = "c".repeat(60); // > 50 chars
         let repo = TagRepository::new(pool.clone());
 
-        let new_tag = midi_pipeline::db::models::NewTag {
-            name: "test".to_string(),
-            category: Some(long_category),
-            color: None,
-        };
-
-        let result = repo.insert(&pool, new_tag).await;
+        let result = repo.insert("test", Some(&long_category)).await;
         assert!(result.is_err(), "Category > 50 chars should fail");
 
         cleanup_database(&pool).await.expect("Cleanup failed");
@@ -1581,7 +1575,7 @@ async fn test_get_files_by_tags_and_performance() {
         cleanup_database(&pool).await.expect("Cleanup failed");
 
         let repo = TagRepository::new(pool.clone());
-        let result = repo.add_tag_to_file(&pool, 999999, "test_tag").await;
+        let result = repo.add_tag_to_file(999999, "test_tag", None).await;
         assert!(result.is_err(), "Adding tag to non-existent file should fail FK constraint");
 
         cleanup_database(&pool).await.expect("Cleanup failed");
@@ -1597,7 +1591,8 @@ async fn test_get_files_by_tags_and_performance() {
         let repo = TagRepository::new(pool.clone());
 
         // Remove tag that was never added - should not error
-        let result = repo.remove_tag_from_file(file_id, "nonexistent").await;
+        // Using tag_id 999999 (non-existent)
+        let result = repo.remove_tag_from_file(file_id, 999999).await;
         assert!(result.is_ok(), "Removing non-existent tag should be idempotent");
 
         cleanup_database(&pool).await.expect("Cleanup failed");
@@ -1610,7 +1605,7 @@ async fn test_get_files_by_tags_and_performance() {
         cleanup_database(&pool).await.expect("Cleanup failed");
 
         let repo = TagRepository::new(pool.clone());
-        let result = repo.delete(&pool, "nonexistent_tag").await;
+        let result = repo.delete("nonexistent_tag").await;
         assert!(result.is_ok(), "Delete non-existent should be idempotent");
 
         cleanup_database(&pool).await.expect("Cleanup failed");
@@ -1623,7 +1618,7 @@ async fn test_get_files_by_tags_and_performance() {
         cleanup_database(&pool).await.expect("Cleanup failed");
 
         let repo = TagRepository::new(pool.clone());
-        let result = repo.get_tags_for_file(&pool, 999999).await;
+        let result = repo.get_tags_for_file(999999).await;
         assert!(result.is_ok(), "Should not error");
         assert_eq!(result.unwrap().len(), 0, "Should return empty list");
 
@@ -1639,7 +1634,7 @@ async fn test_get_files_by_tags_and_performance() {
         let file_id = create_test_file(&pool, "file.mid").await;
         let repo = TagRepository::new(pool.clone());
 
-        let result = repo.add_tag_to_file(&pool, file_id, "").await;
+        let result = repo.add_tag_to_file(file_id, "", None).await;
         assert!(result.is_err(), "Empty tag name should fail");
 
         cleanup_database(&pool).await.expect("Cleanup failed");
@@ -1655,11 +1650,11 @@ async fn test_get_files_by_tags_and_performance() {
         let repo = TagRepository::new(pool.clone());
 
         let tags = vec![
-            ("valid_tag".to_string(), None),
-            ("".to_string(), None), // Empty tag - should fail
+            "valid_tag".to_string(),
+            "".to_string(), // Empty tag - should fail
         ];
 
-        let result = repo.upsert_tags_for_file(&pool, file_id, tags).await;
+        let result = repo.upsert_tags_for_file(file_id, &tags).await;
         assert!(result.is_err(), "Bulk upsert with empty tag should fail");
 
         cleanup_database(&pool).await.expect("Cleanup failed");
@@ -1685,23 +1680,10 @@ async fn test_get_files_by_tags_and_performance() {
         cleanup_database(&pool).await.expect("Cleanup failed");
 
         let repo = TagRepository::new(pool.clone());
-        repo.insert(&pool, midi_pipeline::db::models::NewTag {
-            name: "test1".to_string(),
-            category: None,
-            color: None,
-        })
-        .await
-        .expect("Insert failed");
+        repo.insert("test1", None).await.expect("Insert failed");
+        repo.insert("test2", None).await.expect("Insert failed");
 
-        repo.insert(&pool, midi_pipeline::db::models::NewTag {
-            name: "test2".to_string(),
-            category: None,
-            color: None,
-        })
-        .await
-        .expect("Insert failed");
-
-        let result = repo.search(&pool, "").await;
+        let result = repo.search("", 100).await;
         assert!(result.is_ok(), "result should succeed, got error: {:?}", result.err());
         assert_eq!(result.unwrap().len(), 2, "Empty query should return all tags");
 

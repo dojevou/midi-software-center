@@ -1,7 +1,7 @@
-//! Analysis Tauri commands
-//!
-//! Grown-up Script: I/O wrapper for musical analysis and compatibility matching.
-//! Updated to use proper JOINs with actual database schema.
+   /// Analysis Tauri commands
+   ///
+   /// Grown-up Script: I/O wrapper for musical analysis and compatibility matching.
+   /// Updated to use proper JOINs with actual database schema.
 
 use crate::commands::AppState;
 use crate::core::compatibility;

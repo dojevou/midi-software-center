@@ -1,12 +1,12 @@
-//! Simple High-Performance MIDI Importer
-//!
-//! Usage: ./import_midi ~/midi_extraction
-//!
-//! This script:
-//! - Scans recursively for .mid/.midi files
-//! - Calculates SHA-256 hash for deduplication
-//! - Inserts into database with parallel processing
-//! - Shows real-time progress
+   /// Simple High-Performance MIDI Importer
+   ///
+   /// Usage: ./import_midi ~/midi_extraction
+   ///
+   /// This script:
+   /// - Scans recursively for .mid/.midi files
+   /// - Calculates SHA-256 hash for deduplication
+   /// - Inserts into database with parallel processing
+   /// - Shows real-time progress
 
 use chrono::Utc;
 use sha2::{Digest, Sha256};

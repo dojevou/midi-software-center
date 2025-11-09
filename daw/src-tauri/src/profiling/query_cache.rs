@@ -1,20 +1,20 @@
-//! Database query result caching
-//!
-//! Provides time-based caching for database query results with automatic invalidation.
-//!
-//! # Architecture
-//!
-//! This is a **Trusty Module** - pure caching logic with no I/O:
-//! - Cache entry management with TTL
-//! - Query result serialization
-//! - Cache invalidation on data changes
-//! - Hit/miss tracking
-//!
-//! # Components
-//!
-//! - [`QueryCache`]: Time-based cache with automatic expiration
-//! - [`QueryKey`]: Cache key generation from queries
-//! - [`CacheEntry`]: Cached query result with metadata
+   /// Database query result caching
+   ///
+   /// Provides time-based caching for database query results with automatic invalidation.
+   ///
+   /// # Architecture
+   ///
+   /// This is a **Trusty Module** - pure caching logic with no I/O:
+   /// - Cache entry management with TTL
+   /// - Query result serialization
+   /// - Cache invalidation on data changes
+   /// - Hit/miss tracking
+   ///
+   /// # Components
+   ///
+   /// - [`QueryCache`]: Time-based cache with automatic expiration
+   /// - [`QueryKey`]: Cache key generation from queries
+   /// - [`CacheEntry`]: Cached query result with metadata
 
 use std::collections::HashMap;
 use std::hash::Hash;

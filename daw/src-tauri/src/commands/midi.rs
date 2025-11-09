@@ -1,7 +1,7 @@
-//! MIDI hardware Tauri commands
-//!
-//! Grown-up Scripts: Thin wrappers around MIDI manager for frontend access.
-//! Delegate all business logic to Trusty Modules and MIDI manager.
+   /// MIDI hardware Tauri commands
+   ///
+   /// Grown-up Scripts: Thin wrappers around MIDI manager for frontend access.
+   /// Delegate all business logic to Trusty Modules and MIDI manager.
 
 use tauri::State;
 use std::sync::Arc;

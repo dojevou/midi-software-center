@@ -10,6 +10,7 @@
 use tracing::{info, warn, error};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
+mod automation;
 mod commands;
 mod models;
 mod core;

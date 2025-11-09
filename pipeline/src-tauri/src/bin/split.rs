@@ -1,4 +1,4 @@
-//! Split binary - standalone executable for splitting multi-track MIDI files
+   /// Split binary - standalone executable for splitting multi-track MIDI files
 
 use anyhow::{Context, Result};
 use clap::Parser;

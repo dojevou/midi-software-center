@@ -1,6 +1,6 @@
-//! Analysis and compatibility models
-//!
-//! Trusty Module: Pure data structures for musical compatibility analysis.
+   /// Analysis and compatibility models
+   ///
+   /// Trusty Module: Pure data structures for musical compatibility analysis.
 
 use serde::Serialize;
 use std::str::FromStr;

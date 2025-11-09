@@ -1,51 +1,51 @@
-//! Dynamic Concurrency Tuning Module
-//!
-//! This module provides automatic detection and calculation of optimal concurrency
-//! settings based on system resources (CPU cores, RAM, disk type).
-//!
-//! # Architecture
-//!
-//! This is a **Trusty Module** - pure logic with comprehensive tests.
-//! - NO I/O operations (system detection is read-only introspection)
-//! - All functions are pure calculations
-//! - Highly testable with different configurations
-//!
-//! # Usage
-//!
-//! ```rust
-//! use pipeline::core::performance::concurrency::{
-//!     detect_system_resources,
-//!     calculate_optimal_concurrency
-//! };
-//!
-//! // Auto-detect system resources
-//! let resources = detect_system_resources();
-//!
-//! // Calculate optimal concurrency
-//! let concurrency = calculate_optimal_concurrency(&resources);
-//! println!("Using {} concurrent workers", concurrency);
-//! ```
-//!
-//! # Performance Tuning Strategy
-//!
-//! The optimal concurrency is calculated using a multi-factor formula:
-//!
-//! 1. **CPU-based baseline**: `cpu_cores × 2`
-//!    - Accounts for I/O-bound operations (file reading, database writes)
-//!    - Each core can handle ~2 concurrent I/O operations efficiently
-//!
-//! 2. **Memory constraints**: Reduce concurrency if RAM < 8GB
-//!    - 4GB RAM: Divide by 4 (risk of swapping)
-//!    - 6GB RAM: Divide by 2 (limited headroom)
-//!    - 8GB+ RAM: No reduction
-//!
-//! 3. **Storage type**: Cap based on disk performance
-//!    - HDD: Cap at 50 (seek times limit parallelism)
-//!    - SSD: Cap at 100 (near-linear scaling)
-//!
-//! 4. **Absolute bounds**: Clamp to [10, 100]
-//!    - Minimum 10: Ensure reasonable throughput on any system
-//!    - Maximum 100: Prevent database connection exhaustion
+   /// Dynamic Concurrency Tuning Module
+   ///
+   /// This module provides automatic detection and calculation of optimal concurrency
+   /// settings based on system resources (CPU cores, RAM, disk type).
+   ///
+   /// # Architecture
+   ///
+   /// This is a **Trusty Module** - pure logic with comprehensive tests.
+   /// - NO I/O operations (system detection is read-only introspection)
+   /// - All functions are pure calculations
+   /// - Highly testable with different configurations
+   ///
+   /// # Usage
+   ///
+   /// ```rust
+   /// use pipeline::core::performance::concurrency::{
+   ///     detect_system_resources,
+   ///     calculate_optimal_concurrency
+   /// };
+   ///
+   /// // Auto-detect system resources
+   /// let resources = detect_system_resources();
+   ///
+   /// // Calculate optimal concurrency
+   /// let concurrency = calculate_optimal_concurrency(&resources);
+   /// println!("Using {} concurrent workers", concurrency);
+   /// ```
+   ///
+   /// # Performance Tuning Strategy
+   ///
+   /// The optimal concurrency is calculated using a multi-factor formula:
+   ///
+   /// 1. **CPU-based baseline**: `cpu_cores × 2`
+   ///    - Accounts for I/O-bound operations (file reading, database writes)
+   ///    - Each core can handle ~2 concurrent I/O operations efficiently
+   ///
+   /// 2. **Memory constraints**: Reduce concurrency if RAM < 8GB
+   ///    - 4GB RAM: Divide by 4 (risk of swapping)
+   ///    - 6GB RAM: Divide by 2 (limited headroom)
+   ///    - 8GB+ RAM: No reduction
+   ///
+   /// 3. **Storage type**: Cap based on disk performance
+   ///    - HDD: Cap at 50 (seek times limit parallelism)
+   ///    - SSD: Cap at 100 (near-linear scaling)
+   ///
+   /// 4. **Absolute bounds**: Clamp to [10, 100]
+   ///    - Minimum 10: Ensure reasonable throughput on any system
+   ///    - Maximum 100: Prevent database connection exhaustion
 
 use sysinfo::System;
 use std::thread;
@@ -502,9 +502,9 @@ mod tests {
         let (concurrency, pool_size, batch_size) = calculate_all_settings();
 
         // Verify all values are in expected ranges
-        assert!(concurrency >= 10 && concurrency <= 100);
-        assert!(pool_size >= 20 && pool_size <= 200);
-        assert!(batch_size >= 500 && batch_size <= 10000);
+        assert!((10..=100).contains(&concurrency));
+        assert!((20..=200).contains(&pool_size));
+        assert!((500..=10000).contains(&batch_size));
 
         // Verify relationships
         assert!(pool_size >= concurrency, "Pool should be >= concurrency");

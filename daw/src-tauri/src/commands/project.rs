@@ -1,6 +1,6 @@
-//! Project and track loading commands
-//!
-//! Commands for loading multiple tracks into the sequencer from the database.
+   /// Project and track loading commands
+   ///
+   /// Commands for loading multiple tracks into the sequencer from the database.
 
 use crate::commands::AppState;
 use crate::core::midi::loader::load_midi_file;

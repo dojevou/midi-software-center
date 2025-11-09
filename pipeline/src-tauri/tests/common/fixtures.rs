@@ -1,4 +1,4 @@
-//! Test fixtures: databases, files, and sample data
+   /// Test fixtures: databases, files, and sample data
 
 use super::database::TestDatabase;
 use sqlx::PgPool;

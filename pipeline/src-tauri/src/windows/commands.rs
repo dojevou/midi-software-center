@@ -1,13 +1,12 @@
-//! Tauri command handlers for window management
-//!
-//! These commands expose window management functionality to the frontend.
+   /// Tauri command handlers for window management
+   ///
+   /// These commands expose window management functionality to the frontend.
 
 use tauri::command;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 
 use crate::windows::manager::WindowManager;
-use crate::windows::state::{WindowType, DockSide};
 
 /// Show a window by label
 #[command]

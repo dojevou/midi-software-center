@@ -1,13 +1,13 @@
-//! Key Detection Module
-//!
-//! Implements the Krumhansl-Schmuckler key-finding algorithm to detect
-//! the musical key of MIDI files.
-//!
-//! # Archetype: Trusty Module
-//! - Pure functions with no side effects
-//! - No I/O operations
-//! - Highly testable
-//! - Reusable across the application
+   /// Key Detection Module
+   ///
+   /// Implements the Krumhansl-Schmuckler key-finding algorithm to detect
+   /// the musical key of MIDI files.
+   ///
+   /// # Archetype: Trusty Module
+   /// - Pure functions with no side effects
+   /// - No I/O operations
+   /// - Highly testable
+   /// - Reusable across the application
 
 use crate::core::analysis::key_profiles::*;
 use midi_library_shared::core::midi::types::{Event, MidiFile};
@@ -1302,7 +1302,7 @@ mod tests {
         let confidence = calculate_confidence(&correlations);
 
         assert!(confidence.is_finite());
-        assert!(confidence >= 0.0 && confidence <= 1.0);
+        assert!((0.0..=1.0).contains(&confidence));
     }
 
     #[test]
@@ -1345,7 +1345,7 @@ mod tests {
         for correlations in test_cases {
             let confidence = calculate_confidence(&correlations);
             assert!(
-                confidence >= 0.0 && confidence <= 1.0,
+                (0.0..=1.0).contains(&confidence),
                 "Confidence {} out of bounds [0.0, 1.0]",
                 confidence
             );
@@ -1422,7 +1422,7 @@ mod tests {
         for (profile1, profile2) in &test_profiles {
             let correlation = calculate_correlation(profile1, profile2);
             assert!(
-                correlation >= -1.0 && correlation <= 1.0,
+                (-1.0..=1.0).contains(&correlation),
                 "Correlation {} out of bounds [-1.0, 1.0]",
                 correlation
             );

@@ -1,6 +1,6 @@
-//! Controller Editor Undo/Redo Commands - Trusty Module
-//!
-//! Commands for controller (CC) editor operations: add/delete/move points, smooth curves.
+   /// Controller Editor Undo/Redo Commands - Trusty Module
+   ///
+   /// Commands for controller (CC) editor operations: add/delete/move points, smooth curves.
 
 use super::core::{Command, UndoRedoError, UndoRedoResult};
 use serde::{Deserialize, Serialize};

@@ -1,22 +1,22 @@
-//! Memory tracking and profiling system
-//!
-//! Provides real-time memory metrics, allocation tracking, and memory optimization
-//! for the DAW application.
-//!
-//! # Architecture
-//!
-//! This is a **Trusty Module** - pure logic with no I/O:
-//! - Memory metrics calculation and tracking
-//! - Allocation pool management
-//! - Cache statistics and eviction logic
-//! - All functions are testable without external dependencies
-//!
-//! # Components
-//!
-//! - [`MemoryMetrics`]: Heap usage and object tracking
-//! - [`AllocationPool`]: Pre-allocated buffer pools
-//! - [`MemoryCache`]: LRU cache with size limits
-//! - [`CacheStats`]: Cache hit/miss tracking
+   /// Memory tracking and profiling system
+   ///
+   /// Provides real-time memory metrics, allocation tracking, and memory optimization
+   /// for the DAW application.
+   ///
+   /// # Architecture
+   ///
+   /// This is a **Trusty Module** - pure logic with no I/O:
+   /// - Memory metrics calculation and tracking
+   /// - Allocation pool management
+   /// - Cache statistics and eviction logic
+   /// - All functions are testable without external dependencies
+   ///
+   /// # Components
+   ///
+   /// - [`MemoryMetrics`]: Heap usage and object tracking
+   /// - [`AllocationPool`]: Pre-allocated buffer pools
+   /// - [`MemoryCache`]: LRU cache with size limits
+   /// - [`CacheStats`]: Cache hit/miss tracking
 
 use std::collections::{HashMap, VecDeque};
 use std::sync::Arc;

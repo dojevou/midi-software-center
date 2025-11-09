@@ -75,6 +75,7 @@ use tokio::sync::RwLock;
 ///     Ok(())
 /// }
 /// ```
+#[derive(Clone)]
 pub struct Database {
     pool: Arc<RwLock<PgPool>>,
     database_url: String,
@@ -573,7 +574,7 @@ impl Database {
                         retries, max_retries, e, delay
                     );
                     tokio::time::sleep(delay).await;
-                    delay = delay * 2; // Exponential backoff
+                    delay *= 2; // Exponential backoff
                 }
                 Err(e) => {
                     if retries > 0 {

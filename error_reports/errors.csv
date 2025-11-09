@@ -1,0 +1,195 @@
+ID,Category,Error Type,Message,Affected Items,Status,Priority
+1,Format String Errors,format_string,invalid reference to positional argument 1 (no arguments were given),,TODO,1
+2,Format String Errors,format_string,invalid reference to positional argument 0 (no arguments were given),,TODO,1
+3,Format String Errors,format_string,invalid reference to positional argument 1 (no arguments were given),,TODO,1
+4,Format String Errors,format_string,invalid reference to positional argument 10 (no arguments were given),,TODO,1
+5,Format String Errors,format_string,invalid reference to positional argument 100 (no arguments were given),,TODO,1
+6,Format String Errors,format_string,invalid reference to positional argument 1 (no arguments were given),,TODO,1
+7,Format String Errors,format_string,invalid reference to positional argument 10 (no arguments were given),,TODO,1
+8,Unresolved Imports,unresolved_import,unresolved import `common`,common,TODO,3
+9,Missing Type Definitions,missing_type,cannot find type `SearchQuery` in module `midi_pipeline::db::models`,SearchQuery,TODO,2
+10,Missing Type Definitions,missing_type,cannot find type `SearchQuery` in module `midi_pipeline::db::models`,SearchQuery,TODO,2
+11,Missing Type Definitions,missing_type,cannot find type `SearchQuery` in module `midi_pipeline::db::models`,SearchQuery,TODO,2
+12,Missing Type Definitions,missing_type,cannot find type `SearchQuery` in module `midi_pipeline::db::models`,SearchQuery,TODO,2
+13,Missing Type Definitions,missing_type,cannot find type `SearchQuery` in module `midi_pipeline::db::models`,SearchQuery,TODO,2
+14,Missing Type Definitions,missing_type,cannot find type `SearchQuery` in module `midi_pipeline::db::models`,SearchQuery,TODO,2
+15,Missing Type Definitions,missing_type,cannot find type `SearchQuery` in module `midi_pipeline::db::models`,SearchQuery,TODO,2
+16,Missing Type Definitions,missing_type,cannot find type `SearchQuery` in module `midi_pipeline::db::models`,SearchQuery,TODO,2
+17,Missing Type/Value Definitions,unknown,cannot find value `tags` in this scope,tags,TODO,9
+18,Missing Type/Value Definitions,unknown,cannot find value `tags` in this scope,tags,TODO,9
+19,Missing Type/Value Definitions,unknown,"cannot find struct, variant or union type `SearchFilters` in this scope",SearchFilters,TODO,9
+20,Missing Type/Value Definitions,unknown,"cannot find struct, variant or union type `SearchFilters` in this scope",SearchFilters,TODO,9
+21,Format String Errors,unknown,"1 positional argument in format string, but no arguments were given",,TODO,1
+22,Format String Errors,unknown,"1 positional argument in format string, but no arguments were given",,TODO,1
+23,Format String Errors,unknown,"1 positional argument in format string, but no arguments were given",,TODO,1
+24,Format String Errors,format_string,invalid reference to positional argument 1 (no arguments were given),,TODO,1
+25,Format String Errors,format_string,invalid reference to positional argument 2 (no arguments were given),,TODO,1
+26,Trait Bound & Type Mismatch,unknown,missing generics for trait `Emitter`,Emitter,TODO,6
+27,Missing Type Definitions,missing_type,cannot find type `SearchQuery` in module `midi_pipeline::db::models`,SearchQuery,TODO,2
+28,Missing Type Definitions,missing_type,cannot find type `SearchQuery` in module `midi_pipeline::db::models`,SearchQuery,TODO,2
+29,Missing Type/Value Definitions,unknown,"cannot find struct, variant or union type `NewTag` in module `midi_pipeline::db::models`",NewTag,TODO,9
+30,Missing Type/Value Definitions,unknown,"cannot find struct, variant or union type `NewTag` in module `midi_pipeline::db::models`",NewTag,TODO,9
+31,Missing Type/Value Definitions,unknown,"cannot find struct, variant or union type `NewTag` in module `midi_pipeline::db::models`",NewTag,TODO,9
+32,Unresolved Imports,unknown,failed to resolve: use of unresolved module or unlinked crate `common`,common,TODO,3
+33,Unresolved Imports,unresolved_import,unresolved import `common`,common,TODO,3
+34,Other/Uncategorized,unknown,no variant or associated item named `Emit` found for enum `tauri::Error` in the current scope,Emit,TODO,10
+35,Other/Uncategorized,binary_op,binary operation `==` cannot be applied to type `&TagResponse`,,TODO,10
+36,Trait Bound & Type Mismatch,trait_bound,the trait bound `ImportProgress: serde::Deserialize<'de>` is not satisfied,,TODO,6
+37,Other/Uncategorized,unknown,arguments to this function are incorrect,,TODO,10
+38,Other/Uncategorized,unknown,can't compare `TagResponse` with `TagResponse`,TagResponse,TODO,10
+39,Missing Repository Methods,missing_method,no method named `clone` found for struct `AppState` in the current scope,AppState|clone,TODO,5
+40,Other/Uncategorized,unknown,mismatched types,,TODO,10
+41,Iterator & Type Conversion,unknown,a value of type `&AppState` cannot be built from an iterator over elements of type `std::string::Str,,TODO,7
+42,Other/Uncategorized,unknown,arguments to this function are incorrect,,TODO,10
+43,Other/Uncategorized,unknown,arguments to this function are incorrect,,TODO,10
+44,Documentation Comment Errors,doc_comment,expected outer doc comment,,TODO,8
+45,Documentation Comment Errors,doc_comment,expected outer doc comment,,TODO,8
+46,Documentation Comment Errors,doc_comment,expected outer doc comment,,TODO,8
+47,Documentation Comment Errors,doc_comment,expected outer doc comment,,TODO,8
+48,Documentation Comment Errors,doc_comment,expected outer doc comment,,TODO,8
+49,Documentation Comment Errors,doc_comment,expected outer doc comment,,TODO,8
+50,Documentation Comment Errors,doc_comment,expected outer doc comment,,TODO,8
+51,Documentation Comment Errors,doc_comment,expected outer doc comment,,TODO,8
+52,Documentation Comment Errors,doc_comment,expected outer doc comment,,TODO,8
+53,Documentation Comment Errors,doc_comment,expected outer doc comment,,TODO,8
+54,Documentation Comment Errors,doc_comment,expected outer doc comment,,TODO,8
+55,Documentation Comment Errors,doc_comment,expected outer doc comment,,TODO,8
+56,Documentation Comment Errors,doc_comment,expected outer doc comment,,TODO,8
+57,Documentation Comment Errors,doc_comment,expected outer doc comment,,TODO,8
+58,Documentation Comment Errors,doc_comment,expected outer doc comment,,TODO,8
+59,Documentation Comment Errors,doc_comment,expected outer doc comment,,TODO,8
+60,Documentation Comment Errors,doc_comment,expected outer doc comment,,TODO,8
+61,Documentation Comment Errors,doc_comment,expected outer doc comment,,TODO,8
+62,Documentation Comment Errors,doc_comment,expected outer doc comment,,TODO,8
+63,Documentation Comment Errors,doc_comment,expected outer doc comment,,TODO,8
+64,Documentation Comment Errors,doc_comment,expected outer doc comment,,TODO,8
+65,Documentation Comment Errors,doc_comment,expected outer doc comment,,TODO,8
+66,Documentation Comment Errors,doc_comment,expected outer doc comment,,TODO,8
+67,Documentation Comment Errors,doc_comment,expected outer doc comment,,TODO,8
+68,Documentation Comment Errors,doc_comment,expected outer doc comment,,TODO,8
+69,Documentation Comment Errors,doc_comment,expected outer doc comment,,TODO,8
+70,Documentation Comment Errors,doc_comment,expected outer doc comment,,TODO,8
+71,Documentation Comment Errors,doc_comment,expected outer doc comment,,TODO,8
+72,Documentation Comment Errors,doc_comment,expected outer doc comment,,TODO,8
+73,Documentation Comment Errors,doc_comment,expected outer doc comment,,TODO,8
+74,Documentation Comment Errors,doc_comment,expected outer doc comment,,TODO,8
+75,Documentation Comment Errors,doc_comment,expected outer doc comment,,TODO,8
+76,Documentation Comment Errors,doc_comment,expected outer doc comment,,TODO,8
+77,Documentation Comment Errors,doc_comment,expected outer doc comment,,TODO,8
+78,Documentation Comment Errors,doc_comment,expected outer doc comment,,TODO,8
+79,Documentation Comment Errors,doc_comment,expected outer doc comment,,TODO,8
+80,Documentation Comment Errors,doc_comment,expected outer doc comment,,TODO,8
+81,Documentation Comment Errors,doc_comment,expected outer doc comment,,TODO,8
+82,Documentation Comment Errors,doc_comment,expected outer doc comment,,TODO,8
+83,Documentation Comment Errors,doc_comment,expected outer doc comment,,TODO,8
+84,Documentation Comment Errors,doc_comment,expected outer doc comment,,TODO,8
+85,Documentation Comment Errors,doc_comment,expected outer doc comment,,TODO,8
+86,Documentation Comment Errors,doc_comment,expected outer doc comment,,TODO,8
+87,Documentation Comment Errors,doc_comment,expected outer doc comment,,TODO,8
+88,Documentation Comment Errors,doc_comment,expected outer doc comment,,TODO,8
+89,Documentation Comment Errors,doc_comment,expected outer doc comment,,TODO,8
+90,Documentation Comment Errors,doc_comment,expected outer doc comment,,TODO,8
+91,Documentation Comment Errors,doc_comment,expected outer doc comment,,TODO,8
+92,Documentation Comment Errors,doc_comment,expected outer doc comment,,TODO,8
+93,Documentation Comment Errors,doc_comment,expected outer doc comment,,TODO,8
+94,Documentation Comment Errors,unknown,expected item after doc comment,,TODO,8
+95,Iterator & Type Conversion,iterator,`tokio::fs::ReadDir` is not an iterator,,TODO,7
+96,Unresolved Imports,unknown,failed to resolve: use of unresolved module or unlinked crate `midi_daw`,midi_daw,TODO,3
+97,Unresolved Imports,unresolved_import,unresolved import `crate::common`,,TODO,3
+98,Unresolved Imports,unknown,failed to resolve: use of unresolved module or unlinked crate `midi_daw`,midi_daw,TODO,3
+99,Unresolved Imports,unknown,failed to resolve: use of unresolved module or unlinked crate `midi_daw`,midi_daw,TODO,3
+100,Unresolved Imports,unknown,failed to resolve: use of unresolved module or unlinked crate `midi_daw`,midi_daw,TODO,3
+101,Unresolved Imports,unknown,failed to resolve: use of unresolved module or unlinked crate `midi_daw`,midi_daw,TODO,3
+102,Unresolved Imports,unknown,failed to resolve: use of unresolved module or unlinked crate `midi_daw`,midi_daw,TODO,3
+103,Unresolved Imports,unresolved_import,unresolved import `crate::common`,,TODO,3
+104,Other/Uncategorized,unknown,use of moved value: `result`,result,TODO,10
+105,Iterator & Type Conversion,iterator,`tokio::fs::ReadDir` is not an iterator,,TODO,7
+106,Other/Uncategorized,binary_op,binary operation `==` cannot be applied to type `&TagResponse`,,TODO,10
+107,Other/Uncategorized,binary_op,binary operation `==` cannot be applied to type `&TagResponse`,,TODO,10
+108,Iterator & Type Conversion,iterator,`tokio::fs::ReadDir` is not an iterator,,TODO,7
+109,Other/Uncategorized,binary_op,binary operation `==` cannot be applied to type `&TagResponse`,,TODO,10
+110,Other/Uncategorized,binary_op,binary operation `==` cannot be applied to type `&TagResponse`,,TODO,10
+111,Other/Uncategorized,unknown,arguments to this function are incorrect,,TODO,10
+112,Other/Uncategorized,unknown,mismatched types,,TODO,10
+113,Other/Uncategorized,unknown,mismatched types,,TODO,10
+114,Other/Uncategorized,unknown,mismatched types,,TODO,10
+115,Other/Uncategorized,unknown,mismatched types,,TODO,10
+116,Other/Uncategorized,unknown,mismatched types,,TODO,10
+117,Other/Uncategorized,unknown,mismatched types,,TODO,10
+118,Other/Uncategorized,unknown,mismatched types,,TODO,10
+119,Missing Repository Methods,unknown,no method named `len` found for unit type `()` in the current scope,len,TODO,5
+120,Other/Uncategorized,unknown,mismatched types,,TODO,10
+121,Missing Repository Methods,missing_method,no method named `add_tag_to_file` found for struct `TagRepository` in the current scope,TagRepository|add_tag_to_file,TODO,5
+122,Other/Uncategorized,unknown,mismatched types,,TODO,10
+123,Missing Repository Methods,missing_method,no method named `clone` found for struct `AppState` in the current scope,AppState|clone,TODO,5
+124,Trait Bound & Type Mismatch,trait_bound,the trait bound `std::string::String: From<Option<Vec<std::string::String>>>` is not satisfied,,TODO,6
+125,Missing Repository Methods,missing_method,no method named `add_tag_to_file` found for struct `TagRepository` in the current scope,TagRepository|add_tag_to_file,TODO,5
+126,Missing Repository Methods,missing_method,no method named `limit` found for struct `SearchQueryBuilder` in the current scope,limit|SearchQueryBuilder,TODO,5
+127,Unresolved Imports,unresolved_import,unresolved import `crate::automation`,,TODO,3
+128,Unresolved Imports,unresolved_import,unresolved import `commands::AutomationState`,,TODO,3
+129,Unresolved Imports,unknown,failed to resolve: could not find `automation` in `commands`,commands|automation,TODO,3
+130,Unresolved Imports,unknown,failed to resolve: could not find `automation` in `commands`,commands|automation,TODO,3
+131,Unresolved Imports,unknown,failed to resolve: could not find `automation` in `commands`,commands|automation,TODO,3
+132,Unresolved Imports,unknown,failed to resolve: could not find `automation` in `commands`,commands|automation,TODO,3
+133,Unresolved Imports,unknown,failed to resolve: could not find `automation` in `commands`,commands|automation,TODO,3
+134,Unresolved Imports,unknown,failed to resolve: could not find `automation` in `commands`,commands|automation,TODO,3
+135,Unresolved Imports,unknown,failed to resolve: could not find `automation` in `commands`,commands|automation,TODO,3
+136,Unresolved Imports,unknown,failed to resolve: could not find `automation` in `commands`,commands|automation,TODO,3
+137,Unresolved Imports,unknown,failed to resolve: could not find `automation` in `commands`,commands|automation,TODO,3
+138,Unresolved Imports,unknown,failed to resolve: could not find `automation` in `commands`,commands|automation,TODO,3
+139,Unresolved Imports,unknown,failed to resolve: could not find `automation` in `commands`,commands|automation,TODO,3
+140,Other/Uncategorized,unknown,use of moved value: `write_result`,write_result,TODO,10
+141,Other/Uncategorized,unknown,mismatched types,,TODO,10
+142,Other/Uncategorized,unknown,use of moved value: `result`,result,TODO,10
+143,Other/Uncategorized,unknown,use of moved value: `result`,result,TODO,10
+144,Other/Uncategorized,unknown,use of moved value: `result`,result,TODO,10
+145,Missing Repository Methods,missing_method,no method named `add_tag_to_file` found for struct `TagRepository` in the current scope,TagRepository|add_tag_to_file,TODO,5
+146,Other/Uncategorized,unknown,use of moved value: `result`,result,TODO,10
+147,Missing Repository Methods,missing_method,no method named `limit` found for struct `SearchQueryBuilder` in the current scope,limit|SearchQueryBuilder,TODO,5
+148,Unresolved Imports,unresolved_import,unresolved import `crate::automation`,,TODO,3
+149,Unresolved Imports,unresolved_import,unresolved import `commands::AutomationState`,,TODO,3
+150,Unresolved Imports,unknown,failed to resolve: could not find `automation` in `commands`,commands|automation,TODO,3
+151,Unresolved Imports,unknown,failed to resolve: could not find `automation` in `commands`,commands|automation,TODO,3
+152,Unresolved Imports,unknown,failed to resolve: could not find `automation` in `commands`,commands|automation,TODO,3
+153,Unresolved Imports,unknown,failed to resolve: could not find `automation` in `commands`,commands|automation,TODO,3
+154,Unresolved Imports,unknown,failed to resolve: could not find `automation` in `commands`,commands|automation,TODO,3
+155,Unresolved Imports,unknown,failed to resolve: could not find `automation` in `commands`,commands|automation,TODO,3
+156,Unresolved Imports,unknown,failed to resolve: could not find `automation` in `commands`,commands|automation,TODO,3
+157,Unresolved Imports,unknown,failed to resolve: could not find `automation` in `commands`,commands|automation,TODO,3
+158,Unresolved Imports,unknown,failed to resolve: could not find `automation` in `commands`,commands|automation,TODO,3
+159,Unresolved Imports,unknown,failed to resolve: could not find `automation` in `commands`,commands|automation,TODO,3
+160,Unresolved Imports,unknown,failed to resolve: could not find `automation` in `commands`,commands|automation,TODO,3
+161,Other/Uncategorized,unknown,use of moved value: `result`,result,TODO,10
+162,Other/Uncategorized,unknown,mismatched types,,TODO,10
+163,Other/Uncategorized,unknown,use of moved value: `result`,result,TODO,10
+164,Trait Bound & Type Mismatch,trait_bound,the trait bound `std::string::String: From<Option<Vec<std::string::String>>>` is not satisfied,,TODO,6
+165,Other/Uncategorized,unknown,no field `file_id` on type `midi_pipeline::File`,file_id,TODO,10
+166,Missing Repository Methods,unknown,no method named `midi_format` found for struct `fixtures::NewFileBuilder` in the current scope,midi_format,TODO,5
+167,Other/Uncategorized,unknown,mismatched types,,TODO,10
+168,Missing Repository Methods,missing_method,no method named `insert` found for struct `TagRepository` in the current scope,insert|TagRepository,TODO,5
+169,Other/Uncategorized,unknown,mismatched types,,TODO,10
+170,Missing Repository Methods,unknown,no method named `midi_format` found for struct `fixtures::NewFileBuilder` in the current scope,midi_format,TODO,5
+171,Missing Repository Methods,missing_method,no method named `add_tag_to_file` found for struct `TagRepository` in the current scope,TagRepository|add_tag_to_file,TODO,5
+172,Missing Repository Methods,missing_method,no method named `max_duration` found for struct `SearchQueryBuilder` in the current scope,SearchQueryBuilder|max_duration,TODO,5
+173,Trait Bound & Type Mismatch,trait_bound,the trait bound `std::string::String: From<Option<Vec<std::string::String>>>` is not satisfied,,TODO,6
+174,Other/Uncategorized,unknown,no field `file_id` on type `&midi_pipeline::File`,file_id,TODO,10
+175,Other/Uncategorized,unknown,no field `file_id` on type `&midi_pipeline::File`,file_id,TODO,10
+176,Other/Uncategorized,unknown,no function or associated item named `update_filename` found for struct `FileRepository` in the curr,FileRepository|update_filename,TODO,10
+177,Other/Uncategorized,unknown,arguments to this function are incorrect,,TODO,10
+178,Other/Uncategorized,unknown,arguments to this function are incorrect,,TODO,10
+179,Other/Uncategorized,unknown,mismatched types,,TODO,10
+180,Other/Uncategorized,unknown,arguments to this function are incorrect,,TODO,10
+181,Other/Uncategorized,unknown,mismatched types,,TODO,10
+182,Other/Uncategorized,unknown,arguments to this function are incorrect,,TODO,10
+183,Other/Uncategorized,unknown,arguments to this function are incorrect,,TODO,10
+184,Other/Uncategorized,unknown,mismatched types,,TODO,10
+185,Missing Repository Methods,missing_method,no method named `delete` found for struct `TagRepository` in the current scope,delete|TagRepository,TODO,5
+186,Other/Uncategorized,unknown,no function or associated item named `delete_by_id` found for struct `FileRepository` in the current,delete_by_id|FileRepository,TODO,10
+187,Other/Uncategorized,unknown,arguments to this function are incorrect,,TODO,10
+188,Missing Repository Methods,missing_method,no method named `get_tags_for_file` found for struct `TagRepository` in the current scope,get_tags_for_file|TagRepository,TODO,5
+189,Missing Repository Methods,missing_method,no method named `add_tag_to_file` found for struct `TagRepository` in the current scope,TagRepository|add_tag_to_file,TODO,5
+190,Missing Repository Methods,missing_method,no method named `upsert_tags_for_file` found for struct `TagRepository` in the current scope,upsert_tags_for_file|TagRepository,TODO,5
+191,Missing Repository Methods,missing_method,no method named `insert` found for struct `TagRepository` in the current scope,insert|TagRepository,TODO,5
+192,Missing Repository Methods,missing_method,no method named `insert` found for struct `TagRepository` in the current scope,insert|TagRepository,TODO,5
+193,Missing Repository Methods,missing_method,no method named `search` found for struct `TagRepository` in the current scope,search|TagRepository,TODO,5
+194,Trait Bound & Type Mismatch,unknown,missing generics for trait `Emitter`,Emitter,TODO,6

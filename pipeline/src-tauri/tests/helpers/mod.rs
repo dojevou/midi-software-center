@@ -1,6 +1,6 @@
-//! Test helpers module
-//!
-//! Provides database helpers, macros, and utilities for repository testing.
+   /// Test helpers module
+   ///
+   /// Provides database helpers, macros, and utilities for repository testing.
 
 pub mod db;
 pub mod macros;

@@ -1,4 +1,4 @@
-//! Database model types
+   /// Database model types
 
 pub mod midi_file;
 pub mod midi;

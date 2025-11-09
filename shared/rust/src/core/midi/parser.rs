@@ -605,7 +605,7 @@ mod tests {
 
         while value > 0 {
             buffer <<= 8;
-            buffer |= ((value & 0x7F) | 0x80) as u32;
+            buffer |= (value & 0x7F) | 0x80;
             value >>= 7;
         }
 
@@ -620,6 +620,7 @@ mod tests {
         bytes
     }
 
+    #[allow(dead_code)]
     fn minimal_track_with_eot() -> Vec<u8> {
         vec![
             0x00, 0xFF, 0x2F, 0x00, // Delta=0, EndOfTrack
@@ -968,7 +969,7 @@ mod tests {
         match &events[0].event {
             Event::KeySignature { sharps_flats, is_minor } => {
                 assert_eq!(*sharps_flats, 2);
-                assert_eq!(*is_minor, false);
+                assert!(!(*is_minor));
             }
             _ => panic!("Expected KeySignature event"),
         }
@@ -988,7 +989,7 @@ mod tests {
         match &events[0].event {
             Event::KeySignature { sharps_flats, is_minor } => {
                 assert_eq!(*sharps_flats, -2);
-                assert_eq!(*is_minor, false);
+                assert!(!(*is_minor));
             }
             _ => panic!("Expected KeySignature event"),
         }
@@ -1153,8 +1154,8 @@ mod tests {
 
         // Should have 3 NoteOn events + EndOfTrack
         assert_eq!(events.len(), 4);
-        for i in 0..3 {
-            assert!(matches!(events[i].event, Event::NoteOn { .. }));
+        for event in events.iter().take(3) {
+            assert!(matches!(event.event, Event::NoteOn { .. }));
         }
     }
 

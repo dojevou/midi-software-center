@@ -1,7 +1,7 @@
-//! DAW Database Integration Tests - Phase 3
-//!
-//! Comprehensive database integration testing for the DAW application.
-//! Tests connectivity, file queries, metadata retrieval, and performance.
+   /// DAW Database Integration Tests - Phase 3
+   ///
+   /// Comprehensive database integration testing for the DAW application.
+   /// Tests connectivity, file queries, metadata retrieval, and performance.
 
 use sqlx::PgPool;
 use std::env;

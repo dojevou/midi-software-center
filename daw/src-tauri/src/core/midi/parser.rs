@@ -1,7 +1,7 @@
-//! MIDI File Parser - Trusty Module
-//!
-//! Pure functions for parsing MIDI files into data structures.
-//! NO I/O - caller reads file and passes bytes.
+   /// MIDI File Parser - Trusty Module
+   ///
+   /// Pure functions for parsing MIDI files into data structures.
+   /// NO I/O - caller reads file and passes bytes.
 
 use crate::models::midi::{MidiEvent, MidiEventType, MidiPattern};
 

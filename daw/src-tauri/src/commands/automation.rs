@@ -1,6 +1,6 @@
-//! Automation commands for Tauri frontend
-//!
-//! Grown-up Script: Tauri commands with side effects for automation management.
+   /// Automation commands for Tauri frontend
+   ///
+   /// Grown-up Script: Tauri commands with side effects for automation management.
 
 use crate::automation::{
     AutomationLane, AutomationManager, CurveType, ParameterType,

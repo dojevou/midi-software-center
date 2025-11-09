@@ -1,8 +1,8 @@
 #!/usr/bin/env cargo
-//! Batch import using existing repository layer
-//!
-//! This imports MIDI files using the FileRepository and MetadataRepository
-//! which are already aligned with the database schema.
+   /// Batch import using existing repository layer
+   ///
+   /// This imports MIDI files using the FileRepository and MetadataRepository
+   /// which are already aligned with the database schema.
 
 use anyhow::Result;
 use clap::Parser;

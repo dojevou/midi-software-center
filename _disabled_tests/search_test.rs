@@ -1,11 +1,11 @@
-//! Search command integration tests (20 tests)
-//!
-//! Tests for search.rs commands covering:
-//! - File searching with multiple filters
-//! - Sorting and pagination
-//! - Autocomplete suggestions
-//! - Full-text search
-//! - Performance testing
+   /// Search command integration tests (20 tests)
+   ///
+   /// Tests for search.rs commands covering:
+   /// - File searching with multiple filters
+   /// - Sorting and pagination
+   /// - Autocomplete suggestions
+   /// - Full-text search
+   /// - Performance testing
 
 use crate::common::*;
 use midi_daw::commands::AppState;

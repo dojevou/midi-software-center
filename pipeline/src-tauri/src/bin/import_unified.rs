@@ -1,48 +1,48 @@
-//! Unified MIDI Import Pipeline
-//!
-//! This binary orchestrates ALL existing modules to provide a complete, single-pass
-//! import pipeline that processes compressed archives directly into the database with
-//! FULL analysis (BPM, key, tags, complexity, etc.).
-//!
-//! # Architecture: Orchestration Layer
-//! This is a thin orchestration layer that combines:
-//! - Archive extraction (io::decompressor)
-//! - MIDI parsing (core::midi::parser)
-//! - Musical analysis (core::analysis)
-//! - Intelligent tagging (core::analysis::auto_tagger)
-//! - Hash-based deduplication (core::hash)
-//! - Batch database inserts (database::batch_insert)
-//!
-//! # Workflow:
-//! ```text
-//! For each archive in input directory:
-//!   1. Extract archive → temp directory
-//!   2. Find all .mid/.midi files
-//!   3. For EACH MIDI file (in parallel with 32 workers):
-//!      a. Read file bytes
-//!      b. Parse MIDI
-//!      c. Detect BPM and key
-//!      d. Extract tags from path and content
-//!      e. Analyze notes (complexity, pitch range, polyphony, etc.)
-//!      f. Calculate BLAKE3 hash for deduplication
-//!      g. INSERT INTO files + musical_metadata (ONE transaction)
-//!   4. Clean up temp files
-//!   5. Move to next archive
-//! ```
-//!
-//! # Performance:
-//! - Target: 350-400 files/sec with full analysis
-//! - 1.5M files completed in ~1-1.5 hours
-//! - Single-pass processing (no re-analysis needed)
-//!
-//! # Usage:
-//! ```bash
-//! # Process directory of archives
-//! cargo run --release --bin import_unified -- ~/floorp_downloads/_1.002.000-Midi-Collection_/
-//!
-//! # Process single archive
-//! cargo run --release --bin import_unified -- ~/path/to/archive.zip
-//! ```
+   /// Unified MIDI Import Pipeline
+   ///
+   /// This binary orchestrates ALL existing modules to provide a complete, single-pass
+   /// import pipeline that processes compressed archives directly into the database with
+   /// FULL analysis (BPM, key, tags, complexity, etc.).
+   ///
+   /// # Architecture: Orchestration Layer
+   /// This is a thin orchestration layer that combines:
+   /// - Archive extraction (io::decompressor)
+   /// - MIDI parsing (core::midi::parser)
+   /// - Musical analysis (core::analysis)
+   /// - Intelligent tagging (core::analysis::auto_tagger)
+   /// - Hash-based deduplication (core::hash)
+   /// - Batch database inserts (database::batch_insert)
+   ///
+   /// # Workflow:
+   /// ```text
+   /// For each archive in input directory:
+   ///   1. Extract archive → temp directory
+   ///   2. Find all .mid/.midi files
+   ///   3. For EACH MIDI file (in parallel with 32 workers):
+   ///      a. Read file bytes
+   ///      b. Parse MIDI
+   ///      c. Detect BPM and key
+   ///      d. Extract tags from path and content
+   ///      e. Analyze notes (complexity, pitch range, polyphony, etc.)
+   ///      f. Calculate BLAKE3 hash for deduplication
+   ///      g. INSERT INTO files + musical_metadata (ONE transaction)
+   ///   4. Clean up temp files
+   ///   5. Move to next archive
+   /// ```
+   ///
+   /// # Performance:
+   /// - Target: 350-400 files/sec with full analysis
+   /// - 1.5M files completed in ~1-1.5 hours
+   /// - Single-pass processing (no re-analysis needed)
+   ///
+   /// # Usage:
+   /// ```bash
+   /// # Process directory of archives
+   /// cargo run --release --bin import_unified -- ~/floorp_downloads/_1.002.000-Midi-Collection_/
+   ///
+   /// # Process single archive
+   /// cargo run --release --bin import_unified -- ~/path/to/archive.zip
+   /// ```
 
 use std::path::{Path, PathBuf};
 use std::sync::atomic::{AtomicUsize, AtomicU64, Ordering};

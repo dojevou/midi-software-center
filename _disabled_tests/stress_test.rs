@@ -1,22 +1,22 @@
-//! Phase 7.3: Stress & Load Tests (8-10 tests)
-//!
-//! Extreme conditions and system boundary testing.
-//! Tests system behavior under high load, malformed data, concurrent operations,
-//! and resource constraints.
-//!
-//! All tests marked with #[ignore] for optional stress testing.
-//!
-//! Stress Test Categories:
-//! - Large batch imports (5000+ files)
-//! - Malformed data handling (50% invalid files)
-//! - Concurrent operations (10+ parallel streams)
-//! - Complex queries (10+ filter conditions)
-//! - Memory leak detection (1000+ iterations)
-//! - Filesystem limits (max path lengths, unicode, special chars)
-//! - Database connection pool stress (100+ connections)
-//! - Rapid user input (1000+ inputs/sec)
-//! - Long-running operations (24 hour simulation)
-//! - Cascading failure recovery
+   /// Phase 7.3: Stress & Load Tests (8-10 tests)
+   ///
+   /// Extreme conditions and system boundary testing.
+   /// Tests system behavior under high load, malformed data, concurrent operations,
+   /// and resource constraints.
+   ///
+   /// All tests marked with #[ignore] for optional stress testing.
+   ///
+   /// Stress Test Categories:
+   /// - Large batch imports (5000+ files)
+   /// - Malformed data handling (50% invalid files)
+   /// - Concurrent operations (10+ parallel streams)
+   /// - Complex queries (10+ filter conditions)
+   /// - Memory leak detection (1000+ iterations)
+   /// - Filesystem limits (max path lengths, unicode, special chars)
+   /// - Database connection pool stress (100+ connections)
+   /// - Rapid user input (1000+ inputs/sec)
+   /// - Long-running operations (24 hour simulation)
+   /// - Cascading failure recovery
 
 use midi_pipeline::commands::file_import::{import_single_file, import_directory};
 use midi_pipeline::commands::files::{get_file_count, list_files, delete_file};
