@@ -38,6 +38,10 @@
 use regex::Regex;
 use std::collections::HashSet;
 
+// Drum analyzer integration (v2.1)
+use super::drum_analyzer;
+use midi_library_shared::core::midi::types::MidiFile;
+
 /// Main auto-tagging engine
 pub struct AutoTagger {
     genre_keywords: HashSet<String>,
@@ -140,6 +144,7 @@ impl AutoTagger {
     /// * `midi_instruments` - Instrument names from MIDI file (e.g., ["Acoustic Bass Drum"])
     /// * `bpm` - Detected BPM (optional, added as tag if present)
     /// * `key_signature` - Detected key (optional, added as tag if present)
+    /// * `midi_file` - Optional MIDI file for drum analysis (v2.1 enhancement)
     ///
     /// # Returns
     /// Vector of unique tags with categories
@@ -150,6 +155,7 @@ impl AutoTagger {
         midi_instruments: &[String],
         bpm: Option<f64>,
         key_signature: Option<&str>,
+        midi_file: Option<&MidiFile>,
     ) -> Vec<Tag> {
         let mut tags = HashSet::new();
 
@@ -207,6 +213,18 @@ impl AutoTagger {
                     0.80, // Confidence from key detection algorithm
                     40,   // Key priority
                     "key_analysis",
+                ));
+            }
+        }
+
+        // 6. Add drum-specific tags if MIDI file provided (v2.1 enhancement)
+        if let Some(midi) = midi_file {
+            let drum_analysis = drum_analyzer::analyze_drum_midi(midi);
+            if drum_analysis.is_drum_file {
+                tags.extend(drum_analyzer::generate_drum_tags(
+                    &drum_analysis,
+                    file_path,
+                    file_name,
                 ));
             }
         }

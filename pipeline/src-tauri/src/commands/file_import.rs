@@ -443,6 +443,7 @@ async fn process_single_file(
         &midi_instruments,
         bpm,
         key_signature.as_deref(),
+        None, // TODO: Pass parsed MidiFile for drum analysis (v2.1 enhancement)
     );
 
     Ok(ProcessedFile {
