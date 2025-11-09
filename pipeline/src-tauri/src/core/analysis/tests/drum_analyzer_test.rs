@@ -13,8 +13,8 @@ use crate::core::analysis::drum_analyzer::{
     note_to_drum_type, has_drum_channel, extract_drum_notes, detect_cymbal_types,
     extract_time_signature_from_meta, extract_time_signature_from_path,
     extract_bpm_from_filename, extract_pattern_type, extract_rhythmic_feel,
-    extract_song_structure, DrumNote, CymbalType, PatternType, RhythmicFeel,
-    SongStructure,
+    extract_song_structure, detect_techniques, DrumNote, CymbalType, PatternType,
+    RhythmicFeel, SongStructure, DrumTechnique,
 };
 use midi_library_shared::core::midi::types::{MidiFile, Header, Track, TimedEvent, Event};
 use std::collections::HashMap;
@@ -446,9 +446,350 @@ fn test_extract_song_structure_verse() {
 }
 
 // ============================================================================
-// PHASE 1 + 2 SUMMARY
+// PHASE 3: PATTERN ANALYSIS & TECHNIQUE DETECTION (15 tests)
 // ============================================================================
-// Total tests: 35
+
+// Helper: Create NoteOn with specific velocity
+fn note_on_vel(channel: u8, note: u8, velocity: u8) -> Event {
+    Event::NoteOn {
+        channel,
+        note,
+        velocity,
+    }
+}
+
+// ======= Ghost Notes Detection (5 tests) =======
+
+#[test]
+fn test_detect_techniques_ghost_notes_detected() {
+    // Test: Ghost notes detected (low-velocity snare hits)
+    // Create MIDI with 10 snare hits: 7 ghost notes (vel < 40), 3 regular (vel >= 40)
+    let mut events = vec![];
+
+    // Ghost notes (velocity < 40) - 7 hits
+    for i in 0..7 {
+        events.push((i * 480, note_on_vel(9, 38, 30)));  // Snare at low velocity
+        events.push((240, note_off(9, 38, 0)));
+    }
+
+    // Regular notes (velocity >= 40) - 3 hits
+    for i in 0..3 {
+        events.push((480, note_on_vel(9, 38, 80)));  // Snare at normal velocity
+        events.push((240, note_off(9, 38, 0)));
+    }
+
+    let midi = create_test_midi(events);
+    let drum_notes = extract_drum_notes(&midi);
+    let techniques = detect_techniques(&midi, &drum_notes);
+
+    assert!(techniques.contains(&DrumTechnique::GhostNotes));
+}
+
+#[test]
+fn test_detect_techniques_ghost_notes_not_detected() {
+    // Test: No ghost notes (all snares at normal velocity)
+    let mut events = vec![];
+
+    for i in 0..10 {
+        events.push((i * 480, note_on_vel(9, 38, 80)));  // All normal velocity
+        events.push((240, note_off(9, 38, 0)));
+    }
+
+    let midi = create_test_midi(events);
+    let drum_notes = extract_drum_notes(&midi);
+    let techniques = detect_techniques(&midi, &drum_notes);
+
+    assert!(!techniques.contains(&DrumTechnique::GhostNotes));
+}
+
+#[test]
+fn test_detect_techniques_ghost_notes_threshold() {
+    // Test: Ghost notes at exactly 30% threshold (should detect)
+    let mut events = vec![];
+
+    // 3 ghost notes (30% of 10 total)
+    for i in 0..3 {
+        events.push((i * 480, note_on_vel(9, 38, 35)));
+        events.push((240, note_off(9, 38, 0)));
+    }
+
+    // 7 regular notes (70%)
+    for i in 0..7 {
+        events.push((480, note_on_vel(9, 38, 80)));
+        events.push((240, note_off(9, 38, 0)));
+    }
+
+    let midi = create_test_midi(events);
+    let drum_notes = extract_drum_notes(&midi);
+    let techniques = detect_techniques(&midi, &drum_notes);
+
+    // 30% should trigger ghost notes detection
+    assert!(techniques.contains(&DrumTechnique::GhostNotes));
+}
+
+#[test]
+fn test_detect_techniques_ghost_notes_no_snares() {
+    // Test: No ghost notes if there are no snare hits
+    let events = vec![
+        (0, note_on_vel(9, 36, 100)),   // Kick only
+        (480, note_off(9, 36, 0)),
+    ];
+
+    let midi = create_test_midi(events);
+    let drum_notes = extract_drum_notes(&midi);
+    let techniques = detect_techniques(&midi, &drum_notes);
+
+    assert!(!techniques.contains(&DrumTechnique::GhostNotes));
+}
+
+#[test]
+fn test_detect_techniques_ghost_notes_velocity_boundary() {
+    // Test: Velocity at boundary (39 is ghost, 40 is not)
+    let events = vec![
+        (0, note_on_vel(9, 38, 39)),    // Ghost note (< 40)
+        (240, note_off(9, 38, 0)),
+        (240, note_on_vel(9, 38, 40)),  // Regular note (>= 40)
+        (240, note_off(9, 38, 0)),
+    ];
+
+    let midi = create_test_midi(events);
+    let drum_notes = extract_drum_notes(&midi);
+    let techniques = detect_techniques(&midi, &drum_notes);
+
+    // 50% ghost notes should trigger detection
+    assert!(techniques.contains(&DrumTechnique::GhostNotes));
+}
+
+// ======= Double Bass Detection (4 tests) =======
+
+#[test]
+fn test_detect_techniques_double_bass_detected() {
+    // Test: Double bass detected (> 100 kick hits)
+    let mut events = vec![];
+
+    for i in 0..120 {
+        events.push((i * 120, note_on(9, 36, 100)));  // 120 kicks
+        events.push((60, note_off(9, 36, 0)));
+    }
+
+    let midi = create_test_midi(events);
+    let drum_notes = extract_drum_notes(&midi);
+    let techniques = detect_techniques(&midi, &drum_notes);
+
+    assert!(techniques.contains(&DrumTechnique::DoubleBass));
+}
+
+#[test]
+fn test_detect_techniques_double_bass_not_detected() {
+    // Test: No double bass (only 50 kicks)
+    let mut events = vec![];
+
+    for i in 0..50 {
+        events.push((i * 240, note_on(9, 36, 100)));
+        events.push((120, note_off(9, 36, 0)));
+    }
+
+    let midi = create_test_midi(events);
+    let drum_notes = extract_drum_notes(&midi);
+    let techniques = detect_techniques(&midi, &drum_notes);
+
+    assert!(!techniques.contains(&DrumTechnique::DoubleBass));
+}
+
+#[test]
+fn test_detect_techniques_double_bass_threshold() {
+    // Test: Exactly at threshold (100 kicks should NOT trigger, > 100 should)
+    let mut events_100 = vec![];
+    let mut events_101 = vec![];
+
+    for i in 0..100 {
+        events_100.push((i * 120, note_on(9, 36, 100)));
+        events_100.push((60, note_off(9, 36, 0)));
+    }
+
+    for i in 0..101 {
+        events_101.push((i * 120, note_on(9, 36, 100)));
+        events_101.push((60, note_off(9, 36, 0)));
+    }
+
+    let midi_100 = create_test_midi(events_100);
+    let midi_101 = create_test_midi(events_101);
+
+    let drum_notes_100 = extract_drum_notes(&midi_100);
+    let drum_notes_101 = extract_drum_notes(&midi_101);
+
+    let techniques_100 = detect_techniques(&midi_100, &drum_notes_100);
+    let techniques_101 = detect_techniques(&midi_101, &drum_notes_101);
+
+    // 100 kicks should NOT trigger
+    assert!(!techniques_100.contains(&DrumTechnique::DoubleBass));
+    // 101 kicks should trigger
+    assert!(techniques_101.contains(&DrumTechnique::DoubleBass));
+}
+
+#[test]
+fn test_detect_techniques_double_bass_both_kick_types() {
+    // Test: Double bass counts both kick types (note 35 + 36)
+    let mut events = vec![];
+
+    // 60 kicks on note 35 (Acoustic Bass Drum)
+    for i in 0..60 {
+        events.push((i * 120, note_on(9, 35, 100)));
+        events.push((60, note_off(9, 35, 0)));
+    }
+
+    // 60 kicks on note 36 (Bass Drum 1)
+    for i in 0..60 {
+        events.push((120, note_on(9, 36, 100)));
+        events.push((60, note_off(9, 36, 0)));
+    }
+
+    let midi = create_test_midi(events);
+    let drum_notes = extract_drum_notes(&midi);
+    let techniques = detect_techniques(&midi, &drum_notes);
+
+    // Total 120 kicks should trigger double bass
+    assert!(techniques.contains(&DrumTechnique::DoubleBass));
+}
+
+// ======= Technique Combinations (4 tests) =======
+
+#[test]
+fn test_detect_techniques_multiple_techniques() {
+    // Test: Both ghost notes and double bass detected
+    let mut events = vec![];
+
+    // 120 kicks for double bass
+    for i in 0..120 {
+        events.push((i * 120, note_on(9, 36, 100)));
+        events.push((60, note_off(9, 36, 0)));
+    }
+
+    // Ghost notes: 7 low-velocity, 3 regular
+    for i in 0..7 {
+        events.push((120, note_on_vel(9, 38, 30)));
+        events.push((60, note_off(9, 38, 0)));
+    }
+    for i in 0..3 {
+        events.push((120, note_on_vel(9, 38, 80)));
+        events.push((60, note_off(9, 38, 0)));
+    }
+
+    let midi = create_test_midi(events);
+    let drum_notes = extract_drum_notes(&midi);
+    let techniques = detect_techniques(&midi, &drum_notes);
+
+    assert!(techniques.contains(&DrumTechnique::DoubleBass));
+    assert!(techniques.contains(&DrumTechnique::GhostNotes));
+    assert_eq!(techniques.len(), 2);
+}
+
+#[test]
+fn test_detect_techniques_no_techniques() {
+    // Test: No techniques detected (normal drum pattern)
+    let events = vec![
+        (0, note_on_vel(9, 36, 100)),    // Regular kick
+        (240, note_off(9, 36, 0)),
+        (0, note_on_vel(9, 38, 80)),     // Regular snare
+        (240, note_off(9, 38, 0)),
+        (0, note_on_vel(9, 42, 70)),     // Hi-hat
+        (240, note_off(9, 42, 0)),
+    ];
+
+    let midi = create_test_midi(events);
+    let drum_notes = extract_drum_notes(&midi);
+    let techniques = detect_techniques(&midi, &drum_notes);
+
+    assert!(techniques.is_empty());
+}
+
+#[test]
+fn test_detect_techniques_empty_midi() {
+    // Test: Empty MIDI file
+    let midi = create_test_midi(vec![]);
+    let drum_notes = extract_drum_notes(&midi);
+    let techniques = detect_techniques(&midi, &drum_notes);
+
+    assert!(techniques.is_empty());
+}
+
+#[test]
+fn test_detect_techniques_non_drum_notes() {
+    // Test: Non-drum notes don't trigger techniques
+    let events = vec![
+        (0, note_on_vel(0, 60, 100)),   // Channel 1, middle C
+        (480, note_off(0, 60, 0)),
+        (0, note_on_vel(1, 64, 100)),   // Channel 2, E
+        (480, note_off(1, 64, 0)),
+    ];
+
+    let midi = create_test_midi(events);
+    let drum_notes = extract_drum_notes(&midi);
+    let techniques = detect_techniques(&midi, &drum_notes);
+
+    assert!(techniques.is_empty());
+}
+
+// ======= Integration Tests (2 tests) =======
+
+#[test]
+fn test_detect_techniques_realistic_jazz_pattern() {
+    // Test: Realistic jazz pattern with ghost notes
+    let mut events = vec![];
+
+    // Ride cymbal pattern (not tested for techniques, but adds realism)
+    for i in 0..16 {
+        events.push((i * 240, note_on_vel(9, 51, 70)));
+        events.push((120, note_off(9, 51, 0)));
+    }
+
+    // Jazz snare with ghost notes: 8 ghost, 4 regular (75% ghost notes)
+    for i in 0..8 {
+        events.push((240, note_on_vel(9, 38, 25)));  // Ghost note
+        events.push((120, note_off(9, 38, 0)));
+    }
+    for i in 0..4 {
+        events.push((240, note_on_vel(9, 38, 90)));  // Accent
+        events.push((120, note_off(9, 38, 0)));
+    }
+
+    let midi = create_test_midi(events);
+    let drum_notes = extract_drum_notes(&midi);
+    let techniques = detect_techniques(&midi, &drum_notes);
+
+    assert!(techniques.contains(&DrumTechnique::GhostNotes));
+    assert!(!techniques.contains(&DrumTechnique::DoubleBass));
+}
+
+#[test]
+fn test_detect_techniques_realistic_metal_pattern() {
+    // Test: Realistic metal pattern with double bass
+    let mut events = vec![];
+
+    // Fast double bass: 150 kicks
+    for i in 0..150 {
+        events.push((i * 60, note_on_vel(9, 36, 110)));  // Fast 16th notes
+        events.push((30, note_off(9, 36, 0)));
+    }
+
+    // Snare backbeat: all loud hits
+    for i in 0..8 {
+        events.push((240, note_on_vel(9, 38, 100)));
+        events.push((120, note_off(9, 38, 0)));
+    }
+
+    let midi = create_test_midi(events);
+    let drum_notes = extract_drum_notes(&midi);
+    let techniques = detect_techniques(&midi, &drum_notes);
+
+    assert!(techniques.contains(&DrumTechnique::DoubleBass));
+    assert!(!techniques.contains(&DrumTechnique::GhostNotes));  // No ghost notes
+}
+
+// ============================================================================
+// PHASE 1 + 2 + 3 SUMMARY
+// ============================================================================
+// Total tests: 50
 // - Phase 1 (GM Drum Note Mapping & Channel Detection): 20 tests
 //   - GM Drum Note Mapping: 10 tests
 //   - Channel Detection: 10 tests
@@ -458,8 +799,12 @@ fn test_extract_song_structure_verse() {
 //   - Pattern type detection: 3 tests
 //   - Rhythmic feel detection: 3 tests
 //   - Song structure detection: 2 tests
+// - Phase 3 (Pattern Analysis & Technique Detection): 15 tests
+//   - Ghost notes detection: 5 tests
+//   - Double bass detection: 4 tests
+//   - Technique combinations: 4 tests
+//   - Integration tests: 2 tests
 //
-// Next phases will add:
-// - Phase 3: Pattern Analysis & Technique Detection (15 tests)
+// Next phase will add:
 // - Phase 4: Tag Generation & Integration (10 tests)
 // ============================================================================

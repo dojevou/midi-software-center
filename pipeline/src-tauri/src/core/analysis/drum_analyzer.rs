@@ -355,11 +355,10 @@ pub fn detect_techniques(midi_file: &MidiFile, drum_notes: &HashMap<DrumNote, us
         techniques.push(DrumTechnique::GhostNotes);
     }
 
-    // Double bass: High count of kick notes
-    let kick_count = drum_notes.get(&DrumNote::BassDrum1)
-        .or_else(|| drum_notes.get(&DrumNote::AcousticBassDrum))
-        .copied()
-        .unwrap_or(0);
+    // Double bass: High count of kick notes (combine both kick types)
+    let kick_count_1 = drum_notes.get(&DrumNote::BassDrum1).copied().unwrap_or(0);
+    let kick_count_2 = drum_notes.get(&DrumNote::AcousticBassDrum).copied().unwrap_or(0);
+    let kick_count = kick_count_1 + kick_count_2;
 
     if kick_count > 100 { // Threshold for double-bass
         techniques.push(DrumTechnique::DoubleBass);
@@ -388,7 +387,7 @@ fn has_ghost_notes(midi_file: &MidiFile) -> bool {
         }
     }
 
-    total_snare > 0 && (ghost_count as f64 / total_snare as f64) > 0.3
+    total_snare > 0 && (ghost_count as f64 / total_snare as f64) >= 0.3
 }
 
 // ============================================================================
