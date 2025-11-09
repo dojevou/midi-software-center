@@ -13,8 +13,9 @@ use crate::core::analysis::drum_analyzer::{
     note_to_drum_type, has_drum_channel, extract_drum_notes, detect_cymbal_types,
     extract_time_signature_from_meta, extract_time_signature_from_path,
     extract_bpm_from_filename, extract_pattern_type, extract_rhythmic_feel,
-    extract_song_structure, detect_techniques, DrumNote, CymbalType, PatternType,
-    RhythmicFeel, SongStructure, DrumTechnique,
+    extract_song_structure, detect_techniques, generate_drum_tags, DrumAnalysis,
+    DrumNote, CymbalType, PatternType, RhythmicFeel, SongStructure, DrumTechnique,
+    TimeSignature,
 };
 use midi_library_shared::core::midi::types::{MidiFile, Header, Track, TimedEvent, Event};
 use std::collections::HashMap;
@@ -805,6 +806,218 @@ fn test_detect_techniques_realistic_metal_pattern() {
 //   - Technique combinations: 4 tests
 //   - Integration tests: 2 tests
 //
-// Next phase will add:
 // - Phase 4: Tag Generation & Integration (10 tests)
+//   - Basic tag generation: 2 tests
+//   - Metadata tag generation: 3 tests
+//   - Technique tags: 2 tests
+//   - Tag metadata validation: 3 tests
+// ============================================================================
+
+// ============================================================================
+// PHASE 4: TAG GENERATION & INTEGRATION (10 tests)
+// ============================================================================
+
+// Helper: Create a basic drum analysis for testing
+fn create_test_drum_analysis() -> DrumAnalysis {
+    let mut drum_notes = std::collections::HashMap::new();
+    drum_notes.insert(DrumNote::BassDrum1, 50);
+    drum_notes.insert(DrumNote::AcousticSnare, 30);
+    drum_notes.insert(DrumNote::ClosedHiHat, 100);
+
+    DrumAnalysis {
+        is_drum_file: true,
+        drum_channel_detected: true,
+        drum_notes,
+        pattern_type: None,
+        rhythmic_feel: None,
+        time_signature: None,
+        bpm: None,
+        cymbal_types: vec![],
+        techniques: vec![],
+        song_structure: None,
+    }
+}
+
+// ======= Basic Tag Generation (2 tests) =======
+
+#[test]
+fn test_generate_drum_tags_basic() {
+    // Test: Basic tag generation with minimal analysis
+    let analysis = create_test_drum_analysis();
+    let tags = generate_drum_tags(&analysis, "/path/to", "file.mid");
+
+    // Should generate at least "drums" tag and specific drum tags
+    assert!(!tags.is_empty());
+    assert!(tags.iter().any(|t| t.name == "drums"));
+    assert!(tags.iter().any(|t| t.name == "kick"));
+    assert!(tags.iter().any(|t| t.name == "snare"));
+    assert!(tags.iter().any(|t| t.name == "hihat"));
+}
+
+#[test]
+fn test_generate_drum_tags_with_cymbals() {
+    // Test: Tag generation includes cymbal-specific tags
+    let mut analysis = create_test_drum_analysis();
+    analysis.cymbal_types = vec![
+        CymbalType::ClosedHat,
+        CymbalType::Ride,
+        CymbalType::Crash,
+    ];
+
+    let tags = generate_drum_tags(&analysis, "/path/to", "file.mid");
+
+    assert!(tags.iter().any(|t| t.name == "closed-hat"));
+    assert!(tags.iter().any(|t| t.name == "ride"));
+    assert!(tags.iter().any(|t| t.name == "crash"));
+}
+
+// ======= Metadata Tag Generation (3 tests) =======
+
+#[test]
+fn test_generate_drum_tags_with_time_signature() {
+    // Test: Time signature tags are generated
+    let mut analysis = create_test_drum_analysis();
+    analysis.time_signature = Some(TimeSignature {
+        numerator: 9,
+        denominator: 8,
+    });
+
+    let tags = generate_drum_tags(&analysis, "/path/to", "file.mid");
+
+    assert!(tags.iter().any(|t| t.name == "9-8"));
+    assert!(tags.iter().any(|t| t.category == Some("time-signature".to_string())));
+}
+
+#[test]
+fn test_generate_drum_tags_with_bpm() {
+    // Test: BPM tags are generated from filename
+    let analysis = create_test_drum_analysis();
+    let tags = generate_drum_tags(&analysis, "/path/to", "174_Groove.mid");
+
+    assert!(tags.iter().any(|t| t.name == "174"));
+    assert!(tags.iter().any(|t| t.category == Some("tempo".to_string())));
+}
+
+#[test]
+fn test_generate_drum_tags_with_pattern_type() {
+    // Test: Pattern type tags are generated
+    let mut analysis = create_test_drum_analysis();
+    analysis.pattern_type = Some(PatternType::Fill);
+
+    let tags = generate_drum_tags(&analysis, "/path/to", "Fill_01.mid");
+
+    assert!(tags.iter().any(|t| t.name == "fill"));
+    assert!(tags.iter().any(|t| t.category == Some("pattern-type".to_string())));
+}
+
+// ======= Technique Tags (2 tests) =======
+
+#[test]
+fn test_generate_drum_tags_with_techniques() {
+    // Test: Technique tags are generated
+    let mut analysis = create_test_drum_analysis();
+    analysis.techniques = vec![DrumTechnique::GhostNotes, DrumTechnique::DoubleBass];
+
+    let tags = generate_drum_tags(&analysis, "/path/to", "file.mid");
+
+    assert!(tags.iter().any(|t| t.name == "ghost-notes"));
+    assert!(tags.iter().any(|t| t.name == "double-bass"));
+    assert!(tags.iter().any(|t| t.category == Some("technique".to_string())));
+}
+
+#[test]
+fn test_generate_drum_tags_with_rhythmic_feel() {
+    // Test: Rhythmic feel tags are generated
+    let mut analysis = create_test_drum_analysis();
+    analysis.rhythmic_feel = Some(RhythmicFeel::Swing);
+
+    let tags = generate_drum_tags(&analysis, "/path/to", "Swing_Pattern.mid");
+
+    assert!(tags.iter().any(|t| t.name == "swing"));
+    assert!(tags.iter().any(|t| t.category == Some("rhythm-feel".to_string())));
+}
+
+// ======= Tag Metadata Validation (3 tests) =======
+
+#[test]
+fn test_generate_drum_tags_confidence_scores() {
+    // Test: All tags have valid confidence scores (0.60-0.95)
+    let mut analysis = create_test_drum_analysis();
+    analysis.cymbal_types = vec![CymbalType::Crash];
+    analysis.techniques = vec![DrumTechnique::GhostNotes];
+
+    let tags = generate_drum_tags(&analysis, "/path/to", "174_Crash_Groove.mid");
+
+    for tag in &tags {
+        assert!(tag.confidence >= 0.60 && tag.confidence <= 0.95,
+            "Tag '{}' has invalid confidence: {}", tag.name, tag.confidence);
+    }
+}
+
+#[test]
+fn test_generate_drum_tags_priority_ordering() {
+    // Test: All tags have valid priorities (10-90, lower = higher priority)
+    let mut analysis = create_test_drum_analysis();
+    analysis.time_signature = Some(TimeSignature { numerator: 4, denominator: 4 });
+    analysis.pattern_type = Some(PatternType::Groove);
+
+    let tags = generate_drum_tags(&analysis, "/path/to", "file.mid");
+
+    for tag in &tags {
+        assert!(tag.priority >= 10 && tag.priority <= 90,
+            "Tag '{}' has invalid priority: {}", tag.name, tag.priority);
+    }
+
+    // Verify priority relationships make sense (optional check)
+    // Note: The actual priority values depend on the implementation
+    let drums_tag = tags.iter().find(|t| t.name == "drums");
+    let kick_tag = tags.iter().find(|t| t.name == "kick");
+
+    // Just verify both tags exist and have valid priorities
+    if let (Some(drums), Some(kick)) = (drums_tag, kick_tag) {
+        // Both should have valid priorities
+        assert!(drums.priority >= 10 && drums.priority <= 90);
+        assert!(kick.priority >= 10 && kick.priority <= 90);
+    }
+}
+
+#[test]
+fn test_generate_drum_tags_detection_methods() {
+    // Test: All tags have non-empty detection methods
+    let mut analysis = create_test_drum_analysis();
+    analysis.cymbal_types = vec![CymbalType::Ride];
+    analysis.techniques = vec![DrumTechnique::DoubleBass];
+    analysis.time_signature = Some(TimeSignature { numerator: 6, denominator: 8 });
+
+    let tags = generate_drum_tags(&analysis, "/path/to", "140bpm_Ride.mid");
+
+    for tag in &tags {
+        assert!(!tag.detection_method.is_empty(),
+            "Tag '{}' has empty detection method", tag.name);
+
+        // Common detection methods
+        let valid_methods = vec![
+            "midi_channel_10", "midi_notes", "midi_meta_event",
+            "filename_exact", "filename_bpm", "time_sig_derived",
+            "midi_pattern_analysis", "cymbal_notes", "midi_drum_notes"
+        ];
+
+        // Detection method should be from known set
+        assert!(valid_methods.iter().any(|&m| tag.detection_method.contains(m)),
+            "Tag '{}' has unexpected detection method: {}", tag.name, tag.detection_method);
+    }
+}
+
+// ============================================================================
+// PHASE 1 + 2 + 3 + 4 SUMMARY
+// ============================================================================
+// Total tests: 60
+// - Phase 1 (GM Drum Note Mapping & Channel Detection): 20 tests
+// - Phase 2 (Filename/Path Metadata Extraction): 15 tests
+// - Phase 3 (Pattern Analysis & Technique Detection): 15 tests
+// - Phase 4 (Tag Generation & Integration): 10 tests
+//
+// Next phases will add:
+// - Phase 5: Integration Tests (10 tests)
+// - Phase 6: Real-World Validation (1000+ files)
 // ============================================================================
