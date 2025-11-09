@@ -442,6 +442,7 @@ pub fn extract_time_signature_from_path(file_path: &str, file_name: &str) -> Opt
 /// - "174_Gmin_Bass.mid"
 /// - "140bpm_Kick.mid"
 /// - "120 BPM Groove.mid"
+/// - "jazz_136_swing.mid"
 pub fn extract_bpm_from_filename(file_name: &str) -> Option<f64> {
     let name_lower = file_name.to_lowercase();
 
@@ -471,6 +472,19 @@ pub fn extract_bpm_from_filename(file_name: &str) -> Option<f64> {
         if let Ok(bpm) = file_name[..3].parse::<f64>() {
             if (30.0..=300.0).contains(&bpm) {
                 return Some(bpm);
+            }
+        }
+    }
+
+    // Pattern 4: "_XXX_" anywhere in filename (e.g., "jazz_136_swing.mid")
+    // Split by underscore and check each segment
+    for segment in file_name.split('_') {
+        // Check if segment is exactly 3 digits
+        if segment.len() == 3 && segment.chars().all(|c| c.is_ascii_digit()) {
+            if let Ok(bpm) = segment.parse::<f64>() {
+                if (30.0..=300.0).contains(&bpm) {
+                    return Some(bpm);
+                }
             }
         }
     }
