@@ -11,7 +11,10 @@
 
 use crate::core::analysis::drum_analyzer::{
     note_to_drum_type, has_drum_channel, extract_drum_notes, detect_cymbal_types,
-    extract_time_signature_from_meta, DrumNote, CymbalType,
+    extract_time_signature_from_meta, extract_time_signature_from_path,
+    extract_bpm_from_filename, extract_pattern_type, extract_rhythmic_feel,
+    extract_song_structure, DrumNote, CymbalType, PatternType, RhythmicFeel,
+    SongStructure,
 };
 use midi_library_shared::core::midi::types::{MidiFile, Header, Track, TimedEvent, Event};
 use std::collections::HashMap;
@@ -314,14 +317,149 @@ fn test_extract_time_signature_from_meta() {
 }
 
 // ============================================================================
-// PHASE 1 SUMMARY
+// PHASE 2: FILENAME/PATH METADATA EXTRACTION (15 tests)
 // ============================================================================
-// Total tests in Phase 1: 20
-// - GM Drum Note Mapping: 10 tests
-// - Channel Detection: 10 tests
+
+// ======= Time Signature Extraction (3 tests) =======
+
+#[test]
+fn test_extract_time_signature_from_path_9_8() {
+    // Test: Extract 9/8 time signature from filename
+    let result = extract_time_signature_from_path("/drums/jazz/", "9-8 Straight Kick.mid");
+    assert!(result.is_some());
+
+    let ts = result.unwrap();
+    assert_eq!(ts.numerator, 9);
+    assert_eq!(ts.denominator, 8);
+}
+
+#[test]
+fn test_extract_time_signature_from_path_6_8() {
+    // Test: Extract 6/8 time signature from path
+    let result = extract_time_signature_from_path("/drums/blues/6-8/", "Country Shuffle.mid");
+    assert!(result.is_some());
+
+    let ts = result.unwrap();
+    assert_eq!(ts.numerator, 6);
+    assert_eq!(ts.denominator, 8);
+}
+
+#[test]
+fn test_extract_time_signature_from_path_none() {
+    // Test: No time signature in path or filename
+    let result = extract_time_signature_from_path("/drums/rock/", "Basic Beat.mid");
+    // Should be None since there's no time signature pattern
+    assert!(result.is_none());
+}
+
+// ======= BPM Extraction (4 tests) =======
+
+#[test]
+fn test_extract_bpm_from_filename_underscore() {
+    // Test: Pattern 1 - "174_Gmin_Bass.mid"
+    let result = extract_bpm_from_filename("174_Gmin_Bass.mid");
+    assert_eq!(result, Some(174.0));
+}
+
+#[test]
+fn test_extract_bpm_from_filename_bpm_lowercase() {
+    // Test: Pattern 2 - "140 bpm Kick.mid" (with space, real-world pattern)
+    let result = extract_bpm_from_filename("140 bpm Kick.mid");
+    assert_eq!(result, Some(140.0));
+}
+
+#[test]
+fn test_extract_bpm_from_filename_bpm_uppercase() {
+    // Test: Pattern 3 - "120 BPM Groove.mid"
+    let result = extract_bpm_from_filename("120 BPM Groove.mid");
+    assert_eq!(result, Some(120.0));
+}
+
+#[test]
+fn test_extract_bpm_from_filename_invalid() {
+    // Test: Invalid BPM values (outside 30-300 range)
+    assert_eq!(extract_bpm_from_filename("20bpm.mid"), None);  // Too slow
+    assert_eq!(extract_bpm_from_filename("350bpm.mid"), None); // Too fast
+    assert_eq!(extract_bpm_from_filename("no_bpm.mid"), None); // No BPM
+}
+
+// ======= Pattern Type Detection (3 tests) =======
+
+#[test]
+fn test_extract_pattern_type_groove() {
+    // Test: Detect "groove" pattern type
+    let result = extract_pattern_type("/drums/funk/", "Groove 01.mid");
+    assert_eq!(result, Some(PatternType::Groove));
+}
+
+#[test]
+fn test_extract_pattern_type_fill() {
+    // Test: Detect "fill" pattern type
+    let result = extract_pattern_type("/drums/metal/", "Metal Fill 02.mid");
+    assert_eq!(result, Some(PatternType::Fill));
+}
+
+#[test]
+fn test_extract_pattern_type_intro() {
+    // Test: Detect "intro" pattern type
+    let result = extract_pattern_type("/drums/rock/", "Song Intro.mid");
+    assert_eq!(result, Some(PatternType::Intro));
+}
+
+// ======= Rhythmic Feel Detection (3 tests) =======
+
+#[test]
+fn test_extract_rhythmic_feel_swing() {
+    // Test: Detect "swing" rhythmic feel
+    let result = extract_rhythmic_feel("/drums/jazz/", "Swing Ride Pattern.mid");
+    assert_eq!(result, Some(RhythmicFeel::Swing));
+}
+
+#[test]
+fn test_extract_rhythmic_feel_shuffle() {
+    // Test: Detect "shuffle" rhythmic feel
+    let result = extract_rhythmic_feel("/drums/blues/", "Shuffle Beat.mid");
+    assert_eq!(result, Some(RhythmicFeel::Shuffle));
+}
+
+#[test]
+fn test_extract_rhythmic_feel_straight() {
+    // Test: Detect "straight" rhythmic feel
+    let result = extract_rhythmic_feel("/drums/rock/", "Straight Rock Beat.mid");
+    assert_eq!(result, Some(RhythmicFeel::Straight));
+}
+
+// ======= Song Structure Detection (2 tests) =======
+
+#[test]
+fn test_extract_song_structure_chorus() {
+    // Test: Detect "chorus" song structure
+    let result = extract_song_structure("/drums/pop/", "Chorus Ride 8th Splash.mid");
+    assert_eq!(result, Some(SongStructure::Chorus));
+}
+
+#[test]
+fn test_extract_song_structure_verse() {
+    // Test: Detect "verse" song structure
+    let result = extract_song_structure("/drums/rock/", "Verse Hat Pattern.mid");
+    assert_eq!(result, Some(SongStructure::Verse));
+}
+
+// ============================================================================
+// PHASE 1 + 2 SUMMARY
+// ============================================================================
+// Total tests: 35
+// - Phase 1 (GM Drum Note Mapping & Channel Detection): 20 tests
+//   - GM Drum Note Mapping: 10 tests
+//   - Channel Detection: 10 tests
+// - Phase 2 (Filename/Path Metadata Extraction): 15 tests
+//   - Time signature extraction: 3 tests
+//   - BPM extraction: 4 tests
+//   - Pattern type detection: 3 tests
+//   - Rhythmic feel detection: 3 tests
+//   - Song structure detection: 2 tests
 //
 // Next phases will add:
-// - Phase 2: Filename/Path Metadata Extraction (15 tests)
 // - Phase 3: Pattern Analysis & Technique Detection (15 tests)
 // - Phase 4: Tag Generation & Integration (10 tests)
 // ============================================================================
