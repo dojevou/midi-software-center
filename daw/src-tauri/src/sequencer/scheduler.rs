@@ -1,7 +1,6 @@
-   /// Event scheduling for sequencer
-   ///
-   /// Grown-up Script: Manages priority queue of MIDI events for precise playback timing.
-
+/// Event scheduling for sequencer
+///
+/// Grown-up Script: Manages priority queue of MIDI events for precise playback timing.
 use crate::core::midi::types::MidiMessage;
 use std::cmp::Ordering;
 use std::collections::BinaryHeap;
@@ -48,9 +47,7 @@ pub struct EventScheduler {
 impl EventScheduler {
     /// Create a new empty event scheduler
     pub fn new() -> Self {
-        Self {
-            events: Arc::new(Mutex::new(BinaryHeap::new())),
-        }
+        Self { events: Arc::new(Mutex::new(BinaryHeap::new())) }
     }
 
     /// Schedule a MIDI event at a specific tick
@@ -60,11 +57,7 @@ impl EventScheduler {
     /// * `tick` - Absolute tick position when event should fire
     /// * `track_id` - ID of the track this event belongs to
     pub async fn schedule(&self, message: MidiMessage, tick: u64, track_id: i32) {
-        let event = ScheduledEvent {
-            message,
-            tick,
-            track_id,
-        };
+        let event = ScheduledEvent { message, tick, track_id };
 
         let mut events = self.events.lock().await;
         events.push(event);
@@ -151,10 +144,7 @@ impl EventScheduler {
     /// Remove all events for a specific track
     pub async fn clear_track(&self, track_id: i32) {
         let mut events = self.events.lock().await;
-        let filtered: Vec<_> = events
-            .drain()
-            .filter(|e| e.track_id != track_id)
-            .collect();
+        let filtered: Vec<_> = events.drain().filter(|e| e.track_id != track_id).collect();
 
         events.clear();
         for event in filtered {
@@ -188,9 +178,7 @@ mod tests {
     async fn test_schedule_and_pop() {
         let scheduler = EventScheduler::new();
 
-        scheduler
-            .schedule(create_test_message(60, 100), 100, 1)
-            .await;
+        scheduler.schedule(create_test_message(60, 100), 100, 1).await;
 
         let event = scheduler.pop_next(100).await.unwrap();
         assert_eq!(event.tick, 100);
@@ -201,9 +189,7 @@ mod tests {
     async fn test_pop_before_ready() {
         let scheduler = EventScheduler::new();
 
-        scheduler
-            .schedule(create_test_message(60, 100), 100, 1)
-            .await;
+        scheduler.schedule(create_test_message(60, 100), 100, 1).await;
 
         // Try to pop at tick 50 (before event is ready)
         let event = scheduler.pop_next(50).await;
@@ -219,15 +205,9 @@ mod tests {
         let scheduler = EventScheduler::new();
 
         // Schedule events out of order
-        scheduler
-            .schedule(create_test_message(64, 100), 300, 1)
-            .await;
-        scheduler
-            .schedule(create_test_message(62, 100), 200, 1)
-            .await;
-        scheduler
-            .schedule(create_test_message(60, 100), 100, 1)
-            .await;
+        scheduler.schedule(create_test_message(64, 100), 300, 1).await;
+        scheduler.schedule(create_test_message(62, 100), 200, 1).await;
+        scheduler.schedule(create_test_message(60, 100), 100, 1).await;
 
         // Should come out in chronological order
         let e1 = scheduler.pop_next(500).await.unwrap();
@@ -247,15 +227,9 @@ mod tests {
     async fn test_pop_ready() {
         let scheduler = EventScheduler::new();
 
-        scheduler
-            .schedule(create_test_message(60, 100), 100, 1)
-            .await;
-        scheduler
-            .schedule(create_test_message(62, 100), 200, 1)
-            .await;
-        scheduler
-            .schedule(create_test_message(64, 100), 300, 1)
-            .await;
+        scheduler.schedule(create_test_message(60, 100), 100, 1).await;
+        scheduler.schedule(create_test_message(62, 100), 200, 1).await;
+        scheduler.schedule(create_test_message(64, 100), 300, 1).await;
 
         // Get all events up to tick 250
         let ready = scheduler.pop_ready(250).await;
@@ -271,12 +245,8 @@ mod tests {
     async fn test_peek_next() {
         let scheduler = EventScheduler::new();
 
-        scheduler
-            .schedule(create_test_message(60, 100), 100, 1)
-            .await;
-        scheduler
-            .schedule(create_test_message(62, 100), 200, 1)
-            .await;
+        scheduler.schedule(create_test_message(60, 100), 100, 1).await;
+        scheduler.schedule(create_test_message(62, 100), 200, 1).await;
 
         let next_tick = scheduler.peek_next().await.unwrap();
         assert_eq!(next_tick, 100);
@@ -289,15 +259,9 @@ mod tests {
     async fn test_clear_track() {
         let scheduler = EventScheduler::new();
 
-        scheduler
-            .schedule(create_test_message(60, 100), 100, 1)
-            .await;
-        scheduler
-            .schedule(create_test_message(62, 100), 200, 2)
-            .await;
-        scheduler
-            .schedule(create_test_message(64, 100), 300, 1)
-            .await;
+        scheduler.schedule(create_test_message(60, 100), 100, 1).await;
+        scheduler.schedule(create_test_message(62, 100), 200, 2).await;
+        scheduler.schedule(create_test_message(64, 100), 300, 1).await;
 
         scheduler.clear_track(1).await;
 
@@ -312,21 +276,9 @@ mod tests {
         let scheduler = EventScheduler::new();
 
         let events = vec![
-            ScheduledEvent {
-                message: create_test_message(60, 100),
-                tick: 100,
-                track_id: 1,
-            },
-            ScheduledEvent {
-                message: create_test_message(62, 100),
-                tick: 200,
-                track_id: 1,
-            },
-            ScheduledEvent {
-                message: create_test_message(64, 100),
-                tick: 300,
-                track_id: 1,
-            },
+            ScheduledEvent { message: create_test_message(60, 100), tick: 100, track_id: 1 },
+            ScheduledEvent { message: create_test_message(62, 100), tick: 200, track_id: 1 },
+            ScheduledEvent { message: create_test_message(64, 100), tick: 300, track_id: 1 },
         ];
 
         scheduler.schedule_many(events).await;
@@ -338,12 +290,8 @@ mod tests {
     async fn test_clear() {
         let scheduler = EventScheduler::new();
 
-        scheduler
-            .schedule(create_test_message(60, 100), 100, 1)
-            .await;
-        scheduler
-            .schedule(create_test_message(62, 100), 200, 1)
-            .await;
+        scheduler.schedule(create_test_message(60, 100), 100, 1).await;
+        scheduler.schedule(create_test_message(62, 100), 200, 1).await;
 
         scheduler.clear().await;
 

@@ -1,3 +1,4 @@
+#[allow(dead_code)]
    /// Menu creation for window management
 
 use tauri::{Menu, Submenu, MenuItem, CustomMenuItem};

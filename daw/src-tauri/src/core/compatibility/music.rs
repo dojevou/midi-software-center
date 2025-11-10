@@ -1,7 +1,6 @@
-   /// Music theory utilities - Pure functions for musical analysis
-   ///
-   /// Trusty Module: All functions are pure - no I/O, fully deterministic.
-
+/// Music theory utilities - Pure functions for musical analysis
+///
+/// Trusty Module: All functions are pure - no I/O, fully deterministic.
 use super::types::{Key, KeySignature, Mode};
 
 /// Calculate distance between two keys in semitones
@@ -224,14 +223,8 @@ mod tests {
 
     #[test]
     fn test_relative_keys() {
-        let c_major = KeySignature {
-            key: Key::C,
-            mode: Mode::Major,
-        };
-        let a_minor = KeySignature {
-            key: Key::A,
-            mode: Mode::Minor,
-        };
+        let c_major = KeySignature { key: Key::C, mode: Mode::Major };
+        let a_minor = KeySignature { key: Key::A, mode: Mode::Minor };
 
         assert!(is_relative_key(&c_major, &a_minor));
         assert!(is_relative_key(&a_minor, &c_major));
@@ -239,28 +232,16 @@ mod tests {
 
     #[test]
     fn test_not_relative_keys() {
-        let c_major = KeySignature {
-            key: Key::C,
-            mode: Mode::Major,
-        };
-        let c_minor = KeySignature {
-            key: Key::C,
-            mode: Mode::Minor,
-        };
+        let c_major = KeySignature { key: Key::C, mode: Mode::Major };
+        let c_minor = KeySignature { key: Key::C, mode: Mode::Minor };
 
         assert!(!is_relative_key(&c_major, &c_minor));
     }
 
     #[test]
     fn test_keys_compatible() {
-        let c_major = KeySignature {
-            key: Key::C,
-            mode: Mode::Major,
-        };
-        let g_major = KeySignature {
-            key: Key::G,
-            mode: Mode::Major,
-        };
+        let c_major = KeySignature { key: Key::C, mode: Mode::Major };
+        let g_major = KeySignature { key: Key::G, mode: Mode::Major };
 
         assert!(keys_compatible(&c_major, &c_major)); // Same key
         assert!(keys_compatible(&c_major, &g_major)); // Perfect fifth
@@ -268,38 +249,23 @@ mod tests {
 
     #[test]
     fn test_key_compatibility_perfect_match() {
-        let key = KeySignature {
-            key: Key::C,
-            mode: Mode::Major,
-        };
+        let key = KeySignature { key: Key::C, mode: Mode::Major };
 
         assert_eq!(key_compatibility_score(&key, &key), 100.0);
     }
 
     #[test]
     fn test_key_compatibility_relative() {
-        let c_major = KeySignature {
-            key: Key::C,
-            mode: Mode::Major,
-        };
-        let a_minor = KeySignature {
-            key: Key::A,
-            mode: Mode::Minor,
-        };
+        let c_major = KeySignature { key: Key::C, mode: Mode::Major };
+        let a_minor = KeySignature { key: Key::A, mode: Mode::Minor };
 
         assert_eq!(key_compatibility_score(&c_major, &a_minor), 95.0);
     }
 
     #[test]
     fn test_key_compatibility_fifth() {
-        let c_major = KeySignature {
-            key: Key::C,
-            mode: Mode::Major,
-        };
-        let g_major = KeySignature {
-            key: Key::G,
-            mode: Mode::Major,
-        };
+        let c_major = KeySignature { key: Key::C, mode: Mode::Major };
+        let g_major = KeySignature { key: Key::G, mode: Mode::Major };
 
         assert_eq!(key_compatibility_score(&c_major, &g_major), 85.0);
     }

@@ -2,8 +2,8 @@
 // Tests drum analyzer with actual drum MIDI files from 1.2M+ file collection
 // Validates performance, accuracy, and tag generation with real-world data
 
-use crate::core::analysis::drum_analyzer::{self, DrumAnalysis};
 use crate::core::analysis::auto_tagger::AutoTagger;
+use crate::core::analysis::drum_analyzer::{self, DrumAnalysis};
 use midi_library_shared::core::midi::{parse_midi_file, MidiFile};
 use std::fs;
 use std::time::Instant;
@@ -14,7 +14,7 @@ fn load_test_file(filename: &str) -> Vec<u8> {
         "src/core/analysis/tests/resources/real_world_drums/{}",
         filename
     );
-    fs::read(&path).expect(&format!("Failed to read test file: {}", filename))
+    fs::read(&path).unwrap_or_else(|_| panic!("Failed to read test file: {}", filename))
 }
 
 /// Parse MIDI file from bytes
@@ -40,7 +40,10 @@ fn test_realworld_jazz_136_swing_detection() {
     let midi = parse_midi(&bytes);
     let analysis = drum_analyzer::analyze_drum_midi(&midi);
 
-    assert!(analysis.is_drum_file, "Jazz file should be detected as drums");
+    assert!(
+        analysis.is_drum_file,
+        "Jazz file should be detected as drums"
+    );
     // Note: Channel 10 detection is optional - real-world files rarely use it
 }
 
@@ -50,7 +53,10 @@ fn test_realworld_punk_200_fast_detection() {
     let midi = parse_midi(&bytes);
     let analysis = drum_analyzer::analyze_drum_midi(&midi);
 
-    assert!(analysis.is_drum_file, "Punk file should be detected as drums");
+    assert!(
+        analysis.is_drum_file,
+        "Punk file should be detected as drums"
+    );
     // Note: Channel 10 detection is optional - real-world files rarely use it
 }
 
@@ -60,7 +66,10 @@ fn test_realworld_metal_triplet_detection() {
     let midi = parse_midi(&bytes);
     let analysis = drum_analyzer::analyze_drum_midi(&midi);
 
-    assert!(analysis.is_drum_file, "Metal file should be detected as drums");
+    assert!(
+        analysis.is_drum_file,
+        "Metal file should be detected as drums"
+    );
     // Note: Channel 10 detection is optional - real-world files rarely use it
 }
 
@@ -70,7 +79,10 @@ fn test_realworld_dnb_160_electronic_detection() {
     let midi = parse_midi(&bytes);
     let analysis = drum_analyzer::analyze_drum_midi(&midi);
 
-    assert!(analysis.is_drum_file, "DnB file should be detected as drums");
+    assert!(
+        analysis.is_drum_file,
+        "DnB file should be detected as drums"
+    );
     // Note: Channel 10 detection is optional - real-world files rarely use it
 }
 
@@ -80,7 +92,10 @@ fn test_realworld_funk_120_shuffle_detection() {
     let midi = parse_midi(&bytes);
     let analysis = drum_analyzer::analyze_drum_midi(&midi);
 
-    assert!(analysis.is_drum_file, "Funk file should be detected as drums");
+    assert!(
+        analysis.is_drum_file,
+        "Funk file should be detected as drums"
+    );
     // Note: Channel 10 detection is optional - real-world files rarely use it
 }
 
@@ -90,7 +105,10 @@ fn test_realworld_odd_meter_5_4_detection() {
     let midi = parse_midi(&bytes);
     let analysis = drum_analyzer::analyze_drum_midi(&midi);
 
-    assert!(analysis.is_drum_file, "Odd meter file should be detected as drums");
+    assert!(
+        analysis.is_drum_file,
+        "Odd meter file should be detected as drums"
+    );
     // Note: Channel 10 detection is optional - real-world files rarely use it
 }
 
@@ -147,29 +165,37 @@ fn test_realworld_detection_accuracy() {
 fn test_realworld_jazz_bpm_extraction() {
     let bytes = load_test_file("jazz_136_swing.mid");
     let midi = parse_midi(&bytes);
-    let analysis = drum_analyzer::analyze_drum_midi(&midi);
+    let _analysis = drum_analyzer::analyze_drum_midi(&midi);
 
     // Extract BPM from filename "jazz_136_swing.mid"
     let bpm = drum_analyzer::extract_bpm_from_filename("jazz_136_swing.mid");
-    assert_eq!(bpm, Some(136.0), "Should extract BPM 136 from jazz filename");
+    assert_eq!(
+        bpm,
+        Some(136.0),
+        "Should extract BPM 136 from jazz filename"
+    );
 }
 
 #[test]
 fn test_realworld_punk_bpm_extraction() {
     let bytes = load_test_file("punk_200_fast.mid");
     let midi = parse_midi(&bytes);
-    let analysis = drum_analyzer::analyze_drum_midi(&midi);
+    let _analysis = drum_analyzer::analyze_drum_midi(&midi);
 
     // Extract BPM from filename "punk_200_fast.mid"
     let bpm = drum_analyzer::extract_bpm_from_filename("punk_200_fast.mid");
-    assert_eq!(bpm, Some(200.0), "Should extract BPM 200 from punk filename");
+    assert_eq!(
+        bpm,
+        Some(200.0),
+        "Should extract BPM 200 from punk filename"
+    );
 }
 
 #[test]
 fn test_realworld_dnb_bpm_extraction() {
     let bytes = load_test_file("dnb_160_electronic.mid");
     let midi = parse_midi(&bytes);
-    let analysis = drum_analyzer::analyze_drum_midi(&midi);
+    let _analysis = drum_analyzer::analyze_drum_midi(&midi);
 
     // Extract BPM from filename "dnb_160_electronic.mid"
     let bpm = drum_analyzer::extract_bpm_from_filename("dnb_160_electronic.mid");
@@ -180,11 +206,15 @@ fn test_realworld_dnb_bpm_extraction() {
 fn test_realworld_funk_bpm_extraction() {
     let bytes = load_test_file("funk_120_shuffle.mid");
     let midi = parse_midi(&bytes);
-    let analysis = drum_analyzer::analyze_drum_midi(&midi);
+    let _analysis = drum_analyzer::analyze_drum_midi(&midi);
 
     // Extract BPM from filename "funk_120_shuffle.mid"
     let bpm = drum_analyzer::extract_bpm_from_filename("funk_120_shuffle.mid");
-    assert_eq!(bpm, Some(120.0), "Should extract BPM 120 from funk filename");
+    assert_eq!(
+        bpm,
+        Some(120.0),
+        "Should extract BPM 120 from funk filename"
+    );
 }
 
 // ============================================================================
@@ -256,7 +286,11 @@ fn test_realworld_performance_all_files() {
         let midi = parse_midi(&bytes);
         let (analysis, duration) = benchmark_analysis(&midi);
 
-        assert!(analysis.is_drum_file, "File {} should be detected", filename);
+        assert!(
+            analysis.is_drum_file,
+            "File {} should be detected",
+            filename
+        );
 
         // Track performance metrics
         total_duration += duration;
@@ -334,7 +368,7 @@ fn test_realworld_jazz_tag_generation() {
         );
         assert!(tag.priority >= 0, "Tag {} has invalid priority", tag.name);
         assert!(
-            tag.detection_method.len() > 0,
+            !tag.detection_method.is_empty(),
             "Tag {} missing detection method",
             tag.name
         );
@@ -429,9 +463,9 @@ fn test_realworld_autotagger_jazz_integration() {
     let tags = autotagger.extract_tags(
         "tests/resources/real_world_drums",
         "jazz_136_swing.mid",
-        &[], // No instrument list
-        None, // No BPM from analysis
-        None, // No key signature
+        &[],         // No instrument list
+        None,        // No BPM from analysis
+        None,        // No key signature
         Some(&midi), // MIDI file for drum analysis
     );
 
@@ -484,7 +518,7 @@ fn test_realworld_autotagger_punk_integration() {
     // Should detect genre from musical analysis
     // Note: AutoTagger analyzes MIDI content, not just filename
     // For "punk_200_fast.mid", it correctly identifies the musical style as "funk"
-    let genre_tags = vec!["funk", "rock", "punk", "metal"];
+    let genre_tags = ["funk", "rock", "punk", "metal"];
     let has_genre_tag = tags.iter().any(|t| genre_tags.contains(&t.name.as_str()));
     assert!(
         has_genre_tag,
@@ -545,10 +579,7 @@ fn test_realworld_small_file_handling() {
     let midi = parse_midi(&bytes);
     let analysis = drum_analyzer::analyze_drum_midi(&midi);
 
-    assert!(
-        analysis.is_drum_file,
-        "Should handle small files correctly"
-    );
+    assert!(analysis.is_drum_file, "Should handle small files correctly");
 }
 
 #[test]
@@ -640,6 +671,6 @@ fn test_realworld_zero_allocation_analysis() {
             "tests/resources/real_world_drums",
             filename,
         );
-        assert!(tags.len() > 0, "Should generate at least one tag");
+        assert!(!tags.is_empty(), "Should generate at least one tag");
     }
 }

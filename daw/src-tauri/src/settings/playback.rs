@@ -1,18 +1,15 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Default)]
 pub enum ClickSound {
+    #[default]
     Digital,
     WoodBlock,
     Cowbell,
     Beep,
 }
 
-impl Default for ClickSound {
-    fn default() -> Self {
-        ClickSound::Digital
-    }
-}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PlaybackSettings {
@@ -70,7 +67,7 @@ impl PlaybackSettings {
     }
 
     pub fn set_metronome_volume(&mut self, volume: f32) -> Result<(), String> {
-        if volume < 0.0 || volume > 1.0 {
+        if !(0.0..=1.0).contains(&volume) {
             return Err("Volume must be between 0.0 and 1.0".to_string());
         }
         self.metronome_volume = volume;
@@ -90,7 +87,7 @@ impl PlaybackSettings {
     }
 
     pub fn set_backing_track_volume(&mut self, volume: f32) -> Result<(), String> {
-        if volume < 0.0 || volume > 1.0 {
+        if !(0.0..=1.0).contains(&volume) {
             return Err("Volume must be between 0.0 and 1.0".to_string());
         }
         self.backing_track_volume = volume;

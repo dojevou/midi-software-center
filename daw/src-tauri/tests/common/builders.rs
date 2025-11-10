@@ -1,5 +1,5 @@
-   /// Test data builders for fluent test construction
 
+/// Test data builders for fluent test construction
 use midi_daw::models::{MidiEvent, MidiEventType};
 
 /// Builder for MIDI files in database
@@ -76,7 +76,7 @@ impl MidiFileBuilder {
             } else {
                 let _ = sqlx::query(
                     "INSERT INTO musical_metadata (file_id, bpm, total_notes)
-                     VALUES ($1, $2, $3)"
+                     VALUES ($1, $2, $3)",
                 )
                 .bind(file_id)
                 .bind(self.bpm)
@@ -177,11 +177,7 @@ pub struct SequencerStateBuilder {
 
 impl SequencerStateBuilder {
     pub fn new() -> Self {
-        Self {
-            bpm: 120.0,
-            playing: false,
-            position: 0,
-        }
+        Self { bpm: 120.0, playing: false, position: 0 }
     }
 
     pub fn with_bpm(mut self, bpm: f32) -> Self {

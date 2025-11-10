@@ -1,6 +1,6 @@
-   /// Musical metadata repository
-   /// Aligned with actual schema from 001_initial_schema.sql
 
+/// Musical metadata repository
+/// Aligned with actual schema from 001_initial_schema.sql
 use crate::db::models::{MusicalMetadata, NewMusicalMetadata};
 use sqlx::PgPool;
 
@@ -211,11 +211,9 @@ impl MetadataRepository {
 
     /// Gets metadata count
     pub async fn count(pool: &PgPool) -> Result<i64, sqlx::Error> {
-        let count = sqlx::query_scalar!(
-            r#"SELECT COUNT(*) as "count!" FROM musical_metadata"#
-        )
-        .fetch_one(pool)
-        .await?;
+        let count = sqlx::query_scalar!(r#"SELECT COUNT(*) as "count!" FROM musical_metadata"#)
+            .fetch_one(pool)
+            .await?;
 
         Ok(count)
     }
@@ -224,14 +222,13 @@ impl MetadataRepository {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use sqlx::postgres::PgPoolOptions;
     use num_traits::FromPrimitive;
+    use sqlx::postgres::PgPoolOptions;
 
     async fn setup_test_pool() -> PgPool {
-        let database_url = std::env::var("DATABASE_URL")
-            .unwrap_or_else(|_| {
-                "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()
-            });
+        let database_url = std::env::var("DATABASE_URL").unwrap_or_else(|_| {
+            "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()
+        });
 
         PgPoolOptions::new()
             .max_connections(5)

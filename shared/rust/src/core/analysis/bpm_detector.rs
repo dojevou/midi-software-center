@@ -1,14 +1,14 @@
-   /// BPM Detection Module
-   ///
-   /// This module provides BPM (Beats Per Minute) detection for MIDI files.
-   /// It analyzes tempo change events and provides confidence scores.
-   ///
-   /// # Archetype: Trusty Module
-   /// - Pure functions with no side effects
-   /// - No I/O operations
-   /// - Highly testable
-   /// - Reusable across the application
 
+/// BPM Detection Module
+///
+/// This module provides BPM (Beats Per Minute) detection for MIDI files.
+/// It analyzes tempo change events and provides confidence scores.
+///
+/// # Archetype: Trusty Module
+/// - Pure functions with no side effects
+/// - No I/O operations
+/// - Highly testable
+/// - Reusable across the application
 use crate::core::midi::types::{Event, MidiFile};
 
 /// Default BPM when no tempo events are found
@@ -91,11 +91,7 @@ pub fn detect_bpm(midi_file: &MidiFile) -> BpmDetectionResult {
             bpm: DEFAULT_BPM,
             confidence: 0.3, // Low confidence for default tempo
             method: BpmDetectionMethod::DefaultTempo,
-            metadata: BpmMetadata {
-                tempo_changes: vec![],
-                is_constant: true,
-                tempo_range: None,
-            },
+            metadata: BpmMetadata { tempo_changes: vec![], is_constant: true, tempo_range: None },
         };
     }
 
@@ -135,11 +131,7 @@ pub fn detect_bpm(midi_file: &MidiFile) -> BpmDetectionResult {
         bpm: avg_bpm,
         confidence,
         method,
-        metadata: BpmMetadata {
-            tempo_changes,
-            is_constant,
-            tempo_range,
-        },
+        metadata: BpmMetadata { tempo_changes, is_constant, tempo_range },
     }
 }
 
@@ -153,10 +145,7 @@ fn extract_tempo_events(midi_file: &MidiFile) -> Vec<(u32, u32)> {
         for timed_event in &track.events {
             current_tick = current_tick.saturating_add(timed_event.delta_ticks);
 
-            if let Event::TempoChange {
-                microseconds_per_quarter,
-            } = timed_event.event
-            {
+            if let Event::TempoChange { microseconds_per_quarter } = timed_event.event {
                 tempo_events.push((current_tick, microseconds_per_quarter));
             }
         }
@@ -269,9 +258,7 @@ mod tests {
             let delta = tick - last_tick;
             events.push(TimedEvent {
                 delta_ticks: delta,
-                event: Event::TempoChange {
-                    microseconds_per_quarter: microseconds,
-                },
+                event: Event::TempoChange { microseconds_per_quarter: microseconds },
             });
             last_tick = tick;
         }
@@ -283,17 +270,10 @@ mod tests {
             0
         };
 
-        events.push(TimedEvent {
-            delta_ticks: eot_delta,
-            event: Event::EndOfTrack,
-        });
+        events.push(TimedEvent { delta_ticks: eot_delta, event: Event::EndOfTrack });
 
         MidiFile {
-            header: Header {
-                format: 1,
-                num_tracks: 1,
-                ticks_per_quarter_note: 480,
-            },
+            header: Header { format: 1, num_tracks: 1, ticks_per_quarter_note: 480 },
             tracks: vec![Track { events }],
         }
     }
@@ -304,36 +284,19 @@ mod tests {
 
         for _ in 0..num_tracks {
             tracks.push(Track {
-                events: vec![TimedEvent {
-                    delta_ticks: 1000,
-                    event: Event::EndOfTrack,
-                }],
+                events: vec![TimedEvent { delta_ticks: 1000, event: Event::EndOfTrack }],
             });
         }
 
-        MidiFile {
-            header: Header {
-                format: 1,
-                num_tracks,
-                ticks_per_quarter_note: 480,
-            },
-            tracks,
-        }
+        MidiFile { header: Header { format: 1, num_tracks, ticks_per_quarter_note: 480 }, tracks }
     }
 
     /// Create a MIDI file with specific length (total ticks)
     fn create_midi_with_length(total_ticks: u32) -> MidiFile {
         MidiFile {
-            header: Header {
-                format: 1,
-                num_tracks: 1,
-                ticks_per_quarter_note: 480,
-            },
+            header: Header { format: 1, num_tracks: 1, ticks_per_quarter_note: 480 },
             tracks: vec![Track {
-                events: vec![TimedEvent {
-                    delta_ticks: total_ticks,
-                    event: Event::EndOfTrack,
-                }],
+                events: vec![TimedEvent { delta_ticks: total_ticks, event: Event::EndOfTrack }],
             }],
         }
     }
@@ -460,11 +423,7 @@ mod tests {
     #[test]
     fn test_extract_tempo_events_empty_midi() {
         let midi = MidiFile {
-            header: Header {
-                format: 1,
-                num_tracks: 0,
-                ticks_per_quarter_note: 480,
-            },
+            header: Header { format: 1, num_tracks: 0, ticks_per_quarter_note: 480 },
             tracks: vec![],
         };
 
@@ -475,15 +434,8 @@ mod tests {
     #[test]
     fn test_extract_tempo_events_empty_tracks() {
         let midi = MidiFile {
-            header: Header {
-                format: 1,
-                num_tracks: 2,
-                ticks_per_quarter_note: 480,
-            },
-            tracks: vec![
-                Track { events: vec![] },
-                Track { events: vec![] },
-            ],
+            header: Header { format: 1, num_tracks: 2, ticks_per_quarter_note: 480 },
+            tracks: vec![Track { events: vec![] }, Track { events: vec![] }],
         };
 
         let events = extract_tempo_events(&midi);
@@ -500,33 +452,18 @@ mod tests {
     #[test]
     fn test_extract_tempo_events_non_tempo_only() {
         let midi = MidiFile {
-            header: Header {
-                format: 1,
-                num_tracks: 1,
-                ticks_per_quarter_note: 480,
-            },
+            header: Header { format: 1, num_tracks: 1, ticks_per_quarter_note: 480 },
             tracks: vec![Track {
                 events: vec![
                     TimedEvent {
                         delta_ticks: 0,
-                        event: Event::NoteOn {
-                            channel: 0,
-                            note: 60,
-                            velocity: 100,
-                        },
+                        event: Event::NoteOn { channel: 0, note: 60, velocity: 100 },
                     },
                     TimedEvent {
                         delta_ticks: 480,
-                        event: Event::NoteOff {
-                            channel: 0,
-                            note: 60,
-                            velocity: 0,
-                        },
+                        event: Event::NoteOff { channel: 0, note: 60, velocity: 0 },
                     },
-                    TimedEvent {
-                        delta_ticks: 0,
-                        event: Event::EndOfTrack,
-                    },
+                    TimedEvent { delta_ticks: 0, event: Event::EndOfTrack },
                 ],
             }],
         };
@@ -559,11 +496,10 @@ mod tests {
 
     #[test]
     fn test_extract_tempo_multiple_events_single_track() {
-        let midi = create_test_midi_with_tempos(vec![
-            (0, 500_000),
-            (1000, 428_571),
-            (2000, 333_333),
-        ], None);
+        let midi = create_test_midi_with_tempos(
+            vec![(0, 500_000), (1000, 428_571), (2000, 333_333)],
+            None,
+        );
 
         let events = extract_tempo_events(&midi);
 
@@ -576,37 +512,22 @@ mod tests {
     #[test]
     fn test_extract_tempo_mixed_events() {
         let midi = MidiFile {
-            header: Header {
-                format: 1,
-                num_tracks: 1,
-                ticks_per_quarter_note: 480,
-            },
+            header: Header { format: 1, num_tracks: 1, ticks_per_quarter_note: 480 },
             tracks: vec![Track {
                 events: vec![
                     TimedEvent {
                         delta_ticks: 0,
-                        event: Event::TempoChange {
-                            microseconds_per_quarter: 500_000,
-                        },
+                        event: Event::TempoChange { microseconds_per_quarter: 500_000 },
                     },
                     TimedEvent {
                         delta_ticks: 480,
-                        event: Event::NoteOn {
-                            channel: 0,
-                            note: 60,
-                            velocity: 100,
-                        },
+                        event: Event::NoteOn { channel: 0, note: 60, velocity: 100 },
                     },
                     TimedEvent {
                         delta_ticks: 480,
-                        event: Event::TempoChange {
-                            microseconds_per_quarter: 428_571,
-                        },
+                        event: Event::TempoChange { microseconds_per_quarter: 428_571 },
                     },
-                    TimedEvent {
-                        delta_ticks: 0,
-                        event: Event::EndOfTrack,
-                    },
+                    TimedEvent { delta_ticks: 0, event: Event::EndOfTrack },
                 ],
             }],
         };
@@ -620,10 +541,7 @@ mod tests {
 
     #[test]
     fn test_extract_tempo_large_delta_ticks() {
-        let midi = create_test_midi_with_tempos(vec![
-            (0, 500_000),
-            (1_000_000, 428_571),
-        ], None);
+        let midi = create_test_midi_with_tempos(vec![(0, 500_000), (1_000_000, 428_571)], None);
 
         let events = extract_tempo_events(&midi);
 
@@ -635,11 +553,8 @@ mod tests {
     #[test]
     fn test_extract_tempo_consecutive_events() {
         // Multiple tempo changes with no gap
-        let midi = create_test_midi_with_tempos(vec![
-            (0, 500_000),
-            (0, 428_571),
-            (0, 333_333),
-        ], None);
+        let midi =
+            create_test_midi_with_tempos(vec![(0, 500_000), (0, 428_571), (0, 333_333)], None);
 
         let events = extract_tempo_events(&midi);
 
@@ -656,38 +571,24 @@ mod tests {
     #[test]
     fn test_extract_tempo_multiple_tracks_one_each() {
         let midi = MidiFile {
-            header: Header {
-                format: 1,
-                num_tracks: 2,
-                ticks_per_quarter_note: 480,
-            },
+            header: Header { format: 1, num_tracks: 2, ticks_per_quarter_note: 480 },
             tracks: vec![
                 Track {
                     events: vec![
                         TimedEvent {
                             delta_ticks: 0,
-                            event: Event::TempoChange {
-                                microseconds_per_quarter: 500_000,
-                            },
+                            event: Event::TempoChange { microseconds_per_quarter: 500_000 },
                         },
-                        TimedEvent {
-                            delta_ticks: 0,
-                            event: Event::EndOfTrack,
-                        },
+                        TimedEvent { delta_ticks: 0, event: Event::EndOfTrack },
                     ],
                 },
                 Track {
                     events: vec![
                         TimedEvent {
                             delta_ticks: 1000,
-                            event: Event::TempoChange {
-                                microseconds_per_quarter: 428_571,
-                            },
+                            event: Event::TempoChange { microseconds_per_quarter: 428_571 },
                         },
-                        TimedEvent {
-                            delta_ticks: 0,
-                            event: Event::EndOfTrack,
-                        },
+                        TimedEvent { delta_ticks: 0, event: Event::EndOfTrack },
                     ],
                 },
             ],
@@ -705,52 +606,33 @@ mod tests {
     fn test_extract_tempo_sorting_required() {
         // Tempo events from different tracks requiring sorting
         let midi = MidiFile {
-            header: Header {
-                format: 1,
-                num_tracks: 3,
-                ticks_per_quarter_note: 480,
-            },
+            header: Header { format: 1, num_tracks: 3, ticks_per_quarter_note: 480 },
             tracks: vec![
                 Track {
                     events: vec![
                         TimedEvent {
                             delta_ticks: 2000,
-                            event: Event::TempoChange {
-                                microseconds_per_quarter: 333_333,
-                            },
+                            event: Event::TempoChange { microseconds_per_quarter: 333_333 },
                         },
-                        TimedEvent {
-                            delta_ticks: 0,
-                            event: Event::EndOfTrack,
-                        },
+                        TimedEvent { delta_ticks: 0, event: Event::EndOfTrack },
                     ],
                 },
                 Track {
                     events: vec![
                         TimedEvent {
                             delta_ticks: 0,
-                            event: Event::TempoChange {
-                                microseconds_per_quarter: 500_000,
-                            },
+                            event: Event::TempoChange { microseconds_per_quarter: 500_000 },
                         },
-                        TimedEvent {
-                            delta_ticks: 0,
-                            event: Event::EndOfTrack,
-                        },
+                        TimedEvent { delta_ticks: 0, event: Event::EndOfTrack },
                     ],
                 },
                 Track {
                     events: vec![
                         TimedEvent {
                             delta_ticks: 1000,
-                            event: Event::TempoChange {
-                                microseconds_per_quarter: 428_571,
-                            },
+                            event: Event::TempoChange { microseconds_per_quarter: 428_571 },
                         },
-                        TimedEvent {
-                            delta_ticks: 0,
-                            event: Event::EndOfTrack,
-                        },
+                        TimedEvent { delta_ticks: 0, event: Event::EndOfTrack },
                     ],
                 },
             ],
@@ -769,38 +651,24 @@ mod tests {
     fn test_extract_tempo_same_tick_different_tracks() {
         // Tempo events at same tick from different tracks
         let midi = MidiFile {
-            header: Header {
-                format: 1,
-                num_tracks: 2,
-                ticks_per_quarter_note: 480,
-            },
+            header: Header { format: 1, num_tracks: 2, ticks_per_quarter_note: 480 },
             tracks: vec![
                 Track {
                     events: vec![
                         TimedEvent {
                             delta_ticks: 1000,
-                            event: Event::TempoChange {
-                                microseconds_per_quarter: 500_000,
-                            },
+                            event: Event::TempoChange { microseconds_per_quarter: 500_000 },
                         },
-                        TimedEvent {
-                            delta_ticks: 0,
-                            event: Event::EndOfTrack,
-                        },
+                        TimedEvent { delta_ticks: 0, event: Event::EndOfTrack },
                     ],
                 },
                 Track {
                     events: vec![
                         TimedEvent {
                             delta_ticks: 1000,
-                            event: Event::TempoChange {
-                                microseconds_per_quarter: 428_571,
-                            },
+                            event: Event::TempoChange { microseconds_per_quarter: 428_571 },
                         },
-                        TimedEvent {
-                            delta_ticks: 0,
-                            event: Event::EndOfTrack,
-                        },
+                        TimedEvent { delta_ticks: 0, event: Event::EndOfTrack },
                     ],
                 },
             ],
@@ -816,38 +684,19 @@ mod tests {
     #[test]
     fn test_extract_tempo_some_tracks_empty() {
         let midi = MidiFile {
-            header: Header {
-                format: 1,
-                num_tracks: 3,
-                ticks_per_quarter_note: 480,
-            },
+            header: Header { format: 1, num_tracks: 3, ticks_per_quarter_note: 480 },
             tracks: vec![
-                Track {
-                    events: vec![TimedEvent {
-                        delta_ticks: 0,
-                        event: Event::EndOfTrack,
-                    }],
-                },
+                Track { events: vec![TimedEvent { delta_ticks: 0, event: Event::EndOfTrack }] },
                 Track {
                     events: vec![
                         TimedEvent {
                             delta_ticks: 0,
-                            event: Event::TempoChange {
-                                microseconds_per_quarter: 500_000,
-                            },
+                            event: Event::TempoChange { microseconds_per_quarter: 500_000 },
                         },
-                        TimedEvent {
-                            delta_ticks: 0,
-                            event: Event::EndOfTrack,
-                        },
+                        TimedEvent { delta_ticks: 0, event: Event::EndOfTrack },
                     ],
                 },
-                Track {
-                    events: vec![TimedEvent {
-                        delta_ticks: 0,
-                        event: Event::EndOfTrack,
-                    }],
-                },
+                Track { events: vec![TimedEvent { delta_ticks: 0, event: Event::EndOfTrack }] },
             ],
         };
 
@@ -866,24 +715,15 @@ mod tests {
                 events: vec![
                     TimedEvent {
                         delta_ticks: i * 100,
-                        event: Event::TempoChange {
-                            microseconds_per_quarter: 500_000,
-                        },
+                        event: Event::TempoChange { microseconds_per_quarter: 500_000 },
                     },
-                    TimedEvent {
-                        delta_ticks: 0,
-                        event: Event::EndOfTrack,
-                    },
+                    TimedEvent { delta_ticks: 0, event: Event::EndOfTrack },
                 ],
             });
         }
 
         let midi = MidiFile {
-            header: Header {
-                format: 1,
-                num_tracks: 10,
-                ticks_per_quarter_note: 480,
-            },
+            header: Header { format: 1, num_tracks: 10, ticks_per_quarter_note: 480 },
             tracks,
         };
 
@@ -903,11 +743,7 @@ mod tests {
     #[test]
     fn test_total_ticks_empty_midi() {
         let midi = MidiFile {
-            header: Header {
-                format: 1,
-                num_tracks: 0,
-                ticks_per_quarter_note: 480,
-            },
+            header: Header { format: 1, num_tracks: 0, ticks_per_quarter_note: 480 },
             tracks: vec![],
         };
 
@@ -917,11 +753,7 @@ mod tests {
     #[test]
     fn test_total_ticks_empty_tracks() {
         let midi = MidiFile {
-            header: Header {
-                format: 1,
-                num_tracks: 2,
-                ticks_per_quarter_note: 480,
-            },
+            header: Header { format: 1, num_tracks: 2, ticks_per_quarter_note: 480 },
             tracks: vec![Track { events: vec![] }, Track { events: vec![] }],
         };
 
@@ -937,30 +769,11 @@ mod tests {
     #[test]
     fn test_total_ticks_multiple_tracks_same_length() {
         let midi = MidiFile {
-            header: Header {
-                format: 1,
-                num_tracks: 3,
-                ticks_per_quarter_note: 480,
-            },
+            header: Header { format: 1, num_tracks: 3, ticks_per_quarter_note: 480 },
             tracks: vec![
-                Track {
-                    events: vec![TimedEvent {
-                        delta_ticks: 1000,
-                        event: Event::EndOfTrack,
-                    }],
-                },
-                Track {
-                    events: vec![TimedEvent {
-                        delta_ticks: 1000,
-                        event: Event::EndOfTrack,
-                    }],
-                },
-                Track {
-                    events: vec![TimedEvent {
-                        delta_ticks: 1000,
-                        event: Event::EndOfTrack,
-                    }],
-                },
+                Track { events: vec![TimedEvent { delta_ticks: 1000, event: Event::EndOfTrack }] },
+                Track { events: vec![TimedEvent { delta_ticks: 1000, event: Event::EndOfTrack }] },
+                Track { events: vec![TimedEvent { delta_ticks: 1000, event: Event::EndOfTrack }] },
             ],
         };
 
@@ -970,30 +783,11 @@ mod tests {
     #[test]
     fn test_total_ticks_multiple_tracks_different_lengths() {
         let midi = MidiFile {
-            header: Header {
-                format: 1,
-                num_tracks: 3,
-                ticks_per_quarter_note: 480,
-            },
+            header: Header { format: 1, num_tracks: 3, ticks_per_quarter_note: 480 },
             tracks: vec![
-                Track {
-                    events: vec![TimedEvent {
-                        delta_ticks: 500,
-                        event: Event::EndOfTrack,
-                    }],
-                },
-                Track {
-                    events: vec![TimedEvent {
-                        delta_ticks: 2000,
-                        event: Event::EndOfTrack,
-                    }],
-                },
-                Track {
-                    events: vec![TimedEvent {
-                        delta_ticks: 1000,
-                        event: Event::EndOfTrack,
-                    }],
-                },
+                Track { events: vec![TimedEvent { delta_ticks: 500, event: Event::EndOfTrack }] },
+                Track { events: vec![TimedEvent { delta_ticks: 2000, event: Event::EndOfTrack }] },
+                Track { events: vec![TimedEvent { delta_ticks: 1000, event: Event::EndOfTrack }] },
             ],
         };
 
@@ -1004,48 +798,23 @@ mod tests {
     #[test]
     fn test_total_ticks_one_long_track() {
         let midi = MidiFile {
-            header: Header {
-                format: 1,
-                num_tracks: 3,
-                ticks_per_quarter_note: 480,
-            },
+            header: Header { format: 1, num_tracks: 3, ticks_per_quarter_note: 480 },
             tracks: vec![
-                Track {
-                    events: vec![TimedEvent {
-                        delta_ticks: 100,
-                        event: Event::EndOfTrack,
-                    }],
-                },
+                Track { events: vec![TimedEvent { delta_ticks: 100, event: Event::EndOfTrack }] },
                 Track {
                     events: vec![
                         TimedEvent {
                             delta_ticks: 1000,
-                            event: Event::NoteOn {
-                                channel: 0,
-                                note: 60,
-                                velocity: 100,
-                            },
+                            event: Event::NoteOn { channel: 0, note: 60, velocity: 100 },
                         },
                         TimedEvent {
                             delta_ticks: 1000,
-                            event: Event::NoteOff {
-                                channel: 0,
-                                note: 60,
-                                velocity: 0,
-                            },
+                            event: Event::NoteOff { channel: 0, note: 60, velocity: 0 },
                         },
-                        TimedEvent {
-                            delta_ticks: 8000,
-                            event: Event::EndOfTrack,
-                        },
+                        TimedEvent { delta_ticks: 8000, event: Event::EndOfTrack },
                     ],
                 },
-                Track {
-                    events: vec![TimedEvent {
-                        delta_ticks: 200,
-                        event: Event::EndOfTrack,
-                    }],
-                },
+                Track { events: vec![TimedEvent { delta_ticks: 200, event: Event::EndOfTrack }] },
             ],
         };
 
@@ -1056,33 +825,18 @@ mod tests {
     #[test]
     fn test_total_ticks_zero_delta() {
         let midi = MidiFile {
-            header: Header {
-                format: 1,
-                num_tracks: 1,
-                ticks_per_quarter_note: 480,
-            },
+            header: Header { format: 1, num_tracks: 1, ticks_per_quarter_note: 480 },
             tracks: vec![Track {
                 events: vec![
                     TimedEvent {
                         delta_ticks: 0,
-                        event: Event::NoteOn {
-                            channel: 0,
-                            note: 60,
-                            velocity: 100,
-                        },
+                        event: Event::NoteOn { channel: 0, note: 60, velocity: 100 },
                     },
                     TimedEvent {
                         delta_ticks: 0,
-                        event: Event::NoteOff {
-                            channel: 0,
-                            note: 60,
-                            velocity: 0,
-                        },
+                        event: Event::NoteOff { channel: 0, note: 60, velocity: 0 },
                     },
-                    TimedEvent {
-                        delta_ticks: 0,
-                        event: Event::EndOfTrack,
-                    },
+                    TimedEvent { delta_ticks: 0, event: Event::EndOfTrack },
                 ],
             }],
         };
@@ -1105,125 +859,101 @@ mod tests {
         let tempo_changes = vec![];
         let total_ticks = 1000;
 
-        assert_eq!(calculate_weighted_average(&tempo_changes, total_ticks), DEFAULT_BPM);
+        assert_eq!(
+            calculate_weighted_average(&tempo_changes, total_ticks),
+            DEFAULT_BPM
+        );
     }
 
     #[test]
     fn test_weighted_average_single_tempo() {
-        let tempo_changes = vec![TempoChange {
-            tick: 0,
-            bpm: 140.0,
-        }];
+        let tempo_changes = vec![TempoChange { tick: 0, bpm: 140.0 }];
         let total_ticks = 1000;
 
-        assert_eq!(calculate_weighted_average(&tempo_changes, total_ticks), 140.0);
+        assert_eq!(
+            calculate_weighted_average(&tempo_changes, total_ticks),
+            140.0
+        );
     }
 
     #[test]
     fn test_weighted_average_single_tempo_mid_file() {
-        let tempo_changes = vec![TempoChange {
-            tick: 500,
-            bpm: 150.0,
-        }];
+        let tempo_changes = vec![TempoChange { tick: 500, bpm: 150.0 }];
         let total_ticks = 1000;
 
         // Duration: 1000 - 500 = 500 ticks
-        assert_eq!(calculate_weighted_average(&tempo_changes, total_ticks), 150.0);
+        assert_eq!(
+            calculate_weighted_average(&tempo_changes, total_ticks),
+            150.0
+        );
     }
 
     #[test]
     fn test_weighted_average_last_tempo_at_end() {
-        let tempo_changes = vec![
-            TempoChange {
-                tick: 0,
-                bpm: 120.0,
-            },
-            TempoChange {
-                tick: 1000,
-                bpm: 140.0,
-            },
-        ];
+        let tempo_changes =
+            vec![TempoChange { tick: 0, bpm: 120.0 }, TempoChange { tick: 1000, bpm: 140.0 }];
         let total_ticks = 1000;
 
         // Second tempo has zero duration (at end)
         // weighted_sum = 120 * 1000 + 140 * 0 = 120000
         // total_weight = 1000
-        assert_eq!(calculate_weighted_average(&tempo_changes, total_ticks), 120.0);
+        assert_eq!(
+            calculate_weighted_average(&tempo_changes, total_ticks),
+            120.0
+        );
     }
 
     #[test]
     fn test_weighted_average_all_zero_duration() {
         let tempo_changes = vec![
-            TempoChange {
-                tick: 0,
-                bpm: 100.0,
-            },
-            TempoChange {
-                tick: 0,
-                bpm: 120.0,
-            },
-            TempoChange {
-                tick: 0,
-                bpm: 140.0,
-            },
+            TempoChange { tick: 0, bpm: 100.0 },
+            TempoChange { tick: 0, bpm: 120.0 },
+            TempoChange { tick: 0, bpm: 140.0 },
         ];
         let total_ticks = 0;
 
         // All durations are zero, should return first BPM
-        assert_eq!(calculate_weighted_average(&tempo_changes, total_ticks), 100.0);
+        assert_eq!(
+            calculate_weighted_average(&tempo_changes, total_ticks),
+            100.0
+        );
     }
 
     #[test]
     fn test_weighted_average_total_ticks_zero() {
-        let tempo_changes = vec![
-            TempoChange {
-                tick: 0,
-                bpm: 120.0,
-            },
-            TempoChange {
-                tick: 500,
-                bpm: 140.0,
-            },
-        ];
+        let tempo_changes =
+            vec![TempoChange { tick: 0, bpm: 120.0 }, TempoChange { tick: 500, bpm: 140.0 }];
         let total_ticks = 0;
 
         // total_ticks < last tick, saturating_sub gives 0 for last tempo
         // Only first tempo has duration (500 - 0 = 500)
-        assert_eq!(calculate_weighted_average(&tempo_changes, total_ticks), 120.0);
+        assert_eq!(
+            calculate_weighted_average(&tempo_changes, total_ticks),
+            120.0
+        );
     }
 
     #[test]
     fn test_weighted_average_total_less_than_last_tick() {
-        let tempo_changes = vec![
-            TempoChange {
-                tick: 0,
-                bpm: 100.0,
-            },
-            TempoChange {
-                tick: 1000,
-                bpm: 140.0,
-            },
-        ];
+        let tempo_changes =
+            vec![TempoChange { tick: 0, bpm: 100.0 }, TempoChange { tick: 1000, bpm: 140.0 }];
         let total_ticks = 500; // Less than last tempo tick
 
         // First tempo: 1000 - 0 = 1000
         // Second tempo: 500.saturating_sub(1000) = 0
         // weighted_sum = 100 * 1000 + 140 * 0 = 100000
         // total_weight = 1000
-        assert_eq!(calculate_weighted_average(&tempo_changes, total_ticks), 100.0);
+        assert_eq!(
+            calculate_weighted_average(&tempo_changes, total_ticks),
+            100.0
+        );
     }
 
     #[test]
     fn test_weighted_average_saturation_behavior() {
         let tempo_changes = vec![
-            TempoChange {
-                tick: 0,
-                bpm: 120.0,
-            },
-            TempoChange {
-                tick: u32::MAX / 2,
-                bpm: 140.0,
-            },
+            TempoChange { tick: 0, bpm: 120.0 },
+            TempoChange { tick: u32::MAX / 2, bpm: 140.0 },
         ];
         let total_ticks = u32::MAX;
 
@@ -1241,132 +971,90 @@ mod tests {
     #[test]
     fn test_weighted_average_equal_duration_50_50() {
         // 50% at 100 BPM, 50% at 120 BPM → average = 110
-        let tempo_changes = vec![
-            TempoChange {
-                tick: 0,
-                bpm: 100.0,
-            },
-            TempoChange {
-                tick: 500,
-                bpm: 120.0,
-            },
-        ];
+        let tempo_changes =
+            vec![TempoChange { tick: 0, bpm: 100.0 }, TempoChange { tick: 500, bpm: 120.0 }];
         let total_ticks = 1000;
 
         // (100 * 500 + 120 * 500) / 1000 = (50000 + 60000) / 1000 = 110
-        assert_eq!(calculate_weighted_average(&tempo_changes, total_ticks), 110.0);
+        assert_eq!(
+            calculate_weighted_average(&tempo_changes, total_ticks),
+            110.0
+        );
     }
 
     #[test]
     fn test_weighted_average_90_10_split() {
         // 90% at 100 BPM, 10% at 120 BPM
-        let tempo_changes = vec![
-            TempoChange {
-                tick: 0,
-                bpm: 100.0,
-            },
-            TempoChange {
-                tick: 900,
-                bpm: 120.0,
-            },
-        ];
+        let tempo_changes =
+            vec![TempoChange { tick: 0, bpm: 100.0 }, TempoChange { tick: 900, bpm: 120.0 }];
         let total_ticks = 1000;
 
         // (100 * 900 + 120 * 100) / 1000 = (90000 + 12000) / 1000 = 102
-        assert_eq!(calculate_weighted_average(&tempo_changes, total_ticks), 102.0);
+        assert_eq!(
+            calculate_weighted_average(&tempo_changes, total_ticks),
+            102.0
+        );
     }
 
     #[test]
     fn test_weighted_average_10_90_split() {
         // 10% at 100 BPM, 90% at 120 BPM
-        let tempo_changes = vec![
-            TempoChange {
-                tick: 0,
-                bpm: 100.0,
-            },
-            TempoChange {
-                tick: 100,
-                bpm: 120.0,
-            },
-        ];
+        let tempo_changes =
+            vec![TempoChange { tick: 0, bpm: 100.0 }, TempoChange { tick: 100, bpm: 120.0 }];
         let total_ticks = 1000;
 
         // (100 * 100 + 120 * 900) / 1000 = (10000 + 108000) / 1000 = 118
-        assert_eq!(calculate_weighted_average(&tempo_changes, total_ticks), 118.0);
+        assert_eq!(
+            calculate_weighted_average(&tempo_changes, total_ticks),
+            118.0
+        );
     }
 
     #[test]
     fn test_weighted_average_three_equal_durations() {
         // 33.3% each at 80, 120, 160 BPM → average = 120
         let tempo_changes = vec![
-            TempoChange {
-                tick: 0,
-                bpm: 80.0,
-            },
-            TempoChange {
-                tick: 300,
-                bpm: 120.0,
-            },
-            TempoChange {
-                tick: 700,
-                bpm: 160.0,
-            },
+            TempoChange { tick: 0, bpm: 80.0 },
+            TempoChange { tick: 300, bpm: 120.0 },
+            TempoChange { tick: 700, bpm: 160.0 },
         ];
         let total_ticks = 1000;
 
         // (80 * 300 + 120 * 400 + 160 * 300) / 1000
         // = (24000 + 48000 + 48000) / 1000 = 120
-        assert_eq!(calculate_weighted_average(&tempo_changes, total_ticks), 120.0);
+        assert_eq!(
+            calculate_weighted_average(&tempo_changes, total_ticks),
+            120.0
+        );
     }
 
     #[test]
     fn test_weighted_average_three_unequal_50_30_20() {
         // 50% at 100, 30% at 120, 20% at 140
         let tempo_changes = vec![
-            TempoChange {
-                tick: 0,
-                bpm: 100.0,
-            },
-            TempoChange {
-                tick: 500,
-                bpm: 120.0,
-            },
-            TempoChange {
-                tick: 800,
-                bpm: 140.0,
-            },
+            TempoChange { tick: 0, bpm: 100.0 },
+            TempoChange { tick: 500, bpm: 120.0 },
+            TempoChange { tick: 800, bpm: 140.0 },
         ];
         let total_ticks = 1000;
 
         // (100 * 500 + 120 * 300 + 140 * 200) / 1000
         // = (50000 + 36000 + 28000) / 1000 = 114
-        assert_eq!(calculate_weighted_average(&tempo_changes, total_ticks), 114.0);
+        assert_eq!(
+            calculate_weighted_average(&tempo_changes, total_ticks),
+            114.0
+        );
     }
 
     #[test]
     fn test_weighted_average_five_exponential_decay() {
         // Durations: 500, 250, 125, 62, 63 (exponentially decreasing)
         let tempo_changes = vec![
-            TempoChange {
-                tick: 0,
-                bpm: 100.0,
-            },
-            TempoChange {
-                tick: 500,
-                bpm: 110.0,
-            },
-            TempoChange {
-                tick: 750,
-                bpm: 120.0,
-            },
-            TempoChange {
-                tick: 875,
-                bpm: 130.0,
-            },
-            TempoChange {
-                tick: 937,
-                bpm: 140.0,
-            },
+            TempoChange { tick: 0, bpm: 100.0 },
+            TempoChange { tick: 500, bpm: 110.0 },
+            TempoChange { tick: 750, bpm: 120.0 },
+            TempoChange { tick: 875, bpm: 130.0 },
+            TempoChange { tick: 937, bpm: 140.0 },
         ];
         let total_ticks = 1000;
 
@@ -1380,18 +1068,9 @@ mod tests {
     fn test_weighted_average_precision_check() {
         // Verify floating point precision is maintained
         let tempo_changes = vec![
-            TempoChange {
-                tick: 0,
-                bpm: 123.456,
-            },
-            TempoChange {
-                tick: 333,
-                bpm: 156.789,
-            },
-            TempoChange {
-                tick: 667,
-                bpm: 178.901,
-            },
+            TempoChange { tick: 0, bpm: 123.456 },
+            TempoChange { tick: 333, bpm: 156.789 },
+            TempoChange { tick: 667, bpm: 178.901 },
         ];
         let total_ticks = 1000;
 
@@ -1412,26 +1091,15 @@ mod tests {
 
     #[test]
     fn test_confidence_single_tempo() {
-        let tempo_changes = vec![TempoChange {
-            tick: 0,
-            bpm: 120.0,
-        }];
+        let tempo_changes = vec![TempoChange { tick: 0, bpm: 120.0 }];
 
         assert_eq!(calculate_confidence(&tempo_changes), 1.0);
     }
 
     #[test]
     fn test_confidence_two_identical() {
-        let tempo_changes = vec![
-            TempoChange {
-                tick: 0,
-                bpm: 120.0,
-            },
-            TempoChange {
-                tick: 500,
-                bpm: 120.0,
-            },
-        ];
+        let tempo_changes =
+            vec![TempoChange { tick: 0, bpm: 120.0 }, TempoChange { tick: 500, bpm: 120.0 }];
 
         // Variance = 0, cv = 0, confidence = 1.0
         assert_eq!(calculate_confidence(&tempo_changes), 1.0);
@@ -1440,26 +1108,11 @@ mod tests {
     #[test]
     fn test_confidence_many_identical() {
         let tempo_changes = vec![
-            TempoChange {
-                tick: 0,
-                bpm: 140.0,
-            },
-            TempoChange {
-                tick: 100,
-                bpm: 140.0,
-            },
-            TempoChange {
-                tick: 200,
-                bpm: 140.0,
-            },
-            TempoChange {
-                tick: 300,
-                bpm: 140.0,
-            },
-            TempoChange {
-                tick: 400,
-                bpm: 140.0,
-            },
+            TempoChange { tick: 0, bpm: 140.0 },
+            TempoChange { tick: 100, bpm: 140.0 },
+            TempoChange { tick: 200, bpm: 140.0 },
+            TempoChange { tick: 300, bpm: 140.0 },
+            TempoChange { tick: 400, bpm: 140.0 },
         ];
 
         assert_eq!(calculate_confidence(&tempo_changes), 1.0);
@@ -1468,16 +1121,8 @@ mod tests {
     #[test]
     fn test_confidence_extreme_variance_clamped() {
         // Extreme variance should clamp to minimum confidence (0.5)
-        let tempo_changes = vec![
-            TempoChange {
-                tick: 0,
-                bpm: 20.0,
-            },
-            TempoChange {
-                tick: 500,
-                bpm: 300.0,
-            },
-        ];
+        let tempo_changes =
+            vec![TempoChange { tick: 0, bpm: 20.0 }, TempoChange { tick: 500, bpm: 300.0 }];
 
         // Mean = 160, variance = 19600, std_dev = 140, cv = 0.875
         // confidence = 1.0 - 0.875 = 0.125 → clamped to 0.5
@@ -1491,16 +1136,8 @@ mod tests {
     #[test]
     fn test_confidence_very_low_variance() {
         // BPMs differ by only 1
-        let tempo_changes = vec![
-            TempoChange {
-                tick: 0,
-                bpm: 120.0,
-            },
-            TempoChange {
-                tick: 500,
-                bpm: 121.0,
-            },
-        ];
+        let tempo_changes =
+            vec![TempoChange { tick: 0, bpm: 120.0 }, TempoChange { tick: 500, bpm: 121.0 }];
 
         // Mean = 120.5, variance = 0.25, std_dev = 0.5, cv ≈ 0.00415
         // confidence ≈ 0.996
@@ -1512,18 +1149,9 @@ mod tests {
     fn test_confidence_low_variance() {
         // 120, 121, 122 (±1 BPM around mean)
         let tempo_changes = vec![
-            TempoChange {
-                tick: 0,
-                bpm: 120.0,
-            },
-            TempoChange {
-                tick: 333,
-                bpm: 121.0,
-            },
-            TempoChange {
-                tick: 667,
-                bpm: 122.0,
-            },
+            TempoChange { tick: 0, bpm: 120.0 },
+            TempoChange { tick: 333, bpm: 121.0 },
+            TempoChange { tick: 667, bpm: 122.0 },
         ];
 
         // Mean = 121, variance ≈ 0.667, std_dev ≈ 0.816, cv ≈ 0.00675
@@ -1535,16 +1163,8 @@ mod tests {
     #[test]
     fn test_confidence_medium_variance() {
         // 100, 140 (±20 from mean of 120)
-        let tempo_changes = vec![
-            TempoChange {
-                tick: 0,
-                bpm: 100.0,
-            },
-            TempoChange {
-                tick: 500,
-                bpm: 140.0,
-            },
-        ];
+        let tempo_changes =
+            vec![TempoChange { tick: 0, bpm: 100.0 }, TempoChange { tick: 500, bpm: 140.0 }];
 
         // Mean = 120, variance = 400, std_dev = 20, cv ≈ 0.167
         // confidence ≈ 0.833
@@ -1555,16 +1175,8 @@ mod tests {
     #[test]
     fn test_confidence_high_variance_at_clamp() {
         // 60, 180 (±60 from mean of 120)
-        let tempo_changes = vec![
-            TempoChange {
-                tick: 0,
-                bpm: 60.0,
-            },
-            TempoChange {
-                tick: 500,
-                bpm: 180.0,
-            },
-        ];
+        let tempo_changes =
+            vec![TempoChange { tick: 0, bpm: 60.0 }, TempoChange { tick: 500, bpm: 180.0 }];
 
         // Mean = 120, variance = 3600, std_dev = 60, cv = 0.5
         // confidence = 1.0 - 0.5 = 0.5 (exactly at clamp boundary)
@@ -1575,26 +1187,11 @@ mod tests {
     fn test_confidence_five_low_variance() {
         // 115, 118, 120, 122, 125 (±5 around mean of 120)
         let tempo_changes = vec![
-            TempoChange {
-                tick: 0,
-                bpm: 115.0,
-            },
-            TempoChange {
-                tick: 200,
-                bpm: 118.0,
-            },
-            TempoChange {
-                tick: 400,
-                bpm: 120.0,
-            },
-            TempoChange {
-                tick: 600,
-                bpm: 122.0,
-            },
-            TempoChange {
-                tick: 800,
-                bpm: 125.0,
-            },
+            TempoChange { tick: 0, bpm: 115.0 },
+            TempoChange { tick: 200, bpm: 118.0 },
+            TempoChange { tick: 400, bpm: 120.0 },
+            TempoChange { tick: 600, bpm: 122.0 },
+            TempoChange { tick: 800, bpm: 125.0 },
         ];
 
         // Mean = 120, variance = 11.2, std_dev ≈ 3.35, cv ≈ 0.0279
@@ -1607,26 +1204,11 @@ mod tests {
     fn test_confidence_five_high_variance() {
         // Wide range: 80, 100, 120, 140, 160
         let tempo_changes = vec![
-            TempoChange {
-                tick: 0,
-                bpm: 80.0,
-            },
-            TempoChange {
-                tick: 200,
-                bpm: 100.0,
-            },
-            TempoChange {
-                tick: 400,
-                bpm: 120.0,
-            },
-            TempoChange {
-                tick: 600,
-                bpm: 140.0,
-            },
-            TempoChange {
-                tick: 800,
-                bpm: 160.0,
-            },
+            TempoChange { tick: 0, bpm: 80.0 },
+            TempoChange { tick: 200, bpm: 100.0 },
+            TempoChange { tick: 400, bpm: 120.0 },
+            TempoChange { tick: 600, bpm: 140.0 },
+            TempoChange { tick: 800, bpm: 160.0 },
         ];
 
         // Mean = 120, variance = 800, std_dev ≈ 28.28, cv ≈ 0.236
@@ -1645,18 +1227,9 @@ mod tests {
         // CV = 8.165 / 110 ≈ 0.0742
         // Confidence = 1.0 - 0.0742 ≈ 0.926
         let tempo_changes = vec![
-            TempoChange {
-                tick: 0,
-                bpm: 100.0,
-            },
-            TempoChange {
-                tick: 333,
-                bpm: 110.0,
-            },
-            TempoChange {
-                tick: 667,
-                bpm: 120.0,
-            },
+            TempoChange { tick: 0, bpm: 100.0 },
+            TempoChange { tick: 333, bpm: 110.0 },
+            TempoChange { tick: 667, bpm: 120.0 },
         ];
 
         let conf = calculate_confidence(&tempo_changes);
@@ -1670,11 +1243,7 @@ mod tests {
     #[test]
     fn test_detect_bpm_empty_midi() {
         let midi = MidiFile {
-            header: Header {
-                format: 1,
-                num_tracks: 0,
-                ticks_per_quarter_note: 480,
-            },
+            header: Header { format: 1, num_tracks: 0, ticks_per_quarter_note: 480 },
             tracks: vec![],
         };
 
@@ -1704,33 +1273,18 @@ mod tests {
     #[test]
     fn test_detect_bpm_only_non_tempo_events() {
         let midi = MidiFile {
-            header: Header {
-                format: 1,
-                num_tracks: 1,
-                ticks_per_quarter_note: 480,
-            },
+            header: Header { format: 1, num_tracks: 1, ticks_per_quarter_note: 480 },
             tracks: vec![Track {
                 events: vec![
                     TimedEvent {
                         delta_ticks: 0,
-                        event: Event::NoteOn {
-                            channel: 0,
-                            note: 60,
-                            velocity: 100,
-                        },
+                        event: Event::NoteOn { channel: 0, note: 60, velocity: 100 },
                     },
                     TimedEvent {
                         delta_ticks: 480,
-                        event: Event::NoteOff {
-                            channel: 0,
-                            note: 60,
-                            velocity: 0,
-                        },
+                        event: Event::NoteOff { channel: 0, note: 60, velocity: 0 },
                     },
-                    TimedEvent {
-                        delta_ticks: 0,
-                        event: Event::EndOfTrack,
-                    },
+                    TimedEvent { delta_ticks: 0, event: Event::EndOfTrack },
                 ],
             }],
         };
@@ -1773,23 +1327,14 @@ mod tests {
     #[test]
     fn test_detect_bpm_single_tempo_end_of_file() {
         let midi = MidiFile {
-            header: Header {
-                format: 1,
-                num_tracks: 1,
-                ticks_per_quarter_note: 480,
-            },
+            header: Header { format: 1, num_tracks: 1, ticks_per_quarter_note: 480 },
             tracks: vec![Track {
                 events: vec![
                     TimedEvent {
                         delta_ticks: 1920, // 1 bar
-                        event: Event::TempoChange {
-                            microseconds_per_quarter: 500_000,
-                        },
+                        event: Event::TempoChange { microseconds_per_quarter: 500_000 },
                     },
-                    TimedEvent {
-                        delta_ticks: 0,
-                        event: Event::EndOfTrack,
-                    },
+                    TimedEvent { delta_ticks: 0, event: Event::EndOfTrack },
                 ],
             }],
         };
@@ -1805,38 +1350,24 @@ mod tests {
     fn test_detect_bpm_single_tempo_multiple_tracks() {
         // Same tempo event in multiple tracks (should dedupe)
         let midi = MidiFile {
-            header: Header {
-                format: 1,
-                num_tracks: 2,
-                ticks_per_quarter_note: 480,
-            },
+            header: Header { format: 1, num_tracks: 2, ticks_per_quarter_note: 480 },
             tracks: vec![
                 Track {
                     events: vec![
                         TimedEvent {
                             delta_ticks: 0,
-                            event: Event::TempoChange {
-                                microseconds_per_quarter: 500_000,
-                            },
+                            event: Event::TempoChange { microseconds_per_quarter: 500_000 },
                         },
-                        TimedEvent {
-                            delta_ticks: 0,
-                            event: Event::EndOfTrack,
-                        },
+                        TimedEvent { delta_ticks: 0, event: Event::EndOfTrack },
                     ],
                 },
                 Track {
                     events: vec![
                         TimedEvent {
                             delta_ticks: 0,
-                            event: Event::TempoChange {
-                                microseconds_per_quarter: 500_000,
-                            },
+                            event: Event::TempoChange { microseconds_per_quarter: 500_000 },
                         },
-                        TimedEvent {
-                            delta_ticks: 0,
-                            event: Event::EndOfTrack,
-                        },
+                        TimedEvent { delta_ticks: 0, event: Event::EndOfTrack },
                     ],
                 },
             ],
@@ -1879,13 +1410,16 @@ mod tests {
 
     #[test]
     fn test_detect_bpm_five_tempos() {
-        let midi = create_test_midi_with_tempos(vec![
-            (0, 500_000),     // 120 BPM
-            (200, 468_750),   // 128 BPM
-            (400, 500_000),   // 120 BPM
-            (600, 468_750),   // 128 BPM
-            (800, 500_000),   // 120 BPM
-        ], None);
+        let midi = create_test_midi_with_tempos(
+            vec![
+                (0, 500_000),   // 120 BPM
+                (200, 468_750), // 128 BPM
+                (400, 500_000), // 120 BPM
+                (600, 468_750), // 128 BPM
+                (800, 500_000), // 120 BPM
+            ],
+            None,
+        );
 
         let result = detect_bpm(&midi);
 
@@ -1934,12 +1468,15 @@ mod tests {
     fn test_detect_bpm_complex_real_world() {
         // Simulate a real-world MIDI with tempo changes
         // Classical piece with ritardando: 120 → 115 → 110 → 105
-        let midi = create_test_midi_with_tempos(vec![
-            (0, 500_000),      // 120 BPM (40% of file)
-            (4000, 521_739),   // 115 BPM (30%)
-            (7000, 545_455),   // 110 BPM (20%)
-            (9000, 571_429),   // 105 BPM (10%)
-        ], Some(10000));
+        let midi = create_test_midi_with_tempos(
+            vec![
+                (0, 500_000),    // 120 BPM (40% of file)
+                (4000, 521_739), // 115 BPM (30%)
+                (7000, 545_455), // 110 BPM (20%)
+                (9000, 571_429), // 105 BPM (10%)
+            ],
+            Some(10000),
+        );
 
         let result = detect_bpm(&midi);
 
@@ -1962,10 +1499,13 @@ mod tests {
     #[test]
     fn test_detect_bpm_high_variance_low_confidence() {
         // Extreme tempo changes: 60 → 180
-        let midi = create_test_midi_with_tempos(vec![
-            (0, 1_000_000),  // 60 BPM
-            (500, 333_333),  // 180 BPM
-        ], None);
+        let midi = create_test_midi_with_tempos(
+            vec![
+                (0, 1_000_000), // 60 BPM
+                (500, 333_333), // 180 BPM
+            ],
+            None,
+        );
 
         let result = detect_bpm(&midi);
 
@@ -1985,7 +1525,10 @@ mod tests {
 
     #[test]
     fn test_detect_bpm_metadata_tempo_changes_populated() {
-        let midi = create_test_midi_with_tempos(vec![(0, 500_000), (1000, 428_571), (2000, 333_333)], None);
+        let midi = create_test_midi_with_tempos(
+            vec![(0, 500_000), (1000, 428_571), (2000, 333_333)],
+            None,
+        );
 
         let result = detect_bpm(&midi);
 
@@ -2024,11 +1567,14 @@ mod tests {
         assert_eq!(result_single.metadata.tempo_range, None);
 
         // Multiple tempos → tempo_range = Some((min, max))
-        let midi_multiple = create_test_midi_with_tempos(vec![
-            (0, 600_000),     // 100 BPM
-            (500, 500_000),   // 120 BPM
-            (1000, 428_571),  // 140 BPM
-        ], None);
+        let midi_multiple = create_test_midi_with_tempos(
+            vec![
+                (0, 600_000),    // 100 BPM
+                (500, 500_000),  // 120 BPM
+                (1000, 428_571), // 140 BPM
+            ],
+            None,
+        );
         let result_multiple = detect_bpm(&midi_multiple);
         let (min, max) = result_multiple.metadata.tempo_range.unwrap();
         assert_bpm_approx_eq(min, 100.0, 0.1);
@@ -2046,18 +1592,18 @@ mod tests {
         assert_eq!(detect_bpm(&midi_single).confidence, 1.0);
 
         // Multiple identical → confidence = 1.0
-        let midi_identical = create_test_midi_with_tempos(vec![
-            (0, 500_000),
-            (500, 500_000),
-            (1000, 500_000),
-        ], None);
+        let midi_identical =
+            create_test_midi_with_tempos(vec![(0, 500_000), (500, 500_000), (1000, 500_000)], None);
         assert_eq!(detect_bpm(&midi_identical).confidence, 1.0);
 
         // High variance → confidence = 0.5 (clamped)
-        let midi_variance = create_test_midi_with_tempos(vec![
-            (0, 1_000_000),  // 60 BPM
-            (500, 333_333),  // 180 BPM
-        ], None);
+        let midi_variance = create_test_midi_with_tempos(
+            vec![
+                (0, 1_000_000), // 60 BPM
+                (500, 333_333), // 180 BPM
+            ],
+            None,
+        );
         assert_eq!(detect_bpm(&midi_variance).confidence, 0.5);
     }
 
@@ -2065,11 +1611,17 @@ mod tests {
     fn test_detect_bpm_method_selection_logic() {
         // No tempos → DefaultTempo
         let midi_default = create_midi_no_tempo(1);
-        assert_eq!(detect_bpm(&midi_default).method, BpmDetectionMethod::DefaultTempo);
+        assert_eq!(
+            detect_bpm(&midi_default).method,
+            BpmDetectionMethod::DefaultTempo
+        );
 
         // One tempo → SingleTempo
         let midi_single = create_test_midi_with_tempos(vec![(0, 500_000)], None);
-        assert_eq!(detect_bpm(&midi_single).method, BpmDetectionMethod::SingleTempo);
+        assert_eq!(
+            detect_bpm(&midi_single).method,
+            BpmDetectionMethod::SingleTempo
+        );
 
         // Two or more tempos → WeightedAverage
         let midi_multiple = create_test_midi_with_tempos(vec![(0, 500_000), (1000, 428_571)], None);
@@ -2083,11 +1635,7 @@ mod tests {
     fn test_detect_bpm_full_integration() {
         // Real-world integration test with realistic MIDI structure
         let midi = MidiFile {
-            header: Header {
-                format: 1,
-                num_tracks: 3,
-                ticks_per_quarter_note: 480,
-            },
+            header: Header { format: 1, num_tracks: 3, ticks_per_quarter_note: 480 },
             tracks: vec![
                 // Tempo track
                 Track {
@@ -2104,10 +1652,7 @@ mod tests {
                                 microseconds_per_quarter: 468_750, // 128 BPM
                             },
                         },
-                        TimedEvent {
-                            delta_ticks: 0,
-                            event: Event::EndOfTrack,
-                        },
+                        TimedEvent { delta_ticks: 0, event: Event::EndOfTrack },
                     ],
                 },
                 // Melody track
@@ -2115,24 +1660,13 @@ mod tests {
                     events: vec![
                         TimedEvent {
                             delta_ticks: 0,
-                            event: Event::NoteOn {
-                                channel: 0,
-                                note: 60,
-                                velocity: 100,
-                            },
+                            event: Event::NoteOn { channel: 0, note: 60, velocity: 100 },
                         },
                         TimedEvent {
                             delta_ticks: 480,
-                            event: Event::NoteOff {
-                                channel: 0,
-                                note: 60,
-                                velocity: 0,
-                            },
+                            event: Event::NoteOff { channel: 0, note: 60, velocity: 0 },
                         },
-                        TimedEvent {
-                            delta_ticks: 0,
-                            event: Event::EndOfTrack,
-                        },
+                        TimedEvent { delta_ticks: 0, event: Event::EndOfTrack },
                     ],
                 },
                 // Bass track
@@ -2140,24 +1674,13 @@ mod tests {
                     events: vec![
                         TimedEvent {
                             delta_ticks: 0,
-                            event: Event::NoteOn {
-                                channel: 1,
-                                note: 48,
-                                velocity: 80,
-                            },
+                            event: Event::NoteOn { channel: 1, note: 48, velocity: 80 },
                         },
                         TimedEvent {
                             delta_ticks: 960,
-                            event: Event::NoteOff {
-                                channel: 1,
-                                note: 48,
-                                velocity: 0,
-                            },
+                            event: Event::NoteOff { channel: 1, note: 48, velocity: 0 },
                         },
-                        TimedEvent {
-                            delta_ticks: 0,
-                            event: Event::EndOfTrack,
-                        },
+                        TimedEvent { delta_ticks: 0, event: Event::EndOfTrack },
                     ],
                 },
             ],

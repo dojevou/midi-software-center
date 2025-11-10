@@ -1,31 +1,31 @@
-   /// Batch Database Insert Operations
-   ///
-   /// Architecture: Grown-up Script (service layer with database access)
-   /// Purpose: High-performance batch insertion of MIDI file records and metadata
-   ///
-   /// This module provides batched database operations for importing large numbers
-   /// of MIDI files. It uses chunked transactions to achieve 10-50x speedup over
-   /// individual INSERT statements.
-   ///
-   /// # Performance
-   ///
-   /// - Individual INSERT: ~200 rows/sec
-   /// - Batched INSERT: ~10,000-50,000 rows/sec
-   ///
-   /// # Examples
-   ///
-   /// ```rust
-   /// use batch_insert::BatchInserter;
-   ///
-   /// let inserter = BatchInserter::new(pool, 1000);
-   /// let file_ids = inserter.insert_files_batch(file_records).await?;
-   /// inserter.insert_metadata_batch(metadata_records).await?;
-   /// ```
 
+/// Batch Database Insert Operations
+///
+/// Architecture: Grown-up Script (service layer with database access)
+/// Purpose: High-performance batch insertion of MIDI file records and metadata
+///
+/// This module provides batched database operations for importing large numbers
+/// of MIDI files. It uses chunked transactions to achieve 10-50x speedup over
+/// individual INSERT statements.
+///
+/// # Performance
+///
+/// - Individual INSERT: ~200 rows/sec
+/// - Batched INSERT: ~10,000-50,000 rows/sec
+///
+/// # Examples
+///
+/// ```rust
+/// use batch_insert::BatchInserter;
+///
+/// let inserter = BatchInserter::new(pool, 1000);
+/// let file_ids = inserter.insert_files_batch(file_records).await?;
+/// inserter.insert_metadata_batch(metadata_records).await?;
+/// ```
 use crate::core::performance::concurrency::calculate_all_settings;
+use serde::{Deserialize, Serialize};
 use sqlx::{PgPool, Postgres, Transaction};
 use thiserror::Error;
-use serde::{Deserialize, Serialize};
 
 //=============================================================================
 // ERROR TYPES
@@ -77,30 +77,30 @@ impl FileRecord {
         file_size: i64,
         category: Option<String>,
     ) -> Self {
-        Self {
-            filename,
-            new_filename,
-            filepath,
-            parent_folder,
-            hash,
-            file_size,
-            category,
-        }
+        Self { filename, new_filename, filepath, parent_folder, hash, file_size, category }
     }
 
     /// Validate record data
     pub fn validate(&self) -> Result<()> {
         if self.filename.is_empty() {
-            return Err(BatchInsertError::InvalidData("filename cannot be empty".to_string()));
+            return Err(BatchInsertError::InvalidData(
+                "filename cannot be empty".to_string(),
+            ));
         }
         if self.filepath.is_empty() {
-            return Err(BatchInsertError::InvalidData("filepath cannot be empty".to_string()));
+            return Err(BatchInsertError::InvalidData(
+                "filepath cannot be empty".to_string(),
+            ));
         }
         if self.hash.is_empty() {
-            return Err(BatchInsertError::InvalidData("hash cannot be empty".to_string()));
+            return Err(BatchInsertError::InvalidData(
+                "hash cannot be empty".to_string(),
+            ));
         }
         if self.file_size <= 0 {
-            return Err(BatchInsertError::InvalidData("file_size must be positive".to_string()));
+            return Err(BatchInsertError::InvalidData(
+                "file_size must be positive".to_string(),
+            ));
         }
         Ok(())
     }
@@ -157,18 +157,23 @@ impl MusicalMetadata {
     /// Validate metadata
     pub fn validate(&self) -> Result<()> {
         if self.file_id <= 0 {
-            return Err(BatchInsertError::InvalidData("file_id must be positive".to_string()));
+            return Err(BatchInsertError::InvalidData(
+                "file_id must be positive".to_string(),
+            ));
         }
         if let Some(bpm) = self.bpm {
             if !(20..=300).contains(&bpm) {
-                return Err(BatchInsertError::InvalidData(
-                    format!("BPM {} out of range (20-300)", bpm)
-                ));
+                return Err(BatchInsertError::InvalidData(format!(
+                    "BPM {} out of range (20-300)",
+                    bpm
+                )));
             }
         }
         if let Some(duration) = self.duration_seconds {
             if duration < 0.0 {
-                return Err(BatchInsertError::InvalidData("duration cannot be negative".to_string()));
+                return Err(BatchInsertError::InvalidData(
+                    "duration cannot be negative".to_string(),
+                ));
             }
         }
         Ok(())
@@ -239,7 +244,10 @@ impl BatchInserter {
     /// ```
     pub fn with_optimal_batch_size(pool: PgPool) -> Self {
         let (_, _, batch_size) = calculate_all_settings();
-        println!("🚀 BatchInserter: Using optimal batch size of {} records", batch_size);
+        println!(
+            "🚀 BatchInserter: Using optimal batch size of {} records",
+            batch_size
+        );
         Self::new(pool, batch_size)
     }
 
@@ -393,7 +401,9 @@ impl BatchInserter {
         let mut all_ids = Vec::with_capacity(files.len());
 
         // Process in chunks, maintaining file-metadata relationship
-        for (file_chunk, meta_chunk) in files.chunks(self.batch_size).zip(metadata.chunks(self.batch_size)) {
+        for (file_chunk, meta_chunk) in
+            files.chunks(self.batch_size).zip(metadata.chunks(self.batch_size))
+        {
             let mut tx = self.pool.begin().await?;
 
             // Insert files and get IDs

@@ -1,16 +1,16 @@
-   /// Error Handling Module - PURE FUNCTION ARCHETYPE
-   ///
-   /// PURPOSE: Transform and convert error types for Tauri commands
-   /// ARCHETYPE: Pure Function (deterministic transformations, no I/O)
-   /// LOCATION: pipeline/src-tauri/src/error.rs
-   ///
-   /// ✅ CAN: Transform errors (sqlx::Error → AppError)
-   /// ✅ CAN: Convert types (AppError → String)
-   /// ✅ SHOULD: Be deterministic
-   /// ❌ NO: I/O operations
-   /// ❌ NO: Side effects
-   /// ❌ NO: State
 
+/// Error Handling Module - PURE FUNCTION ARCHETYPE
+///
+/// PURPOSE: Transform and convert error types for Tauri commands
+/// ARCHETYPE: Pure Function (deterministic transformations, no I/O)
+/// LOCATION: pipeline/src-tauri/src/error.rs
+///
+/// ✅ CAN: Transform errors (sqlx::Error → AppError)
+/// ✅ CAN: Convert types (AppError → String)
+/// ✅ SHOULD: Be deterministic
+/// ❌ NO: I/O operations
+/// ❌ NO: Side effects
+/// ❌ NO: State
 use std::fmt;
 
 /// Application error types
@@ -241,9 +241,7 @@ mod tests {
 
     #[test]
     fn test_display_database_error() {
-        let err = AppError::DatabaseError(
-            sqlx::Error::RowNotFound
-        );
+        let err = AppError::DatabaseError(sqlx::Error::RowNotFound);
         assert!(err.to_string().contains("Database error"));
     }
 

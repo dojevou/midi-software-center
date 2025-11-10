@@ -1,14 +1,13 @@
-   /// MIDI connection manager
-   ///
-   /// Grown-up Script: Handles MIDI device connections and message transmission.
-   /// Delegates validation and encoding to Trusty Modules.
-
+/// MIDI connection manager
+///
+/// Grown-up Script: Handles MIDI device connections and message transmission.
+/// Delegates validation and encoding to Trusty Modules.
 use midir::{MidiOutput, MidiOutputConnection};
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use tracing::{info, warn, error};
+use tracing::{error, info, warn};
 
-use crate::core::midi::types::{MidiMessage, MidiEventType};
+use crate::core::midi::types::{MidiEventType, MidiMessage};
 use crate::core::midi::validator;
 use crate::models::MidiDevice;
 
@@ -35,11 +34,10 @@ impl MidiManager {
     ///
     /// Returns list of all MIDI output ports found on the system.
     pub fn list_devices(&self) -> Result<Vec<MidiDevice>, String> {
-        let midi_out = MidiOutput::new("MIDI Library DAW")
-            .map_err(|e| {
-                error!("Failed to create MIDI output: {}", e);
-                format!("Failed to create MIDI output: {}", e)
-            })?;
+        let midi_out = MidiOutput::new("MIDI Library DAW").map_err(|e| {
+            error!("Failed to create MIDI output: {}", e);
+            format!("Failed to create MIDI output: {}", e)
+        })?;
 
         let ports = midi_out.ports();
         let mut devices = Vec::new();
@@ -64,23 +62,17 @@ impl MidiManager {
         info!("Attempting to connect to MIDI device: {}", device_name);
 
         // Create MIDI output
-        let midi_out = MidiOutput::new("MIDI Library DAW")
-            .map_err(|e| {
-                error!("Failed to create MIDI output: {}", e);
-                format!("Failed to create MIDI output: {}", e)
-            })?;
+        let midi_out = MidiOutput::new("MIDI Library DAW").map_err(|e| {
+            error!("Failed to create MIDI output: {}", e);
+            format!("Failed to create MIDI output: {}", e)
+        })?;
 
         // Find the port
         let ports = midi_out.ports();
         let port = ports
             .iter()
             .find(|p| {
-                midi_out
-                    .port_name(p)
-                    .ok()
-                    .as_ref()
-                    .map(|n| n == device_name)
-                    .unwrap_or(false)
+                midi_out.port_name(p).ok().as_ref().map(|n| n == device_name).unwrap_or(false)
             })
             .ok_or_else(|| {
                 error!("Device '{}' not found", device_name);
@@ -88,12 +80,10 @@ impl MidiManager {
             })?;
 
         // Connect
-        let connection = midi_out
-            .connect(port, "daw-output")
-            .map_err(|e| {
-                error!("Connection failed: {}", e);
-                format!("Connection failed: {}", e)
-            })?;
+        let connection = midi_out.connect(port, "daw-output").map_err(|e| {
+            error!("Connection failed: {}", e);
+            format!("Connection failed: {}", e)
+        })?;
 
         // Store connection
         let mut conn_lock = self.connection.lock().await;
@@ -167,12 +157,7 @@ impl MidiManager {
     /// Send a note on message
     ///
     /// Convenience method for sending note on events.
-    pub async fn send_note_on(
-        &self,
-        channel: u8,
-        note: u8,
-        velocity: u8,
-    ) -> Result<(), String> {
+    pub async fn send_note_on(&self, channel: u8, note: u8, velocity: u8) -> Result<(), String> {
         let msg = MidiMessage {
             event_type: MidiEventType::NoteOn,
             channel,
@@ -219,11 +204,7 @@ impl MidiManager {
     /// Send a program change message
     ///
     /// Convenience method for sending program change events.
-    pub async fn send_program_change(
-        &self,
-        channel: u8,
-        program: u8,
-    ) -> Result<(), String> {
+    pub async fn send_program_change(&self, channel: u8, program: u8) -> Result<(), String> {
         let msg = MidiMessage {
             event_type: MidiEventType::ProgramChange,
             channel,
@@ -317,10 +298,7 @@ mod tests {
             parse_manufacturer("Steinberg UR22"),
             Some("Steinberg".to_string())
         );
-        assert_eq!(
-            parse_manufacturer("Akai MPC One"),
-            Some("Akai".to_string())
-        );
+        assert_eq!(parse_manufacturer("Akai MPC One"), Some("Akai".to_string()));
         assert_eq!(parse_manufacturer("Unknown Device"), None);
     }
 }

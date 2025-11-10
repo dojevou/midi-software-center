@@ -1,7 +1,7 @@
-   /// Window layout persistence and management
-   ///
-   /// Handles saving, loading, and managing window layouts.
-
+#[allow(dead_code)]
+/// Window layout persistence and management
+///
+/// Handles saving, loading, and managing window layouts.
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;
@@ -26,6 +26,7 @@ pub struct Layout {
     pub locked: bool,
 }
 
+#[allow(dead_code)]
 impl Layout {
     /// Create a new layout
     pub fn new(name: &str) -> Self {
@@ -99,6 +100,7 @@ pub struct LayoutStorage {
     storage_dir: PathBuf,
 }
 
+#[allow(dead_code)]
 impl LayoutStorage {
     /// Create new layout storage
     pub fn new(storage_dir: PathBuf) -> Result<Self, String> {
@@ -116,8 +118,7 @@ impl LayoutStorage {
         let json = serde_json::to_string_pretty(layout)
             .map_err(|e| format!("Failed to serialize layout: {}", e))?;
 
-        fs::write(&file_path, json)
-            .map_err(|e| format!("Failed to write layout file: {}", e))?;
+        fs::write(&file_path, json).map_err(|e| format!("Failed to write layout file: {}", e))?;
 
         Ok(())
     }
@@ -139,8 +140,7 @@ impl LayoutStorage {
     pub fn delete_layout(&self, name: &str) -> Result<(), String> {
         let file_path = self.storage_dir.join(format!("{}.json", name));
 
-        fs::remove_file(&file_path)
-            .map_err(|e| format!("Failed to delete layout file: {}", e))?;
+        fs::remove_file(&file_path).map_err(|e| format!("Failed to delete layout file: {}", e))?;
 
         Ok(())
     }
@@ -153,8 +153,7 @@ impl LayoutStorage {
             .map_err(|e| format!("Failed to read storage directory: {}", e))?;
 
         for entry in entries {
-            let entry = entry
-                .map_err(|e| format!("Failed to read directory entry: {}", e))?;
+            let entry = entry.map_err(|e| format!("Failed to read directory entry: {}", e))?;
 
             let path = entry.path();
             if path.extension().is_some_and(|ext| ext == "json") {
@@ -176,14 +175,12 @@ impl LayoutStorage {
 
     /// Export layout to JSON string
     pub fn export_layout(&self, layout: &Layout) -> Result<String, String> {
-        serde_json::to_string_pretty(layout)
-            .map_err(|e| format!("Failed to export layout: {}", e))
+        serde_json::to_string_pretty(layout).map_err(|e| format!("Failed to export layout: {}", e))
     }
 
     /// Import layout from JSON string
     pub fn import_layout(&self, json: &str) -> Result<Layout, String> {
-        serde_json::from_str::<Layout>(json)
-            .map_err(|e| format!("Failed to import layout: {}", e))
+        serde_json::from_str::<Layout>(json).map_err(|e| format!("Failed to import layout: {}", e))
     }
 }
 

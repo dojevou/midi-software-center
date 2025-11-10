@@ -1,9 +1,10 @@
-   /// Database test helpers
-   ///
-   /// Provides utilities for setting up test databases, managing transactions,
-   /// and performing common database operations in tests.
-
-use sqlx::{PgPool, Postgres, Transaction, Row};
+#[allow(dead_code, unused_imports, unused_variables)]
+#[allow(dead_code, unused_imports, unused_variables)]
+/// Database test helpers
+///
+/// Provides utilities for setting up test databases, managing transactions,
+/// and performing common database operations in tests.
+use sqlx::{PgPool, Postgres, Row, Transaction};
 use std::env;
 
 // ============================================================================
@@ -61,9 +62,7 @@ pub async fn setup_test_pool_with_config(max_connections: u32) -> PgPool {
 /// // tx is dropped without commit, changes are rolled back
 /// ```
 pub async fn create_transaction(pool: &PgPool) -> Transaction<'_, Postgres> {
-    pool.begin()
-        .await
-        .expect("Failed to begin transaction")
+    pool.begin().await.expect("Failed to begin transaction")
 }
 
 // ============================================================================
@@ -121,9 +120,7 @@ pub async fn cleanup_table(pool: &PgPool, table_name: &str) -> Result<(), sqlx::
 
 /// Count total number of files in database
 pub async fn count_files(pool: &PgPool) -> Result<i64, sqlx::Error> {
-    let row = sqlx::query("SELECT COUNT(*) as count FROM files")
-        .fetch_one(pool)
-        .await?;
+    let row = sqlx::query("SELECT COUNT(*) as count FROM files").fetch_one(pool).await?;
 
     Ok(row.get("count"))
 }
@@ -137,9 +134,7 @@ pub async fn count_files_where(pool: &PgPool, condition: &str) -> Result<i64, sq
 
 /// Count total number of tags in database
 pub async fn count_tags(pool: &PgPool) -> Result<i64, sqlx::Error> {
-    let row = sqlx::query("SELECT COUNT(*) as count FROM tags")
-        .fetch_one(pool)
-        .await?;
+    let row = sqlx::query("SELECT COUNT(*) as count FROM tags").fetch_one(pool).await?;
 
     Ok(row.get("count"))
 }
@@ -155,9 +150,7 @@ pub async fn count_musical_metadata(pool: &PgPool) -> Result<i64, sqlx::Error> {
 
 /// Count file-tag associations
 pub async fn count_file_tags(pool: &PgPool) -> Result<i64, sqlx::Error> {
-    let row = sqlx::query("SELECT COUNT(*) as count FROM file_tags")
-        .fetch_one(pool)
-        .await?;
+    let row = sqlx::query("SELECT COUNT(*) as count FROM file_tags").fetch_one(pool).await?;
 
     Ok(row.get("count"))
 }
@@ -172,9 +165,7 @@ pub async fn count_file_tags(pool: &PgPool) -> Result<i64, sqlx::Error> {
 ///
 /// Panics if the file does not exist or if the query fails.
 pub async fn assert_file_exists(pool: &PgPool, file_id: i64) {
-    let exists = file_exists(pool, file_id)
-        .await
-        .expect("Failed to check if file exists");
+    let exists = file_exists(pool, file_id).await.expect("Failed to check if file exists");
 
     assert!(exists, "File with id {} should exist", file_id);
 }
@@ -185,18 +176,14 @@ pub async fn assert_file_exists(pool: &PgPool, file_id: i64) {
 ///
 /// Panics if the file exists or if the query fails.
 pub async fn assert_file_not_exists(pool: &PgPool, file_id: i64) {
-    let exists = file_exists(pool, file_id)
-        .await
-        .expect("Failed to check if file exists");
+    let exists = file_exists(pool, file_id).await.expect("Failed to check if file exists");
 
     assert!(!exists, "File with id {} should not exist", file_id);
 }
 
 /// Assert that a tag exists in the database
 pub async fn assert_tag_exists(pool: &PgPool, tag_id: i32) {
-    let exists = tag_exists(pool, tag_id)
-        .await
-        .expect("Failed to check if tag exists");
+    let exists = tag_exists(pool, tag_id).await.expect("Failed to check if tag exists");
 
     assert!(exists, "Tag with id {} should exist", tag_id);
 }
@@ -207,29 +194,29 @@ pub async fn assert_metadata_exists(pool: &PgPool, file_id: i64) {
         .await
         .expect("Failed to check if metadata exists");
 
-    assert!(
-        exists,
-        "Musical metadata for file {} should exist",
-        file_id
-    );
+    assert!(exists, "Musical metadata for file {} should exist", file_id);
 }
 
 /// Assert that file count matches expected value
 pub async fn assert_file_count(pool: &PgPool, expected: i64) {
-    let actual = count_files(pool)
-        .await
-        .expect("Failed to count files");
+    let actual = count_files(pool).await.expect("Failed to count files");
 
-    assert_eq!(actual, expected, "Expected {} files, found {}", expected, actual);
+    assert_eq!(
+        actual, expected,
+        "Expected {} files, found {}",
+        expected, actual
+    );
 }
 
 /// Assert that tag count matches expected value
 pub async fn assert_tag_count(pool: &PgPool, expected: i64) {
-    let actual = count_tags(pool)
-        .await
-        .expect("Failed to count tags");
+    let actual = count_tags(pool).await.expect("Failed to count tags");
 
-    assert_eq!(actual, expected, "Expected {} tags, found {}", expected, actual);
+    assert_eq!(
+        actual, expected,
+        "Expected {} tags, found {}",
+        expected, actual
+    );
 }
 
 // ============================================================================
@@ -258,12 +245,11 @@ pub async fn tag_exists(pool: &PgPool, tag_id: i32) -> Result<bool, sqlx::Error>
 
 /// Check if musical metadata exists for a file
 pub async fn metadata_exists(pool: &PgPool, file_id: i64) -> Result<bool, sqlx::Error> {
-    let row = sqlx::query(
-        "SELECT EXISTS(SELECT 1 FROM musical_metadata WHERE file_id = $1) as exists",
-    )
-    .bind(file_id)
-    .fetch_one(pool)
-    .await?;
+    let row =
+        sqlx::query("SELECT EXISTS(SELECT 1 FROM musical_metadata WHERE file_id = $1) as exists")
+            .bind(file_id)
+            .fetch_one(pool)
+            .await?;
 
     Ok(row.get("exists"))
 }
@@ -457,9 +443,7 @@ mod tests {
 
         let files = count_files(&pool).await.expect("Count files failed");
         let tags = count_tags(&pool).await.expect("Count tags failed");
-        let metadata = count_musical_metadata(&pool)
-            .await
-            .expect("Count metadata failed");
+        let metadata = count_musical_metadata(&pool).await.expect("Count metadata failed");
 
         assert_eq!(files, 0);
         assert_eq!(tags, 0);

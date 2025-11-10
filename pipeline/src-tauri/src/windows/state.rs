@@ -1,8 +1,8 @@
-   /// Window state structures and types
-   ///
-   /// Defines the core data structures for tracking window state,
-   /// including window types, positions, and docking information.
-
+#[allow(dead_code)]
+/// Window state structures and types
+///
+/// Defines the core data structures for tracking window state,
+/// including window types, positions, and docking information.
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -22,6 +22,7 @@ pub enum WindowType {
     Palette,
 }
 
+#[allow(dead_code)]
 impl WindowType {
     pub fn is_main(&self) -> bool {
         matches!(self, WindowType::Main)
@@ -46,16 +47,11 @@ pub struct Position {
     pub maximized: bool,
 }
 
+#[allow(dead_code)]
 impl Position {
     /// Create a new position
     pub fn new(x: i32, y: i32, width: u32, height: u32) -> Self {
-        Position {
-            x,
-            y,
-            width,
-            height,
-            maximized: false,
-        }
+        Position { x, y, width, height, maximized: false }
     }
 
     /// Create a position with maximized flag
@@ -87,11 +83,7 @@ pub struct Docking {
 
 impl Default for Docking {
     fn default() -> Self {
-        Docking {
-            docked_to: None,
-            side: DockSide::Right,
-            size_ratio: 0.3,
-        }
+        Docking { docked_to: None, side: DockSide::Right, size_ratio: 0.3 }
     }
 }
 
@@ -119,6 +111,7 @@ pub struct WindowInfo {
     pub created_at: u64,
 }
 
+#[allow(dead_code)]
 impl WindowInfo {
     /// Create a new window info
     pub fn new(label: &str, title: &str, window_type: WindowType) -> Self {
@@ -225,18 +218,12 @@ impl WindowState {
 
     /// Get all visible windows
     pub fn get_visible_windows(&self) -> Vec<&WindowInfo> {
-        self.windows
-            .values()
-            .filter(|w| w.visible)
-            .collect()
+        self.windows.values().filter(|w| w.visible).collect()
     }
 
     /// Get all windows of a specific type
     pub fn get_windows_by_type(&self, wtype: WindowType) -> Vec<&WindowInfo> {
-        self.windows
-            .values()
-            .filter(|w| w.window_type == wtype)
-            .collect()
+        self.windows.values().filter(|w| w.window_type == wtype).collect()
     }
 
     /// Check if window exists
@@ -261,9 +248,7 @@ impl WindowState {
 
     /// Get focused window
     pub fn get_focused(&self) -> Option<&WindowInfo> {
-        self.focused_window
-            .as_ref()
-            .and_then(|label| self.windows.get(label))
+        self.focused_window.as_ref().and_then(|label| self.windows.get(label))
     }
 
     /// Update window z-order (bring to front)

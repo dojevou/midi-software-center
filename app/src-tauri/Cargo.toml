@@ -1,0 +1,31 @@
+[package]
+name = "midi-software-center"
+version = "1.0.0"
+edition = "2021"
+
+[lib]
+name = "midi_app"
+path = "src/lib.rs"
+
+[[bin]]
+name = "midi-software-center"
+path = "src/main.rs"
+
+[dependencies]
+tauri = { version = "2.0", features = [] }
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "postgres", "migrate", "chrono", "bigdecimal"] }
+tokio = { version = "1.35", features = ["full"] }
+dotenv = "0.15"
+tracing = "0.1"
+tracing-subscriber = "0.3"
+tracing-appender = "0.2"
+chrono = { version = "0.4", features = ["serde"] }
+
+# Re-export workspace members
+midi-daw = { path = "../../daw/src-tauri" }
+midi-pipeline = { path = "../../pipeline/src-tauri" }
+
+[build-dependencies]
+tauri-build = { version = "2.0", features = [] }

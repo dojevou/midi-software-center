@@ -1,8 +1,8 @@
-   /// Krumhansl-Schmuckler Key Profiles
-   ///
-   /// These profiles represent the expected distribution of pitch classes
-   /// in major and minor keys, derived from music theory research.
 
+/// Krumhansl-Schmuckler Key Profiles
+///
+/// These profiles represent the expected distribution of pitch classes
+/// in major and minor keys, derived from music theory research.
 /// Major key profile (Krumhansl & Kessler, 1982)
 /// Indexed by pitch class: C, C#, D, D#, E, F, F#, G, G#, A, A#, B
 pub const MAJOR_PROFILE: [f64; 12] = [
@@ -37,9 +37,7 @@ pub const MINOR_PROFILE: [f64; 12] = [
 ];
 
 /// All possible key names in circle of fifths order
-pub const KEY_NAMES: [&str; 12] = [
-    "C", "G", "D", "A", "E", "B", "F#", "C#", "G#", "D#", "A#", "F",
-];
+pub const KEY_NAMES: [&str; 12] = ["C", "G", "D", "A", "E", "B", "F#", "C#", "G#", "D#", "A#", "F"];
 
 /// Maps pitch class to key name
 pub fn pitch_class_to_key_name(pitch_class: usize) -> &'static str {
@@ -201,11 +199,11 @@ mod tests {
     fn test_key_names_circle_of_fifths_order() {
         // Circle of fifths starting from C
         assert_eq!(KEY_NAMES[0], "C");
-        assert_eq!(KEY_NAMES[1], "G");  // +7 semitones
-        assert_eq!(KEY_NAMES[2], "D");  // +7 semitones
-        assert_eq!(KEY_NAMES[3], "A");  // +7 semitones
-        assert_eq!(KEY_NAMES[4], "E");  // +7 semitones
-        assert_eq!(KEY_NAMES[5], "B");  // +7 semitones
+        assert_eq!(KEY_NAMES[1], "G"); // +7 semitones
+        assert_eq!(KEY_NAMES[2], "D"); // +7 semitones
+        assert_eq!(KEY_NAMES[3], "A"); // +7 semitones
+        assert_eq!(KEY_NAMES[4], "E"); // +7 semitones
+        assert_eq!(KEY_NAMES[5], "B"); // +7 semitones
         assert_eq!(KEY_NAMES[6], "F#"); // +7 semitones
     }
 
@@ -221,11 +219,7 @@ mod tests {
     fn test_key_names_all_valid() {
         let valid_keys = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
         for key in KEY_NAMES.iter() {
-            assert!(
-                valid_keys.contains(key),
-                "Invalid key name: {}",
-                key
-            );
+            assert!(valid_keys.contains(key), "Invalid key name: {}", key);
         }
     }
 
@@ -236,7 +230,10 @@ mod tests {
         // Major third (E in C major = index 4) should be more prominent than minor third
         let major_third = MAJOR_PROFILE[4]; // E
         let minor_third = MAJOR_PROFILE[3]; // D#/Eb
-        assert!(major_third > minor_third, "Major third should be more prominent in major key");
+        assert!(
+            major_third > minor_third,
+            "Major third should be more prominent in major key"
+        );
     }
 
     #[test]
@@ -244,7 +241,10 @@ mod tests {
         // Minor third (D#/Eb in C minor = index 3) should be more prominent than major third
         let minor_third = MINOR_PROFILE[3]; // D#/Eb
         let major_third = MINOR_PROFILE[4]; // E
-        assert!(minor_third > major_third, "Minor third should be more prominent in minor key");
+        assert!(
+            minor_third > major_third,
+            "Minor third should be more prominent in minor key"
+        );
     }
 
     #[test]
@@ -254,8 +254,14 @@ mod tests {
         let minor_fifth = MINOR_PROFILE[7];
 
         // Fifth should be second strongest in major
-        assert!(major_fifth > 5.0, "Perfect fifth should be prominent in major");
+        assert!(
+            major_fifth > 5.0,
+            "Perfect fifth should be prominent in major"
+        );
         // Fifth should be strong in minor
-        assert!(minor_fifth > 4.0, "Perfect fifth should be prominent in minor");
+        assert!(
+            minor_fifth > 4.0,
+            "Perfect fifth should be prominent in minor"
+        );
     }
 }

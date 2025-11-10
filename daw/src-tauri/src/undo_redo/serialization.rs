@@ -1,7 +1,7 @@
-   /// Command Serialization - Trusty Module
-   ///
-   /// Support for serializing/deserializing commands for persistence across sessions.
 
+/// Command Serialization - Trusty Module
+///
+/// Support for serializing/deserializing commands for persistence across sessions.
 use super::core::{Command, UndoRedoError, UndoRedoResult};
 use serde::{Deserialize, Serialize};
 use std::fmt::Debug;
@@ -53,9 +53,8 @@ impl CommandSerializer {
 
     /// Deserialize a command history from JSON
     pub fn deserialize_history(json: &str) -> UndoRedoResult<Vec<SerializedCommand>> {
-        serde_json::from_str(json).map_err(|e| {
-            UndoRedoError::ExecutionFailed(format!("Deserialization failed: {}", e))
-        })
+        serde_json::from_str(json)
+            .map_err(|e| UndoRedoError::ExecutionFailed(format!("Deserialization failed: {}", e)))
     }
 
     /// Save command history to file
@@ -100,9 +99,8 @@ mod tests {
 
     #[test]
     fn test_deserialize_history() {
-        let commands = vec![
-            SerializedCommand::new("AddNote".to_string(), r#"{"pitch":60}"#.to_string()),
-        ];
+        let commands =
+            vec![SerializedCommand::new("AddNote".to_string(), r#"{"pitch":60}"#.to_string())];
 
         let json = CommandSerializer::serialize_history(&commands).unwrap();
         let deserialized = CommandSerializer::deserialize_history(&json).unwrap();
@@ -132,9 +130,8 @@ mod tests {
 
     #[test]
     fn test_save_to_file() {
-        let commands = vec![
-            SerializedCommand::new("AddNote".to_string(), r#"{"pitch":60}"#.to_string()),
-        ];
+        let commands =
+            vec![SerializedCommand::new("AddNote".to_string(), r#"{"pitch":60}"#.to_string())];
 
         let temp_file = "/tmp/test_undo_history.json";
         CommandSerializer::save_to_file(&commands, temp_file).unwrap();
@@ -148,9 +145,8 @@ mod tests {
 
     #[test]
     fn test_load_from_file() {
-        let commands = vec![
-            SerializedCommand::new("AddNote".to_string(), r#"{"pitch":60}"#.to_string()),
-        ];
+        let commands =
+            vec![SerializedCommand::new("AddNote".to_string(), r#"{"pitch":60}"#.to_string())];
 
         let temp_file = "/tmp/test_undo_history_load.json";
         CommandSerializer::save_to_file(&commands, temp_file).unwrap();
@@ -196,6 +192,9 @@ mod tests {
         let json = CommandSerializer::serialize_history(&[cmd]).unwrap();
         let deserialized = CommandSerializer::deserialize_history(&json).unwrap();
 
-        assert_eq!(deserialized[0].data, r#"{"field1":"value1","field2":42,"field3":true}"#);
+        assert_eq!(
+            deserialized[0].data,
+            r#"{"field1":"value1","field2":42,"field3":true}"#
+        );
     }
 }

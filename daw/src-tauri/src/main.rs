@@ -6,19 +6,20 @@
     all(not(debug_assertions), target_os = "windows"),
     windows_subsystem = "windows"
 )]
+#![allow(dead_code)]
 
-use tracing::{info, warn, error};
+use tracing::{info, warn};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 mod automation;
 mod commands;
-mod models;
 mod core;
 mod midi;
+mod models;
 mod sequencer;
 mod windows;
 
-use commands::{AppState, DAWState, AutomationState};
+use commands::{AppState, AutomationState, DAWState};
 use midi::MidiManager;
 use sequencer::SequencerEngine;
 use std::sync::Arc;
@@ -35,12 +36,12 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         Ok(pool) => {
             info!("✅ Database connection pool initialized");
             Some(pool)
-        }
+        },
         Err(e) => {
             warn!("⚠️  Database connection failed: {}", e);
             warn!("⚠️  DAW will run without database features (search, analysis, etc.)");
             None
-        }
+        },
     };
 
     // Initialize MIDI manager (no database required for DAW startup)
@@ -56,9 +57,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     info!("Sequencer engine initialized");
 
     // Create application state
-    let state = AppState {
-        db_pool,
-    };
+    let state = AppState { db_pool };
 
     // Create DAW window state
     let daw_state = DAWState::new();
@@ -189,7 +188,10 @@ async fn initialize_database_pool() -> Result<sqlx::PgPool, String> {
             "DATABASE_URL not set. Please set it to: postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()
         })?;
 
-    info!("Connecting to database: {}", database_url.replace(":145278963", ":****"));
+    info!(
+        "Connecting to database: {}",
+        database_url.replace(":145278963", ":****")
+    );
 
     // Get max connections from environment or use default
     let max_connections: u32 = std::env::var("DB_MAX_CONNECTIONS")
@@ -210,7 +212,10 @@ async fn initialize_database_pool() -> Result<sqlx::PgPool, String> {
         .await
         .map_err(|e| format!("Failed to execute test query: {}", e))?;
 
-    info!("Database connection pool created with {} max connections", max_connections);
+    info!(
+        "Database connection pool created with {} max connections",
+        max_connections
+    );
 
     Ok(pool)
 }

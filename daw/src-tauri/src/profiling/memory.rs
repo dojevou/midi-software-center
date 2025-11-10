@@ -1,28 +1,28 @@
-   /// Memory tracking and profiling system
-   ///
-   /// Provides real-time memory metrics, allocation tracking, and memory optimization
-   /// for the DAW application.
-   ///
-   /// # Architecture
-   ///
-   /// This is a **Trusty Module** - pure logic with no I/O:
-   /// - Memory metrics calculation and tracking
-   /// - Allocation pool management
-   /// - Cache statistics and eviction logic
-   /// - All functions are testable without external dependencies
-   ///
-   /// # Components
-   ///
-   /// - [`MemoryMetrics`]: Heap usage and object tracking
-   /// - [`AllocationPool`]: Pre-allocated buffer pools
-   /// - [`MemoryCache`]: LRU cache with size limits
-   /// - [`CacheStats`]: Cache hit/miss tracking
 
+use parking_lot::RwLock;
+use serde::{Deserialize, Serialize};
+/// Memory tracking and profiling system
+///
+/// Provides real-time memory metrics, allocation tracking, and memory optimization
+/// for the DAW application.
+///
+/// # Architecture
+///
+/// This is a **Trusty Module** - pure logic with no I/O:
+/// - Memory metrics calculation and tracking
+/// - Allocation pool management
+/// - Cache statistics and eviction logic
+/// - All functions are testable without external dependencies
+///
+/// # Components
+///
+/// - [`MemoryMetrics`]: Heap usage and object tracking
+/// - [`AllocationPool`]: Pre-allocated buffer pools
+/// - [`MemoryCache`]: LRU cache with size limits
+/// - [`CacheStats`]: Cache hit/miss tracking
 use std::collections::{HashMap, VecDeque};
 use std::sync::Arc;
 use std::time::Instant;
-use parking_lot::RwLock;
-use serde::{Deserialize, Serialize};
 
 // ============================================================================
 // Memory Metrics (500 lines, 25 tests)
@@ -188,10 +188,8 @@ impl MemoryMetrics {
     /// assert_eq!(sorted[1], ("mixer".to_string(), 1024));
     /// ```
     pub fn component_allocations_sorted(&self) -> Vec<(String, usize)> {
-        let mut allocations: Vec<_> = self.component_allocations
-            .iter()
-            .map(|(k, v)| (k.clone(), *v))
-            .collect();
+        let mut allocations: Vec<_> =
+            self.component_allocations.iter().map(|(k, v)| (k.clone(), *v)).collect();
         allocations.sort_by(|a, b| b.1.cmp(&a.1));
         allocations
     }
@@ -253,7 +251,10 @@ impl MemoryMetrics {
         // Calculate differences for each component
         for (component, &current_size) in &self.component_allocations {
             let previous_size = previous.component_allocations.get(component).copied().unwrap_or(0);
-            diff_allocations.insert(component.clone(), current_size.saturating_sub(previous_size));
+            diff_allocations.insert(
+                component.clone(),
+                current_size.saturating_sub(previous_size),
+            );
         }
 
         // Include components that were removed
@@ -291,12 +292,15 @@ impl MemoryMetrics {
     /// ```
     pub fn format_report(&self) -> String {
         let mut report = String::new();
-        report.push_str(&format!("Memory Metrics Report\n"));
-        report.push_str(&format!("====================\n"));
-        report.push_str(&format!("Total Allocated: {}\n", format_bytes(self.heap_allocated)));
+        report.push_str("Memory Metrics Report\n");
+        report.push_str("====================\n");
+        report.push_str(&format!(
+            "Total Allocated: {}\n",
+            format_bytes(self.heap_allocated)
+        ));
         report.push_str(&format!("Total Used: {}\n", format_bytes(self.heap_used)));
         report.push_str(&format!("Tracked Objects: {}\n", self.tracked_objects));
-        report.push_str(&format!("\nComponent Allocations:\n"));
+        report.push_str("\nComponent Allocations:\n");
 
         for (component, size) in self.component_allocations_sorted() {
             let percentage = if self.heap_allocated > 0 {
@@ -304,7 +308,12 @@ impl MemoryMetrics {
             } else {
                 0.0
             };
-            report.push_str(&format!("  {}: {} ({:.1}%)\n", component, format_bytes(size), percentage));
+            report.push_str(&format!(
+                "  {}: {} ({:.1}%)\n",
+                component,
+                format_bytes(size),
+                percentage
+            ));
         }
 
         report
@@ -537,7 +546,13 @@ impl<T> AllocationPool<T> {
     /// assert_eq!(acq, 1);
     /// ```
     pub fn stats(&self) -> (usize, usize, usize, usize, f64) {
-        (self.acquisitions, self.releases, self.hits, self.misses, self.hit_rate())
+        (
+            self.acquisitions,
+            self.releases,
+            self.hits,
+            self.misses,
+            self.hit_rate(),
+        )
     }
 
     /// Clear all buffers from pool
@@ -670,7 +685,9 @@ impl<T: Clone> MemoryCache<T> {
     /// ```
     pub fn insert(&mut self, key: String, value: T, size: usize) {
         // Evict entries if needed to make space
-        while self.current_size.saturating_add(size) > self.max_size && !self.access_order.is_empty() {
+        while self.current_size.saturating_add(size) > self.max_size
+            && !self.access_order.is_empty()
+        {
             self.evict_lru();
         }
 
@@ -686,12 +703,7 @@ impl<T: Clone> MemoryCache<T> {
         }
 
         // Insert new entry
-        let entry = CacheEntry {
-            value,
-            size,
-            last_access: Instant::now(),
-            access_count: 0,
-        };
+        let entry = CacheEntry { value, size, last_access: Instant::now(), access_count: 0 };
 
         self.entries.insert(key.clone(), entry);
         self.access_order.push_back(key);
@@ -972,9 +984,7 @@ impl MemoryTracker {
     /// let tracker = MemoryTracker::new();
     /// ```
     pub fn new() -> Self {
-        Self {
-            metrics: Arc::new(RwLock::new(MemoryMetrics::new())),
-        }
+        Self { metrics: Arc::new(RwLock::new(MemoryMetrics::new())) }
     }
 
     /// Track an allocation

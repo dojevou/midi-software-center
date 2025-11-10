@@ -1,20 +1,20 @@
-   /// Track Splitter - TRUSTY MODULE
-   ///
-   /// Pure logic for splitting multi-track MIDI files into individual single-track files.
-   ///
-   /// This module operates on byte arrays (no I/O) and provides functions to:
-   /// - Parse multi-track MIDI files (Format 1)
-   /// - Split into separate Format 0 (single-track) MIDI files
-   /// - Extract metadata (track name, channel, instrument, note count)
-   /// - Handle tempo tracks and edge cases
-   ///
-   /// # Archetype: TRUSTY MODULE
-   /// - ✅ Pure functions, no side effects
-   /// - ✅ No I/O operations
-   /// - ✅ Operates on byte slices
-   /// - ✅ Comprehensive error handling
-   /// - ✅ Well-tested
 
+/// Track Splitter - TRUSTY MODULE
+///
+/// Pure logic for splitting multi-track MIDI files into individual single-track files.
+///
+/// This module operates on byte arrays (no I/O) and provides functions to:
+/// - Parse multi-track MIDI files (Format 1)
+/// - Split into separate Format 0 (single-track) MIDI files
+/// - Extract metadata (track name, channel, instrument, note count)
+/// - Handle tempo tracks and edge cases
+///
+/// # Archetype: TRUSTY MODULE
+/// - ✅ Pure functions, no side effects
+/// - ✅ No I/O operations
+/// - ✅ Operates on byte slices
+/// - ✅ Comprehensive error handling
+/// - ✅ Well-tested
 use midly::{Format, Header, MetaMessage, Smf, Track, TrackEvent, TrackEventKind};
 use thiserror::Error;
 
@@ -175,11 +175,11 @@ pub fn is_tempo_track(track: &Track) -> bool {
                     MidiMessage::NoteOn { .. } | MidiMessage::NoteOff { .. } => {
                         has_note_events = true;
                         break;
-                    }
-                    _ => {}
+                    },
+                    _ => {},
                 }
-            }
-            _ => {}
+            },
+            _ => {},
         }
     }
 
@@ -206,10 +206,7 @@ pub fn create_single_track_midi(
     track_idx: usize,
 ) -> Result<Vec<u8>, SplitError> {
     // Create new Format 0 header with same timing
-    let new_header = Header {
-        format: Format::SingleTrack,
-        timing: original.header.timing,
-    };
+    let new_header = Header { format: Format::SingleTrack, timing: original.header.timing };
 
     // Build new track by merging tempo events from Track 0 (if exists) with this track
     let mut new_track_events = Vec::new();
@@ -223,8 +220,8 @@ pub fn create_single_track_midi(
                 | TrackEventKind::Meta(MetaMessage::TimeSignature(..))
                 | TrackEventKind::Meta(MetaMessage::KeySignature(..)) => {
                     new_track_events.push(*event);
-                }
-                _ => {}
+                },
+                _ => {},
             }
         }
     }
@@ -233,9 +230,9 @@ pub fn create_single_track_midi(
     new_track_events.extend(track.iter().cloned());
 
     // Ensure track ends with End of Track
-    let has_end_of_track = new_track_events.iter().any(|e| {
-        matches!(e.kind, TrackEventKind::Meta(MetaMessage::EndOfTrack))
-    });
+    let has_end_of_track = new_track_events
+        .iter()
+        .any(|e| matches!(e.kind, TrackEventKind::Meta(MetaMessage::EndOfTrack)));
 
     if !has_end_of_track {
         new_track_events.push(TrackEvent {
@@ -245,10 +242,7 @@ pub fn create_single_track_midi(
     }
 
     // Create new SMF with single track
-    let new_smf = Smf {
-        header: new_header,
-        tracks: vec![new_track_events],
-    };
+    let new_smf = Smf { header: new_header, tracks: vec![new_track_events] };
 
     // Write to bytes
     let mut bytes = Vec::new();
@@ -272,18 +266,13 @@ pub fn create_single_track_midi(
 /// Track name if found, `None` otherwise
 pub fn extract_track_name(track: &Track) -> Option<String> {
     for event in track.iter() {
-        if let TrackEventKind::Meta(meta) = &event.kind {
-            match meta {
-                MetaMessage::TrackName(name) | MetaMessage::InstrumentName(name) => {
-                    // Convert bytes to string
-                    if let Ok(name_str) = String::from_utf8(name.to_vec()) {
-                        let trimmed = name_str.trim();
-                        if !trimmed.is_empty() {
-                            return Some(trimmed.to_string());
-                        }
-                    }
+        if let TrackEventKind::Meta(MetaMessage::TrackName(name) | MetaMessage::InstrumentName(name)) = &event.kind {
+            // Convert bytes to string
+            if let Ok(name_str) = String::from_utf8(name.to_vec()) {
+                let trimmed = name_str.trim();
+                if !trimmed.is_empty() {
+                    return Some(trimmed.to_string());
                 }
-                _ => {}
             }
         }
     }
@@ -311,10 +300,7 @@ pub fn extract_primary_channel(track: &Track) -> Option<u8> {
     }
 
     // Find channel with highest count
-    let max_channel = channel_counts
-        .iter()
-        .enumerate()
-        .max_by_key(|(_, &count)| count)?;
+    let max_channel = channel_counts.iter().enumerate().max_by_key(|(_, &count)| count)?;
 
     if max_channel.1 > &0 {
         Some(max_channel.0 as u8)
@@ -619,30 +605,21 @@ mod tests {
                 delta: 0.into(),
                 kind: TrackEventKind::Midi {
                     channel: 0.into(),
-                    message: MidiMessage::NoteOn {
-                        key: 60.into(),
-                        vel: 64.into(),
-                    },
+                    message: MidiMessage::NoteOn { key: 60.into(), vel: 64.into() },
                 },
             },
             TrackEvent {
                 delta: 10.into(),
                 kind: TrackEventKind::Midi {
                     channel: 0.into(),
-                    message: MidiMessage::NoteOn {
-                        key: 64.into(),
-                        vel: 80.into(),
-                    },
+                    message: MidiMessage::NoteOn { key: 64.into(), vel: 80.into() },
                 },
             },
             TrackEvent {
                 delta: 10.into(),
                 kind: TrackEventKind::Midi {
                     channel: 0.into(),
-                    message: MidiMessage::NoteOff {
-                        key: 60.into(),
-                        vel: 0.into(),
-                    },
+                    message: MidiMessage::NoteOff { key: 60.into(), vel: 0.into() },
                 },
             },
         ]);
@@ -657,10 +634,7 @@ mod tests {
                 delta: 0.into(),
                 kind: TrackEventKind::Midi {
                     channel: 0.into(),
-                    message: MidiMessage::NoteOn {
-                        key: 60.into(),
-                        vel: 64.into(),
-                    },
+                    message: MidiMessage::NoteOn { key: 60.into(), vel: 64.into() },
                 },
             },
             TrackEvent {
@@ -689,10 +663,7 @@ mod tests {
                 delta: 0.into(),
                 kind: TrackEventKind::Meta(MetaMessage::TimeSignature(4, 2, 24, 8)),
             },
-            TrackEvent {
-                delta: 0.into(),
-                kind: TrackEventKind::Meta(MetaMessage::EndOfTrack),
-            },
+            TrackEvent { delta: 0.into(), kind: TrackEventKind::Meta(MetaMessage::EndOfTrack) },
         ]);
 
         assert!(is_tempo_track(&track));
@@ -709,10 +680,7 @@ mod tests {
                 delta: 0.into(),
                 kind: TrackEventKind::Midi {
                     channel: 0.into(),
-                    message: MidiMessage::NoteOn {
-                        key: 60.into(),
-                        vel: 64.into(),
-                    },
+                    message: MidiMessage::NoteOn { key: 60.into(), vel: 64.into() },
                 },
             },
         ]);
@@ -743,10 +711,7 @@ mod tests {
             kind: TrackEventKind::Meta(MetaMessage::InstrumentName(b"Grand Piano")),
         }]);
 
-        assert_eq!(
-            extract_track_name(&track),
-            Some("Grand Piano".to_string())
-        );
+        assert_eq!(extract_track_name(&track), Some("Grand Piano".to_string()));
     }
 
     #[test]
@@ -776,20 +741,14 @@ mod tests {
                 delta: 0.into(),
                 kind: TrackEventKind::Midi {
                     channel: 5.into(),
-                    message: MidiMessage::NoteOn {
-                        key: 60.into(),
-                        vel: 64.into(),
-                    },
+                    message: MidiMessage::NoteOn { key: 60.into(), vel: 64.into() },
                 },
             },
             TrackEvent {
                 delta: 10.into(),
                 kind: TrackEventKind::Midi {
                     channel: 5.into(),
-                    message: MidiMessage::NoteOff {
-                        key: 60.into(),
-                        vel: 0.into(),
-                    },
+                    message: MidiMessage::NoteOff { key: 60.into(), vel: 0.into() },
                 },
             },
         ]);
@@ -804,30 +763,21 @@ mod tests {
                 delta: 0.into(),
                 kind: TrackEventKind::Midi {
                     channel: 0.into(),
-                    message: MidiMessage::NoteOn {
-                        key: 60.into(),
-                        vel: 64.into(),
-                    },
+                    message: MidiMessage::NoteOn { key: 60.into(), vel: 64.into() },
                 },
             },
             TrackEvent {
                 delta: 10.into(),
                 kind: TrackEventKind::Midi {
                     channel: 1.into(),
-                    message: MidiMessage::NoteOn {
-                        key: 64.into(),
-                        vel: 64.into(),
-                    },
+                    message: MidiMessage::NoteOn { key: 64.into(), vel: 64.into() },
                 },
             },
             TrackEvent {
                 delta: 10.into(),
                 kind: TrackEventKind::Midi {
                     channel: 1.into(),
-                    message: MidiMessage::NoteOn {
-                        key: 67.into(),
-                        vel: 64.into(),
-                    },
+                    message: MidiMessage::NoteOn { key: 67.into(), vel: 64.into() },
                 },
             },
         ]);
@@ -868,10 +818,7 @@ mod tests {
             delta: 0.into(),
             kind: TrackEventKind::Midi {
                 channel: 0.into(),
-                message: MidiMessage::NoteOn {
-                    key: 60.into(),
-                    vel: 64.into(),
-                },
+                message: MidiMessage::NoteOn { key: 60.into(), vel: 64.into() },
             },
         }]);
 

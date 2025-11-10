@@ -21,6 +21,7 @@ resolver = "2"
 members = [
     "pipeline/src-tauri",        # Import & analysis (uses shared library)
     "daw/src-tauri",             # Playback & sequencing (independent MIDI)
+    "app/src-tauri",             # Unified frontend app
     # "studio/src-tauri",        # Removed - incomplete, may add later
     "shared/rust",               # Shared MIDI parsing & analysis
     "scripts/import-tool",       # CLI utilities

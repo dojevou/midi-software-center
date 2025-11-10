@@ -1,8 +1,7 @@
-   /// Tauri command handlers for DAW windows
-   ///
-   /// Grown-up Scripts: Expose DAW window operations to frontend.
-   /// All commands use proper error handling with Result<T, String>.
-
+/// Tauri command handlers for DAW windows
+///
+/// Grown-up Scripts: Expose DAW window operations to frontend.
+/// All commands use proper error handling with Result<T, String>.
 use crate::windows::{
     DAWWindowState, MixerWindowState, PlaybackPosition, PlaybackState, TrackInfo,
 };
@@ -105,7 +104,7 @@ pub async fn get_playback_state(
 /// Set tempo (BPM)
 #[tauri::command]
 pub async fn set_bpm(state: tauri::State<'_, DAWState>, bpm: f32) -> Result<(), String> {
-    if bpm < 20.0 || bpm > 999.0 {
+    if !(20.0..=999.0).contains(&bpm) {
         return Err(format!("BPM {} out of range (20-999)", bpm));
     }
 
@@ -128,7 +127,7 @@ pub async fn set_time_signature(
     numerator: u8,
     denominator: u8,
 ) -> Result<(), String> {
-    if numerator < 1 || numerator > 32 {
+    if !(1..=32).contains(&numerator) {
         return Err(format!("Invalid numerator: {}", numerator));
     }
 
@@ -181,7 +180,10 @@ pub async fn get_key_signature(state: tauri::State<'_, DAWState>) -> Result<Stri
 
 /// Add a new track to DAW window
 #[tauri::command]
-pub async fn add_window_track(state: tauri::State<'_, DAWState>, label: String) -> Result<i32, String> {
+pub async fn add_window_track(
+    state: tauri::State<'_, DAWState>,
+    label: String,
+) -> Result<i32, String> {
     if label.is_empty() {
         return Err("Track label cannot be empty".to_string());
     }
@@ -199,7 +201,10 @@ pub async fn add_window_track(state: tauri::State<'_, DAWState>, label: String) 
 
 /// Remove a track from DAW window
 #[tauri::command]
-pub async fn remove_window_track(state: tauri::State<'_, DAWState>, track_id: i32) -> Result<(), String> {
+pub async fn remove_window_track(
+    state: tauri::State<'_, DAWState>,
+    track_id: i32,
+) -> Result<(), String> {
     let mut daw = state.daw.write().await;
     daw.remove_track(track_id)
         .ok_or_else(|| format!("Track {} not found", track_id))?;
@@ -337,7 +342,7 @@ pub async fn set_channel_volume(
     channel_id: i32,
     volume: f32,
 ) -> Result<(), String> {
-    if volume < 0.0 || volume > 1.0 {
+    if !(0.0..=1.0).contains(&volume) {
         return Err(format!("Volume {} out of range (0.0-1.0)", volume));
     }
 
@@ -362,7 +367,7 @@ pub async fn set_channel_pan(
     channel_id: i32,
     pan: f32,
 ) -> Result<(), String> {
-    if pan < -1.0 || pan > 1.0 {
+    if !(-1.0..=1.0).contains(&pan) {
         return Err(format!("Pan {} out of range (-1.0 to 1.0)", pan));
     }
 
@@ -438,9 +443,7 @@ pub async fn set_channel_solo(
 
 /// Get complete DAW state
 #[tauri::command]
-pub async fn get_daw_state(
-    state: tauri::State<'_, DAWState>,
-) -> Result<DAWWindowState, String> {
+pub async fn get_daw_state(state: tauri::State<'_, DAWState>) -> Result<DAWWindowState, String> {
     let daw = state.daw.read().await;
     Ok(daw.clone())
 }

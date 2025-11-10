@@ -1,7 +1,7 @@
-   /// Performance Optimization - Trusty Module
-   ///
-   /// Command compression and memory management for optimal performance.
 
+/// Performance Optimization - Trusty Module
+///
+/// Command compression and memory management for optimal performance.
 use super::core::{Command, UndoRedoResult};
 
 /// Command compressor for merging similar commands
@@ -13,10 +13,10 @@ impl CommandCompressor {
     /// Returns true if compression was successful.
     pub fn compress(
         target: &mut Box<dyn Command>,
-        source: &Box<dyn Command>,
+        source: &dyn Command,
     ) -> UndoRedoResult<bool> {
-        if target.can_merge_with(source.as_ref()) {
-            target.merge_with(source.as_ref())?;
+        if target.can_merge_with(source) {
+            target.merge_with(source)?;
             Ok(true)
         } else {
             Ok(false)
@@ -24,8 +24,8 @@ impl CommandCompressor {
     }
 
     /// Check if two commands can be compressed
-    pub fn can_compress(cmd1: &Box<dyn Command>, cmd2: &Box<dyn Command>) -> bool {
-        cmd1.can_merge_with(cmd2.as_ref())
+    pub fn can_compress(cmd1: &dyn Command, cmd2: &dyn Command) -> bool {
+        cmd1.can_merge_with(cmd2)
     }
 }
 
@@ -38,24 +38,21 @@ pub struct MemoryLimiter {
 impl MemoryLimiter {
     /// Create a new memory limiter with max memory in bytes
     pub fn new(max_memory: usize) -> Self {
-        Self {
-            max_memory,
-            current_memory: 0,
-        }
+        Self { max_memory, current_memory: 0 }
     }
 
     /// Add command and update memory usage
-    pub fn add_command(&mut self, cmd: &Box<dyn Command>) {
+    pub fn add_command(&mut self, cmd: &dyn Command) {
         self.current_memory += cmd.memory_usage();
     }
 
     /// Remove command and update memory usage
-    pub fn remove_command(&mut self, cmd: &Box<dyn Command>) {
+    pub fn remove_command(&mut self, cmd: &dyn Command) {
         self.current_memory = self.current_memory.saturating_sub(cmd.memory_usage());
     }
 
     /// Check if adding a command would exceed memory limit
-    pub fn would_exceed(&self, cmd: &Box<dyn Command>) -> bool {
+    pub fn would_exceed(&self, cmd: &dyn Command) -> bool {
         self.current_memory + cmd.memory_usage() > self.max_memory
     }
 
@@ -97,10 +94,7 @@ pub struct CommandBatcher {
 impl CommandBatcher {
     /// Create a new command batcher
     pub fn new(max_batch_size: usize) -> Self {
-        Self {
-            batch: Vec::new(),
-            max_batch_size,
-        }
+        Self { batch: Vec::new(), max_batch_size }
     }
 
     /// Add command to batch
@@ -143,17 +137,11 @@ mod tests {
 
     impl MockCommand {
         fn new(size: usize) -> Self {
-            Self {
-                size,
-                can_merge: false,
-            }
+            Self { size, can_merge: false }
         }
 
         fn mergeable(size: usize) -> Self {
-            Self {
-                size,
-                can_merge: true,
-            }
+            Self { size, can_merge: true }
         }
     }
 
@@ -183,9 +171,7 @@ mod tests {
                 self.size += other.memory_usage();
                 Ok(())
             } else {
-                Err(UndoRedoError::InvalidState(
-                    "Cannot merge".to_string(),
-                ))
+                Err(UndoRedoError::InvalidState("Cannot merge".to_string()))
             }
         }
     }
@@ -202,7 +188,7 @@ mod tests {
         let mut limiter = MemoryLimiter::new(1024);
         let cmd: Box<dyn Command> = Box::new(MockCommand::new(100));
 
-        limiter.add_command(&cmd);
+        limiter.add_command(cmd.as_ref());
         assert_eq!(limiter.current_usage(), 100);
     }
 
@@ -211,8 +197,8 @@ mod tests {
         let mut limiter = MemoryLimiter::new(1024);
         let cmd: Box<dyn Command> = Box::new(MockCommand::new(100));
 
-        limiter.add_command(&cmd);
-        limiter.remove_command(&cmd);
+        limiter.add_command(cmd.as_ref());
+        limiter.remove_command(cmd.as_ref());
         assert_eq!(limiter.current_usage(), 0);
     }
 
@@ -222,8 +208,8 @@ mod tests {
         let cmd1: Box<dyn Command> = Box::new(MockCommand::new(60));
         let cmd2: Box<dyn Command> = Box::new(MockCommand::new(50));
 
-        limiter.add_command(&cmd1);
-        assert!(limiter.would_exceed(&cmd2));
+        limiter.add_command(cmd1.as_ref());
+        assert!(limiter.would_exceed(cmd2.as_ref()));
     }
 
     #[test]
@@ -231,7 +217,7 @@ mod tests {
         let mut limiter = MemoryLimiter::new(1000);
         let cmd: Box<dyn Command> = Box::new(MockCommand::new(250));
 
-        limiter.add_command(&cmd);
+        limiter.add_command(cmd.as_ref());
         assert_eq!(limiter.usage_percentage(), 25.0);
     }
 
@@ -240,7 +226,7 @@ mod tests {
         let mut limiter = MemoryLimiter::new(1024);
         let cmd: Box<dyn Command> = Box::new(MockCommand::new(100));
 
-        limiter.add_command(&cmd);
+        limiter.add_command(cmd.as_ref());
         limiter.reset();
         assert_eq!(limiter.current_usage(), 0);
     }
@@ -258,7 +244,7 @@ mod tests {
         let cmd1: Box<dyn Command> = Box::new(MockCommand::mergeable(100));
         let cmd2: Box<dyn Command> = Box::new(MockCommand::mergeable(50));
 
-        assert!(CommandCompressor::can_compress(&cmd1, &cmd2));
+        assert!(CommandCompressor::can_compress(cmd1.as_ref(), cmd2.as_ref()));
     }
 
     #[test]
@@ -266,7 +252,7 @@ mod tests {
         let cmd1: Box<dyn Command> = Box::new(MockCommand::new(100));
         let cmd2: Box<dyn Command> = Box::new(MockCommand::new(50));
 
-        assert!(!CommandCompressor::can_compress(&cmd1, &cmd2));
+        assert!(!CommandCompressor::can_compress(cmd1.as_ref(), cmd2.as_ref()));
     }
 
     #[test]
@@ -274,7 +260,7 @@ mod tests {
         let mut cmd1: Box<dyn Command> = Box::new(MockCommand::mergeable(100));
         let cmd2: Box<dyn Command> = Box::new(MockCommand::mergeable(50));
 
-        let result = CommandCompressor::compress(&mut cmd1, &cmd2);
+        let result = CommandCompressor::compress(&mut cmd1, cmd2.as_ref());
         assert!(result.is_ok());
         assert_eq!(result.unwrap(), true);
         assert_eq!(cmd1.memory_usage(), 150);
@@ -342,14 +328,14 @@ mod tests {
         let cmd2: Box<dyn Command> = Box::new(MockCommand::new(300));
         let cmd3: Box<dyn Command> = Box::new(MockCommand::new(400));
 
-        limiter.add_command(&cmd1);
-        limiter.add_command(&cmd2);
+        limiter.add_command(cmd1.as_ref());
+        limiter.add_command(cmd2.as_ref());
         assert_eq!(limiter.current_usage(), 500);
 
-        limiter.add_command(&cmd3);
+        limiter.add_command(cmd3.as_ref());
         assert_eq!(limiter.current_usage(), 900);
 
-        limiter.remove_command(&cmd2);
+        limiter.remove_command(cmd2.as_ref());
         assert_eq!(limiter.current_usage(), 600);
     }
 
@@ -359,7 +345,7 @@ mod tests {
         let cmd: Box<dyn Command> = Box::new(MockCommand::new(100));
 
         // Remove without adding - should not underflow
-        limiter.remove_command(&cmd);
+        limiter.remove_command(cmd.as_ref());
         assert_eq!(limiter.current_usage(), 0);
     }
 

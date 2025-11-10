@@ -1,8 +1,8 @@
-   /// Core Undo/Redo System - Trusty Module
-   ///
-   /// Pure command pattern implementation with no I/O or side effects.
-   /// Provides Command trait and CommandHistory for managing undo/redo operations.
 
+/// Core Undo/Redo System - Trusty Module
+///
+/// Pure command pattern implementation with no I/O or side effects.
+/// Provides Command trait and CommandHistory for managing undo/redo operations.
 use serde::{Deserialize, Serialize};
 use std::collections::VecDeque;
 use thiserror::Error;
@@ -178,10 +178,7 @@ impl CommandHistory {
     ///
     /// Moves the command from the undo stack to the redo stack.
     pub fn undo(&mut self) -> UndoRedoResult<String> {
-        let mut command = self
-            .undo_stack
-            .pop_back()
-            .ok_or(UndoRedoError::NothingToUndo)?;
+        let mut command = self.undo_stack.pop_back().ok_or(UndoRedoError::NothingToUndo)?;
 
         let description = command.description();
 
@@ -200,10 +197,7 @@ impl CommandHistory {
     ///
     /// Moves the command from the redo stack to the undo stack.
     pub fn redo(&mut self) -> UndoRedoResult<String> {
-        let mut command = self
-            .redo_stack
-            .pop_back()
-            .ok_or(UndoRedoError::NothingToRedo)?;
+        let mut command = self.redo_stack.pop_back().ok_or(UndoRedoError::NothingToRedo)?;
 
         let description = command.description();
 
@@ -313,20 +307,12 @@ impl CommandHistory {
 
     /// Get all undo descriptions (newest first)
     pub fn undo_descriptions(&self) -> Vec<String> {
-        self.undo_stack
-            .iter()
-            .rev()
-            .map(|cmd| cmd.description())
-            .collect()
+        self.undo_stack.iter().rev().map(|cmd| cmd.description()).collect()
     }
 
     /// Get all redo descriptions (newest first)
     pub fn redo_descriptions(&self) -> Vec<String> {
-        self.redo_stack
-            .iter()
-            .rev()
-            .map(|cmd| cmd.description())
-            .collect()
+        self.redo_stack.iter().rev().map(|cmd| cmd.description()).collect()
     }
 }
 
@@ -485,15 +471,11 @@ mod tests {
         let target = std::sync::Arc::new(std::sync::Mutex::new(0));
 
         // Execute, undo, then execute again
-        history
-            .execute_command(Box::new(MockCommand::new(42, target.clone())))
-            .unwrap();
+        history.execute_command(Box::new(MockCommand::new(42, target.clone()))).unwrap();
         history.undo().unwrap();
         assert!(history.can_redo());
 
-        history
-            .execute_command(Box::new(MockCommand::new(99, target.clone())))
-            .unwrap();
+        history.execute_command(Box::new(MockCommand::new(99, target.clone()))).unwrap();
         assert!(!history.can_redo());
     }
 
@@ -504,9 +486,7 @@ mod tests {
 
         // Add 5 commands
         for i in 1..=5 {
-            history
-                .execute_command(Box::new(MockCommand::new(i, target.clone())))
-                .unwrap();
+            history.execute_command(Box::new(MockCommand::new(i, target.clone()))).unwrap();
         }
 
         // Should only keep last 3
@@ -526,9 +506,7 @@ mod tests {
         let mut history = CommandHistory::new();
         let target = std::sync::Arc::new(std::sync::Mutex::new(0));
 
-        history
-            .execute_command(Box::new(MockCommand::new(42, target.clone())))
-            .unwrap();
+        history.execute_command(Box::new(MockCommand::new(42, target.clone()))).unwrap();
         history.clear_undo();
 
         assert!(!history.can_undo());
@@ -540,9 +518,7 @@ mod tests {
         let mut history = CommandHistory::new();
         let target = std::sync::Arc::new(std::sync::Mutex::new(0));
 
-        history
-            .execute_command(Box::new(MockCommand::new(42, target.clone())))
-            .unwrap();
+        history.execute_command(Box::new(MockCommand::new(42, target.clone()))).unwrap();
         history.undo().unwrap();
         history.clear_redo();
 
@@ -555,9 +531,7 @@ mod tests {
         let mut history = CommandHistory::new();
         let target = std::sync::Arc::new(std::sync::Mutex::new(0));
 
-        history
-            .execute_command(Box::new(MockCommand::new(42, target.clone())))
-            .unwrap();
+        history.execute_command(Box::new(MockCommand::new(42, target.clone()))).unwrap();
         history.undo().unwrap();
         history.clear();
 
@@ -572,9 +546,7 @@ mod tests {
 
         assert_eq!(history.undo_description(), None);
 
-        history
-            .execute_command(Box::new(MockCommand::new(42, target.clone())))
-            .unwrap();
+        history.execute_command(Box::new(MockCommand::new(42, target.clone()))).unwrap();
         assert_eq!(history.undo_description(), Some("Set to 42".to_string()));
     }
 
@@ -585,9 +557,7 @@ mod tests {
 
         assert_eq!(history.redo_description(), None);
 
-        history
-            .execute_command(Box::new(MockCommand::new(42, target.clone())))
-            .unwrap();
+        history.execute_command(Box::new(MockCommand::new(42, target.clone()))).unwrap();
         history.undo().unwrap();
         assert_eq!(history.redo_description(), Some("Set to 42".to_string()));
     }
@@ -600,12 +570,16 @@ mod tests {
         assert_eq!(history.memory_usage(), 0);
 
         history
-            .execute_command(Box::new(MockCommand::new(42, target.clone()).with_memory(100)))
+            .execute_command(Box::new(
+                MockCommand::new(42, target.clone()).with_memory(100),
+            ))
             .unwrap();
         assert_eq!(history.memory_usage(), 100);
 
         history
-            .execute_command(Box::new(MockCommand::new(99, target.clone()).with_memory(50)))
+            .execute_command(Box::new(
+                MockCommand::new(99, target.clone()).with_memory(50),
+            ))
             .unwrap();
         assert_eq!(history.memory_usage(), 150);
 
@@ -623,13 +597,19 @@ mod tests {
 
         // Add commands totaling 150 bytes
         history
-            .execute_command(Box::new(MockCommand::new(1, target.clone()).with_memory(50)))
+            .execute_command(Box::new(
+                MockCommand::new(1, target.clone()).with_memory(50),
+            ))
             .unwrap();
         history
-            .execute_command(Box::new(MockCommand::new(2, target.clone()).with_memory(50)))
+            .execute_command(Box::new(
+                MockCommand::new(2, target.clone()).with_memory(50),
+            ))
             .unwrap();
         history
-            .execute_command(Box::new(MockCommand::new(3, target.clone()).with_memory(50)))
+            .execute_command(Box::new(
+                MockCommand::new(3, target.clone()).with_memory(50),
+            ))
             .unwrap();
 
         // Should have dropped oldest command
@@ -643,9 +623,7 @@ mod tests {
         let target = std::sync::Arc::new(std::sync::Mutex::new(0));
 
         for i in 1..=5 {
-            history
-                .execute_command(Box::new(MockCommand::new(i, target.clone())))
-                .unwrap();
+            history.execute_command(Box::new(MockCommand::new(i, target.clone()))).unwrap();
         }
         assert_eq!(history.undo_count(), 5);
 
@@ -661,7 +639,9 @@ mod tests {
 
         for i in 1..=5 {
             history
-                .execute_command(Box::new(MockCommand::new(i, target.clone()).with_memory(50)))
+                .execute_command(Box::new(
+                    MockCommand::new(i, target.clone()).with_memory(50),
+                ))
                 .unwrap();
         }
         assert_eq!(history.memory_usage(), 250);
@@ -677,15 +657,9 @@ mod tests {
         let target = std::sync::Arc::new(std::sync::Mutex::new(0));
 
         // Execute 3 commands
-        history
-            .execute_command(Box::new(MockCommand::new(1, target.clone())))
-            .unwrap();
-        history
-            .execute_command(Box::new(MockCommand::new(2, target.clone())))
-            .unwrap();
-        history
-            .execute_command(Box::new(MockCommand::new(3, target.clone())))
-            .unwrap();
+        history.execute_command(Box::new(MockCommand::new(1, target.clone()))).unwrap();
+        history.execute_command(Box::new(MockCommand::new(2, target.clone()))).unwrap();
+        history.execute_command(Box::new(MockCommand::new(3, target.clone()))).unwrap();
 
         assert_eq!(*target.lock().unwrap(), 3);
 
@@ -709,15 +683,9 @@ mod tests {
         let mut history = CommandHistory::new();
         let target = std::sync::Arc::new(std::sync::Mutex::new(0));
 
-        history
-            .execute_command(Box::new(MockCommand::new(1, target.clone())))
-            .unwrap();
-        history
-            .execute_command(Box::new(MockCommand::new(2, target.clone())))
-            .unwrap();
-        history
-            .execute_command(Box::new(MockCommand::new(3, target.clone())))
-            .unwrap();
+        history.execute_command(Box::new(MockCommand::new(1, target.clone()))).unwrap();
+        history.execute_command(Box::new(MockCommand::new(2, target.clone()))).unwrap();
+        history.execute_command(Box::new(MockCommand::new(3, target.clone()))).unwrap();
 
         let descriptions = history.undo_descriptions();
         assert_eq!(descriptions.len(), 3);
@@ -731,12 +699,8 @@ mod tests {
         let mut history = CommandHistory::new();
         let target = std::sync::Arc::new(std::sync::Mutex::new(0));
 
-        history
-            .execute_command(Box::new(MockCommand::new(1, target.clone())))
-            .unwrap();
-        history
-            .execute_command(Box::new(MockCommand::new(2, target.clone())))
-            .unwrap();
+        history.execute_command(Box::new(MockCommand::new(1, target.clone()))).unwrap();
+        history.execute_command(Box::new(MockCommand::new(2, target.clone()))).unwrap();
         history.undo().unwrap();
         history.undo().unwrap();
 
@@ -751,7 +715,9 @@ mod tests {
         let mut history = CommandHistory::new();
         let target = std::sync::Arc::new(std::sync::Mutex::new(0));
 
-        let result = history.execute_command(Box::new(MockCommand::new(42, target.clone()).with_fail_execute()));
+        let result = history.execute_command(Box::new(
+            MockCommand::new(42, target.clone()).with_fail_execute(),
+        ));
         assert!(result.is_err());
         assert_eq!(history.undo_count(), 0);
     }
@@ -762,7 +728,9 @@ mod tests {
         let target = std::sync::Arc::new(std::sync::Mutex::new(0));
 
         history
-            .execute_command(Box::new(MockCommand::new(42, target.clone()).with_fail_undo()))
+            .execute_command(Box::new(
+                MockCommand::new(42, target.clone()).with_fail_undo(),
+            ))
             .unwrap();
 
         let result = history.undo();
@@ -776,9 +744,7 @@ mod tests {
         let mut history = CommandHistory::with_max_depth(0);
         let target = std::sync::Arc::new(std::sync::Mutex::new(0));
 
-        history
-            .execute_command(Box::new(MockCommand::new(42, target.clone())))
-            .unwrap();
+        history.execute_command(Box::new(MockCommand::new(42, target.clone()))).unwrap();
 
         // Should not store any commands
         assert_eq!(history.undo_count(), 0);

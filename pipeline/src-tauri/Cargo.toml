@@ -100,5 +100,3 @@ rand = "0.8"                     # Random data generation for tests
 [[bin]]
 name = "import_unified"
 path = "src/bin/import_unified.rs"
-
-walkdir = "2"

@@ -1,16 +1,17 @@
-   /// DAW window state structures
-   ///
-   /// Defines state for DAW windows including transport controls, playback position,
-   /// track information, and mixer state.
-
+/// DAW window state structures
+///
+/// Defines state for DAW windows including transport controls, playback position,
+/// track information, and mixer state.
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 /// Playback state for the transport
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
+#[derive(Default)]
 pub enum PlaybackState {
     /// Transport is stopped, position at start or last stop point
+    #[default]
     Stopped,
     /// Transport is actively playing
     Playing,
@@ -20,11 +21,6 @@ pub enum PlaybackState {
     Recording,
 }
 
-impl Default for PlaybackState {
-    fn default() -> Self {
-        PlaybackState::Stopped
-    }
-}
 
 impl PlaybackState {
     /// Check if transport is currently playing or recording
@@ -58,12 +54,7 @@ pub struct PlaybackPosition {
 
 impl Default for PlaybackPosition {
     fn default() -> Self {
-        PlaybackPosition {
-            bar: 1,
-            beat: 1,
-            tick: 0,
-            total_ticks: 0,
-        }
+        PlaybackPosition { bar: 1, beat: 1, tick: 0, total_ticks: 0 }
     }
 }
 
@@ -91,12 +82,7 @@ impl PlaybackPosition {
 
         let tick = (remaining_ticks % tpq) as i32;
 
-        PlaybackPosition {
-            bar,
-            beat,
-            tick,
-            total_ticks,
-        }
+        PlaybackPosition { bar, beat, tick, total_ticks }
     }
 
     /// Check if position is valid

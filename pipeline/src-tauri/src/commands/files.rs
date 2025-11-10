@@ -158,10 +158,7 @@ pub async fn get_file_count(state: State<'_, AppState>) -> Result<i64, String> {
 /// Get file details by ID (implementation for tests and reuse)
 ///
 /// Internal implementation that accepts &AppState for testing without Tauri context.
-pub async fn get_file_details_impl(
-    file_id: i64,
-    state: &AppState,
-) -> Result<MidiFile, String> {
+pub async fn get_file_details_impl(file_id: i64, state: &AppState) -> Result<MidiFile, String> {
     let pool = state.database.pool().await;
     let file = sqlx::query_as::<_, MidiFile>(
         r#"
@@ -237,10 +234,7 @@ pub async fn get_file_details(
 /// const file = await invoke<MidiFile>('get_file', { fileId: 123 });
 /// ```
 #[tauri::command]
-pub async fn get_file(
-    file_id: i64,
-    state: State<'_, AppState>,
-) -> Result<MidiFile, String> {
+pub async fn get_file(file_id: i64, state: State<'_, AppState>) -> Result<MidiFile, String> {
     get_file_details(file_id, state).await
 }
 
@@ -445,10 +439,7 @@ pub async fn get_recent_files(
 /// await invoke('delete_file', { fileId: 123 });
 /// ```
 #[tauri::command]
-pub async fn delete_file(
-    file_id: i64,
-    state: State<'_, AppState>,
-) -> Result<(), String> {
+pub async fn delete_file(file_id: i64, state: State<'_, AppState>) -> Result<(), String> {
     let pool = state.database.pool().await;
     sqlx::query("DELETE FROM files WHERE id = $1")
         .bind(file_id)

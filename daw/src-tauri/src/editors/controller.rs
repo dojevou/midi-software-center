@@ -50,11 +50,7 @@ pub struct ControllerEditorState {
 
 impl ControllerEditorState {
     pub fn new(cc_number: u8) -> Self {
-        Self {
-            cc_number,
-            automation_points: HashMap::new(),
-            next_point_id: 1,
-        }
+        Self { cc_number, automation_points: HashMap::new(), next_point_id: 1 }
     }
 
     pub fn add_cc_point_impl(&mut self, tick: i32, value: u8) -> Result<i32, CCError> {
@@ -66,9 +62,7 @@ impl ControllerEditorState {
     }
 
     pub fn delete_cc_point_impl(&mut self, point_id: i32) -> Result<AutomationPoint, CCError> {
-        self.automation_points
-            .remove(&point_id)
-            .ok_or(CCError::PointNotFound(point_id))
+        self.automation_points.remove(&point_id).ok_or(CCError::PointNotFound(point_id))
     }
 
     pub fn update_cc_point_impl(
@@ -107,11 +101,8 @@ impl ControllerEditorState {
 
     pub fn get_value_at_tick(&self, tick: i32) -> u8 {
         // Find the automation point at or before this tick
-        let mut points: Vec<_> = self
-            .automation_points
-            .values()
-            .filter(|p| p.tick <= tick)
-            .collect();
+        let mut points: Vec<_> =
+            self.automation_points.values().filter(|p| p.tick <= tick).collect();
 
         if points.is_empty() {
             return 64; // Default center value
@@ -141,7 +132,7 @@ impl ControllerEditorState {
                 let ratio = position / range;
                 let value = b.value as f32 + (a.value as f32 - b.value as f32) * ratio;
                 value.round() as u8
-            }
+            },
             (Some(b), None) => b.value,
             (None, Some(a)) => a.value,
             (None, None) => 64,
@@ -158,8 +149,8 @@ impl ControllerEditorState {
 }
 
 // Tauri Command Handlers (Task-O-Matic)
-use tauri::State;
 use std::sync::Mutex;
+use tauri::State;
 
 #[tauri::command]
 pub async fn add_cc_point(

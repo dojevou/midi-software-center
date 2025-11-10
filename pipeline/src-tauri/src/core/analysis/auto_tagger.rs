@@ -1,40 +1,40 @@
-   /// Auto-Tagging System for MIDI Files (Enhanced - v2.0)
-   ///
-   /// Based on real-world analysis of 1,566,480 MIDI files from production archives.
-   /// Implements confidence-based tagging with 350+ tag patterns across 10 categories.
-   ///
-   /// **Tag Extraction Sources:**
-   /// - File names (splitting on _, -, space) → confidence 0.85-0.90
-   /// - Folder paths (pack/folder hierarchy) → confidence 0.90-0.95
-   /// - MIDI content (GM instrument names) → confidence 0.75
-   /// - BPM analysis (tempo detection) → confidence 0.80
-   /// - Key analysis (key signature) → confidence 0.80
-   ///
-   /// **Tag Categories with Priorities:**
-   /// - genre (priority 10) - dubstep, house, techno, jazz, hip-hop, etc. (77+ tags)
-   /// - instrument (priority 20) - kick, tabla, djembe, synth, etc. (120+ tags)
-   /// - element (priority 30) - loop, sequence, pattern, etc.
-   /// - key (priority 40) - c, am, g#, etc. (24 keys)
-   /// - tempo (priority 50) - slow, mid-tempo, upbeat, fast, very-fast
-   /// - mood (priority 60) - dark, melodic, energetic, etc.
-   /// - structure (priority 80) - intro, verse, chorus, bridge, breakdown
-   /// - brand (priority 85) - vengeance, ezdrummer, splice, etc. (45+ tags)
-   /// - world (priority 90) - africa, asia, middle-east, etc.
-   ///
-   /// **Confidence Scoring:**
-   /// - Pack-level detection: 0.95 (highest)
-   /// - Folder-level detection: 0.90
-   /// - Filename exact match: 0.90
-   /// - Filename fuzzy match: 0.85
-   /// - BPM/Key analysis: 0.80
-   /// - MIDI GM instruments: 0.75
-   /// - Generic/derived: 0.70
-   ///
-   /// **Detection Methods:**
-   /// - pack_level, folder_level, filename_exact, filename_fuzzy
-   /// - bpm_analysis, bpm_derived, key_analysis, midi_gm
-   /// - filename_generic
 
+/// Auto-Tagging System for MIDI Files (Enhanced - v2.0)
+///
+/// Based on real-world analysis of 1,566,480 MIDI files from production archives.
+/// Implements confidence-based tagging with 350+ tag patterns across 10 categories.
+///
+/// **Tag Extraction Sources:**
+/// - File names (splitting on _, -, space) → confidence 0.85-0.90
+/// - Folder paths (pack/folder hierarchy) → confidence 0.90-0.95
+/// - MIDI content (GM instrument names) → confidence 0.75
+/// - BPM analysis (tempo detection) → confidence 0.80
+/// - Key analysis (key signature) → confidence 0.80
+///
+/// **Tag Categories with Priorities:**
+/// - genre (priority 10) - dubstep, house, techno, jazz, hip-hop, etc. (77+ tags)
+/// - instrument (priority 20) - kick, tabla, djembe, synth, etc. (120+ tags)
+/// - element (priority 30) - loop, sequence, pattern, etc.
+/// - key (priority 40) - c, am, g#, etc. (24 keys)
+/// - tempo (priority 50) - slow, mid-tempo, upbeat, fast, very-fast
+/// - mood (priority 60) - dark, melodic, energetic, etc.
+/// - structure (priority 80) - intro, verse, chorus, bridge, breakdown
+/// - brand (priority 85) - vengeance, ezdrummer, splice, etc. (45+ tags)
+/// - world (priority 90) - africa, asia, middle-east, etc.
+///
+/// **Confidence Scoring:**
+/// - Pack-level detection: 0.95 (highest)
+/// - Folder-level detection: 0.90
+/// - Filename exact match: 0.90
+/// - Filename fuzzy match: 0.85
+/// - BPM/Key analysis: 0.80
+/// - MIDI GM instruments: 0.75
+/// - Generic/derived: 0.70
+///
+/// **Detection Methods:**
+/// - pack_level, folder_level, filename_exact, filename_fuzzy
+/// - bpm_analysis, bpm_derived, key_analysis, midi_gm
+/// - filename_generic
 use regex::Regex;
 use std::collections::HashSet;
 
@@ -284,9 +284,25 @@ impl AutoTagger {
                 ));
             } else if self.style_keywords.contains(&word_lower) {
                 // Detect category based on style keyword
-                let (category, priority) = if ["intro", "outro", "verse", "chorus", "bridge",
-                    "breakdown", "pre-chorus", "cha", "chb", "ch3", "bkdn", "ta",
-                    "middle-8", "mid-8", "all"].contains(&word_lower.as_str()) {
+                let (category, priority) = if [
+                    "intro",
+                    "outro",
+                    "verse",
+                    "chorus",
+                    "bridge",
+                    "breakdown",
+                    "pre-chorus",
+                    "cha",
+                    "chb",
+                    "ch3",
+                    "bkdn",
+                    "ta",
+                    "middle-8",
+                    "mid-8",
+                    "all",
+                ]
+                .contains(&word_lower.as_str())
+                {
                     (Some("structure"), 80) // Song structure priority
                 } else {
                     (Some("mood"), 60) // Mood/style priority
@@ -301,7 +317,8 @@ impl AutoTagger {
                 ));
             }
             // PRIORITY 2: Try fuzzy matching only if no exact match found
-            else if let Some(matched_genre) = self.fuzzy_match(&word_lower, &self.genre_keywords) {
+            else if let Some(matched_genre) = self.fuzzy_match(&word_lower, &self.genre_keywords)
+            {
                 tags.push(Tag::with_metadata(
                     matched_genre,
                     Some("genre"),
@@ -463,12 +480,23 @@ impl AutoTagger {
     fn load_genre_keywords() -> HashSet<String> {
         [
             // Electronic/EDM (expanded from 1.5M+ file analysis)
-            "house", "deephouse", "deep_house", "deep-house",
-            "techhouse", "tech_house", "tech-house",
+            "house",
+            "deephouse",
+            "deep_house",
+            "deep-house",
+            "techhouse",
+            "tech_house",
+            "tech-house",
             "techno",
-            "trance", "psy_trance", "psy-trance", "psytrance",
+            "trance",
+            "psy_trance",
+            "psy-trance",
+            "psytrance",
             "dubstep",
-            "dnb", "drum_and_bass", "drumnbass", "drum-and-bass",
+            "dnb",
+            "drum_and_bass",
+            "drumnbass",
+            "drum-and-bass",
             "edm",
             "electro",
             "progressive",
@@ -476,27 +504,38 @@ impl AutoTagger {
             "acid",
             "ambient",
             "breakbeat",
-            "garage", "speed_garage", "speed-garage", "uk-garage",
-            "trap", "melodic_trap", "melodic-trap",
-            "future_bass", "future-bass",
-            "glitch", "idm",
+            "garage",
+            "speed_garage",
+            "speed-garage",
+            "uk-garage",
+            "trap",
+            "melodic_trap",
+            "melodic-trap",
+            "future_bass",
+            "future-bass",
+            "glitch",
+            "idm",
             "jungle",
             "hardstyle",
             "hardcore",
-            "lofi", "lo-fi",
-            "chillout", "chill-out",
+            "lofi",
+            "lo-fi",
+            "chillout",
+            "chill-out",
             "downtempo",
             "industrial",
-
             // Urban/Contemporary
-            "hip_hop", "hiphop", "hip-hop",
+            "hip_hop",
+            "hiphop",
+            "hip-hop",
             "rap",
-            "rnb", "r&b", "r-and-b",
+            "rnb",
+            "r&b",
+            "r-and-b",
             "soul",
             "pop",
             "disco",
             "funk",
-
             // Traditional/Acoustic
             "jazz",
             "blues",
@@ -504,22 +543,28 @@ impl AutoTagger {
             "metal",
             "country",
             "classical",
-            "cinematic", "film-score",
+            "cinematic",
+            "film-score",
             "acoustic",
-
             // World Music
-            "africa", "african",
-            "asia", "asian",
-            "middle_east", "middle-east",
+            "africa",
+            "african",
+            "asia",
+            "asian",
+            "middle_east",
+            "middle-east",
             "latin",
             "world",
-
             // Sub-genres & styles (from real MIDI collection)
-            "jazzy_hip-hop", "jazzy-hip-hop",
-            "future_rnb", "future-rnb",
-            "liquid_dnb", "liquid-dnb",
+            "jazzy_hip-hop",
+            "jazzy-hip-hop",
+            "future_rnb",
+            "future-rnb",
+            "liquid_dnb",
+            "liquid-dnb",
             "neurofunk",
-            "bass-music", "bass_music",
+            "bass-music",
+            "bass_music",
             "atmospheric",
         ]
         .iter()
@@ -530,42 +575,61 @@ impl AutoTagger {
     fn load_instrument_keywords() -> HashSet<String> {
         [
             // Drums (Western)
-            "kick", "bass_drum", "bassdrum",
+            "kick",
+            "bass_drum",
+            "bassdrum",
             "snare",
-            "hihat", "hat", "hi-hat",
-            "clap", "handclap",
-            "tom", "toms",
-            "cymbal", "crash", "ride",
-            "percussion", "perc",
-            "drum", "drums",
+            "hihat",
+            "hat",
+            "hi-hat",
+            "clap",
+            "handclap",
+            "tom",
+            "toms",
+            "cymbal",
+            "crash",
+            "ride",
+            "percussion",
+            "perc",
+            "drum",
+            "drums",
             "cowbell",
             "tambourine",
             "shaker",
-            "conga", "congas",
-            "bongo", "bongos",
-
+            "conga",
+            "congas",
+            "bongo",
+            "bongos",
             // World Instruments - African (from real collection)
             "djembe",
-            "talking_drum", "talking-drum",
-            "dun", "dun-set",
-            "banana_bells", "banana-bells",
+            "talking_drum",
+            "talking-drum",
+            "dun",
+            "dun-set",
+            "banana_bells",
+            "banana-bells",
             "shakere",
-            "trash_dun", "trash-dun",
-
+            "trash_dun",
+            "trash-dun",
             // World Instruments - Asian (from real collection)
             "tabla",
-            "dayon", "bayon", // Tabla variations
-            "samul_nori", "samul-nori",
+            "dayon",
+            "bayon", // Tabla variations
+            "samul_nori",
+            "samul-nori",
             "kkwaenggwari",
             "janggu",
-            "buk", "kkwaenggwari",
+            "buk",
+            "kkwaenggwari",
             "rebana",
             "kendang",
             "ghatam",
             "dhol",
-            "korean_woodblock", "korean-woodblock",
-            "korean_cymbal", "korean-cymbal", "mudang-cymbal",
-
+            "korean_woodblock",
+            "korean-woodblock",
+            "korean_cymbal",
+            "korean-cymbal",
+            "mudang-cymbal",
             // World Instruments - Middle Eastern (from real collection)
             "darabuka",
             "riq",
@@ -573,69 +637,91 @@ impl AutoTagger {
             "tabal",
             "tupan",
             "muzhar",
-            "finger_bells", "finger-bells",
-
+            "finger_bells",
+            "finger-bells",
             // Bass
             "bass",
-            "sub", "subbass", "sub-bass",
+            "sub",
+            "subbass",
+            "sub-bass",
             "reese",
-
             // Synths
-            "pluck", "plucked",
+            "pluck",
+            "plucked",
             "lead",
             "synth",
-            "pad", "sub-pad", "strings-pad",
-            "chord", "chords",
+            "pad",
+            "sub-pad",
+            "strings-pad",
+            "chord",
+            "chords",
             "stab",
-            "arp", "arpeggiated", "arp-loop",
-            "melody", "melodic", "melody-loop",
-
+            "arp",
+            "arpeggiated",
+            "arp-loop",
+            "melody",
+            "melodic",
+            "melody-loop",
             // Keys
             "piano",
             "keys",
             "organ",
             "rhodes",
             "wurlitzer",
-            "electric_piano", "electric-piano",
-
+            "electric_piano",
+            "electric-piano",
             // Orchestral
-            "strings", "string",
+            "strings",
+            "string",
             "brass",
             "woodwind",
             "orchestra",
-            "violin", "viola", "cello", "contrabass",
-            "trumpet", "trombone", "horn",
-            "flute", "oboe", "clarinet", "bassoon",
-
+            "violin",
+            "viola",
+            "cello",
+            "contrabass",
+            "trumpet",
+            "trombone",
+            "horn",
+            "flute",
+            "oboe",
+            "clarinet",
+            "bassoon",
             // Vocals
-            "vocal", "vocals",
+            "vocal",
+            "vocals",
             "vox",
             "voice",
             "choir",
-
             // FX
-            "fx", "effect",
+            "fx",
+            "effect",
             "riser",
             "impact",
             "sweep",
             "transition",
             "zap",
             "whistle",
-            "waterfalling", "wobbly", "wobble",
-
+            "waterfalling",
+            "wobbly",
+            "wobble",
             // Loops & Elements
             "loop",
             "pattern",
-            "sequence", "seq",
+            "sequence",
+            "seq",
             "backing",
             "construction",
             // Note: "groove" removed - now handled by drum analyzer with category "pattern-type"
 
             // Guitar
             "guitar",
-            "acoustic_guitar", "acoustic-guitar",
-            "electric_guitar", "electric-guitar",
-            "bass_guitar", "bass-guitar",
+            "acoustic_guitar",
+            "acoustic-guitar",
+            "electric_guitar",
+            "electric-guitar",
+            "bass_guitar",
+            "bass-guitar",
         ]
         .iter()
         .map(|s| s.to_string())
@@ -648,44 +734,59 @@ impl AutoTagger {
             "vengeance",
             "splice",
             "loopmasters",
-            "sample_magic", "samplemagic",
-            "black_octopus", "blackoctopus",
+            "sample_magic",
+            "samplemagic",
+            "black_octopus",
+            "blackoctopus",
             "cymatics",
-            "production_master", "productionmaster",
-            "zero_g", "zero-g",
+            "production_master",
+            "productionmaster",
+            "zero_g",
+            "zero-g",
             "vir2",
-
             // Drum Libraries (from Mega Drums Pack analysis)
-            "ezdrummer", "ez_drummer", "ez-drummer",
-            "superior_drummer", "superior-drummer",
-            "groove_monkey", "groove-monkey",
-            "stage_1_drums", "stage-1-drums",
-            "reelfeel_drums", "reelfeel-drums",
-            "la_drum_studio", "la-drum-studio",
-            "nice_beats", "nice-beats",
-            "sly_dunbar", "sly-dunbar",
-            "x_filez", "x-filez",
-
+            "ezdrummer",
+            "ez_drummer",
+            "ez-drummer",
+            "superior_drummer",
+            "superior-drummer",
+            "groove_monkey",
+            "groove-monkey",
+            "stage_1_drums",
+            "stage-1-drums",
+            "reelfeel_drums",
+            "reelfeel-drums",
+            "la_drum_studio",
+            "la-drum-studio",
+            "nice_beats",
+            "nice-beats",
+            "sly_dunbar",
+            "sly-dunbar",
+            "x_filez",
+            "x-filez",
             // Hardware Manufacturers
             "roland",
             "korg",
             "moog",
             "arturia",
-            "native_instruments", "native-instruments",
+            "native_instruments",
+            "native-instruments",
             "native",
-
             // Software Synths
             "serum",
             "massive",
             "sylenth",
             "spire",
-
             // DAWs
-            "abletonlive", "ableton",
-            "flstudio", "fl_studio", "fl-studio",
+            "abletonlive",
+            "ableton",
+            "flstudio",
+            "fl_studio",
+            "fl-studio",
             "logic",
             "cubase",
-            "pro_tools", "pro-tools",
+            "pro_tools",
+            "pro-tools",
         ]
         .iter()
         .map(|s| s.to_string())
@@ -723,20 +824,30 @@ impl AutoTagger {
             "energetic",
             "chill",
             "relaxed",
-
             // Song Structure (from Piano Collection analysis)
             "intro",
             "outro",
-            "verse", "verse-1", "verse-2", "verse-3",
-            "chorus", "chorus-a", "chorus-b", "chorus-3",
-            "cha", "chb", "ch3", // Short forms
-            "pre-chorus", "prechorus",
+            "verse",
+            "verse-1",
+            "verse-2",
+            "verse-3",
+            "chorus",
+            "chorus-a",
+            "chorus-b",
+            "chorus-3",
+            "cha",
+            "chb",
+            "ch3", // Short forms
+            "pre-chorus",
+            "prechorus",
             "bridge",
-            "breakdown", "bkdn",
-            "turnaround", "ta",
-            "middle-8", "mid-8",
+            "breakdown",
+            "bkdn",
+            "turnaround",
+            "ta",
+            "middle-8",
+            "mid-8",
             "all", // Complete arrangement
-
             // Musical Styles (from Chords Collection)
             "ballad",
             "straight",
@@ -744,13 +855,11 @@ impl AutoTagger {
             "shuffle",
             "waltz",
             "valse",
-
             // Psy Trance Descriptors
             "flowing",
             "intense",
             "psychedelic",
             "hypnotic",
-
             // Production Styles
             "phatter",
             "phunkier",
@@ -1391,11 +1500,7 @@ mod tests {
         let tagger = AutoTagger::new().unwrap();
 
         // Use single-word instrument names that match keywords
-        let instruments = vec![
-            "Bass".to_string(),
-            "Synth".to_string(),
-            "Piano".to_string(),
-        ];
+        let instruments = vec!["Bass".to_string(), "Synth".to_string(), "Piano".to_string()];
         let tags = tagger.extract_from_instruments(&instruments);
 
         // Should extract tags for matching keywords
@@ -1453,11 +1558,8 @@ mod tests {
     fn test_instrument_duplicates() {
         let tagger = AutoTagger::new().unwrap();
 
-        let instruments = vec![
-            "Bass Drum".to_string(),
-            "Bass Drum".to_string(),
-            "Bass Drum".to_string(),
-        ];
+        let instruments =
+            vec!["Bass Drum".to_string(), "Bass Drum".to_string(), "Bass Drum".to_string()];
         let tags = tagger.extract_from_instruments(&instruments);
 
         // Should handle duplicates (extract_tags() uses HashSet for deduplication)
@@ -1530,7 +1632,14 @@ mod tests {
         let tagger = AutoTagger::new().unwrap();
 
         // Real example: "CS2_140_Am_Behind_The_Photo.mid"
-        let tags = tagger.extract_tags("", "CS2_140_Am_Behind_The_Photo.mid", &[], None, Some("Am"), None);
+        let tags = tagger.extract_tags(
+            "",
+            "CS2_140_Am_Behind_The_Photo.mid",
+            &[],
+            None,
+            Some("Am"),
+            None,
+        );
         let tag_names: Vec<String> = tags.iter().map(|t| t.full_name()).collect();
 
         assert!(tag_names.contains(&"key:am".to_string()));
@@ -1613,7 +1722,7 @@ mod tests {
 
         let tags1 = tagger.extract_tags("", "file.mid", &[], None, Some("C#"), None);
         let tags2 = tagger.extract_tags("", "file.mid", &[], None, Some("c#"), None);
-        let tags3 = tagger.extract_tags("", "file.mid", &[], None, Some("C♯"), None); // Won't match (# only)
+        let _tags3 = tagger.extract_tags("", "file.mid", &[], None, Some("C♯"), None); // Won't match (# only)
 
         let names1: Vec<String> = tags1.iter().map(|t| t.full_name()).collect();
         let names2: Vec<String> = tags2.iter().map(|t| t.full_name()).collect();
@@ -1975,11 +2084,14 @@ mod tests {
         let tagger = AutoTagger::new().unwrap();
 
         // Should have both single-word and multi-word variants
-        assert!(tagger.genre_keywords.contains("dnb") ||
-                tagger.genre_keywords.contains("drum_and_bass"));
+        assert!(
+            tagger.genre_keywords.contains("dnb")
+                || tagger.genre_keywords.contains("drum_and_bass")
+        );
 
-        assert!(tagger.genre_keywords.contains("hiphop") ||
-                tagger.genre_keywords.contains("hip_hop"));
+        assert!(
+            tagger.genre_keywords.contains("hiphop") || tagger.genre_keywords.contains("hip_hop")
+        );
     }
 
     #[test]
@@ -2116,4 +2228,3 @@ mod tests {
         assert_eq!(parts, vec!["a", "b", "c", "d", "e"]);
     }
 }
-

@@ -1,23 +1,33 @@
-   /// Phase 7.1: Full Workflow Integration Tests (45-55 tests)
-   ///
-   /// Extended multi-step workflows testing real-world scenarios:
-   /// - Music production workflows (8 tests)
-   /// - Library management workflows (7 tests)
-   /// - Collaborative workflows (6 tests)
-   /// - Search and curation workflows (6 tests)
-   /// - Performance and optimization workflows (6 tests)
-   /// - Error recovery workflows (6 tests)
-   /// - Advanced feature workflows (6 tests)
-   ///
-   /// All tests use real database operations, actual MIDI files, and complete
-   /// end-to-end workflow validation with performance assertions.
-
-use midi_pipeline::commands::file_import::{import_single_file, import_directory, import_single_file_impl, import_directory_impl};
-use midi_pipeline::commands::files::{get_file_count, get_file_details, delete_file, list_files, get_file_count_impl, get_file_details_impl, list_files_impl};
-use midi_pipeline::commands::search::{search_files, get_all_tags, get_files_by_tag, search_files_impl, get_all_tags_impl, SearchFilters};
-use midi_pipeline::commands::tags::{add_tags_to_file, get_file_tags, update_file_tags, get_file_tags_impl, add_tags_to_file_impl};
+#[allow(dead_code, unused_imports, unused_variables)]
 use midi_pipeline::commands::analyze::start_analysis;
+/// Phase 7.1: Full Workflow Integration Tests (45-55 tests)
+///
+/// Extended multi-step workflows testing real-world scenarios:
+/// - Music production workflows (8 tests)
+/// - Library management workflows (7 tests)
+/// - Collaborative workflows (6 tests)
+/// - Search and curation workflows (6 tests)
+/// - Performance and optimization workflows (6 tests)
+/// - Error recovery workflows (6 tests)
+/// - Advanced feature workflows (6 tests)
+///
+/// All tests use real database operations, actual MIDI files, and complete
+/// end-to-end workflow validation with performance assertions.
+use midi_pipeline::commands::file_import::{
+    import_directory, import_directory_impl, import_single_file, import_single_file_impl,
+};
+use midi_pipeline::commands::files::{
+    delete_file, get_file_count, get_file_count_impl, get_file_details, get_file_details_impl,
+    list_files, list_files_impl,
+};
+use midi_pipeline::commands::search::{
+    get_all_tags, get_all_tags_impl, get_files_by_tag, search_files, search_files_impl,
+    SearchFilters,
+};
 use midi_pipeline::commands::stats::{get_category_stats, get_database_size};
+use midi_pipeline::commands::tags::{
+    add_tags_to_file, add_tags_to_file_impl, get_file_tags, get_file_tags_impl, update_file_tags,
+};
 use midi_pipeline::{AppState, Database};
 use sqlx::PgPool;
 use std::path::PathBuf;
@@ -27,7 +37,9 @@ use tempfile::TempDir;
 use tokio::fs;
 
 mod common;
-use common::{TestDatabase, FileFixtures, MidiFileBuilder, setup_test_state, import_and_analyze_file};
+use common::{
+    import_and_analyze_file, setup_test_state, FileFixtures, MidiFileBuilder, TestDatabase,
+};
 
 // ============================================================================
 // TEST FIXTURES & HELPERS
@@ -35,8 +47,9 @@ use common::{TestDatabase, FileFixtures, MidiFileBuilder, setup_test_state, impo
 
 /// Create AppState for testing
 async fn create_app_state() -> AppState {
-    let database_url = std::env::var("TEST_DATABASE_URL")
-        .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string());
+    let database_url = std::env::var("TEST_DATABASE_URL").unwrap_or_else(|_| {
+        "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()
+    });
 
     let database = Database::new(&database_url)
         .await
@@ -120,33 +133,24 @@ async fn test_workflow_compose_new_song() {
     fs::write(&track1_path, &midi_data).await.unwrap();
 
     // Step 2: Import first track
-    let result1 = import_single_file_impl(
-        track1_path.to_str().unwrap().to_string(),
-        None,
-        &state,
-    ).await;
+    let result1 =
+        import_single_file_impl(track1_path.to_str().unwrap().to_string(), None, &state).await;
     assert!(result1.is_ok());
 
     // Step 3: Add bass track
     let track2_path = project_path.join("bass.mid");
     fs::write(&track2_path, &midi_data).await.unwrap();
 
-    let result2 = import_single_file_impl(
-        track2_path.to_str().unwrap().to_string(),
-        None,
-        &state,
-    ).await;
+    let result2 =
+        import_single_file_impl(track2_path.to_str().unwrap().to_string(), None, &state).await;
     assert!(result2.is_ok());
 
     // Step 4: Add drums track
     let track3_path = project_path.join("drums.mid");
     fs::write(&track3_path, &midi_data).await.unwrap();
 
-    let result3 = import_single_file_impl(
-        track3_path.to_str().unwrap().to_string(),
-        None,
-        &state,
-    ).await;
+    let result3 =
+        import_single_file_impl(track3_path.to_str().unwrap().to_string(), None, &state).await;
     assert!(result3.is_ok());
 
     // Step 5: Tag all tracks as project
@@ -154,7 +158,11 @@ async fn test_workflow_compose_new_song() {
     assert!(file_count >= 3);
 
     // Verify composition workflow completed
-    cleanup_test_files(&state.database.pool().await, &format!("{}%", project_path.to_str().unwrap())).await;
+    cleanup_test_files(
+        &state.database.pool().await,
+        &format!("{}%", project_path.to_str().unwrap()),
+    )
+    .await;
 }
 
 #[tokio::test]
@@ -169,16 +177,18 @@ async fn test_workflow_load_template_customize() {
     fs::write(&template_path, &template_data).await.unwrap();
 
     // Step 2: Import template
-    let result = import_single_file_impl(
-        template_path.to_str().unwrap().to_string(),
-        None,
-        &state,
-    ).await;
+    let result =
+        import_single_file_impl(template_path.to_str().unwrap().to_string(), None, &state).await;
     assert!(result.is_ok());
     let file_id = result.unwrap().id;
 
     // Step 3: Tag as template
-    let tag_result = add_tags_to_file_impl(file_id, vec!["template".to_string(), "house".to_string()], &state).await;
+    let tag_result = add_tags_to_file_impl(
+        file_id,
+        vec!["template".to_string(), "house".to_string()],
+        &state,
+    )
+    .await;
     assert!(tag_result.is_ok());
 
     // Step 4: Verify tags
@@ -190,14 +200,15 @@ async fn test_workflow_load_template_customize() {
     let custom_data = create_midi_bytes(140, "G_MAJOR");
     fs::write(&custom_path, &custom_data).await.unwrap();
 
-    let custom_result = import_single_file_impl(
-        custom_path.to_str().unwrap().to_string(),
-        None,
-        &state,
-    ).await;
+    let custom_result =
+        import_single_file_impl(custom_path.to_str().unwrap().to_string(), None, &state).await;
     assert!(custom_result.is_ok());
 
-    cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(
+        &state.database.pool().await,
+        &format!("{}%", temp_dir.path().to_str().unwrap()),
+    )
+    .await;
 }
 
 #[tokio::test]
@@ -211,34 +222,38 @@ async fn test_workflow_jam_session() {
     let backing_data = create_midi_bytes(100, "E_MAJOR");
     fs::write(&backing_path, &backing_data).await.unwrap();
 
-    let backing_result = import_single_file_impl(
-        backing_path.to_str().unwrap().to_string(),
-        None,
-        &state,
-    ).await;
+    let backing_result =
+        import_single_file_impl(backing_path.to_str().unwrap().to_string(), None, &state).await;
     assert!(backing_result.is_ok());
     let backing_id = backing_result.unwrap().id;
 
     // Step 2: Tag as backing track
-    add_tags_to_file_impl(backing_id, vec!["backing".to_string(), "jam".to_string()], &state).await.unwrap();
+    add_tags_to_file_impl(
+        backing_id,
+        vec!["backing".to_string(), "jam".to_string()],
+        &state,
+    )
+    .await
+    .unwrap();
 
     // Step 3: Record improvisation
     let improv_path = temp_dir.path().join("improvisation.mid");
     let improv_data = create_midi_bytes(100, "E_MAJOR");
     fs::write(&improv_path, &improv_data).await.unwrap();
 
-    let improv_result = import_single_file_impl(
-        improv_path.to_str().unwrap().to_string(),
-        None,
-        &state,
-    ).await;
+    let improv_result =
+        import_single_file_impl(improv_path.to_str().unwrap().to_string(), None, &state).await;
     assert!(improv_result.is_ok());
 
     // Step 4: Verify both files in database
     let count = get_file_count_impl(&state).await.unwrap();
     assert!(count >= 2);
 
-    cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(
+        &state.database.pool().await,
+        &format!("{}%", temp_dir.path().to_str().unwrap()),
+    )
+    .await;
 }
 
 #[tokio::test]
@@ -268,11 +283,9 @@ async fn test_workflow_arrange_for_live() {
 
     for (name, _, _) in &stems {
         let path = stems_dir.join(name);
-        import_single_file_impl(
-        path.to_str().unwrap().to_string(),
-        None,
-        &state,
-    ).await.unwrap();
+        import_single_file_impl(path.to_str().unwrap().to_string(), None, &state)
+            .await
+            .unwrap();
     }
 
     // Step 3: Verify all stems imported
@@ -283,10 +296,20 @@ async fn test_workflow_arrange_for_live() {
     let files = list_files_impl(Some(1), Some(10), &state).await.unwrap();
 
     for file in files.iter().take(4) {
-        add_tags_to_file_impl(file.id, vec!["live".to_string(), "arrangement".to_string()], &state).await.unwrap();
+        add_tags_to_file_impl(
+            file.id,
+            vec!["live".to_string(), "arrangement".to_string()],
+            &state,
+        )
+        .await
+        .unwrap();
     }
 
-    cleanup_test_files(&state.database.pool().await, &format!("{}%", stems_dir.to_str().unwrap())).await;
+    cleanup_test_files(
+        &state.database.pool().await,
+        &format!("{}%", stems_dir.to_str().unwrap()),
+    )
+    .await;
 }
 
 #[tokio::test]
@@ -300,32 +323,34 @@ async fn test_workflow_remix_existing() {
     let original_data = create_midi_bytes(128, "D_MAJOR");
     fs::write(&original_path, &original_data).await.unwrap();
 
-    let original_result = import_single_file_impl(
-        original_path.to_str().unwrap().to_string(),
-        None,
-        &state,
-    ).await;
+    let original_result =
+        import_single_file_impl(original_path.to_str().unwrap().to_string(), None, &state).await;
     assert!(original_result.is_ok());
     let original_id = original_result.unwrap().id;
 
     // Step 2: Tag as original
-    add_tags_to_file_impl(original_id, vec!["original".to_string()], &state).await.unwrap();
+    add_tags_to_file_impl(original_id, vec!["original".to_string()], &state)
+        .await
+        .unwrap();
 
     // Step 3: Create remix version
     let remix_path = temp_dir.path().join("remix.mid");
     let remix_data = create_midi_bytes(140, "D_MAJOR"); // Faster tempo
     fs::write(&remix_path, &remix_data).await.unwrap();
 
-    let remix_result = import_single_file_impl(
-        remix_path.to_str().unwrap().to_string(),
-        None,
-        &state,
-    ).await;
+    let remix_result =
+        import_single_file_impl(remix_path.to_str().unwrap().to_string(), None, &state).await;
     assert!(remix_result.is_ok());
     let remix_id = remix_result.unwrap().id;
 
     // Step 4: Tag as remix
-    add_tags_to_file_impl(remix_id, vec!["remix".to_string(), "uptempo".to_string()], &state).await.unwrap();
+    add_tags_to_file_impl(
+        remix_id,
+        vec!["remix".to_string(), "uptempo".to_string()],
+        &state,
+    )
+    .await
+    .unwrap();
 
     // Step 5: Verify both versions exist
     let tags_original = get_file_tags_impl(original_id, &state).await.unwrap();
@@ -334,7 +359,11 @@ async fn test_workflow_remix_existing() {
     assert!(tags_original.iter().any(|tag| tag == "original"));
     assert!(tags_remix.iter().any(|tag| tag == "remix"));
 
-    cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(
+        &state.database.pool().await,
+        &format!("{}%", temp_dir.path().to_str().unwrap()),
+    )
+    .await;
 }
 
 #[tokio::test]
@@ -348,11 +377,8 @@ async fn test_workflow_music_theory_analysis() {
     let file_data = create_midi_bytes(120, "G_MAJOR");
     fs::write(&file_path, &file_data).await.unwrap();
 
-    let import_result = import_single_file_impl(
-        file_path.to_str().unwrap().to_string(),
-        None,
-        &state,
-    ).await;
+    let import_result =
+        import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state).await;
     assert!(import_result.is_ok());
     let file_id = import_result.unwrap().id;
 
@@ -361,13 +387,23 @@ async fn test_workflow_music_theory_analysis() {
     assert!(details.is_ok());
 
     // Step 3: Tag based on analysis
-    add_tags_to_file_impl(file_id, vec!["analyzed".to_string(), "theory".to_string()], &state).await.unwrap();
+    add_tags_to_file_impl(
+        file_id,
+        vec!["analyzed".to_string(), "theory".to_string()],
+        &state,
+    )
+    .await
+    .unwrap();
 
     // Step 4: Verify analysis metadata
     let file_info = details.unwrap();
     assert!(file_info.filepath.contains("analyze_me.mid"));
 
-    cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(
+        &state.database.pool().await,
+        &format!("{}%", temp_dir.path().to_str().unwrap()),
+    )
+    .await;
 }
 
 #[tokio::test]
@@ -394,23 +430,31 @@ async fn test_workflow_performance_preparation() {
         let data = create_midi_bytes(*bpm, key);
         fs::write(&path, &data).await.unwrap();
 
-        let result = import_single_file_impl(
-        path.to_str().unwrap().to_string(),
-        None,
-        &state,
-    ).await.unwrap();
+        let result = import_single_file_impl(path.to_str().unwrap().to_string(), None, &state)
+            .await
+            .unwrap();
         file_ids.push(result.id);
     }
 
     // Step 2: Tag all as setlist
     for file_id in &file_ids {
-        add_tags_to_file_impl(*file_id, vec!["setlist".to_string(), "live".to_string()], &state).await.unwrap();
+        add_tags_to_file_impl(
+            *file_id,
+            vec!["setlist".to_string(), "live".to_string()],
+            &state,
+        )
+        .await
+        .unwrap();
     }
 
     // Step 3: Verify setlist order
     assert_eq!(file_ids.len(), 5);
 
-    cleanup_test_files(&state.database.pool().await, &format!("{}%", setlist_dir.to_str().unwrap())).await;
+    cleanup_test_files(
+        &state.database.pool().await,
+        &format!("{}%", setlist_dir.to_str().unwrap()),
+    )
+    .await;
 }
 
 #[tokio::test]
@@ -424,11 +468,8 @@ async fn test_workflow_publishing_workflow() {
     let master_data = create_midi_bytes(120, "C_MAJOR");
     fs::write(&master_path, &master_data).await.unwrap();
 
-    let master_result = import_single_file_impl(
-        master_path.to_str().unwrap().to_string(),
-        None,
-        &state,
-    ).await;
+    let master_result =
+        import_single_file_impl(master_path.to_str().unwrap().to_string(), None, &state).await;
     assert!(master_result.is_ok());
     let file_id = master_result.unwrap().id;
 
@@ -440,11 +481,7 @@ async fn test_workflow_publishing_workflow() {
         "copyright_cleared".to_string(),
     ];
 
-    add_tags_to_file_impl(
-        &state,
-        file_id,
-        publishing_tags.clone(),
-    ).await.unwrap();
+    add_tags_to_file_impl(&state, file_id, publishing_tags.clone()).await.unwrap();
 
     // Step 3: Verify all tags applied
     let tags = get_file_tags_impl(file_id, &state).await.unwrap();
@@ -459,7 +496,11 @@ async fn test_workflow_publishing_workflow() {
         fs::write(&export_path, &master_data).await.unwrap();
     }
 
-    cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(
+        &state.database.pool().await,
+        &format!("{}%", temp_dir.path().to_str().unwrap()),
+    )
+    .await;
 }
 
 // ============================================================================
@@ -486,17 +527,17 @@ async fn test_workflow_organize_library() {
         let data = create_midi_bytes(*bpm, key);
         fs::write(&path, &data).await.unwrap();
 
-        let result = import_single_file_impl(
-        path.to_str().unwrap().to_string(),
-        None,
-        &state,
-    ).await.unwrap();
+        let result = import_single_file_impl(path.to_str().unwrap().to_string(), None, &state)
+            .await
+            .unwrap();
 
         add_tags_to_file_impl(
             &state,
             result.id,
             tags.iter().map(|s| s.to_string()).collect(),
-        ).await.unwrap();
+        )
+        .await
+        .unwrap();
     }
 
     // Step 2: Search by tag
@@ -505,9 +546,16 @@ async fn test_workflow_organize_library() {
 
     // Step 3: Verify organization complete
     let duration = start.elapsed();
-    assert!(duration.as_secs() < 5, "Organization should complete in < 5s");
+    assert!(
+        duration.as_secs() < 5,
+        "Organization should complete in < 5s"
+    );
 
-    cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(
+        &state.database.pool().await,
+        &format!("{}%", temp_dir.path().to_str().unwrap()),
+    )
+    .await;
 }
 
 #[tokio::test]
@@ -521,33 +569,30 @@ async fn test_workflow_duplicate_cleanup() {
     let midi_data = create_midi_bytes(120, "C_MAJOR");
     fs::write(&original_path, &midi_data).await.unwrap();
 
-    let original_result = import_single_file_impl(
-        original_path.to_str().unwrap().to_string(),
-        None,
-        &state,
-    ).await.unwrap();
+    let original_result =
+        import_single_file_impl(original_path.to_str().unwrap().to_string(), None, &state)
+            .await
+            .unwrap();
 
     // Step 2: Try to import duplicate (same hash)
     let duplicate_path = temp_dir.path().join("duplicate.mid");
     fs::write(&duplicate_path, &midi_data).await.unwrap();
 
-    let duplicate_result = import_single_file_impl(
-        duplicate_path.to_str().unwrap().to_string(),
-        None,
-        &state,
-    ).await;
+    let duplicate_result =
+        import_single_file_impl(duplicate_path.to_str().unwrap().to_string(), None, &state).await;
 
     // Step 3: Verify duplicate detection (should succeed but detect duplicate)
     assert!(duplicate_result.is_ok());
 
     // Step 4: Delete duplicate
-    let delete_result = delete_file(
-        &state,
-        original_result.id,
-    ).await;
+    let delete_result = delete_file(&state, original_result.id).await;
     assert!(delete_result.is_ok());
 
-    cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(
+        &state.database.pool().await,
+        &format!("{}%", temp_dir.path().to_str().unwrap()),
+    )
+    .await;
 }
 
 #[tokio::test]
@@ -568,11 +613,9 @@ async fn test_workflow_key_transposition() {
         let data = create_midi_bytes(120, key);
         fs::write(&path, &data).await.unwrap();
 
-        import_single_file_impl(
-        path.to_str().unwrap().to_string(),
-        None,
-        &state,
-    ).await.unwrap();
+        import_single_file_impl(path.to_str().unwrap().to_string(), None, &state)
+            .await
+            .unwrap();
     }
 
     // Step 2: Search would filter by key (simulated here)
@@ -584,16 +627,21 @@ async fn test_workflow_key_transposition() {
     let transposed_data = create_midi_bytes(120, "G_MAJOR");
     fs::write(&transposed_path, &transposed_data).await.unwrap();
 
-    let result = import_single_file_impl(
-        transposed_path.to_str().unwrap().to_string(),
-        None,
-        &state,
-    ).await.unwrap();
+    let result =
+        import_single_file_impl(transposed_path.to_str().unwrap().to_string(), None, &state)
+            .await
+            .unwrap();
 
     // Step 4: Tag as transposed
-    add_tags_to_file_impl(result.id, vec!["transposed".to_string()], &state).await.unwrap();
+    add_tags_to_file_impl(result.id, vec!["transposed".to_string()], &state)
+        .await
+        .unwrap();
 
-    cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(
+        &state.database.pool().await,
+        &format!("{}%", temp_dir.path().to_str().unwrap()),
+    )
+    .await;
 }
 
 #[tokio::test]
@@ -611,11 +659,9 @@ async fn test_workflow_tempo_matching() {
         let data = create_midi_bytes(*tempo, "C_MAJOR");
         fs::write(&path, &data).await.unwrap();
 
-        import_single_file_impl(
-        path.to_str().unwrap().to_string(),
-        None,
-        &state,
-    ).await.unwrap();
+        import_single_file_impl(path.to_str().unwrap().to_string(), None, &state)
+            .await
+            .unwrap();
     }
 
     // Step 2: Create tempo-matched versions
@@ -624,20 +670,24 @@ async fn test_workflow_tempo_matching() {
         let data = create_midi_bytes(target_tempo, "C_MAJOR");
         fs::write(&path, &data).await.unwrap();
 
-        let result = import_single_file_impl(
-        path.to_str().unwrap().to_string(),
-        None,
-        &state,
-    ).await.unwrap();
+        let result = import_single_file_impl(path.to_str().unwrap().to_string(), None, &state)
+            .await
+            .unwrap();
 
-        add_tags_to_file_impl(result.id, vec!["tempo_synced".to_string()], &state).await.unwrap();
+        add_tags_to_file_impl(result.id, vec!["tempo_synced".to_string()], &state)
+            .await
+            .unwrap();
     }
 
     // Step 3: Verify all synced files tagged
     let all_tags = get_all_tags_impl(&state).await.unwrap();
     assert!(all_tags.iter().any(|tag| tag == "tempo_synced"));
 
-    cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(
+        &state.database.pool().await,
+        &format!("{}%", temp_dir.path().to_str().unwrap()),
+    )
+    .await;
 }
 
 #[tokio::test]
@@ -649,13 +699,7 @@ async fn test_workflow_create_sample_pack() {
     fs::create_dir(&pack_dir).await.unwrap();
 
     // Step 1: Create sample pack files
-    let samples = vec![
-        "kick.mid",
-        "snare.mid",
-        "hihat.mid",
-        "clap.mid",
-        "bass.mid",
-    ];
+    let samples = vec!["kick.mid", "snare.mid", "hihat.mid", "clap.mid", "bass.mid"];
 
     let mut sample_ids = Vec::new();
 
@@ -664,24 +708,32 @@ async fn test_workflow_create_sample_pack() {
         let data = create_midi_bytes(128, "C_MAJOR");
         fs::write(&path, &data).await.unwrap();
 
-        let result = import_single_file_impl(
-        path.to_str().unwrap().to_string(),
-        None,
-        &state,
-    ).await.unwrap();
+        let result = import_single_file_impl(path.to_str().unwrap().to_string(), None, &state)
+            .await
+            .unwrap();
 
         sample_ids.push(result.id);
     }
 
     // Step 2: Tag all as sample pack
     for file_id in &sample_ids {
-        add_tags_to_file_impl(*file_id, vec!["sample_pack".to_string(), "drums".to_string()], &state).await.unwrap();
+        add_tags_to_file_impl(
+            *file_id,
+            vec!["sample_pack".to_string(), "drums".to_string()],
+            &state,
+        )
+        .await
+        .unwrap();
     }
 
     // Step 3: Verify pack complete
     assert_eq!(sample_ids.len(), 5);
 
-    cleanup_test_files(&state.database.pool().await, &format!("{}%", pack_dir.to_str().unwrap())).await;
+    cleanup_test_files(
+        &state.database.pool().await,
+        &format!("{}%", pack_dir.to_str().unwrap()),
+    )
+    .await;
 }
 
 #[tokio::test]
@@ -702,11 +754,9 @@ async fn test_workflow_backup_and_restore() {
         let data = create_midi_bytes(120, "C_MAJOR");
         fs::write(&path, &data).await.unwrap();
 
-        import_single_file_impl(
-        path.to_str().unwrap().to_string(),
-        None,
-        &state,
-    ).await.unwrap();
+        import_single_file_impl(path.to_str().unwrap().to_string(), None, &state)
+            .await
+            .unwrap();
     }
 
     let after_import_count = get_file_count_impl(&state).await.unwrap();
@@ -723,7 +773,11 @@ async fn test_workflow_backup_and_restore() {
     let backup_files = fs::read_dir(&backup_dir).await.unwrap().count();
     assert!(backup_files >= 3);
 
-    cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(
+        &state.database.pool().await,
+        &format!("{}%", temp_dir.path().to_str().unwrap()),
+    )
+    .await;
 }
 
 #[tokio::test]
@@ -739,13 +793,18 @@ async fn test_workflow_collaborative_project() {
     let user1_path = user1_dir.join("contribution1.mid");
     fs::write(&user1_path, &create_midi_bytes(128, "C_MAJOR")).await.unwrap();
 
-    let user1_result = import_single_file_impl(
-        user1_path.to_str().unwrap().to_string(),
-        None,
-        &state,
-    ).await.unwrap();
+    let user1_result =
+        import_single_file_impl(user1_path.to_str().unwrap().to_string(), None, &state)
+            .await
+            .unwrap();
 
-    add_tags_to_file_impl(user1_result.id, vec!["collaboration".to_string(), "user1".to_string()], &state).await.unwrap();
+    add_tags_to_file_impl(
+        user1_result.id,
+        vec!["collaboration".to_string(), "user1".to_string()],
+        &state,
+    )
+    .await
+    .unwrap();
 
     // Step 2: User 2 contributes
     let user2_dir = temp_dir.path().join("user2");
@@ -754,19 +813,28 @@ async fn test_workflow_collaborative_project() {
     let user2_path = user2_dir.join("contribution2.mid");
     fs::write(&user2_path, &create_midi_bytes(128, "C_MAJOR")).await.unwrap();
 
-    let user2_result = import_single_file_impl(
-        user2_path.to_str().unwrap().to_string(),
-        None,
-        &state,
-    ).await.unwrap();
+    let user2_result =
+        import_single_file_impl(user2_path.to_str().unwrap().to_string(), None, &state)
+            .await
+            .unwrap();
 
-    add_tags_to_file_impl(user2_result.id, vec!["collaboration".to_string(), "user2".to_string()], &state).await.unwrap();
+    add_tags_to_file_impl(
+        user2_result.id,
+        vec!["collaboration".to_string(), "user2".to_string()],
+        &state,
+    )
+    .await
+    .unwrap();
 
     // Step 3: Verify all contributions
     let all_tags = get_all_tags_impl(&state).await.unwrap();
     assert!(all_tags.iter().any(|tag| tag == "collaboration"));
 
-    cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(
+        &state.database.pool().await,
+        &format!("{}%", temp_dir.path().to_str().unwrap()),
+    )
+    .await;
 }
 
 // ============================================================================
@@ -787,13 +855,13 @@ async fn test_workflow_session_sharing() {
         let path = session_dir.join(format!("track_{}.mid", i));
         fs::write(&path, &create_midi_bytes(120, "C_MAJOR")).await.unwrap();
 
-        let result = import_single_file_impl(
-        path.to_str().unwrap().to_string(),
-        None,
-        &state,
-    ).await.unwrap();
+        let result = import_single_file_impl(path.to_str().unwrap().to_string(), None, &state)
+            .await
+            .unwrap();
 
-        add_tags_to_file_impl(result.id, vec!["session".to_string()], &state).await.unwrap();
+        add_tags_to_file_impl(result.id, vec!["session".to_string()], &state)
+            .await
+            .unwrap();
     }
 
     // Step 2: Simulate export/send (copy to shared dir)
@@ -810,7 +878,11 @@ async fn test_workflow_session_sharing() {
     let shared_count = fs::read_dir(&shared_dir).await.unwrap().count();
     assert_eq!(shared_count, 3);
 
-    cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(
+        &state.database.pool().await,
+        &format!("{}%", temp_dir.path().to_str().unwrap()),
+    )
+    .await;
 }
 
 #[tokio::test]
@@ -823,25 +895,33 @@ async fn test_workflow_feedback_incorporation() {
     let v1_path = temp_dir.path().join("track_v1.mid");
     fs::write(&v1_path, &create_midi_bytes(128, "C_MAJOR")).await.unwrap();
 
-    let v1_result = import_single_file_impl(
-        v1_path.to_str().unwrap().to_string(),
-        None,
-        &state,
-    ).await.unwrap();
+    let v1_result = import_single_file_impl(v1_path.to_str().unwrap().to_string(), None, &state)
+        .await
+        .unwrap();
 
-    add_tags_to_file_impl(v1_result.id, vec!["v1".to_string(), "needs_revision".to_string()], &state).await.unwrap();
+    add_tags_to_file_impl(
+        v1_result.id,
+        vec!["v1".to_string(), "needs_revision".to_string()],
+        &state,
+    )
+    .await
+    .unwrap();
 
     // Step 2: Create v2 with feedback incorporated
     let v2_path = temp_dir.path().join("track_v2.mid");
     fs::write(&v2_path, &create_midi_bytes(132, "C_MAJOR")).await.unwrap();
 
-    let v2_result = import_single_file_impl(
-        v2_path.to_str().unwrap().to_string(),
-        None,
-        &state,
-    ).await.unwrap();
+    let v2_result = import_single_file_impl(v2_path.to_str().unwrap().to_string(), None, &state)
+        .await
+        .unwrap();
 
-    add_tags_to_file_impl(v2_result.id, vec!["v2".to_string(), "feedback_applied".to_string()], &state).await.unwrap();
+    add_tags_to_file_impl(
+        v2_result.id,
+        vec!["v2".to_string(), "feedback_applied".to_string()],
+        &state,
+    )
+    .await
+    .unwrap();
 
     // Step 3: Verify iterations
     let v1_tags = get_file_tags_impl(v1_result.id, &state).await.unwrap();
@@ -850,7 +930,11 @@ async fn test_workflow_feedback_incorporation() {
     assert!(v1_tags.iter().any(|tag| tag == "v1"));
     assert!(v2_tags.iter().any(|tag| tag == "v2"));
 
-    cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(
+        &state.database.pool().await,
+        &format!("{}%", temp_dir.path().to_str().unwrap()),
+    )
+    .await;
 }
 
 #[tokio::test]
@@ -863,44 +947,61 @@ async fn test_workflow_version_control() {
     let v1_path = temp_dir.path().join("checkpoint_v1.mid");
     fs::write(&v1_path, &create_midi_bytes(120, "C_MAJOR")).await.unwrap();
 
-    let v1_result = import_single_file_impl(
-        v1_path.to_str().unwrap().to_string(),
-        None,
-        &state,
-    ).await.unwrap();
+    let v1_result = import_single_file_impl(v1_path.to_str().unwrap().to_string(), None, &state)
+        .await
+        .unwrap();
 
-    add_tags_to_file_impl(v1_result.id, vec!["checkpoint".to_string(), "v1".to_string()], &state).await.unwrap();
+    add_tags_to_file_impl(
+        v1_result.id,
+        vec!["checkpoint".to_string(), "v1".to_string()],
+        &state,
+    )
+    .await
+    .unwrap();
 
     // Step 2: Create v2
     let v2_path = temp_dir.path().join("checkpoint_v2.mid");
     fs::write(&v2_path, &create_midi_bytes(125, "C_MAJOR")).await.unwrap();
 
-    let v2_result = import_single_file_impl(
-        v2_path.to_str().unwrap().to_string(),
-        None,
-        &state,
-    ).await.unwrap();
+    let v2_result = import_single_file_impl(v2_path.to_str().unwrap().to_string(), None, &state)
+        .await
+        .unwrap();
 
-    add_tags_to_file_impl(v2_result.id, vec!["checkpoint".to_string(), "v2".to_string()], &state).await.unwrap();
+    add_tags_to_file_impl(
+        v2_result.id,
+        vec!["checkpoint".to_string(), "v2".to_string()],
+        &state,
+    )
+    .await
+    .unwrap();
 
     // Step 3: Create final version
     let final_path = temp_dir.path().join("final.mid");
     fs::write(&final_path, &create_midi_bytes(128, "C_MAJOR")).await.unwrap();
 
-    let final_result = import_single_file_impl(
-        final_path.to_str().unwrap().to_string(),
-        None,
-        &state,
-    ).await.unwrap();
+    let final_result =
+        import_single_file_impl(final_path.to_str().unwrap().to_string(), None, &state)
+            .await
+            .unwrap();
 
-    add_tags_to_file_impl(final_result.id, vec!["final".to_string(), "approved".to_string()], &state).await.unwrap();
+    add_tags_to_file_impl(
+        final_result.id,
+        vec!["final".to_string(), "approved".to_string()],
+        &state,
+    )
+    .await
+    .unwrap();
 
     // Verify version chain
     let all_tags = get_all_tags_impl(&state).await.unwrap();
     assert!(all_tags.iter().any(|tag| tag == "checkpoint"));
     assert!(all_tags.iter().any(|tag| tag == "final"));
 
-    cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(
+        &state.database.pool().await,
+        &format!("{}%", temp_dir.path().to_str().unwrap()),
+    )
+    .await;
 }
 
 #[tokio::test]
@@ -915,14 +1016,18 @@ async fn test_workflow_multi_format_delivery() {
     let master_path = delivery_dir.join("master.mid");
     fs::write(&master_path, &create_midi_bytes(128, "C_MAJOR")).await.unwrap();
 
-    let result = import_single_file_impl(
-        master_path.to_str().unwrap().to_string(),
-        None,
-        &state,
-    ).await.unwrap();
+    let result = import_single_file_impl(master_path.to_str().unwrap().to_string(), None, &state)
+        .await
+        .unwrap();
 
     // Step 2: Tag as multi-format deliverable
-    add_tags_to_file_impl(result.id, vec!["deliverable".to_string(), "multi_format".to_string()], &state).await.unwrap();
+    add_tags_to_file_impl(
+        result.id,
+        vec!["deliverable".to_string(), "multi_format".to_string()],
+        &state,
+    )
+    .await
+    .unwrap();
 
     // Step 3: Create format variations (simulated)
     let formats = vec!["wav", "mp3", "pdf", "xml"];
@@ -935,7 +1040,11 @@ async fn test_workflow_multi_format_delivery() {
     let count = fs::read_dir(&delivery_dir).await.unwrap().count();
     assert!(count >= 5); // master + 4 formats
 
-    cleanup_test_files(&state.database.pool().await, &format!("{}%", delivery_dir.to_str().unwrap())).await;
+    cleanup_test_files(
+        &state.database.pool().await,
+        &format!("{}%", delivery_dir.to_str().unwrap()),
+    )
+    .await;
 }
 
 #[tokio::test]
@@ -951,13 +1060,17 @@ async fn test_workflow_archive_preservation() {
         let path = archive_dir.join(format!("archive_{}.mid", i));
         fs::write(&path, &create_midi_bytes(120, "C_MAJOR")).await.unwrap();
 
-        let result = import_single_file_impl(
-        path.to_str().unwrap().to_string(),
-        None,
-        &state,
-    ).await.unwrap();
+        let result = import_single_file_impl(path.to_str().unwrap().to_string(), None, &state)
+            .await
+            .unwrap();
 
-        add_tags_to_file_impl(result.id, vec!["archive".to_string(), "preserved".to_string()], &state).await.unwrap();
+        add_tags_to_file_impl(
+            result.id,
+            vec!["archive".to_string(), "preserved".to_string()],
+            &state,
+        )
+        .await
+        .unwrap();
     }
 
     // Step 2: Verify archival integrity
@@ -968,7 +1081,11 @@ async fn test_workflow_archive_preservation() {
     let count = get_file_count_impl(&state).await.unwrap();
     assert!(count >= 5);
 
-    cleanup_test_files(&state.database.pool().await, &format!("{}%", archive_dir.to_str().unwrap())).await;
+    cleanup_test_files(
+        &state.database.pool().await,
+        &format!("{}%", archive_dir.to_str().unwrap()),
+    )
+    .await;
 }
 
 #[tokio::test]
@@ -981,25 +1098,35 @@ async fn test_workflow_data_migration() {
     let old_format_path = temp_dir.path().join("old_format.mid");
     fs::write(&old_format_path, &create_midi_bytes(110, "D_MAJOR")).await.unwrap();
 
-    let old_result = import_single_file_impl(
-        old_format_path.to_str().unwrap().to_string(),
-        None,
-        &state,
-    ).await.unwrap();
+    let old_result =
+        import_single_file_impl(old_format_path.to_str().unwrap().to_string(), None, &state)
+            .await
+            .unwrap();
 
-    add_tags_to_file_impl(old_result.id, vec!["old_format".to_string(), "migration_pending".to_string()], &state).await.unwrap();
+    add_tags_to_file_impl(
+        old_result.id,
+        vec!["old_format".to_string(), "migration_pending".to_string()],
+        &state,
+    )
+    .await
+    .unwrap();
 
     // Step 2: Convert to new format
     let new_format_path = temp_dir.path().join("new_format.mid");
     fs::write(&new_format_path, &create_midi_bytes(110, "D_MAJOR")).await.unwrap();
 
-    let new_result = import_single_file_impl(
-        new_format_path.to_str().unwrap().to_string(),
-        None,
-        &state,
-    ).await.unwrap();
+    let new_result =
+        import_single_file_impl(new_format_path.to_str().unwrap().to_string(), None, &state)
+            .await
+            .unwrap();
 
-    add_tags_to_file_impl(new_result.id, vec!["new_format".to_string(), "migrated".to_string()], &state).await.unwrap();
+    add_tags_to_file_impl(
+        new_result.id,
+        vec!["new_format".to_string(), "migrated".to_string()],
+        &state,
+    )
+    .await
+    .unwrap();
 
     // Step 3: Verify migration
     let old_tags = get_file_tags_impl(old_result.id, &state).await.unwrap();
@@ -1008,7 +1135,11 @@ async fn test_workflow_data_migration() {
     assert!(old_tags.iter().any(|tag| tag.name == "old_format"));
     assert!(new_tags.iter().any(|tag| tag.name == "migrated"));
 
-    cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(
+        &state.database.pool().await,
+        &format!("{}%", temp_dir.path().to_str().unwrap()),
+    )
+    .await;
 }
 
 // ===== SECTION 4: EDGE CASE WORKFLOWS (10 additional edge case tests) =====
@@ -1026,8 +1157,15 @@ async fn test_workflow_concurrent_import_same_file() {
 
     let (result1, result2) = tokio::join!(r1, r2);
 
-    assert!(result1.is_ok() || result2.is_ok(), "At least one concurrent import should succeed");
-    cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    assert!(
+        result1.is_ok() || result2.is_ok(),
+        "At least one concurrent import should succeed"
+    );
+    cleanup_test_files(
+        &state.database.pool().await,
+        &format!("{}%", temp_dir.path().to_str().unwrap()),
+    )
+    .await;
 }
 
 #[tokio::test]
@@ -1037,11 +1175,17 @@ async fn test_workflow_empty_tag_list() {
     let file_path = temp_dir.path().join("empty_tags.mid");
     fs::write(&file_path, &create_midi_bytes(120, "C_MAJOR")).await.unwrap();
 
-    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state).await.unwrap();
+    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state)
+        .await
+        .unwrap();
     let tags = add_tags_to_file_impl(result.id, vec![], &state).await;
 
     assert!(tags.is_ok(), "Empty tag list should be handled gracefully");
-    cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(
+        &state.database.pool().await,
+        &format!("{}%", temp_dir.path().to_str().unwrap()),
+    )
+    .await;
 }
 
 #[tokio::test]
@@ -1051,13 +1195,21 @@ async fn test_workflow_delete_with_tags() {
     let file_path = temp_dir.path().join("delete_tagged.mid");
     fs::write(&file_path, &create_midi_bytes(120, "C_MAJOR")).await.unwrap();
 
-    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state).await.unwrap();
-    add_tags_to_file_impl(result.id, vec!["test".to_string()], &state).await.unwrap();
+    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state)
+        .await
+        .unwrap();
+    add_tags_to_file_impl(result.id, vec!["test".to_string()], &state)
+        .await
+        .unwrap();
 
     use midi_pipeline::db::repositories::FileRepository;
     let delete_result = FileRepository::delete(&state.database.pool().await, result.id).await;
     assert!(delete_result.is_ok(), "Delete with tags should succeed");
-    cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(
+        &state.database.pool().await,
+        &format!("{}%", temp_dir.path().to_str().unwrap()),
+    )
+    .await;
 }
 
 #[tokio::test]
@@ -1068,10 +1220,31 @@ async fn test_workflow_search_after_analysis() {
     fs::write(&file_path, &create_midi_bytes(140, "G_MAJOR")).await.unwrap();
 
     let _ = import_and_analyze_file(&state, file_path.to_str().unwrap().to_string()).await;
-    let search_results = search_files_impl("".to_string(), SearchFilters { min_bpm: Some(120), max_bpm: Some(160), key_signatures: None, category: None, min_duration: None, max_duration: None }, 0, 10, &state).await;
+    let search_results = search_files_impl(
+        "".to_string(),
+        SearchFilters {
+            min_bpm: Some(120),
+            max_bpm: Some(160),
+            key_signatures: None,
+            category: None,
+            min_duration: None,
+            max_duration: None,
+        },
+        0,
+        10,
+        &state,
+    )
+    .await;
 
-    assert!(search_results.is_ok(), "Search after analysis should succeed");
-    cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    assert!(
+        search_results.is_ok(),
+        "Search after analysis should succeed"
+    );
+    cleanup_test_files(
+        &state.database.pool().await,
+        &format!("{}%", temp_dir.path().to_str().unwrap()),
+    )
+    .await;
 }
 
 #[tokio::test]
@@ -1081,12 +1254,24 @@ async fn test_workflow_duplicate_tag_deduplication() {
     let file_path = temp_dir.path().join("dup_tags.mid");
     fs::write(&file_path, &create_midi_bytes(120, "C_MAJOR")).await.unwrap();
 
-    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state).await.unwrap();
-    add_tags_to_file_impl(result.id, vec!["tag".to_string(), "tag".to_string()], &state).await.unwrap();
+    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state)
+        .await
+        .unwrap();
+    add_tags_to_file_impl(
+        result.id,
+        vec!["tag".to_string(), "tag".to_string()],
+        &state,
+    )
+    .await
+    .unwrap();
 
     let tags = get_file_tags_impl(result.id, &state).await.unwrap();
     assert_eq!(tags.len(), 1, "Duplicate tags should be deduplicated");
-    cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(
+        &state.database.pool().await,
+        &format!("{}%", temp_dir.path().to_str().unwrap()),
+    )
+    .await;
 }
 
 #[tokio::test]
@@ -1096,10 +1281,18 @@ async fn test_workflow_analysis_on_corrupted() {
     let file_path = temp_dir.path().join("corrupt.mid");
     fs::write(&file_path, b"NOT_VALID_MIDI").await.unwrap();
 
-    let import_result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state).await;
+    let import_result =
+        import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state).await;
 
-    assert!(import_result.is_err(), "Corrupted file should fail gracefully");
-    cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    assert!(
+        import_result.is_err(),
+        "Corrupted file should fail gracefully"
+    );
+    cleanup_test_files(
+        &state.database.pool().await,
+        &format!("{}%", temp_dir.path().to_str().unwrap()),
+    )
+    .await;
 }
 
 #[tokio::test]
@@ -1113,7 +1306,8 @@ async fn test_workflow_rapid_fire_operations() {
         let temp_path = temp_dir.path().join(format!("rapid{}.mid", i));
         let handle = tokio::spawn(async move {
             let _ = fs::write(&temp_path, &create_midi_bytes(100 + i * 10, "C_MAJOR")).await;
-            import_single_file_impl(temp_path.to_str().unwrap().to_string(), None, &state_clone).await
+            import_single_file_impl(temp_path.to_str().unwrap().to_string(), None, &state_clone)
+                .await
         });
         handles.push(handle);
     }
@@ -1121,7 +1315,11 @@ async fn test_workflow_rapid_fire_operations() {
     let results: Vec<_> = futures::future::join_all(handles).await;
     let success = results.iter().filter(|r| r.is_ok() && r.as_ref().unwrap().is_ok()).count();
     assert!(success > 0, "Some rapid operations should succeed");
-    cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(
+        &state.database.pool().await,
+        &format!("{}%", temp_dir.path().to_str().unwrap()),
+    )
+    .await;
 }
 
 #[tokio::test]
@@ -1131,19 +1329,30 @@ async fn test_workflow_large_batch_consistency() {
 
     for i in 0..10 {
         let file_path = temp_dir.path().join(format!("batch{:02}.mid", i));
-        fs::write(&file_path, &create_midi_bytes(100 + i as u32 * 5, "C_MAJOR")).await.unwrap();
+        fs::write(
+            &file_path,
+            &create_midi_bytes(100 + i as u32 * 5, "C_MAJOR"),
+        )
+        .await
+        .unwrap();
     }
 
     let batch_result = import_directory_impl(
-        
         temp_dir.path().to_str().unwrap().to_string(),
-        false, None, &state
-    ).await;
+        false,
+        None,
+        &state,
+    )
+    .await;
 
     assert!(batch_result.is_ok(), "Batch import should complete");
     let summary = batch_result.unwrap();
     assert!(summary.total_files >= 10, "Batch should process all files");
-    cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(
+        &state.database.pool().await,
+        &format!("{}%", temp_dir.path().to_str().unwrap()),
+    )
+    .await;
 }
 
 #[tokio::test]
@@ -1158,11 +1367,31 @@ async fn test_workflow_search_filter_combination() {
             1 => "G_MAJOR",
             _ => "D_MAJOR",
         };
-        fs::write(&file_path, &create_midi_bytes(100 + i as u32 * 20, key)).await.unwrap();
+        fs::write(&file_path, &create_midi_bytes(100 + i as u32 * 20, key))
+            .await
+            .unwrap();
         let _ = import_and_analyze_file(&state, file_path.to_str().unwrap().to_string()).await;
     }
 
-    let results = search_files_impl("".to_string(), SearchFilters { min_bpm: Some(120), max_bpm: Some(160), key_signatures: Some(vec!["C_MAJOR".to_string()]), category: None, min_duration: None, max_duration: None }, 0, 10, &state).await;
+    let results = search_files_impl(
+        "".to_string(),
+        SearchFilters {
+            min_bpm: Some(120),
+            max_bpm: Some(160),
+            key_signatures: Some(vec!["C_MAJOR".to_string()]),
+            category: None,
+            min_duration: None,
+            max_duration: None,
+        },
+        0,
+        10,
+        &state,
+    )
+    .await;
     assert!(results.is_ok(), "Complex filter search should succeed");
-    cleanup_test_files(&state.database.pool().await, &format!("{}%", temp_dir.path().to_str().unwrap())).await;
+    cleanup_test_files(
+        &state.database.pool().await,
+        &format!("{}%", temp_dir.path().to_str().unwrap()),
+    )
+    .await;
 }

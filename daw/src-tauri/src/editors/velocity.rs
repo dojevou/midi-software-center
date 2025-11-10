@@ -62,15 +62,9 @@ impl VelocityEditorState {
 
         // Collect all updates first
         for (&note_id, &velocity) in self.note_velocities.iter() {
-            let original = if !self.modified_notes.contains_key(&note_id) {
-                velocity
-            } else {
-                velocity
-            };
-
             // Simple pseudo-random variation based on note_id
             let variation = ((note_id as f32 * 12345.0).sin() * amount * 20.0) as i32;
-            let new_velocity = (original as i32 + variation).clamp(1, 127) as u8;
+            let new_velocity = (velocity as i32 + variation).clamp(1, 127) as u8;
 
             updates.push((note_id, velocity, new_velocity));
             modified_notes.push(note_id);
@@ -78,9 +72,7 @@ impl VelocityEditorState {
 
         // Apply updates
         for (note_id, original_velocity, new_velocity) in updates {
-            if !self.modified_notes.contains_key(&note_id) {
-                self.modified_notes.insert(note_id, original_velocity);
-            }
+            self.modified_notes.entry(note_id).or_insert(original_velocity);
             self.note_velocities.insert(note_id, new_velocity);
         }
 
@@ -137,8 +129,8 @@ impl Default for VelocityEditorState {
 }
 
 // Tauri Command Handlers (Task-O-Matic)
-use tauri::State;
 use std::sync::Mutex;
+use tauri::State;
 
 #[tauri::command]
 pub async fn set_velocity(
@@ -282,8 +274,8 @@ mod tests {
         let v2 = state.get_velocity(2).unwrap();
 
         // Should be clamped to valid range
-        assert!(v1 >= 1 && v1 <= 127);
-        assert!(v2 >= 1 && v2 <= 127);
+        assert!((1..=127).contains(&v1));
+        assert!((1..=127).contains(&v2));
     }
 
     #[test]

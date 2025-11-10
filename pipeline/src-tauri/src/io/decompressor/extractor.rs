@@ -1,11 +1,11 @@
-   /// Archive Extraction Logic
-   ///
-   /// # Archetype: Grown-up Script
-   /// - Performs I/O operations (file extraction)
-   /// - Separates I/O logic from business logic
-   /// - Both runnable AND importable
-   /// - Returns Result types for error handling
 
+/// Archive Extraction Logic
+///
+/// # Archetype: Grown-up Script
+/// - Performs I/O operations (file extraction)
+/// - Separates I/O logic from business logic
+/// - Both runnable AND importable
+/// - Returns Result types for error handling
 use std::fs::{self, File};
 use std::io;
 use std::path::{Path, PathBuf};
@@ -80,15 +80,10 @@ pub fn extract_archive(
     config: &ExtractionConfig,
 ) -> Result<ExtractionResult> {
     let format = formats::detect_format(archive_path)
-        .ok_or_else(|| IoError::UnsupportedFormat {
-            path: archive_path.to_path_buf(),
-        })?;
+        .ok_or_else(|| IoError::UnsupportedFormat { path: archive_path.to_path_buf() })?;
 
-    let mut result = ExtractionResult {
-        midi_files: Vec::new(),
-        archives_processed: 0,
-        errors: Vec::new(),
-    };
+    let mut result =
+        ExtractionResult { midi_files: Vec::new(), archives_processed: 0, errors: Vec::new() };
 
     extract_recursive(archive_path, output_dir, config, 0, &mut result, format)?;
 
@@ -105,9 +100,7 @@ fn extract_recursive(
     format: formats::ArchiveFormat,
 ) -> Result<()> {
     if current_depth >= config.max_depth {
-        result
-            .errors
-            .push(format!("Max depth reached at: {}", archive_path.display()));
+        result.errors.push(format!("Max depth reached at: {}", archive_path.display()));
         return Ok(());
     }
 
@@ -116,12 +109,10 @@ fn extract_recursive(
     match format {
         formats::ArchiveFormat::Zip => {
             extract_zip(archive_path, output_dir, config, current_depth, result)?;
-        }
+        },
         _ => {
-            result
-                .errors
-                .push(format!("Format {:?} not yet implemented", format));
-        }
+            result.errors.push(format!("Format {:?} not yet implemented", format));
+        },
     }
 
     Ok(())
@@ -278,9 +269,6 @@ mod tests {
         let result = extract_archive(&path, &output, &config);
 
         assert!(result.is_err());
-        assert!(result
-            .unwrap_err()
-            .to_string()
-            .contains("Unsupported archive format"));
+        assert!(result.unwrap_err().to_string().contains("Unsupported archive format"));
     }
 }

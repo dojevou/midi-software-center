@@ -1,17 +1,22 @@
+#[allow(dead_code, unused_imports, unused_variables)]
+#[allow(dead_code, unused_imports, unused_variables)]
 // Common test infrastructure for Pipeline command tests
 // Provides database mocks, Tauri mocks, fixtures, builders, and assertions
 
-pub mod database;
-pub mod mocks;
-pub mod builders;
 pub mod assertions;
+pub mod builders;
+pub mod database;
 pub mod fixtures;
+pub mod mocks;
 
-pub use database::TestDatabase;
-pub use mocks::{MockWindow, MockAppHandle, EmittedEvent};
-pub use builders::{MidiFileBuilder, MetadataBuilder, TagBuilder, create_test_file, insert_metadata, create_test_file_with_metadata, create_test_files, setup_test_state, import_and_analyze_file};
 pub use assertions::*;
-pub use fixtures::{TestFixtures, FileFixtures};
+pub use builders::{
+    create_test_file, create_test_file_with_metadata, create_test_files, import_and_analyze_file,
+    insert_metadata, setup_test_state, MetadataBuilder, MidiFileBuilder, TagBuilder,
+};
+pub use database::TestDatabase;
+pub use fixtures::{FileFixtures, TestFixtures};
+pub use mocks::{EmittedEvent, MockAppHandle, MockWindow};
 
 // Re-export commonly used items
 pub use sqlx::PgPool;

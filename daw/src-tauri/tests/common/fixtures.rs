@@ -1,5 +1,5 @@
-   /// Test fixtures: databases, files, and sample data
 
+/// Test fixtures: databases, files, and sample data
 use super::database::TestDatabase;
 use sqlx::PgPool;
 
@@ -10,16 +10,12 @@ pub struct TestFixtures {
 
 impl TestFixtures {
     pub async fn new() -> Self {
-        Self {
-            db: TestDatabase::new().await,
-        }
+        Self { db: TestDatabase::new().await }
     }
 
     /// Fixture: 100 files with varied metadata
     pub async fn standard_library() -> Self {
-        Self {
-            db: TestDatabase::with_full_dataset().await,
-        }
+        Self { db: TestDatabase::with_full_dataset().await }
     }
 
     /// Fixture: Empty database (for insert tests)
@@ -29,9 +25,7 @@ impl TestFixtures {
 
     /// Fixture: 1000 files (for performance tests)
     pub async fn large_library() -> Self {
-        Self {
-            db: TestDatabase::with_files(1000).await,
-        }
+        Self { db: TestDatabase::with_files(1000).await }
     }
 
     pub fn pool(&self) -> &PgPool {
@@ -61,10 +55,9 @@ impl FileFixtures {
     pub async fn create_midi_files(&self, count: usize) -> Vec<std::path::PathBuf> {
         let mut paths = Vec::new();
         for i in 0..count {
-            let path = self.create_midi_file(
-                &format!("test_{}.mid", i),
-                &self.simple_midi_bytes()
-            ).await;
+            let path = self
+                .create_midi_file(&format!("test_{}.mid", i), &self.simple_midi_bytes())
+                .await;
             paths.push(path);
         }
         paths
@@ -145,14 +138,12 @@ impl FileFixtures {
     pub fn high_density_midi_bytes(&self) -> Vec<u8> {
         // MIDI header
         let mut bytes = vec![
-            0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06,
-            0x00, 0x00, 0x00, 0x01, 0x01, 0xE0,
+            0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x01, 0x01, 0xE0,
         ];
 
         // Calculate track size: Tempo (7) + 100 notes (9 bytes each) + End (4) = 911 bytes
         bytes.extend_from_slice(&[
-            0x4D, 0x54, 0x72, 0x6B,
-            0x00, 0x00, 0x03, 0x8F, // Track length (911 bytes)
+            0x4D, 0x54, 0x72, 0x6B, 0x00, 0x00, 0x03, 0x8F, // Track length (911 bytes)
             0x00, 0xFF, 0x51, 0x03, 0x07, 0xA1, 0x20, // Tempo
         ]);
 

@@ -13,7 +13,7 @@ pub mod velocity;
 
 // Re-export common types for convenience
 pub use controller::{
-    add_cc_point, delete_cc_point, AutomationPoint, ControllerEditorState, CCError,
+    add_cc_point, delete_cc_point, AutomationPoint, CCError, ControllerEditorState,
 };
 pub use piano_roll::{
     add_note, delete_note, move_note, select_note, set_quantize_grid, GridSnap, NoteSelection,
@@ -22,9 +22,7 @@ pub use piano_roll::{
 pub use tempo::{
     tempo_editor_add_tempo_ramp, tempo_editor_set_tempo, TempoEditorState, TempoError, TempoPoint,
 };
-pub use velocity::{
-    humanize_velocities, set_velocity, VelocityEditorState, VelocityError,
-};
+pub use velocity::{humanize_velocities, set_velocity, VelocityEditorState, VelocityError};
 
 #[cfg(test)]
 mod tests {

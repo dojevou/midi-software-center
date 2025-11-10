@@ -1,17 +1,14 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Default)]
 pub enum FontSize {
     Small,
+    #[default]
     Medium,
     Large,
 }
 
-impl Default for FontSize {
-    fn default() -> Self {
-        FontSize::Medium
-    }
-}
 
 impl FontSize {
     pub fn as_pixels(&self) -> u32 {
@@ -24,21 +21,18 @@ impl FontSize {
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
+#[derive(Default)]
 pub enum GridSnapOption {
     Off,
     Bar,
     HalfNote,
     QuarterNote,
     EighthNote,
+    #[default]
     SixteenthNote,
     ThirtySecondNote,
 }
 
-impl Default for GridSnapOption {
-    fn default() -> Self {
-        GridSnapOption::SixteenthNote
-    }
-}
 
 impl GridSnapOption {
     pub fn ticks_per_beat(&self, ppq: u32) -> u32 {
@@ -109,7 +103,7 @@ impl DisplaySettings {
     }
 
     pub fn set_window_scale(&mut self, scale: f32) -> Result<(), String> {
-        if scale < 1.0 || scale > 4.0 {
+        if !(1.0..=4.0).contains(&scale) {
             return Err("Window scale must be between 1.0 and 4.0".to_string());
         }
         self.window_scale = scale;
@@ -125,7 +119,7 @@ impl DisplaySettings {
     }
 
     pub fn set_timeline_zoom_default(&mut self, zoom: f32) -> Result<(), String> {
-        if zoom < 0.1 || zoom > 10.0 {
+        if !(0.1..=10.0).contains(&zoom) {
             return Err("Timeline zoom must be between 0.1 and 10.0".to_string());
         }
         self.timeline_zoom_default = zoom;
@@ -189,9 +183,7 @@ mod tests {
 
     #[test]
     fn test_builder_pattern() {
-        let settings = DisplaySettings::new()
-            .with_scale(2.0)
-            .with_font_size(FontSize::Large);
+        let settings = DisplaySettings::new().with_scale(2.0).with_font_size(FontSize::Large);
 
         assert_eq!(settings.window_scale, 2.0);
         assert_eq!(settings.font_size, FontSize::Large);

@@ -1,42 +1,44 @@
-   /// Comprehensive tests for pipeline/src-tauri/src/commands/analyze.rs
-   /// Commands: start_analysis
-   ///
-   /// **Target Coverage:** 90%+ (Trusty Module requirement: 80%+)
-   /// **Total Tests:** 35 (original comprehensive suite)
-   ///
-   /// This test suite validates the high-performance parallel analysis system that processes
-   /// 1.1M+ MIDI files using 32 concurrent workers with batch database operations.
-   ///
-   /// **Test Categories:**
-   /// 1. Musical Analysis Operations - BPM detection, key detection, duration calculation
-   /// 2. Parallel Processing - 32 worker pool with Arc<Semaphore> limiting
-   /// 3. Batch Database Operations - 1000-file fetch chunks, 100-file insert batches
-   /// 4. Progress Tracking - Arc<AtomicUsize> counters, event emission
-   /// 5. Error Handling - Arc<Mutex<Vec>>> error collection, graceful recovery
-   ///
-   /// **Performance Characteristics:**
-   /// - Batch fetching in 1000-file chunks from database
-   /// - Parallel analysis with 32 concurrent workers
-   /// - Arc<Semaphore> concurrency control for resource limiting
-   /// - Arc<AtomicUsize> thread-safe counters for progress tracking
-   /// - Arc<Mutex<Vec<>>> for error collection across workers
-   /// - Progress event emission throttling (every 10 files)
-   /// - Batch metadata insertion (100-file batches for optimal throughput)
-   ///
-   /// **Special Considerations:**
-   /// - BPM detector accuracy (within ±5 BPM tolerance)
-   /// - Key detector using Krumhansl-Schmuckler algorithm
-   /// - Duration analysis in both seconds and MIDI ticks
-   /// - Worker pool saturation and semaphore backpressure
-   /// - Database transaction batching for high throughput
-   /// - Progress event rate limiting to avoid UI overload
-   /// - Error recovery without stopping entire analysis batch
-
+#[allow(dead_code, unused_imports, unused_variables)]
+/// Comprehensive tests for pipeline/src-tauri/src/commands/analyze.rs
+/// Commands: start_analysis
+///
+/// **Target Coverage:** 90%+ (Trusty Module requirement: 80%+)
+/// **Total Tests:** 35 (original comprehensive suite)
+///
+/// This test suite validates the high-performance parallel analysis system that processes
+/// 1.1M+ MIDI files using 32 concurrent workers with batch database operations.
+///
+/// **Test Categories:**
+/// 1. Musical Analysis Operations - BPM detection, key detection, duration calculation
+/// 2. Parallel Processing - 32 worker pool with Arc<Semaphore> limiting
+/// 3. Batch Database Operations - 1000-file fetch chunks, 100-file insert batches
+/// 4. Progress Tracking - Arc<AtomicUsize> counters, event emission
+/// 5. Error Handling - Arc<Mutex<Vec>>> error collection, graceful recovery
+///
+/// **Performance Characteristics:**
+/// - Batch fetching in 1000-file chunks from database
+/// - Parallel analysis with 32 concurrent workers
+/// - Arc<Semaphore> concurrency control for resource limiting
+/// - Arc<AtomicUsize> thread-safe counters for progress tracking
+/// - Arc<Mutex<Vec<>>> for error collection across workers
+/// - Progress event emission throttling (every 10 files)
+/// - Batch metadata insertion (100-file batches for optimal throughput)
+///
+/// **Special Considerations:**
+/// - BPM detector accuracy (within ±5 BPM tolerance)
+/// - Key detector using Krumhansl-Schmuckler algorithm
+/// - Duration analysis in both seconds and MIDI ticks
+/// - Worker pool saturation and semaphore backpressure
+/// - Database transaction batching for high throughput
+/// - Progress event rate limiting to avoid UI overload
+/// - Error recovery without stopping entire analysis batch
 use common::*;
 use midi_library_shared::core::midi::parser::parse_midi_file;
-use midi_library_shared::core::midi::types::{Event, MidiFile, Header, Track, TimedEvent, TextType};
-use tauri::{Emitter, Manager};
+use midi_library_shared::core::midi::types::{
+    Event, Header, MidiFile, TextType, TimedEvent, Track,
+};
 use std::sync::Arc;
+use tauri::{Emitter, Manager};
 
 // Re-create AppState and necessary types for testing
 struct TestAppState {
@@ -45,9 +47,7 @@ struct TestAppState {
 
 impl TestAppState {
     async fn new() -> Self {
-        Self {
-            database: TestDatabase::new().await,
-        }
+        Self { database: TestDatabase::new().await }
     }
 }
 
@@ -59,9 +59,7 @@ struct TestWindow {
 
 impl TestWindow {
     fn new() -> Self {
-        Self {
-            events: Arc::new(Mutex::new(Vec::new())),
-        }
+        Self { events: Arc::new(Mutex::new(Vec::new())) }
     }
 
     async fn get_events(&self) -> Vec<(String, serde_json::Value)> {
@@ -86,7 +84,12 @@ impl<R: tauri::Runtime> Emitter<R> for TestWindow {
         Ok(())
     }
 
-    fn emit_to<S: serde::Serialize + Clone>(&self, _target: &str, event: &str, payload: S) -> tauri::Result<()> {
+    fn emit_to<S: serde::Serialize + Clone>(
+        &self,
+        _target: &str,
+        event: &str,
+        payload: S,
+    ) -> tauri::Result<()> {
         self.emit(event, payload)
     }
 
@@ -107,9 +110,9 @@ fn create_midi_bytes(bpm: f64, key_notes: &[u8]) -> Vec<u8> {
     bytes.extend_from_slice(&[
         0x4D, 0x54, 0x68, 0x64, // "MThd"
         0x00, 0x00, 0x00, 0x06, // Header length
-        0x00, 0x00,             // Format 0
-        0x00, 0x01,             // 1 track
-        0x01, 0xE0,             // 480 ticks/beat
+        0x00, 0x00, // Format 0
+        0x00, 0x01, // 1 track
+        0x01, 0xE0, // 480 ticks/beat
     ]);
 
     // Calculate microseconds per beat for tempo
@@ -167,16 +170,13 @@ fn create_complex_midi_bytes() -> Vec<u8> {
 
     // MIDI header
     bytes.extend_from_slice(&[
-        0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06,
-        0x00, 0x00, 0x00, 0x01, 0x01, 0xE0,
+        0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x01, 0x01, 0xE0,
     ]);
 
     let mut track_data = Vec::new();
 
     // Tempo: 140 BPM
-    track_data.extend_from_slice(&[
-        0x00, 0xFF, 0x51, 0x03, 0x06, 0xB3, 0xB3,
-    ]);
+    track_data.extend_from_slice(&[0x00, 0xFF, 0x51, 0x03, 0x06, 0xB3, 0xB3]);
 
     // Track name
     let name = b"Piano";
@@ -191,9 +191,7 @@ fn create_complex_midi_bytes() -> Vec<u8> {
         0x00, 0x90, 60, 80, // C4
         0x00, 0x90, 64, 82, // E4
         0x00, 0x90, 67, 84, // G4
-        0x20, 0x80, 60, 40,
-        0x00, 0x80, 64, 40,
-        0x00, 0x80, 67, 40,
+        0x20, 0x80, 60, 40, 0x00, 0x80, 64, 40, 0x00, 0x80, 67, 40,
     ]);
 
     // Pitch bend
@@ -232,7 +230,7 @@ async fn test_start_analysis_empty_unanalyzed() {
     for i in 0..10 {
         let file_id: i64 = sqlx::query_scalar(
             "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
-             VALUES ($1, $2, $3) RETURNING file_id"
+             VALUES ($1, $2, $3) RETURNING file_id",
         )
         .bind(format!("/test/file_{}.mid", i))
         .bind(format!("{:064x}", i))
@@ -252,13 +250,15 @@ async fn test_start_analysis_empty_unanalyzed() {
     // Call start_analysis - should return immediately with 0 analyzed
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok(), "Analysis should succeed");
     let summary = result.unwrap();
@@ -282,7 +282,7 @@ async fn test_start_analysis_single_file() {
     // Insert into database
     let file_id: i64 = sqlx::query_scalar(
         "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
-         VALUES ($1, $2, $3) RETURNING file_id"
+         VALUES ($1, $2, $3) RETURNING file_id",
     )
     .bind(midi_path.to_str().unwrap())
     .bind(format!("{:064x}", 12345))
@@ -294,42 +294,50 @@ async fn test_start_analysis_single_file() {
     // Analyze
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
-    assert!(result.is_ok(), "Analysis should succeed: {:?}", result.err());
+    assert!(
+        result.is_ok(),
+        "Analysis should succeed: {:?}",
+        result.err()
+    );
     let summary = result.unwrap();
     assert_eq!(summary.total_files, 1);
     assert_eq!(summary.analyzed, 1);
     assert_eq!(summary.skipped, 0);
 
     // Verify metadata was inserted
-    let metadata: Option<(f64, String)> = sqlx::query_as(
-        "SELECT tempo_bpm, key_signature FROM musical_metadata WHERE file_id = $1"
-    )
-    .bind(file_id)
-    .fetch_optional(pool)
-    .await
-    .expect("Failed to fetch metadata");
+    let metadata: Option<(f64, String)> =
+        sqlx::query_as("SELECT tempo_bpm, key_signature FROM musical_metadata WHERE file_id = $1")
+            .bind(file_id)
+            .fetch_optional(pool)
+            .await
+            .expect("Failed to fetch metadata");
 
     assert!(metadata.is_some(), "Metadata should exist");
     let (bpm, key) = metadata.unwrap();
     assert!((bpm - 120.0).abs() < 5.0, "BPM should be ~120, got {}", bpm);
-    assert!(key.contains("C") || key.contains("major"), "Key should be C major-ish, got {}", key);
+    assert!(
+        key.contains("C") || key.contains("major"),
+        "Key should be C major-ish, got {}",
+        key
+    );
 
     // Verify analyzed_at was set
-    let analyzed_at: Option<chrono::NaiveDateTime> = sqlx::query_scalar(
-        "SELECT analyzed_at FROM files WHERE file_id = $1"
-    )
-    .bind(file_id)
-    .fetch_one(pool)
-    .await
-    .expect("Failed to fetch analyzed_at");
+    let analyzed_at: Option<chrono::NaiveDateTime> =
+        sqlx::query_scalar("SELECT analyzed_at FROM files WHERE file_id = $1")
+            .bind(file_id)
+            .fetch_one(pool)
+            .await
+            .expect("Failed to fetch analyzed_at");
 
     assert!(analyzed_at.is_some(), "analyzed_at should be set");
 
@@ -347,11 +355,12 @@ async fn test_start_analysis_100_files() {
     for i in 0..100 {
         let bpm = 100.0 + (i as f64 * 0.5); // 100-149.5 BPM
         let midi_bytes = create_midi_bytes(bpm, &[60, 62, 64, 65, 67, 69, 71, 72]);
-        let midi_path = file_fixtures.create_midi_file(&format!("test_{}.mid", i), &midi_bytes).await;
+        let midi_path =
+            file_fixtures.create_midi_file(&format!("test_{}.mid", i), &midi_bytes).await;
 
         let file_id: i64 = sqlx::query_scalar(
             "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
-             VALUES ($1, $2, $3) RETURNING file_id"
+             VALUES ($1, $2, $3) RETURNING file_id",
         )
         .bind(midi_path.to_str().unwrap())
         .bind(format!("{:064x}", i))
@@ -367,13 +376,15 @@ async fn test_start_analysis_100_files() {
     let window = TestWindow::new();
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         window.clone(),
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok(), "Analysis should succeed");
     let summary = result.unwrap();
@@ -382,23 +393,24 @@ async fn test_start_analysis_100_files() {
     assert_eq!(summary.skipped, 0);
 
     // Verify all files have metadata
-    let metadata_count: i64 = sqlx::query_scalar(
-        "SELECT COUNT(*) FROM musical_metadata WHERE file_id = ANY($1)"
-    )
-    .bind(&file_ids)
-    .fetch_one(pool)
-    .await
-    .expect("Failed to count metadata");
+    let metadata_count: i64 =
+        sqlx::query_scalar("SELECT COUNT(*) FROM musical_metadata WHERE file_id = ANY($1)")
+            .bind(&file_ids)
+            .fetch_one(pool)
+            .await
+            .expect("Failed to count metadata");
 
     assert_eq!(metadata_count, 100, "All files should have metadata");
 
     // Verify progress events were emitted (every 10 files)
     let events = window.get_events().await;
-    let progress_events: Vec<_> = events.iter()
-        .filter(|(name, _)| name == "analysis-progress")
-        .collect();
+    let progress_events: Vec<_> =
+        events.iter().filter(|(name, _)| name == "analysis-progress").collect();
 
-    assert!(progress_events.len() >= 10, "Should have at least 10 progress events");
+    assert!(
+        progress_events.len() >= 10,
+        "Should have at least 10 progress events"
+    );
 
     db.cleanup().await;
 }
@@ -413,11 +425,12 @@ async fn test_start_analysis_1000_files() {
     let midi_bytes = create_midi_bytes(120.0, &[60, 62, 64]);
 
     for i in 0..1000 {
-        let midi_path = file_fixtures.create_midi_file(&format!("batch_{}.mid", i), &midi_bytes).await;
+        let midi_path =
+            file_fixtures.create_midi_file(&format!("batch_{}.mid", i), &midi_bytes).await;
 
         sqlx::query(
             "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
-             VALUES ($1, $2, $3)"
+             VALUES ($1, $2, $3)",
         )
         .bind(midi_path.to_str().unwrap())
         .bind(format!("{:064x}", i))
@@ -430,13 +443,15 @@ async fn test_start_analysis_1000_files() {
     // Analyze
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok(), "Analysis should succeed");
     let summary = result.unwrap();
@@ -444,12 +459,10 @@ async fn test_start_analysis_1000_files() {
     assert_eq!(summary.analyzed, 1000);
 
     // Verify batching worked - all metadata inserted
-    let metadata_count: i64 = sqlx::query_scalar(
-        "SELECT COUNT(*) FROM musical_metadata"
-    )
-    .fetch_one(pool)
-    .await
-    .expect("Failed to count");
+    let metadata_count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM musical_metadata")
+        .fetch_one(pool)
+        .await
+        .expect("Failed to count");
 
     assert!(metadata_count >= 1000, "All files should have metadata");
 
@@ -468,7 +481,7 @@ async fn test_start_analysis_metadata_extracted() {
 
     let file_id: i64 = sqlx::query_scalar(
         "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
-         VALUES ($1, $2, $3) RETURNING file_id"
+         VALUES ($1, $2, $3) RETURNING file_id",
     )
     .bind(midi_path.to_str().unwrap())
     .bind(format!("{:064x}", 99999))
@@ -480,28 +493,30 @@ async fn test_start_analysis_metadata_extracted() {
     // Analyze
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok());
 
     // Verify comprehensive metadata extraction
     let metadata: (
-        Option<f64>,  // tempo_bpm
+        Option<f64>,    // tempo_bpm
         Option<String>, // key_signature
-        Option<i16>,  // time_signature_num
-        Option<i16>,  // time_signature_den
-        Option<f64>,  // duration_seconds
-        i32,          // note_count
+        Option<i16>,    // time_signature_num
+        Option<i16>,    // time_signature_den
+        Option<f64>,    // duration_seconds
+        i32,            // note_count
     ) = sqlx::query_as(
         "SELECT tempo_bpm, key_signature, time_signature_num, time_signature_den,
                 duration_seconds, note_count
-         FROM musical_metadata WHERE file_id = $1"
+         FROM musical_metadata WHERE file_id = $1",
     )
     .bind(file_id)
     .fetch_one(pool)
@@ -511,7 +526,11 @@ async fn test_start_analysis_metadata_extracted() {
     assert!(metadata.0.is_some(), "BPM should be detected");
     assert!(metadata.1.is_some(), "Key should be detected");
     assert_eq!(metadata.2, Some(4), "Time signature numerator should be 4");
-    assert_eq!(metadata.3, Some(4), "Time signature denominator should be 4");
+    assert_eq!(
+        metadata.3,
+        Some(4),
+        "Time signature denominator should be 4"
+    );
     assert!(metadata.4.is_some(), "Duration should be calculated");
     assert!(metadata.5 > 0, "Note count should be > 0");
 
@@ -528,11 +547,13 @@ async fn test_start_analysis_batch_database_insert() {
     let midi_bytes = create_midi_bytes(120.0, &[60, 64, 67]);
 
     for i in 0..150 {
-        let midi_path = file_fixtures.create_midi_file(&format!("batch_insert_{}.mid", i), &midi_bytes).await;
+        let midi_path = file_fixtures
+            .create_midi_file(&format!("batch_insert_{}.mid", i), &midi_bytes)
+            .await;
 
         sqlx::query(
             "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
-             VALUES ($1, $2, $3)"
+             VALUES ($1, $2, $3)",
         )
         .bind(midi_path.to_str().unwrap())
         .bind(format!("{:064x}", i + 50000))
@@ -545,13 +566,15 @@ async fn test_start_analysis_batch_database_insert() {
     // Analyze - should trigger batch insert at 100 files and final flush at 150
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok());
     let summary = result.unwrap();
@@ -561,7 +584,7 @@ async fn test_start_analysis_batch_database_insert() {
     let count: i64 = sqlx::query_scalar(
         "SELECT COUNT(*) FROM musical_metadata m
          JOIN files f ON m.file_id = f.file_id
-         WHERE f.file_path LIKE '/tmp%batch_insert%'"
+         WHERE f.file_path LIKE '/tmp%batch_insert%'",
     )
     .fetch_one(pool)
     .await
@@ -582,11 +605,12 @@ async fn test_start_analysis_worker_pool_32() {
     let midi_bytes = create_midi_bytes(120.0, &[60, 64, 67]);
 
     for i in 0..64 {
-        let midi_path = file_fixtures.create_midi_file(&format!("worker_{}.mid", i), &midi_bytes).await;
+        let midi_path =
+            file_fixtures.create_midi_file(&format!("worker_{}.mid", i), &midi_bytes).await;
 
         sqlx::query(
             "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
-             VALUES ($1, $2, $3)"
+             VALUES ($1, $2, $3)",
         )
         .bind(midi_path.to_str().unwrap())
         .bind(format!("{:064x}", i + 60000))
@@ -600,13 +624,15 @@ async fn test_start_analysis_worker_pool_32() {
 
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
     let duration = start.elapsed();
 
@@ -617,7 +643,10 @@ async fn test_start_analysis_worker_pool_32() {
     // With 32 workers, 64 files should complete faster than sequential
     // Sequential would be ~64 * analysis_time, parallel should be ~2 * analysis_time
     // This is a soft check - just ensure it completes
-    assert!(duration.as_secs() < 30, "Should complete in reasonable time with parallelism");
+    assert!(
+        duration.as_secs() < 30,
+        "Should complete in reasonable time with parallelism"
+    );
 
     db.cleanup().await;
 }
@@ -632,11 +661,12 @@ async fn test_start_analysis_arc_atomic_counter() {
     let midi_bytes = create_midi_bytes(120.0, &[60]);
 
     for i in 0..25 {
-        let midi_path = file_fixtures.create_midi_file(&format!("counter_{}.mid", i), &midi_bytes).await;
+        let midi_path =
+            file_fixtures.create_midi_file(&format!("counter_{}.mid", i), &midi_bytes).await;
 
         sqlx::query(
             "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
-             VALUES ($1, $2, $3)"
+             VALUES ($1, $2, $3)",
         )
         .bind(midi_path.to_str().unwrap())
         .bind(format!("{:064x}", i + 70000))
@@ -648,19 +678,24 @@ async fn test_start_analysis_arc_atomic_counter() {
 
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok());
     let summary = result.unwrap();
 
     // Arc<AtomicUsize> counter should accurately track all files
-    assert_eq!(summary.analyzed, 25, "Counter should track exactly 25 analyzed files");
+    assert_eq!(
+        summary.analyzed, 25,
+        "Counter should track exactly 25 analyzed files"
+    );
     assert_eq!(summary.skipped, 0, "Counter should track 0 skipped files");
     assert_eq!(summary.total_files, 25, "Total should match");
 
@@ -688,7 +723,7 @@ async fn test_start_analysis_arc_mutex_error_collection() {
 
         sqlx::query(
             "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
-             VALUES ($1, $2, $3)"
+             VALUES ($1, $2, $3)",
         )
         .bind(midi_path.to_str().unwrap())
         .bind(format!("{:064x}", i + 80000))
@@ -700,20 +735,26 @@ async fn test_start_analysis_arc_mutex_error_collection() {
 
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok());
     let summary = result.unwrap();
 
     // Arc<Mutex<Vec<String>>> should collect errors from invalid files
     assert_eq!(summary.total_files, 10);
-    assert_eq!(summary.analyzed + summary.skipped, 10, "All files accounted for");
+    assert_eq!(
+        summary.analyzed + summary.skipped,
+        10,
+        "All files accounted for"
+    );
     assert!(summary.skipped > 0, "Should have skipped invalid files");
     assert!(!summary.errors.is_empty(), "Should have error messages");
 
@@ -730,11 +771,13 @@ async fn test_start_analysis_progress_events() {
     let midi_bytes = create_midi_bytes(120.0, &[60, 64, 67]);
 
     for i in 0..35 {
-        let midi_path = file_fixtures.create_midi_file(&format!("progress_{}.mid", i), &midi_bytes).await;
+        let midi_path = file_fixtures
+            .create_midi_file(&format!("progress_{}.mid", i), &midi_bytes)
+            .await;
 
         sqlx::query(
             "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
-             VALUES ($1, $2, $3)"
+             VALUES ($1, $2, $3)",
         )
         .bind(midi_path.to_str().unwrap())
         .bind(format!("{:064x}", i + 90000))
@@ -748,13 +791,15 @@ async fn test_start_analysis_progress_events() {
 
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         window.clone(),
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok());
 
@@ -762,19 +807,34 @@ async fn test_start_analysis_progress_events() {
     tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
 
     let events = window.get_events().await;
-    let progress_events: Vec<_> = events.iter()
-        .filter(|(name, _)| name == "analysis-progress")
-        .collect();
+    let progress_events: Vec<_> =
+        events.iter().filter(|(name, _)| name == "analysis-progress").collect();
 
     // Should emit at files: 10, 20, 30, 35 (at minimum)
-    assert!(progress_events.len() >= 4, "Should have at least 4 progress events, got {}", progress_events.len());
+    assert!(
+        progress_events.len() >= 4,
+        "Should have at least 4 progress events, got {}",
+        progress_events.len()
+    );
 
     // Verify event structure
     if let Some((_, payload)) = progress_events.first() {
-        assert!(payload.get("current").is_some(), "Event should have 'current' field");
-        assert!(payload.get("total").is_some(), "Event should have 'total' field");
-        assert!(payload.get("rate").is_some(), "Event should have 'rate' field");
-        assert!(payload.get("eta_seconds").is_some(), "Event should have 'eta_seconds' field");
+        assert!(
+            payload.get("current").is_some(),
+            "Event should have 'current' field"
+        );
+        assert!(
+            payload.get("total").is_some(),
+            "Event should have 'total' field"
+        );
+        assert!(
+            payload.get("rate").is_some(),
+            "Event should have 'rate' field"
+        );
+        assert!(
+            payload.get("eta_seconds").is_some(),
+            "Event should have 'eta_seconds' field"
+        );
     }
 
     db.cleanup().await;
@@ -790,11 +850,13 @@ async fn test_start_analysis_batching_1000_items() {
     let midi_bytes = create_midi_bytes(120.0, &[60]);
 
     for i in 0..2500 {
-        let midi_path = file_fixtures.create_midi_file(&format!("large_batch_{}.mid", i), &midi_bytes).await;
+        let midi_path = file_fixtures
+            .create_midi_file(&format!("large_batch_{}.mid", i), &midi_bytes)
+            .await;
 
         sqlx::query(
             "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
-             VALUES ($1, $2, $3)"
+             VALUES ($1, $2, $3)",
         )
         .bind(midi_path.to_str().unwrap())
         .bind(format!("{:064x}", i + 100000))
@@ -811,13 +873,15 @@ async fn test_start_analysis_batching_1000_items() {
 
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok());
     let summary = result.unwrap();
@@ -839,7 +903,7 @@ async fn test_start_analysis_individual_file_failures() {
     for i in 0..20 {
         sqlx::query(
             "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
-             VALUES ($1, $2, $3)"
+             VALUES ($1, $2, $3)",
         )
         .bind(format!("/nonexistent/path/file_{}.mid", i))
         .bind(format!("{:064x}", i + 110000))
@@ -851,19 +915,24 @@ async fn test_start_analysis_individual_file_failures() {
 
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok(), "Analysis should continue despite failures");
     let summary = result.unwrap();
 
     assert_eq!(summary.total_files, 20);
-    assert_eq!(summary.skipped, 20, "All files should be skipped due to file not found");
+    assert_eq!(
+        summary.skipped, 20,
+        "All files should be skipped due to file not found"
+    );
     assert_eq!(summary.analyzed, 0);
     assert_eq!(summary.errors.len(), 20, "Should have 20 error messages");
 
@@ -880,11 +949,13 @@ async fn test_start_analysis_invalid_midi_handling() {
     let corrupt_bytes = vec![0xFF, 0xFF, 0xFF, 0xFF]; // Not valid MIDI
 
     for i in 0..15 {
-        let midi_path = file_fixtures.create_midi_file(&format!("corrupt_{}.mid", i), &corrupt_bytes).await;
+        let midi_path = file_fixtures
+            .create_midi_file(&format!("corrupt_{}.mid", i), &corrupt_bytes)
+            .await;
 
         sqlx::query(
             "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
-             VALUES ($1, $2, $3)"
+             VALUES ($1, $2, $3)",
         )
         .bind(midi_path.to_str().unwrap())
         .bind(format!("{:064x}", i + 120000))
@@ -896,20 +967,25 @@ async fn test_start_analysis_invalid_midi_handling() {
 
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok(), "Should handle corrupt MIDI gracefully");
     let summary = result.unwrap();
 
     assert_eq!(summary.total_files, 15);
     assert_eq!(summary.skipped, 15, "All corrupt files should be skipped");
-    assert!(!summary.errors.is_empty(), "Should have error messages for corrupt files");
+    assert!(
+        !summary.errors.is_empty(),
+        "Should have error messages for corrupt files"
+    );
 
     db.cleanup().await;
 }
@@ -925,11 +1001,12 @@ async fn test_start_analysis_bpm_accuracy_c_major() {
 
     for (i, bpm) in test_bpms.iter().enumerate() {
         let midi_bytes = create_midi_bytes(*bpm, &[60, 62, 64, 65, 67, 69, 71, 72]);
-        let midi_path = file_fixtures.create_midi_file(&format!("bpm_{}.mid", i), &midi_bytes).await;
+        let midi_path =
+            file_fixtures.create_midi_file(&format!("bpm_{}.mid", i), &midi_bytes).await;
 
         let file_id: i64 = sqlx::query_scalar(
             "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
-             VALUES ($1, $2, $3) RETURNING file_id"
+             VALUES ($1, $2, $3) RETURNING file_id",
         )
         .bind(midi_path.to_str().unwrap())
         .bind(format!("{:064x}", i + 130000))
@@ -941,13 +1018,15 @@ async fn test_start_analysis_bpm_accuracy_c_major() {
 
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok());
 
@@ -956,7 +1035,7 @@ async fn test_start_analysis_bpm_accuracy_c_major() {
         "SELECT tempo_bpm FROM musical_metadata m
          JOIN files f ON m.file_id = f.file_id
          WHERE f.file_path LIKE '/tmp%bpm_%'
-         ORDER BY f.file_id"
+         ORDER BY f.file_id",
     )
     .fetch_all(pool)
     .await
@@ -965,8 +1044,13 @@ async fn test_start_analysis_bpm_accuracy_c_major() {
     for (i, detected) in detected_bpms.iter().enumerate() {
         let expected = test_bpms[i];
         let error_percent = ((detected - expected).abs() / expected) * 100.0;
-        assert!(error_percent < 5.0, "BPM accuracy should be within 5% for {}, got {}, expected {}",
-                i, detected, expected);
+        assert!(
+            error_percent < 5.0,
+            "BPM accuracy should be within 5% for {}, got {}, expected {}",
+            i,
+            detected,
+            expected
+        );
     }
 
     db.cleanup().await;
@@ -980,18 +1064,19 @@ async fn test_start_analysis_key_detection_accuracy() {
 
     // Test different keys
     let keys = vec![
-        ("C_major", vec![60, 62, 64, 65, 67, 69, 71, 72]),    // C major scale
-        ("D_major", vec![62, 64, 66, 67, 69, 71, 73, 74]),    // D major scale
-        ("E_minor", vec![64, 66, 67, 69, 71, 72, 74, 76]),    // E minor scale
+        ("C_major", vec![60, 62, 64, 65, 67, 69, 71, 72]), // C major scale
+        ("D_major", vec![62, 64, 66, 67, 69, 71, 73, 74]), // D major scale
+        ("E_minor", vec![64, 66, 67, 69, 71, 72, 74, 76]), // E minor scale
     ];
 
     for (i, (key_name, notes)) in keys.iter().enumerate() {
         let midi_bytes = create_midi_bytes(120.0, notes);
-        let midi_path = file_fixtures.create_midi_file(&format!("key_{}.mid", i), &midi_bytes).await;
+        let midi_path =
+            file_fixtures.create_midi_file(&format!("key_{}.mid", i), &midi_bytes).await;
 
         sqlx::query(
             "INSERT INTO files (file_path, blake3_hash, file_size_bytes, filename)
-             VALUES ($1, $2, $3, $4)"
+             VALUES ($1, $2, $3, $4)",
         )
         .bind(midi_path.to_str().unwrap())
         .bind(format!("{:064x}", i + 140000))
@@ -1004,13 +1089,15 @@ async fn test_start_analysis_key_detection_accuracy() {
 
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok());
 
@@ -1019,7 +1106,7 @@ async fn test_start_analysis_key_detection_accuracy() {
         "SELECT key_signature FROM musical_metadata m
          JOIN files f ON m.file_id = f.file_id
          WHERE f.filename LIKE '%major%' OR f.filename LIKE '%minor%'
-         ORDER BY f.file_id"
+         ORDER BY f.file_id",
     )
     .fetch_all(pool)
     .await
@@ -1048,7 +1135,7 @@ async fn test_start_analysis_duration_calculation() {
 
     let file_id: i64 = sqlx::query_scalar(
         "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
-         VALUES ($1, $2, $3) RETURNING file_id"
+         VALUES ($1, $2, $3) RETURNING file_id",
     )
     .bind(midi_path.to_str().unwrap())
     .bind(format!("{:064x}", 150000))
@@ -1059,27 +1146,35 @@ async fn test_start_analysis_duration_calculation() {
 
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok());
 
     // Verify duration was calculated
     let (duration_secs, duration_ticks): (Option<f64>, Option<i32>) = sqlx::query_as(
-        "SELECT duration_seconds, duration_ticks FROM musical_metadata WHERE file_id = $1"
+        "SELECT duration_seconds, duration_ticks FROM musical_metadata WHERE file_id = $1",
     )
     .bind(file_id)
     .fetch_one(pool)
     .await
     .expect("Failed to fetch duration");
 
-    assert!(duration_secs.is_some(), "Duration in seconds should be calculated");
-    assert!(duration_ticks.is_some(), "Duration in ticks should be calculated");
+    assert!(
+        duration_secs.is_some(),
+        "Duration in seconds should be calculated"
+    );
+    assert!(
+        duration_ticks.is_some(),
+        "Duration in ticks should be calculated"
+    );
     assert!(duration_secs.unwrap() > 0.0, "Duration should be positive");
     assert!(duration_ticks.unwrap() > 0, "Tick count should be positive");
 
@@ -1098,7 +1193,7 @@ async fn test_start_analysis_instrument_extraction() {
 
     let file_id: i64 = sqlx::query_scalar(
         "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
-         VALUES ($1, $2, $3) RETURNING file_id"
+         VALUES ($1, $2, $3) RETURNING file_id",
     )
     .bind(midi_path.to_str().unwrap())
     .bind(format!("{:064x}", 160000))
@@ -1109,29 +1204,32 @@ async fn test_start_analysis_instrument_extraction() {
 
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok());
 
     // Verify instruments were extracted
-    let instruments: Vec<String> = sqlx::query_scalar(
-        "SELECT instruments FROM musical_metadata WHERE file_id = $1"
-    )
-    .bind(file_id)
-    .fetch_one(pool)
-    .await
-    .expect("Failed to fetch instruments");
+    let instruments: Vec<String> =
+        sqlx::query_scalar("SELECT instruments FROM musical_metadata WHERE file_id = $1")
+            .bind(file_id)
+            .fetch_one(pool)
+            .await
+            .expect("Failed to fetch instruments");
 
     assert!(!instruments.is_empty(), "Should detect instruments");
     // Should contain "Piano" from track name or program change
-    assert!(instruments.iter().any(|i| i.contains("Piano") || i.contains("piano")),
-            "Should detect Piano instrument");
+    assert!(
+        instruments.iter().any(|i| i.contains("Piano") || i.contains("piano")),
+        "Should detect Piano instrument"
+    );
 
     db.cleanup().await;
 }
@@ -1148,7 +1246,7 @@ async fn test_start_analysis_tempo_map_handling() {
 
     let file_id: i64 = sqlx::query_scalar(
         "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
-         VALUES ($1, $2, $3) RETURNING file_id"
+         VALUES ($1, $2, $3) RETURNING file_id",
     )
     .bind(midi_path.to_str().unwrap())
     .bind(format!("{:064x}", 170000))
@@ -1159,27 +1257,31 @@ async fn test_start_analysis_tempo_map_handling() {
 
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok());
 
     // Verify tempo variation flag
-    let has_variation: bool = sqlx::query_scalar(
-        "SELECT has_tempo_variation FROM musical_metadata WHERE file_id = $1"
-    )
-    .bind(file_id)
-    .fetch_one(pool)
-    .await
-    .expect("Failed to fetch tempo variation");
+    let has_variation: bool =
+        sqlx::query_scalar("SELECT has_tempo_variation FROM musical_metadata WHERE file_id = $1")
+            .bind(file_id)
+            .fetch_one(pool)
+            .await
+            .expect("Failed to fetch tempo variation");
 
     // Simple file should not have tempo variation
-    assert!(!has_variation, "Simple file should not have tempo variation");
+    assert!(
+        !has_variation,
+        "Simple file should not have tempo variation"
+    );
 
     db.cleanup().await;
 }
@@ -1196,7 +1298,7 @@ async fn test_start_analysis_time_signature_detection() {
 
     let file_id: i64 = sqlx::query_scalar(
         "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
-         VALUES ($1, $2, $3) RETURNING file_id"
+         VALUES ($1, $2, $3) RETURNING file_id",
     )
     .bind(midi_path.to_str().unwrap())
     .bind(format!("{:064x}", 180000))
@@ -1207,19 +1309,21 @@ async fn test_start_analysis_time_signature_detection() {
 
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok());
 
     // Verify time signature
     let (num, den): (Option<i16>, Option<i16>) = sqlx::query_as(
-        "SELECT time_signature_num, time_signature_den FROM musical_metadata WHERE file_id = $1"
+        "SELECT time_signature_num, time_signature_den FROM musical_metadata WHERE file_id = $1",
     )
     .bind(file_id)
     .fetch_one(pool)
@@ -1244,7 +1348,7 @@ async fn test_start_analysis_polyphonic_notes_count() {
 
     let file_id: i64 = sqlx::query_scalar(
         "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
-         VALUES ($1, $2, $3) RETURNING file_id"
+         VALUES ($1, $2, $3) RETURNING file_id",
     )
     .bind(midi_path.to_str().unwrap())
     .bind(format!("{:064x}", 190000))
@@ -1255,27 +1359,31 @@ async fn test_start_analysis_polyphonic_notes_count() {
 
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok());
 
     // Verify polyphony detection
-    let polyphony: Option<i16> = sqlx::query_scalar(
-        "SELECT polyphony_max FROM musical_metadata WHERE file_id = $1"
-    )
-    .bind(file_id)
-    .fetch_one(pool)
-    .await
-    .expect("Failed to fetch polyphony");
+    let polyphony: Option<i16> =
+        sqlx::query_scalar("SELECT polyphony_max FROM musical_metadata WHERE file_id = $1")
+            .bind(file_id)
+            .fetch_one(pool)
+            .await
+            .expect("Failed to fetch polyphony");
 
     assert!(polyphony.is_some(), "Polyphony should be detected");
-    assert!(polyphony.unwrap() >= 3, "Should detect chord (3+ simultaneous notes)");
+    assert!(
+        polyphony.unwrap() >= 3,
+        "Should detect chord (3+ simultaneous notes)"
+    );
 
     db.cleanup().await;
 }
@@ -1292,7 +1400,7 @@ async fn test_start_analysis_percussion_detection() {
 
     let file_id: i64 = sqlx::query_scalar(
         "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
-         VALUES ($1, $2, $3) RETURNING file_id"
+         VALUES ($1, $2, $3) RETURNING file_id",
     )
     .bind(midi_path.to_str().unwrap())
     .bind(format!("{:064x}", 200000))
@@ -1303,24 +1411,25 @@ async fn test_start_analysis_percussion_detection() {
 
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok());
 
     // Just verify analysis completed
-    let note_count: i32 = sqlx::query_scalar(
-        "SELECT note_count FROM musical_metadata WHERE file_id = $1"
-    )
-    .bind(file_id)
-    .fetch_one(pool)
-    .await
-    .expect("Failed to fetch note count");
+    let note_count: i32 =
+        sqlx::query_scalar("SELECT note_count FROM musical_metadata WHERE file_id = $1")
+            .bind(file_id)
+            .fetch_one(pool)
+            .await
+            .expect("Failed to fetch note count");
 
     assert!(note_count > 0, "Should have detected notes");
 
@@ -1338,7 +1447,7 @@ async fn test_start_analysis_velocity_statistics() {
 
     let file_id: i64 = sqlx::query_scalar(
         "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
-         VALUES ($1, $2, $3) RETURNING file_id"
+         VALUES ($1, $2, $3) RETURNING file_id",
     )
     .bind(midi_path.to_str().unwrap())
     .bind(format!("{:064x}", 210000))
@@ -1349,20 +1458,22 @@ async fn test_start_analysis_velocity_statistics() {
 
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok());
 
     // Verify velocity statistics
     let (avg_vel, vel_low, vel_high): (Option<f64>, Option<i16>, Option<i16>) = sqlx::query_as(
         "SELECT avg_velocity, velocity_range_low, velocity_range_high
-         FROM musical_metadata WHERE file_id = $1"
+         FROM musical_metadata WHERE file_id = $1",
     )
     .bind(file_id)
     .fetch_one(pool)
@@ -1372,7 +1483,10 @@ async fn test_start_analysis_velocity_statistics() {
     assert!(avg_vel.is_some(), "Average velocity should be calculated");
     assert!(vel_low.is_some(), "Min velocity should be detected");
     assert!(vel_high.is_some(), "Max velocity should be detected");
-    assert!(avg_vel.unwrap() > 0.0 && avg_vel.unwrap() <= 127.0, "Velocity should be in valid range");
+    assert!(
+        avg_vel.unwrap() > 0.0 && avg_vel.unwrap() <= 127.0,
+        "Velocity should be in valid range"
+    );
 
     db.cleanup().await;
 }
@@ -1389,7 +1503,7 @@ async fn test_start_analysis_note_range_calculation() {
 
     let file_id: i64 = sqlx::query_scalar(
         "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
-         VALUES ($1, $2, $3) RETURNING file_id"
+         VALUES ($1, $2, $3) RETURNING file_id",
     )
     .bind(midi_path.to_str().unwrap())
     .bind(format!("{:064x}", 220000))
@@ -1400,20 +1514,22 @@ async fn test_start_analysis_note_range_calculation() {
 
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok());
 
     // Verify note range
     let (low, high, semitones): (Option<i16>, Option<i16>, Option<i16>) = sqlx::query_as(
         "SELECT pitch_range_low, pitch_range_high, pitch_range_semitones
-         FROM musical_metadata WHERE file_id = $1"
+         FROM musical_metadata WHERE file_id = $1",
     )
     .bind(file_id)
     .fetch_one(pool)
@@ -1425,7 +1541,11 @@ async fn test_start_analysis_note_range_calculation() {
     assert!(semitones.is_some(), "Semitone range should be calculated");
     assert_eq!(low.unwrap(), 60, "Lowest note should be C4 (60)");
     assert_eq!(high.unwrap(), 72, "Highest note should be C5 (72)");
-    assert_eq!(semitones.unwrap(), 12, "Range should be 12 semitones (1 octave)");
+    assert_eq!(
+        semitones.unwrap(),
+        12,
+        "Range should be 12 semitones (1 octave)"
+    );
 
     db.cleanup().await;
 }
@@ -1446,7 +1566,7 @@ async fn test_start_analysis_complexity_score() {
 
     let simple_id: i64 = sqlx::query_scalar(
         "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
-         VALUES ($1, $2, $3) RETURNING file_id"
+         VALUES ($1, $2, $3) RETURNING file_id",
     )
     .bind(simple_path.to_str().unwrap())
     .bind(format!("{:064x}", 230000))
@@ -1457,7 +1577,7 @@ async fn test_start_analysis_complexity_score() {
 
     let complex_id: i64 = sqlx::query_scalar(
         "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
-         VALUES ($1, $2, $3) RETURNING file_id"
+         VALUES ($1, $2, $3) RETURNING file_id",
     )
     .bind(complex_path.to_str().unwrap())
     .bind(format!("{:064x}", 230001))
@@ -1468,37 +1588,45 @@ async fn test_start_analysis_complexity_score() {
 
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok());
 
     // Verify complexity scores
-    let simple_score: Option<f64> = sqlx::query_scalar(
-        "SELECT complexity_score FROM musical_metadata WHERE file_id = $1"
-    )
-    .bind(simple_id)
-    .fetch_one(pool)
-    .await
-    .expect("Failed to fetch simple score");
+    let simple_score: Option<f64> =
+        sqlx::query_scalar("SELECT complexity_score FROM musical_metadata WHERE file_id = $1")
+            .bind(simple_id)
+            .fetch_one(pool)
+            .await
+            .expect("Failed to fetch simple score");
 
-    let complex_score: Option<f64> = sqlx::query_scalar(
-        "SELECT complexity_score FROM musical_metadata WHERE file_id = $1"
-    )
-    .bind(complex_id)
-    .fetch_one(pool)
-    .await
-    .expect("Failed to fetch complex score");
+    let complex_score: Option<f64> =
+        sqlx::query_scalar("SELECT complexity_score FROM musical_metadata WHERE file_id = $1")
+            .bind(complex_id)
+            .fetch_one(pool)
+            .await
+            .expect("Failed to fetch complex score");
 
-    assert!(simple_score.is_some(), "Simple file should have complexity score");
-    assert!(complex_score.is_some(), "Complex file should have complexity score");
-    assert!(complex_score.unwrap() > simple_score.unwrap(),
-            "Complex file should have higher complexity score");
+    assert!(
+        simple_score.is_some(),
+        "Simple file should have complexity score"
+    );
+    assert!(
+        complex_score.is_some(),
+        "Complex file should have complexity score"
+    );
+    assert!(
+        complex_score.unwrap() > simple_score.unwrap(),
+        "Complex file should have higher complexity score"
+    );
 
     db.cleanup().await;
 }
@@ -1515,7 +1643,7 @@ async fn test_start_analysis_pitch_bend_detection() {
 
     let file_id: i64 = sqlx::query_scalar(
         "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
-         VALUES ($1, $2, $3) RETURNING file_id"
+         VALUES ($1, $2, $3) RETURNING file_id",
     )
     .bind(midi_path.to_str().unwrap())
     .bind(format!("{:064x}", 240000))
@@ -1526,24 +1654,25 @@ async fn test_start_analysis_pitch_bend_detection() {
 
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok());
 
     // Verify pitch bend detection
-    let has_pitch_bend: bool = sqlx::query_scalar(
-        "SELECT has_pitch_bend FROM musical_metadata WHERE file_id = $1"
-    )
-    .bind(file_id)
-    .fetch_one(pool)
-    .await
-    .expect("Failed to fetch pitch bend flag");
+    let has_pitch_bend: bool =
+        sqlx::query_scalar("SELECT has_pitch_bend FROM musical_metadata WHERE file_id = $1")
+            .bind(file_id)
+            .fetch_one(pool)
+            .await
+            .expect("Failed to fetch pitch bend flag");
 
     assert!(has_pitch_bend, "Should detect pitch bend in complex MIDI");
 
@@ -1562,7 +1691,7 @@ async fn test_start_analysis_cc_messages_detection() {
 
     let file_id: i64 = sqlx::query_scalar(
         "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
-         VALUES ($1, $2, $3) RETURNING file_id"
+         VALUES ($1, $2, $3) RETURNING file_id",
     )
     .bind(midi_path.to_str().unwrap())
     .bind(format!("{:064x}", 250000))
@@ -1573,24 +1702,25 @@ async fn test_start_analysis_cc_messages_detection() {
 
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok());
 
     // Verify CC detection
-    let has_cc: bool = sqlx::query_scalar(
-        "SELECT has_cc_messages FROM musical_metadata WHERE file_id = $1"
-    )
-    .bind(file_id)
-    .fetch_one(pool)
-    .await
-    .expect("Failed to fetch CC flag");
+    let has_cc: bool =
+        sqlx::query_scalar("SELECT has_cc_messages FROM musical_metadata WHERE file_id = $1")
+            .bind(file_id)
+            .fetch_one(pool)
+            .await
+            .expect("Failed to fetch CC flag");
 
     assert!(has_cc, "Should detect CC messages in complex MIDI");
 
@@ -1605,8 +1735,7 @@ async fn test_start_analysis_empty_track_handling() {
 
     // Create minimal MIDI (just tempo, no notes)
     let mut bytes = vec![
-        0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06,
-        0x00, 0x00, 0x00, 0x01, 0x01, 0xE0,
+        0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x01, 0x01, 0xE0,
     ];
 
     let track_data = vec![
@@ -1628,7 +1757,7 @@ async fn test_start_analysis_empty_track_handling() {
 
     let file_id: i64 = sqlx::query_scalar(
         "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
-         VALUES ($1, $2, $3) RETURNING file_id"
+         VALUES ($1, $2, $3) RETURNING file_id",
     )
     .bind(midi_path.to_str().unwrap())
     .bind(format!("{:064x}", 260000))
@@ -1639,24 +1768,25 @@ async fn test_start_analysis_empty_track_handling() {
 
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok());
 
     // Verify empty track handling
-    let note_count: i32 = sqlx::query_scalar(
-        "SELECT note_count FROM musical_metadata WHERE file_id = $1"
-    )
-    .bind(file_id)
-    .fetch_one(pool)
-    .await
-    .expect("Failed to fetch note count");
+    let note_count: i32 =
+        sqlx::query_scalar("SELECT note_count FROM musical_metadata WHERE file_id = $1")
+            .bind(file_id)
+            .fetch_one(pool)
+            .await
+            .expect("Failed to fetch note count");
 
     assert_eq!(note_count, 0, "Empty track should have 0 notes");
 
@@ -1675,7 +1805,7 @@ async fn test_start_analysis_single_note_file() {
 
     let file_id: i64 = sqlx::query_scalar(
         "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
-         VALUES ($1, $2, $3) RETURNING file_id"
+         VALUES ($1, $2, $3) RETURNING file_id",
     )
     .bind(midi_path.to_str().unwrap())
     .bind(format!("{:064x}", 270000))
@@ -1686,20 +1816,22 @@ async fn test_start_analysis_single_note_file() {
 
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok());
 
     // Verify single note analysis
     let (note_count, pitch_low, pitch_high): (i32, Option<i16>, Option<i16>) = sqlx::query_as(
         "SELECT note_count, pitch_range_low, pitch_range_high
-         FROM musical_metadata WHERE file_id = $1"
+         FROM musical_metadata WHERE file_id = $1",
     )
     .bind(file_id)
     .fetch_one(pool)
@@ -1725,7 +1857,7 @@ async fn test_start_analysis_very_long_duration() {
 
     let file_id: i64 = sqlx::query_scalar(
         "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
-         VALUES ($1, $2, $3) RETURNING file_id"
+         VALUES ($1, $2, $3) RETURNING file_id",
     )
     .bind(midi_path.to_str().unwrap())
     .bind(format!("{:064x}", 280000))
@@ -1736,24 +1868,25 @@ async fn test_start_analysis_very_long_duration() {
 
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok());
 
     // Verify duration calculation handles long files
-    let duration: Option<f64> = sqlx::query_scalar(
-        "SELECT duration_seconds FROM musical_metadata WHERE file_id = $1"
-    )
-    .bind(file_id)
-    .fetch_one(pool)
-    .await
-    .expect("Failed to fetch duration");
+    let duration: Option<f64> =
+        sqlx::query_scalar("SELECT duration_seconds FROM musical_metadata WHERE file_id = $1")
+            .bind(file_id)
+            .fetch_one(pool)
+            .await
+            .expect("Failed to fetch duration");
 
     assert!(duration.is_some(), "Duration should be calculated");
     assert!(duration.unwrap() > 0.0, "Duration should be positive");
@@ -1773,7 +1906,7 @@ async fn test_start_analysis_unicode_filename_handling() {
 
     let file_id: i64 = sqlx::query_scalar(
         "INSERT INTO files (file_path, blake3_hash, file_size_bytes, filename)
-         VALUES ($1, $2, $3, $4) RETURNING file_id"
+         VALUES ($1, $2, $3, $4) RETURNING file_id",
     )
     .bind(midi_path.to_str().unwrap())
     .bind(format!("{:064x}", 290000))
@@ -1785,24 +1918,25 @@ async fn test_start_analysis_unicode_filename_handling() {
 
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok(), "Should handle unicode filenames");
 
     // Verify metadata exists
-    let exists: bool = sqlx::query_scalar(
-        "SELECT EXISTS(SELECT 1 FROM musical_metadata WHERE file_id = $1)"
-    )
-    .bind(file_id)
-    .fetch_one(pool)
-    .await
-    .expect("Failed to check existence");
+    let exists: bool =
+        sqlx::query_scalar("SELECT EXISTS(SELECT 1 FROM musical_metadata WHERE file_id = $1)")
+            .bind(file_id)
+            .fetch_one(pool)
+            .await
+            .expect("Failed to check existence");
 
     assert!(exists, "Metadata should exist for unicode filename");
 
@@ -1819,11 +1953,13 @@ async fn test_start_analysis_database_batch_boundaries() {
     let midi_bytes = create_midi_bytes(120.0, &[60]);
 
     for i in 0..101 {
-        let midi_path = file_fixtures.create_midi_file(&format!("boundary_{}.mid", i), &midi_bytes).await;
+        let midi_path = file_fixtures
+            .create_midi_file(&format!("boundary_{}.mid", i), &midi_bytes)
+            .await;
 
         sqlx::query(
             "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
-             VALUES ($1, $2, $3)"
+             VALUES ($1, $2, $3)",
         )
         .bind(midi_path.to_str().unwrap())
         .bind(format!("{:064x}", i + 300000))
@@ -1835,19 +1971,24 @@ async fn test_start_analysis_database_batch_boundaries() {
 
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok());
     let summary = result.unwrap();
 
     // All files should be analyzed despite batch boundary
-    assert_eq!(summary.analyzed, 101, "Should handle batch boundary correctly");
+    assert_eq!(
+        summary.analyzed, 101,
+        "Should handle batch boundary correctly"
+    );
 
     db.cleanup().await;
 }
@@ -1862,11 +2003,13 @@ async fn test_start_analysis_progress_event_format() {
     let midi_bytes = create_midi_bytes(120.0, &[60]);
 
     for i in 0..20 {
-        let midi_path = file_fixtures.create_midi_file(&format!("event_format_{}.mid", i), &midi_bytes).await;
+        let midi_path = file_fixtures
+            .create_midi_file(&format!("event_format_{}.mid", i), &midi_bytes)
+            .await;
 
         sqlx::query(
             "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
-             VALUES ($1, $2, $3)"
+             VALUES ($1, $2, $3)",
         )
         .bind(midi_path.to_str().unwrap())
         .bind(format!("{:064x}", i + 310000))
@@ -1880,37 +2023,53 @@ async fn test_start_analysis_progress_event_format() {
 
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         window.clone(),
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok());
 
     tokio::time::sleep(tokio::time::Duration::from_millis(100)).await;
 
     let events = window.get_events().await;
-    let progress_events: Vec<_> = events.iter()
-        .filter(|(name, _)| name == "analysis-progress")
-        .collect();
+    let progress_events: Vec<_> =
+        events.iter().filter(|(name, _)| name == "analysis-progress").collect();
 
     // Verify event format
     for (_, payload) in progress_events {
-        assert!(payload.get("current").is_some(), "Should have current field");
+        assert!(
+            payload.get("current").is_some(),
+            "Should have current field"
+        );
         assert!(payload.get("total").is_some(), "Should have total field");
-        assert!(payload.get("current_file").is_some(), "Should have current_file field");
+        assert!(
+            payload.get("current_file").is_some(),
+            "Should have current_file field"
+        );
         assert!(payload.get("rate").is_some(), "Should have rate field");
-        assert!(payload.get("eta_seconds").is_some(), "Should have eta_seconds field");
+        assert!(
+            payload.get("eta_seconds").is_some(),
+            "Should have eta_seconds field"
+        );
 
         // Verify types
         assert!(payload["current"].is_number(), "current should be number");
         assert!(payload["total"].is_number(), "total should be number");
-        assert!(payload["current_file"].is_string(), "current_file should be string");
+        assert!(
+            payload["current_file"].is_string(),
+            "current_file should be string"
+        );
         assert!(payload["rate"].is_number(), "rate should be number");
-        assert!(payload["eta_seconds"].is_number(), "eta_seconds should be number");
+        assert!(
+            payload["eta_seconds"].is_number(),
+            "eta_seconds should be number"
+        );
     }
 
     db.cleanup().await;
@@ -1926,11 +2085,12 @@ async fn test_start_analysis_analysis_state_persistence() {
     let midi_bytes = create_midi_bytes(120.0, &[60, 64, 67]);
 
     for i in 0..10 {
-        let midi_path = file_fixtures.create_midi_file(&format!("persist_{}.mid", i), &midi_bytes).await;
+        let midi_path =
+            file_fixtures.create_midi_file(&format!("persist_{}.mid", i), &midi_bytes).await;
 
         sqlx::query(
             "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
-             VALUES ($1, $2, $3)"
+             VALUES ($1, $2, $3)",
         )
         .bind(midi_path.to_str().unwrap())
         .bind(format!("{:064x}", i + 320000))
@@ -1943,30 +2103,37 @@ async fn test_start_analysis_analysis_state_persistence() {
     // First analysis
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok());
 
     // Second analysis should find 0 unanalyzed files (state persisted)
     let result2 = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
     assert!(result2.is_ok());
     let summary2 = result2.unwrap();
-    assert_eq!(summary2.total_files, 0, "Should find 0 unanalyzed files on second run");
+    assert_eq!(
+        summary2.total_files, 0,
+        "Should find 0 unanalyzed files on second run"
+    );
 
     db.cleanup().await;
 }
@@ -1983,7 +2150,7 @@ async fn test_start_analysis_metadata_fields_populated() {
 
     let file_id: i64 = sqlx::query_scalar(
         "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
-         VALUES ($1, $2, $3) RETURNING file_id"
+         VALUES ($1, $2, $3) RETURNING file_id",
     )
     .bind(midi_path.to_str().unwrap())
     .bind(format!("{:064x}", 330000))
@@ -1994,25 +2161,34 @@ async fn test_start_analysis_metadata_fields_populated() {
 
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok());
 
     // Verify all expected fields are populated
     let metadata: (
-        Option<f64>, Option<String>, Option<i16>, Option<i16>,
-        Option<f64>, i32, Option<f64>, bool, bool
+        Option<f64>,
+        Option<String>,
+        Option<i16>,
+        Option<i16>,
+        Option<f64>,
+        i32,
+        Option<f64>,
+        bool,
+        bool,
     ) = sqlx::query_as(
         "SELECT tempo_bpm, key_signature, time_signature_num, time_signature_den,
                 duration_seconds, note_count, complexity_score,
                 has_pitch_bend, has_cc_messages
-         FROM musical_metadata WHERE file_id = $1"
+         FROM musical_metadata WHERE file_id = $1",
     )
     .bind(file_id)
     .fetch_one(pool)
@@ -2042,11 +2218,12 @@ async fn test_start_analysis_10k_file_performance() {
 
     println!("Creating 10,000 test files...");
     for i in 0..10000 {
-        let midi_path = file_fixtures.create_midi_file(&format!("perf_{}.mid", i), &midi_bytes).await;
+        let midi_path =
+            file_fixtures.create_midi_file(&format!("perf_{}.mid", i), &midi_bytes).await;
 
         sqlx::query(
             "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
-             VALUES ($1, $2, $3)"
+             VALUES ($1, $2, $3)",
         )
         .bind(midi_path.to_str().unwrap())
         .bind(format!("{:064x}", i + 400000))
@@ -2065,13 +2242,15 @@ async fn test_start_analysis_10k_file_performance() {
 
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
     let duration = start.elapsed();
 
@@ -2085,7 +2264,11 @@ async fn test_start_analysis_10k_file_performance() {
     println!("  Rate: {:.1} files/sec", summary.rate);
 
     // Target: >= 100 files/sec with 32 workers
-    assert!(summary.rate >= 50.0, "Should achieve at least 50 files/sec, got {}", summary.rate);
+    assert!(
+        summary.rate >= 50.0,
+        "Should achieve at least 50 files/sec, got {}",
+        summary.rate
+    );
 
     db.cleanup().await;
 }
@@ -2107,11 +2290,12 @@ async fn test_analyze_worker_pool_oom_simulation() {
     let midi_bytes = create_midi_bytes(120.0, &[60, 62, 64]);
 
     for i in 0..500 {
-        let midi_path = file_fixtures.create_midi_file(&format!("stress_{}.mid", i), &midi_bytes).await;
+        let midi_path =
+            file_fixtures.create_midi_file(&format!("stress_{}.mid", i), &midi_bytes).await;
 
         sqlx::query(
             "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
-             VALUES ($1, $2, $3)"
+             VALUES ($1, $2, $3)",
         )
         .bind(midi_path.to_str().unwrap())
         .bind(format!("{:064x}", i + 500000))
@@ -2123,17 +2307,25 @@ async fn test_analyze_worker_pool_oom_simulation() {
 
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
-    assert!(result.is_ok(), "Worker pool should handle large batches without OOM");
+    assert!(
+        result.is_ok(),
+        "Worker pool should handle large batches without OOM"
+    );
     let summary = result.unwrap();
-    assert_eq!(summary.analyzed, 500, "All files should be processed despite memory pressure");
+    assert_eq!(
+        summary.analyzed, 500,
+        "All files should be processed despite memory pressure"
+    );
 
     cleanup_database(&pool).await;
     db.cleanup().await;
@@ -2152,11 +2344,13 @@ async fn test_analyze_database_insert_batch_failure() {
     let midi_bytes = create_midi_bytes(120.0, &[60, 64, 67]);
 
     for i in 0..50 {
-        let midi_path = file_fixtures.create_midi_file(&format!("batch_fail_{}.mid", i), &midi_bytes).await;
+        let midi_path = file_fixtures
+            .create_midi_file(&format!("batch_fail_{}.mid", i), &midi_bytes)
+            .await;
 
         sqlx::query(
             "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
-             VALUES ($1, $2, $3)"
+             VALUES ($1, $2, $3)",
         )
         .bind(midi_path.to_str().unwrap())
         .bind(format!("{:064x}", i + 550000))
@@ -2169,15 +2363,20 @@ async fn test_analyze_database_insert_batch_failure() {
     // Analysis should succeed - database operations are transactional
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
-    assert!(result.is_ok(), "Should handle database operations gracefully");
+    assert!(
+        result.is_ok(),
+        "Should handle database operations gracefully"
+    );
 
     cleanup_database(&pool).await;
     db.cleanup().await;
@@ -2205,18 +2404,26 @@ async fn test_analyze_file_permission_denied() {
 
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok(), "Should handle permission errors gracefully");
     let summary = result.unwrap();
-    assert_eq!(summary.skipped, 1, "File should be skipped due to permission error");
-    assert!(!summary.errors.is_empty(), "Should have error message for permission denied");
+    assert_eq!(
+        summary.skipped, 1,
+        "File should be skipped due to permission error"
+    );
+    assert!(
+        !summary.errors.is_empty(),
+        "Should have error message for permission denied"
+    );
 
     cleanup_database(&pool).await;
     db.cleanup().await;
@@ -2235,11 +2442,12 @@ async fn test_analyze_concurrent_analysis_race_condition() {
     let midi_bytes = create_midi_bytes(120.0, &[60]);
 
     for i in 0..20 {
-        let midi_path = file_fixtures.create_midi_file(&format!("race_{}.mid", i), &midi_bytes).await;
+        let midi_path =
+            file_fixtures.create_midi_file(&format!("race_{}.mid", i), &midi_bytes).await;
 
         sqlx::query(
             "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
-             VALUES ($1, $2, $3)"
+             VALUES ($1, $2, $3)",
         )
         .bind(midi_path.to_str().unwrap())
         .bind(format!("{:064x}", i + 610000))
@@ -2251,10 +2459,11 @@ async fn test_analyze_concurrent_analysis_race_condition() {
 
     // Run two analysis operations concurrently to test race conditions
     let state1 = Arc::new(crate::AppState {
-        database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-            .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-            .await
-            .expect("Failed to connect"),
+        database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(|_| {
+            "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()
+        }))
+        .await
+        .expect("Failed to connect"),
     });
     let state2 = state1.clone();
 
@@ -2262,17 +2471,11 @@ async fn test_analyze_concurrent_analysis_race_condition() {
     let window2 = TestWindow::new();
 
     let handle1 = tokio::spawn(async move {
-        crate::commands::analyze::start_analysis(
-            tauri::State::from(state1),
-            window1,
-        ).await
+        crate::commands::analyze::start_analysis(tauri::State::from(state1), window1).await
     });
 
     let handle2 = tokio::spawn(async move {
-        crate::commands::analyze::start_analysis(
-            tauri::State::from(state2),
-            window2,
-        ).await
+        crate::commands::analyze::start_analysis(tauri::State::from(state2), window2).await
     });
 
     let (result1, result2) = tokio::join!(handle1, handle2);
@@ -2285,13 +2488,16 @@ async fn test_analyze_concurrent_analysis_race_condition() {
     let metadata_count: i64 = sqlx::query_scalar(
         "SELECT COUNT(*) FROM musical_metadata m
          JOIN files f ON m.file_id = f.file_id
-         WHERE f.file_path LIKE '/tmp%race_%'"
+         WHERE f.file_path LIKE '/tmp%race_%'",
     )
     .fetch_one(pool)
     .await
     .expect("Failed to count metadata");
 
-    assert_eq!(metadata_count, 20, "Should have exactly 20 metadata entries (no duplicates from race)");
+    assert_eq!(
+        metadata_count, 20,
+        "Should have exactly 20 metadata entries (no duplicates from race)"
+    );
 
     cleanup_database(&pool).await;
     db.cleanup().await;
@@ -2309,15 +2515,14 @@ async fn test_analyze_corrupted_tempo_metadata() {
     // Create MIDI with tempo of 0 (invalid, could cause divide-by-zero)
     let mut bytes = Vec::new();
     bytes.extend_from_slice(&[
-        0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06,
-        0x00, 0x00, 0x00, 0x01, 0x01, 0xE0,
+        0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x01, 0x01, 0xE0,
     ]);
 
     let mut track_data = Vec::new();
     // Tempo with 0 microseconds per beat (invalid)
     track_data.extend_from_slice(&[0x00, 0xFF, 0x51, 0x03, 0x00, 0x00, 0x00]);
-    track_data.extend_from_slice(&[0x00, 0x90, 60, 80]);  // Note
-    track_data.extend_from_slice(&[0x20, 0x80, 60, 40]);  // Note off
+    track_data.extend_from_slice(&[0x00, 0x90, 60, 80]); // Note
+    track_data.extend_from_slice(&[0x20, 0x80, 60, 40]); // Note off
     track_data.extend_from_slice(&[0x00, 0xFF, 0x2F, 0x00]); // End
 
     bytes.extend_from_slice(&[0x4D, 0x54, 0x72, 0x6B]);
@@ -2334,7 +2539,7 @@ async fn test_analyze_corrupted_tempo_metadata() {
 
     sqlx::query(
         "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
-         VALUES ($1, $2, $3)"
+         VALUES ($1, $2, $3)",
     )
     .bind(midi_path.to_str().unwrap())
     .bind(format!("{:064x}", 620000))
@@ -2345,15 +2550,20 @@ async fn test_analyze_corrupted_tempo_metadata() {
 
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
-    assert!(result.is_ok(), "Should handle zero tempo without divide-by-zero panic");
+    assert!(
+        result.is_ok(),
+        "Should handle zero tempo without divide-by-zero panic"
+    );
 
     cleanup_database(&pool).await;
     db.cleanup().await;
@@ -2371,8 +2581,7 @@ async fn test_analyze_all_zero_velocities() {
     // Create MIDI with all zero velocities
     let mut bytes = Vec::new();
     bytes.extend_from_slice(&[
-        0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06,
-        0x00, 0x00, 0x00, 0x01, 0x01, 0xE0,
+        0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x01, 0x01, 0xE0,
     ]);
 
     let mut track_data = Vec::new();
@@ -2400,7 +2609,7 @@ async fn test_analyze_all_zero_velocities() {
 
     let file_id: i64 = sqlx::query_scalar(
         "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
-         VALUES ($1, $2, $3) RETURNING file_id"
+         VALUES ($1, $2, $3) RETURNING file_id",
     )
     .bind(midi_path.to_str().unwrap())
     .bind(format!("{:064x}", 630000))
@@ -2411,28 +2620,35 @@ async fn test_analyze_all_zero_velocities() {
 
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
-    assert!(result.is_ok(), "Should handle zero velocities without division error");
+    assert!(
+        result.is_ok(),
+        "Should handle zero velocities without division error"
+    );
 
     // Verify velocity stats are handled correctly
-    let avg_vel: Option<f64> = sqlx::query_scalar(
-        "SELECT avg_velocity FROM musical_metadata WHERE file_id = $1"
-    )
-    .bind(file_id)
-    .fetch_one(pool)
-    .await
-    .expect("Failed to fetch velocity");
+    let avg_vel: Option<f64> =
+        sqlx::query_scalar("SELECT avg_velocity FROM musical_metadata WHERE file_id = $1")
+            .bind(file_id)
+            .fetch_one(pool)
+            .await
+            .expect("Failed to fetch velocity");
 
     // Should be Some(0.0) or None, not panic
     if let Some(vel) = avg_vel {
-        assert_eq!(vel, 0.0, "Average velocity should be 0.0 for all-zero velocities");
+        assert_eq!(
+            vel, 0.0,
+            "Average velocity should be 0.0 for all-zero velocities"
+        );
     }
 
     cleanup_database(&pool).await;
@@ -2451,9 +2667,8 @@ async fn test_analyze_zero_ticks_per_beat() {
     // Create MIDI with 0 ticks per beat (invalid header)
     let mut bytes = Vec::new();
     bytes.extend_from_slice(&[
-        0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06,
-        0x00, 0x00, 0x00, 0x01,
-        0x00, 0x00,  // 0 ticks per beat - invalid!
+        0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x01, 0x00,
+        0x00, // 0 ticks per beat - invalid!
     ]);
 
     let track_data = vec![
@@ -2477,7 +2692,7 @@ async fn test_analyze_zero_ticks_per_beat() {
 
     sqlx::query(
         "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
-         VALUES ($1, $2, $3)"
+         VALUES ($1, $2, $3)",
     )
     .bind(midi_path.to_str().unwrap())
     .bind(format!("{:064x}", 640000))
@@ -2488,15 +2703,20 @@ async fn test_analyze_zero_ticks_per_beat() {
 
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
-    assert!(result.is_ok(), "Should handle zero ticks per beat without panic or overflow");
+    assert!(
+        result.is_ok(),
+        "Should handle zero ticks per beat without panic or overflow"
+    );
 
     cleanup_database(&pool).await;
     db.cleanup().await;
@@ -2514,8 +2734,7 @@ async fn test_analyze_high_polyphony_overflow() {
     // Create MIDI with 120 simultaneous notes
     let mut bytes = Vec::new();
     bytes.extend_from_slice(&[
-        0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06,
-        0x00, 0x00, 0x00, 0x01, 0x01, 0xE0,
+        0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x01, 0x01, 0xE0,
     ]);
 
     let mut track_data = Vec::new();
@@ -2547,7 +2766,7 @@ async fn test_analyze_high_polyphony_overflow() {
 
     let file_id: i64 = sqlx::query_scalar(
         "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
-         VALUES ($1, $2, $3) RETURNING file_id"
+         VALUES ($1, $2, $3) RETURNING file_id",
     )
     .bind(midi_path.to_str().unwrap())
     .bind(format!("{:064x}", 650000))
@@ -2558,24 +2777,28 @@ async fn test_analyze_high_polyphony_overflow() {
 
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
-    assert!(result.is_ok(), "Should handle high polyphony without overflow");
+    assert!(
+        result.is_ok(),
+        "Should handle high polyphony without overflow"
+    );
 
     // Verify polyphony was tracked correctly (should use saturation arithmetic)
-    let polyphony: Option<i16> = sqlx::query_scalar(
-        "SELECT polyphony_max FROM musical_metadata WHERE file_id = $1"
-    )
-    .bind(file_id)
-    .fetch_one(pool)
-    .await
-    .expect("Failed to fetch polyphony");
+    let polyphony: Option<i16> =
+        sqlx::query_scalar("SELECT polyphony_max FROM musical_metadata WHERE file_id = $1")
+            .bind(file_id)
+            .fetch_one(pool)
+            .await
+            .expect("Failed to fetch polyphony");
 
     assert!(polyphony.is_some(), "Polyphony should be detected");
     // i16::MAX is 32767, should saturate rather than overflow
@@ -2596,15 +2819,14 @@ async fn test_analyze_malformed_midi_header() {
 
     // Create file with invalid header (not "MThd")
     let malformed_bytes = vec![
-        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06,
-        0x00, 0x00, 0x00, 0x01, 0x01, 0xE0,
+        0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x01, 0x01, 0xE0,
     ];
 
     let midi_path = file_fixtures.create_midi_file("malformed.mid", &malformed_bytes).await;
 
     sqlx::query(
         "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
-         VALUES ($1, $2, $3)"
+         VALUES ($1, $2, $3)",
     )
     .bind(midi_path.to_str().unwrap())
     .bind(format!("{:064x}", 660000))
@@ -2615,13 +2837,15 @@ async fn test_analyze_malformed_midi_header() {
 
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok(), "Should handle malformed header gracefully");
     let summary = result.unwrap();
@@ -2648,8 +2872,7 @@ async fn test_analyze_extreme_bpm_values() {
     // Create MIDI with extremely high BPM (tempo of 1 microsecond per beat)
     let mut bytes = Vec::new();
     bytes.extend_from_slice(&[
-        0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06,
-        0x00, 0x00, 0x00, 0x01, 0x01, 0xE0,
+        0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x01, 0x01, 0xE0,
     ]);
 
     let mut track_data = Vec::new();
@@ -2673,7 +2896,7 @@ async fn test_analyze_extreme_bpm_values() {
 
     let file_id: i64 = sqlx::query_scalar(
         "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
-         VALUES ($1, $2, $3) RETURNING file_id"
+         VALUES ($1, $2, $3) RETURNING file_id",
     )
     .bind(midi_path.to_str().unwrap())
     .bind(format!("{:064x}", 670000))
@@ -2684,24 +2907,28 @@ async fn test_analyze_extreme_bpm_values() {
 
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
-    assert!(result.is_ok(), "Should handle extreme BPM values without overflow");
+    assert!(
+        result.is_ok(),
+        "Should handle extreme BPM values without overflow"
+    );
 
     // Verify BPM is stored (might be clamped to reasonable range)
-    let bpm: Option<f64> = sqlx::query_scalar(
-        "SELECT tempo_bpm FROM musical_metadata WHERE file_id = $1"
-    )
-    .bind(file_id)
-    .fetch_one(pool)
-    .await
-    .expect("Failed to fetch BPM");
+    let bpm: Option<f64> =
+        sqlx::query_scalar("SELECT tempo_bpm FROM musical_metadata WHERE file_id = $1")
+            .bind(file_id)
+            .fetch_one(pool)
+            .await
+            .expect("Failed to fetch BPM");
 
     if let Some(bpm_val) = bpm {
         assert!(bpm_val.is_finite(), "BPM should be finite number");
@@ -2724,13 +2951,12 @@ async fn test_analyze_invalid_time_signature() {
     // Create MIDI with invalid time signature (0/0)
     let mut bytes = Vec::new();
     bytes.extend_from_slice(&[
-        0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06,
-        0x00, 0x00, 0x00, 0x01, 0x01, 0xE0,
+        0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x01, 0x01, 0xE0,
     ]);
 
     let mut track_data = Vec::new();
     track_data.extend_from_slice(&[0x00, 0xFF, 0x51, 0x03, 0x07, 0xA1, 0x20]); // Tempo
-    // Invalid time signature: 0/0
+                                                                               // Invalid time signature: 0/0
     track_data.extend_from_slice(&[0x00, 0xFF, 0x58, 0x04, 0x00, 0x00, 0x18, 0x08]);
     track_data.extend_from_slice(&[0x00, 0x90, 60, 80]);
     track_data.extend_from_slice(&[0x20, 0x80, 60, 40]);
@@ -2750,7 +2976,7 @@ async fn test_analyze_invalid_time_signature() {
 
     sqlx::query(
         "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
-         VALUES ($1, $2, $3)"
+         VALUES ($1, $2, $3)",
     )
     .bind(midi_path.to_str().unwrap())
     .bind(format!("{:064x}", 680000))
@@ -2761,15 +2987,20 @@ async fn test_analyze_invalid_time_signature() {
 
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
-    assert!(result.is_ok(), "Should handle invalid time signature gracefully");
+    assert!(
+        result.is_ok(),
+        "Should handle invalid time signature gracefully"
+    );
 
     cleanup_database(&pool).await;
     db.cleanup().await;
@@ -2787,15 +3018,14 @@ async fn test_analyze_note_range_overflow() {
     // Create MIDI with notes at extreme ends (0 and 127)
     let mut bytes = Vec::new();
     bytes.extend_from_slice(&[
-        0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06,
-        0x00, 0x00, 0x00, 0x01, 0x01, 0xE0,
+        0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x01, 0x01, 0xE0,
     ]);
 
     let mut track_data = Vec::new();
     track_data.extend_from_slice(&[0x00, 0xFF, 0x51, 0x03, 0x07, 0xA1, 0x20]);
 
     // Extreme low and high notes
-    track_data.extend_from_slice(&[0x00, 0x90, 0, 80]);   // Note 0
+    track_data.extend_from_slice(&[0x00, 0x90, 0, 80]); // Note 0
     track_data.extend_from_slice(&[0x00, 0x90, 127, 80]); // Note 127
     track_data.extend_from_slice(&[0x20, 0x80, 0, 40]);
     track_data.extend_from_slice(&[0x00, 0x80, 127, 40]);
@@ -2815,7 +3045,7 @@ async fn test_analyze_note_range_overflow() {
 
     let file_id: i64 = sqlx::query_scalar(
         "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
-         VALUES ($1, $2, $3) RETURNING file_id"
+         VALUES ($1, $2, $3) RETURNING file_id",
     )
     .bind(midi_path.to_str().unwrap())
     .bind(format!("{:064x}", 690000))
@@ -2826,20 +3056,22 @@ async fn test_analyze_note_range_overflow() {
 
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok(), "Should handle extreme note range");
 
     // Verify note range calculation
     let (low, high, semitones): (Option<i16>, Option<i16>, Option<i16>) = sqlx::query_as(
         "SELECT pitch_range_low, pitch_range_high, pitch_range_semitones
-         FROM musical_metadata WHERE file_id = $1"
+         FROM musical_metadata WHERE file_id = $1",
     )
     .bind(file_id)
     .fetch_one(pool)
@@ -2865,8 +3097,7 @@ async fn test_analyze_truncated_midi_file() {
 
     // Create truncated MIDI (header but no track data)
     let truncated_bytes = vec![
-        0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06,
-        0x00, 0x00, 0x00, 0x01, 0x01, 0xE0,
+        0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x01, 0x01, 0xE0,
         // Track header but missing data
         0x4D, 0x54, 0x72, 0x6B, 0x00, 0x00, 0x00, 0x10,
         // Data truncated...
@@ -2876,7 +3107,7 @@ async fn test_analyze_truncated_midi_file() {
 
     sqlx::query(
         "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
-         VALUES ($1, $2, $3)"
+         VALUES ($1, $2, $3)",
     )
     .bind(midi_path.to_str().unwrap())
     .bind(format!("{:064x}", 700000))
@@ -2887,13 +3118,15 @@ async fn test_analyze_truncated_midi_file() {
 
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok(), "Should handle truncated file gracefully");
     let summary = result.unwrap();
@@ -2916,11 +3149,13 @@ async fn test_analyze_database_connection_pool_exhaustion() {
     let midi_bytes = create_midi_bytes(120.0, &[60]);
 
     for i in 0..100 {
-        let midi_path = file_fixtures.create_midi_file(&format!("pool_stress_{}.mid", i), &midi_bytes).await;
+        let midi_path = file_fixtures
+            .create_midi_file(&format!("pool_stress_{}.mid", i), &midi_bytes)
+            .await;
 
         sqlx::query(
             "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
-             VALUES ($1, $2, $3)"
+             VALUES ($1, $2, $3)",
         )
         .bind(midi_path.to_str().unwrap())
         .bind(format!("{:064x}", i + 710000))
@@ -2933,17 +3168,22 @@ async fn test_analyze_database_connection_pool_exhaustion() {
     // Analysis should succeed even under connection pool stress
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok(), "Should handle connection pool stress");
     let summary = result.unwrap();
-    assert_eq!(summary.analyzed, 100, "All files should be analyzed despite pool stress");
+    assert_eq!(
+        summary.analyzed, 100,
+        "All files should be analyzed despite pool stress"
+    );
 
     cleanup_database(&pool).await;
     db.cleanup().await;
@@ -2962,8 +3202,7 @@ async fn test_analyze_negative_delta_time() {
     // but we can test handling of unusual delta time sequences
     let mut bytes = Vec::new();
     bytes.extend_from_slice(&[
-        0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06,
-        0x00, 0x00, 0x00, 0x01, 0x01, 0xE0,
+        0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x01, 0x01, 0xE0,
     ]);
 
     let mut track_data = Vec::new();
@@ -2989,7 +3228,7 @@ async fn test_analyze_negative_delta_time() {
 
     sqlx::query(
         "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
-         VALUES ($1, $2, $3)"
+         VALUES ($1, $2, $3)",
     )
     .bind(midi_path.to_str().unwrap())
     .bind(format!("{:064x}", 720000))
@@ -3000,13 +3239,15 @@ async fn test_analyze_negative_delta_time() {
 
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok(), "Should handle extreme delta time values");
 
@@ -3038,7 +3279,7 @@ async fn test_analyze_mixed_valid_invalid_batch() {
 
         sqlx::query(
             "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
-             VALUES ($1, $2, $3)"
+             VALUES ($1, $2, $3)",
         )
         .bind(midi_path.to_str().unwrap())
         .bind(format!("{:064x}", i + 730000))
@@ -3050,13 +3291,15 @@ async fn test_analyze_mixed_valid_invalid_batch() {
 
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok(), "Should handle mixed batch gracefully");
     let summary = result.unwrap();
@@ -3081,8 +3324,7 @@ async fn test_analyze_very_large_file_timeout() {
     // Create MIDI with thousands of events to simulate large file
     let mut bytes = Vec::new();
     bytes.extend_from_slice(&[
-        0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06,
-        0x00, 0x00, 0x00, 0x01, 0x01, 0xE0,
+        0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x01, 0x01, 0xE0,
     ]);
 
     let mut track_data = Vec::new();
@@ -3112,7 +3354,7 @@ async fn test_analyze_very_large_file_timeout() {
 
     let file_id: i64 = sqlx::query_scalar(
         "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
-         VALUES ($1, $2, $3) RETURNING file_id"
+         VALUES ($1, $2, $3) RETURNING file_id",
     )
     .bind(midi_path.to_str().unwrap())
     .bind(format!("{:064x}", 740000))
@@ -3123,26 +3365,30 @@ async fn test_analyze_very_large_file_timeout() {
 
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok(), "Should handle large files without timeout");
 
     // Verify note count is correct
-    let note_count: i32 = sqlx::query_scalar(
-        "SELECT note_count FROM musical_metadata WHERE file_id = $1"
-    )
-    .bind(file_id)
-    .fetch_one(pool)
-    .await
-    .expect("Failed to fetch note count");
+    let note_count: i32 =
+        sqlx::query_scalar("SELECT note_count FROM musical_metadata WHERE file_id = $1")
+            .bind(file_id)
+            .fetch_one(pool)
+            .await
+            .expect("Failed to fetch note count");
 
-    assert_eq!(note_count, 1000, "Should count all 1000 notes in large file");
+    assert_eq!(
+        note_count, 1000,
+        "Should count all 1000 notes in large file"
+    );
 
     cleanup_database(&pool).await;
     db.cleanup().await;
@@ -3163,7 +3409,7 @@ async fn test_analyze_empty_file() {
 
     sqlx::query(
         "INSERT INTO files (file_path, blake3_hash, file_size_bytes)
-         VALUES ($1, $2, $3)"
+         VALUES ($1, $2, $3)",
     )
     .bind(midi_path.to_str().unwrap())
     .bind(format!("{:064x}", 750000))
@@ -3174,18 +3420,23 @@ async fn test_analyze_empty_file() {
 
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok(), "Should handle empty file gracefully");
     let summary = result.unwrap();
     assert_eq!(summary.skipped, 1, "Empty file should be skipped");
-    assert!(!summary.errors.is_empty(), "Should have error message for empty file");
+    assert!(
+        !summary.errors.is_empty(),
+        "Should have error message for empty file"
+    );
 
     cleanup_database(&pool).await;
     db.cleanup().await;
@@ -3218,15 +3469,20 @@ async fn test_analyze_error_no_unanalyzed_files() {
 
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
-    assert!(result.is_ok(), "Should handle no unanalyzed files gracefully");
+    assert!(
+        result.is_ok(),
+        "Should handle no unanalyzed files gracefully"
+    );
     let summary = result.unwrap();
     assert_eq!(summary.analyzed, 0, "No files should be analyzed");
     db.cleanup().await;
@@ -3249,17 +3505,22 @@ async fn test_analyze_error_corrupted_midi_file() {
 
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok(), "Should handle corrupted MIDI gracefully");
     let summary = result.unwrap();
-    assert!(summary.errors.len() > 0, "Should record error for corrupted file");
+    assert!(
+        summary.errors.len() > 0,
+        "Should record error for corrupted file"
+    );
     db.cleanup().await;
 }
 
@@ -3282,13 +3543,15 @@ async fn test_analyze_error_invalid_tempo_values() {
 
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok(), "Should handle zero tempo gracefully");
     db.cleanup().await;
@@ -3319,13 +3582,15 @@ async fn test_analyze_error_batch_partial_failure() {
 
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok(), "Should handle batch with some failures");
     let summary = result.unwrap();
@@ -3338,8 +3603,9 @@ async fn test_analyze_error_empty_track_handling() {
     let db = TestDatabase::new().await;
     let pool = db.pool();
 
-    let midi_bytes = vec![0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06,
-                         0x00, 0x00, 0x00, 0x01, 0x00, 0x60];
+    let midi_bytes = vec![
+        0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x01, 0x00, 0x60,
+    ];
 
     let _: i64 = sqlx::query_scalar(
         "INSERT INTO files (file_path, blake3_hash, file_size_bytes) VALUES ($1, $2, $3) RETURNING file_id"
@@ -3353,13 +3619,15 @@ async fn test_analyze_error_empty_track_handling() {
 
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok(), "Should handle empty track gracefully");
     db.cleanup().await;
@@ -3383,26 +3651,34 @@ async fn test_analyze_error_concurrent_analysis_idempotent() {
 
     let result1 = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
     let result2 = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
     if let (Ok(s1), Ok(s2)) = (result1, result2) {
-        assert_eq!(s1.analyzed + s1.skipped, s2.analyzed + s2.skipped, "Concurrent analysis should be consistent");
+        assert_eq!(
+            s1.analyzed + s1.skipped,
+            s2.analyzed + s2.skipped,
+            "Concurrent analysis should be consistent"
+        );
     }
     db.cleanup().await;
 }
@@ -3427,15 +3703,20 @@ async fn test_analyze_error_large_batch_processing() {
 
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
-    assert!(result.is_ok(), "Should handle large batch without panicking");
+    assert!(
+        result.is_ok(),
+        "Should handle large batch without panicking"
+    );
     let summary = result.unwrap();
     assert!(summary.total_files > 0, "Should process large batch");
     db.cleanup().await;
@@ -3460,15 +3741,20 @@ async fn test_analyze_error_invalid_key_detection() {
 
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
-    assert!(result.is_ok(), "Should handle files with no notes gracefully");
+    assert!(
+        result.is_ok(),
+        "Should handle files with no notes gracefully"
+    );
     db.cleanup().await;
 }
 
@@ -3491,15 +3777,20 @@ async fn test_analyze_error_atonal_music() {
 
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
-    assert!(result.is_ok(), "Should handle atonal music with low confidence");
+    assert!(
+        result.is_ok(),
+        "Should handle atonal music with low confidence"
+    );
     db.cleanup().await;
 }
 
@@ -3522,13 +3813,15 @@ async fn test_analyze_error_duration_edge_cases() {
 
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok(), "Should handle extreme tempo values");
     db.cleanup().await;
@@ -3554,13 +3847,15 @@ async fn test_analyze_error_progress_event_throttling() {
 
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
     assert!(result.is_ok(), "Should handle batch with event throttling");
     db.cleanup().await;
@@ -3584,15 +3879,20 @@ async fn test_analyze_error_metadata_insertion_rollback() {
 
     let result = crate::commands::analyze::start_analysis(
         tauri::State::from(Arc::new(crate::AppState {
-            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()))
-                .await
-                .expect("Failed to connect"),
+            database: crate::Database::new(&std::env::var("TEST_DATABASE_URL").unwrap_or_else(
+                |_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string(),
+            ))
+            .await
+            .expect("Failed to connect"),
         })),
         TestWindow::new(),
-    ).await;
+    )
+    .await;
 
-    assert!(result.is_ok(), "Should handle metadata insertion with proper state management");
+    assert!(
+        result.is_ok(),
+        "Should handle metadata insertion with proper state management"
+    );
     db.cleanup().await;
 }
 

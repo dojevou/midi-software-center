@@ -1,16 +1,13 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Default)]
 pub enum SyncMode {
+    #[default]
     Internal,
     External,
 }
 
-impl Default for SyncMode {
-    fn default() -> Self {
-        SyncMode::Internal
-    }
-}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MidiSettings {
@@ -123,14 +120,20 @@ mod tests {
     fn test_set_default_input() {
         let mut settings = MidiSettings::default();
         settings.set_default_input(Some("Test Input".to_string()));
-        assert_eq!(settings.default_input_device, Some("Test Input".to_string()));
+        assert_eq!(
+            settings.default_input_device,
+            Some("Test Input".to_string())
+        );
     }
 
     #[test]
     fn test_set_default_output() {
         let mut settings = MidiSettings::default();
         settings.set_default_output(Some("Test Output".to_string()));
-        assert_eq!(settings.default_output_device, Some("Test Output".to_string()));
+        assert_eq!(
+            settings.default_output_device,
+            Some("Test Output".to_string())
+        );
     }
 
     #[test]
@@ -193,8 +196,8 @@ mod tests {
 
     #[test]
     fn test_clear_devices() {
-        let mut settings = MidiSettings::new()
-            .with_devices(Some("Input".to_string()), Some("Output".to_string()));
+        let mut settings =
+            MidiSettings::new().with_devices(Some("Input".to_string()), Some("Output".to_string()));
 
         settings.set_default_input(None);
         settings.set_default_output(None);

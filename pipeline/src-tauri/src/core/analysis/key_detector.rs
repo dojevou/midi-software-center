@@ -1,14 +1,14 @@
-   /// Key Detection Module
-   ///
-   /// Implements the Krumhansl-Schmuckler key-finding algorithm to detect
-   /// the musical key of MIDI files.
-   ///
-   /// # Archetype: Trusty Module
-   /// - Pure functions with no side effects
-   /// - No I/O operations
-   /// - Highly testable
-   /// - Reusable across the application
 
+/// Key Detection Module
+///
+/// Implements the Krumhansl-Schmuckler key-finding algorithm to detect
+/// the musical key of MIDI files.
+///
+/// # Archetype: Trusty Module
+/// - Pure functions with no side effects
+/// - No I/O operations
+/// - Highly testable
+/// - Reusable across the application
 use crate::core::analysis::key_profiles::*;
 use midi_library_shared::core::midi::types::{Event, MidiFile};
 
@@ -264,25 +264,14 @@ mod tests {
         for (pitch, velocity) in notes {
             events.push(TimedEvent {
                 delta_ticks: 10,
-                event: Event::NoteOn {
-                    note: pitch,
-                    velocity,
-                    channel: 0,
-                },
+                event: Event::NoteOn { note: pitch, velocity, channel: 0 },
             });
         }
 
-        events.push(TimedEvent {
-            delta_ticks: 0,
-            event: Event::EndOfTrack,
-        });
+        events.push(TimedEvent { delta_ticks: 0, event: Event::EndOfTrack });
 
         MidiFile {
-            header: Header {
-                format: 1,
-                num_tracks: 1,
-                ticks_per_quarter_note: 480,
-            },
+            header: Header { format: 1, num_tracks: 1, ticks_per_quarter_note: 480 },
             tracks: vec![Track { events }],
         }
     }
@@ -305,6 +294,7 @@ mod tests {
     }
 
     /// Assert correlation is within tolerance
+    #[allow(dead_code)]
     fn assert_correlation_approx(actual: f64, expected: f64, tolerance: f64) {
         assert!(
             (actual - expected).abs() < tolerance,
@@ -339,9 +329,7 @@ mod tests {
     #[test]
     fn test_rotate_profile() {
         // Test that rotating a profile moves the tonic weight to the correct position
-        let profile = [
-            1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0,
-        ];
+        let profile = [1.0, 2.0, 3.0, 4.0, 5.0, 6.0, 7.0, 8.0, 9.0, 10.0, 11.0, 12.0];
 
         // Rotate to pitch class 3 (D#)
         let rotated = rotate_profile(&profile, 3);
@@ -356,9 +344,7 @@ mod tests {
 
     #[test]
     fn test_correlation_identical() {
-        let dist1 = [
-            0.1, 0.2, 0.1, 0.05, 0.15, 0.1, 0.05, 0.15, 0.03, 0.02, 0.03, 0.02,
-        ];
+        let dist1 = [0.1, 0.2, 0.1, 0.05, 0.15, 0.1, 0.05, 0.15, 0.03, 0.02, 0.03, 0.02];
         let correlation = calculate_correlation(&dist1, &dist1);
 
         assert!((correlation - 1.0).abs() < 0.001);
@@ -367,9 +353,7 @@ mod tests {
     #[test]
     fn test_correlation_zero() {
         let dist1 = [0.0; 12];
-        let dist2 = [
-            0.1, 0.2, 0.1, 0.05, 0.15, 0.1, 0.05, 0.15, 0.03, 0.02, 0.03, 0.02,
-        ];
+        let dist2 = [0.1, 0.2, 0.1, 0.05, 0.15, 0.1, 0.05, 0.15, 0.03, 0.02, 0.03, 0.02];
         let correlation = calculate_correlation(&dist1, &dist2);
 
         assert_eq!(correlation, 0.0);
@@ -407,9 +391,9 @@ mod tests {
     fn test_histogram_octave_equivalence() {
         // C3, C4, C5 should all map to pitch class 0
         let midi = create_test_midi_with_notes(vec![
-            (48, 100),  // C3
-            (60, 100),  // C4
-            (72, 100),  // C5
+            (48, 100), // C3
+            (60, 100), // C4
+            (72, 100), // C5
         ]);
         let histogram = build_pitch_class_histogram(&midi);
 
@@ -420,9 +404,9 @@ mod tests {
     fn test_histogram_velocity_zero_ignored() {
         // Notes with velocity 0 should be ignored (they're note-offs)
         let midi = create_test_midi_with_notes(vec![
-            (60, 100),  // C - counted
-            (62, 0),    // D - ignored (velocity 0)
-            (64, 100),  // E - counted
+            (60, 100), // C - counted
+            (62, 0),   // D - ignored (velocity 0)
+            (64, 100), // E - counted
         ]);
         let histogram = build_pitch_class_histogram(&midi);
 
@@ -433,9 +417,7 @@ mod tests {
 
     #[test]
     fn test_histogram_chromatic_scale() {
-        let notes: Vec<(u8, u8)> = (60..72)
-            .map(|pitch| (pitch, 100))
-            .collect();
+        let notes: Vec<(u8, u8)> = (60..72).map(|pitch| (pitch, 100)).collect();
         let midi = create_test_midi_with_notes(notes);
         let histogram = build_pitch_class_histogram(&midi);
 
@@ -448,45 +430,32 @@ mod tests {
     #[test]
     fn test_histogram_c_major_scale() {
         let scale = create_major_scale(60); // C major
-        let notes: Vec<(u8, u8)> = scale.iter()
-            .map(|&pitch| (pitch, 100))
-            .collect();
+        let notes: Vec<(u8, u8)> = scale.iter().map(|&pitch| (pitch, 100)).collect();
         let midi = create_test_midi_with_notes(notes);
         let histogram = build_pitch_class_histogram(&midi);
 
         // C major scale: C D E F G A B C
         // Should have: C=2, D=1, E=1, F=1, G=1, A=1, B=1
-        assert_eq!(histogram[0], 2);  // C (appears twice)
-        assert_eq!(histogram[1], 0);  // C#
-        assert_eq!(histogram[2], 1);  // D
-        assert_eq!(histogram[3], 0);  // D#
-        assert_eq!(histogram[4], 1);  // E
+        assert_eq!(histogram[0], 2); // C (appears twice)
+        assert_eq!(histogram[1], 0); // C#
+        assert_eq!(histogram[2], 1); // D
+        assert_eq!(histogram[3], 0); // D#
+        assert_eq!(histogram[4], 1); // E
     }
 
     #[test]
     fn test_histogram_multiple_tracks() {
         // Create MIDI with 2 tracks, both playing C
         let midi = MidiFile {
-            header: Header {
-                format: 1,
-                num_tracks: 2,
-                ticks_per_quarter_note: 480,
-            },
+            header: Header { format: 1, num_tracks: 2, ticks_per_quarter_note: 480 },
             tracks: vec![
                 Track {
                     events: vec![
                         TimedEvent {
                             delta_ticks: 0,
-                            event: Event::NoteOn {
-                                note: 60,
-                                velocity: 100,
-                                channel: 0,
-                            },
+                            event: Event::NoteOn { note: 60, velocity: 100, channel: 0 },
                         },
-                        TimedEvent {
-                            delta_ticks: 0,
-                            event: Event::EndOfTrack,
-                        },
+                        TimedEvent { delta_ticks: 0, event: Event::EndOfTrack },
                     ],
                 },
                 Track {
@@ -499,10 +468,7 @@ mod tests {
                                 channel: 1,
                             },
                         },
-                        TimedEvent {
-                            delta_ticks: 0,
-                            event: Event::EndOfTrack,
-                        },
+                        TimedEvent { delta_ticks: 0, event: Event::EndOfTrack },
                     ],
                 },
             ],
@@ -516,13 +482,13 @@ mod tests {
     fn test_histogram_full_midi_range() {
         // Test notes across full MIDI range (0-127)
         let midi = create_test_midi_with_notes(vec![
-            (0, 100),    // C(-1)
-            (127, 100),  // G9
+            (0, 100),   // C(-1)
+            (127, 100), // G9
         ]);
         let histogram = build_pitch_class_histogram(&midi);
 
-        assert_eq!(histogram[0], 1);  // C
-        assert_eq!(histogram[7], 1);  // G (127 % 12 = 7)
+        assert_eq!(histogram[0], 1); // C
+        assert_eq!(histogram[7], 1); // G (127 % 12 = 7)
     }
 
     // ============================================================================
@@ -546,10 +512,7 @@ mod tests {
     #[test]
     fn test_confidence_large_gap() {
         // Best: 0.95, Second: 0.70 → gap = 0.25
-        let correlations = vec![
-            (0, ScaleType::Major, 0.95),
-            (1, ScaleType::Major, 0.70),
-        ];
+        let correlations = vec![(0, ScaleType::Major, 0.95), (1, ScaleType::Major, 0.70)];
         let confidence = calculate_confidence(&correlations);
 
         // confidence = 0.5 + (0.25 * 2.5).min(0.5) = 0.5 + 0.5 = 1.0
@@ -559,10 +522,7 @@ mod tests {
     #[test]
     fn test_confidence_small_gap() {
         // Best: 0.75, Second: 0.73 → gap = 0.02
-        let correlations = vec![
-            (0, ScaleType::Major, 0.75),
-            (1, ScaleType::Minor, 0.73),
-        ];
+        let correlations = vec![(0, ScaleType::Major, 0.75), (1, ScaleType::Minor, 0.73)];
         let confidence = calculate_confidence(&correlations);
 
         // confidence = 0.5 + (0.02 * 2.5) = 0.5 + 0.05 = 0.55
@@ -572,10 +532,7 @@ mod tests {
     #[test]
     fn test_confidence_zero_gap() {
         // Identical correlations (ambiguous)
-        let correlations = vec![
-            (0, ScaleType::Major, 0.80),
-            (1, ScaleType::Minor, 0.80),
-        ];
+        let correlations = vec![(0, ScaleType::Major, 0.80), (1, ScaleType::Minor, 0.80)];
         let confidence = calculate_confidence(&correlations);
 
         assert_eq!(confidence, 0.5); // Minimum confidence
@@ -584,10 +541,7 @@ mod tests {
     #[test]
     fn test_confidence_medium_gap() {
         // Best: 0.85, Second: 0.77 → gap = 0.08
-        let correlations = vec![
-            (0, ScaleType::Major, 0.85),
-            (5, ScaleType::Major, 0.77),
-        ];
+        let correlations = vec![(0, ScaleType::Major, 0.85), (5, ScaleType::Major, 0.77)];
         let confidence = calculate_confidence(&correlations);
 
         // confidence = 0.5 + (0.08 * 2.5) = 0.5 + 0.20 = 0.70
@@ -597,10 +551,7 @@ mod tests {
     #[test]
     fn test_confidence_clamped_to_max() {
         // Very large gap should clamp to 1.0
-        let correlations = vec![
-            (0, ScaleType::Major, 0.99),
-            (1, ScaleType::Minor, 0.40),
-        ];
+        let correlations = vec![(0, ScaleType::Major, 0.99), (1, ScaleType::Minor, 0.40)];
         let confidence = calculate_confidence(&correlations);
 
         assert_eq!(confidence, 1.0); // Clamped to maximum
@@ -612,7 +563,11 @@ mod tests {
         let mut correlations = Vec::new();
         for i in 0..24 {
             let correlation = 0.9 - (i as f64 * 0.03); // Decreasing scores
-            let scale_type = if i < 12 { ScaleType::Major } else { ScaleType::Minor };
+            let scale_type = if i < 12 {
+                ScaleType::Major
+            } else {
+                ScaleType::Minor
+            };
             correlations.push((i % 12, scale_type, correlation));
         }
 
@@ -662,9 +617,9 @@ mod tests {
 
         // Element 5 should be 1.0, all others 0.0
         assert!((normalized[5] - 1.0).abs() < 0.001);
-        for i in 0..12 {
+        for (i, &value) in normalized.iter().enumerate() {
             if i != 5 {
-                assert!(normalized[i].abs() < 0.001);
+                assert!(value.abs() < 0.001);
             }
         }
     }
@@ -1060,14 +1015,7 @@ mod tests {
     #[test]
     fn test_detect_pentatonic_scale() {
         // C major pentatonic: C D E G A
-        let notes = vec![
-            (60, 100),
-            (62, 100),
-            (64, 100),
-            (67, 100),
-            (69, 100),
-            (72, 100),
-        ];
+        let notes = vec![(60, 100), (62, 100), (64, 100), (67, 100), (69, 100), (72, 100)];
         let midi = create_test_midi_with_notes(notes);
 
         let result = detect_key(&midi);
@@ -1081,14 +1029,7 @@ mod tests {
     #[test]
     fn test_detect_blues_scale() {
         // E blues scale: E G A Bb B D
-        let notes = vec![
-            (52, 100),
-            (55, 100),
-            (57, 100),
-            (58, 100),
-            (59, 100),
-            (62, 100),
-        ];
+        let notes = vec![(52, 100), (55, 100), (57, 100), (58, 100), (59, 100), (62, 100)];
         let midi = create_test_midi_with_notes(notes);
 
         let result = detect_key(&midi);
@@ -1102,11 +1043,8 @@ mod tests {
         // C major scale with different velocities
         let scale = create_major_scale(60);
         let velocities = [127, 100, 80, 60, 40, 80, 100, 127];
-        let notes: Vec<(u8, u8)> = scale
-            .iter()
-            .zip(velocities.iter())
-            .map(|(&pitch, &vel)| (pitch, vel))
-            .collect();
+        let notes: Vec<(u8, u8)> =
+            scale.iter().zip(velocities.iter()).map(|(&pitch, &vel)| (pitch, vel)).collect();
 
         let midi = create_test_midi_with_notes(notes);
         let result = detect_key(&midi);
@@ -1196,14 +1134,7 @@ mod tests {
     #[test]
     fn test_detect_atonal_music() {
         // Atonal pattern: no clear tonal center
-        let notes = vec![
-            (60, 100),
-            (61, 100),
-            (66, 100),
-            (68, 100),
-            (70, 100),
-            (63, 100),
-        ];
+        let notes = vec![(60, 100), (61, 100), (66, 100), (68, 100), (70, 100), (63, 100)];
         let midi = create_test_midi_with_notes(notes);
 
         let result = detect_key(&midi);
@@ -1215,14 +1146,7 @@ mod tests {
     #[test]
     fn test_detect_whole_tone_scale() {
         // Whole tone scale: C D E F# G# A#
-        let notes = vec![
-            (60, 100),
-            (62, 100),
-            (64, 100),
-            (66, 100),
-            (68, 100),
-            (70, 100),
-        ];
+        let notes = vec![(60, 100), (62, 100), (64, 100), (66, 100), (68, 100), (70, 100)];
         let midi = create_test_midi_with_notes(notes);
 
         let result = detect_key(&midi);
@@ -1276,7 +1200,10 @@ mod tests {
         // Should not produce NaN
         for &val in &normalized {
             assert!(!val.is_nan(), "Normalized histogram contains NaN");
-            assert!(val.is_finite(), "Normalized histogram contains non-finite value");
+            assert!(
+                val.is_finite(),
+                "Normalized histogram contains non-finite value"
+            );
         }
     }
 
@@ -1294,10 +1221,7 @@ mod tests {
     #[test]
     fn test_stability_confidence_nan_handling() {
         // Correlation with NaN (shouldn't happen, but test defensive code)
-        let correlations = vec![
-            (0, ScaleType::Major, 0.8),
-            (1, ScaleType::Major, 0.75),
-        ];
+        let correlations = vec![(0, ScaleType::Major, 0.8), (1, ScaleType::Major, 0.75)];
 
         let confidence = calculate_confidence(&correlations);
 

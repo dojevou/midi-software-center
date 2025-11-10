@@ -1,8 +1,8 @@
-   /// Database Window State
-   ///
-   /// Trusty Module: Pure data structures for database window state including
-   /// search filters, results, and pagination. No I/O, no side effects.
 
+/// Database Window State
+///
+/// Trusty Module: Pure data structures for database window state including
+/// search filters, results, and pagination. No I/O, no side effects.
 use serde::{Deserialize, Serialize};
 
 /// Search filters for database window
@@ -131,7 +131,6 @@ pub enum SortField {
     LastAccessed,
 }
 
-
 /// Sort order
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
@@ -143,7 +142,6 @@ pub enum SortOrder {
     #[default]
     Descending,
 }
-
 
 /// Search result item
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -290,11 +288,8 @@ impl DatabaseWindowState {
     /// Update results and pagination
     pub fn set_results(&mut self, results: Vec<SearchResult>, total_count: usize) {
         self.results = results;
-        self.pagination = PaginationInfo::new(
-            total_count,
-            self.filters.page,
-            self.filters.page_size,
-        );
+        self.pagination =
+            PaginationInfo::new(total_count, self.filters.page, self.filters.page_size);
     }
 
     /// Clear all selections
@@ -377,7 +372,6 @@ pub enum ViewMode {
     /// Details view (full information table)
     Details,
 }
-
 
 #[cfg(test)]
 mod tests {

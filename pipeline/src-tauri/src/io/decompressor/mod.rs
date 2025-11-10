@@ -1,10 +1,10 @@
-   /// Archive decompression module
-   ///
-   /// # Archetype: Grown-up Script
-   /// - Performs I/O operations
-   /// - Can be run standalone OR imported
-   /// - Separates I/O from business logic
 
+/// Archive decompression module
+///
+/// # Archetype: Grown-up Script
+/// - Performs I/O operations
+/// - Can be run standalone OR imported
+/// - Separates I/O from business logic
 pub mod extractor;
 pub mod formats;
 pub mod temp_manager;

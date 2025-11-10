@@ -1,54 +1,54 @@
-   /// Dynamic Concurrency Tuning Module
-   ///
-   /// This module provides automatic detection and calculation of optimal concurrency
-   /// settings based on system resources (CPU cores, RAM, disk type).
-   ///
-   /// # Architecture
-   ///
-   /// This is a **Trusty Module** - pure logic with comprehensive tests.
-   /// - NO I/O operations (system detection is read-only introspection)
-   /// - All functions are pure calculations
-   /// - Highly testable with different configurations
-   ///
-   /// # Usage
-   ///
-   /// ```rust
-   /// use pipeline::core::performance::concurrency::{
-   ///     detect_system_resources,
-   ///     calculate_optimal_concurrency
-   /// };
-   ///
-   /// // Auto-detect system resources
-   /// let resources = detect_system_resources();
-   ///
-   /// // Calculate optimal concurrency
-   /// let concurrency = calculate_optimal_concurrency(&resources);
-   /// println!("Using {} concurrent workers", concurrency);
-   /// ```
-   ///
-   /// # Performance Tuning Strategy
-   ///
-   /// The optimal concurrency is calculated using a multi-factor formula:
-   ///
-   /// 1. **CPU-based baseline**: `cpu_cores × 2`
-   ///    - Accounts for I/O-bound operations (file reading, database writes)
-   ///    - Each core can handle ~2 concurrent I/O operations efficiently
-   ///
-   /// 2. **Memory constraints**: Reduce concurrency if RAM < 8GB
-   ///    - 4GB RAM: Divide by 4 (risk of swapping)
-   ///    - 6GB RAM: Divide by 2 (limited headroom)
-   ///    - 8GB+ RAM: No reduction
-   ///
-   /// 3. **Storage type**: Cap based on disk performance
-   ///    - HDD: Cap at 50 (seek times limit parallelism)
-   ///    - SSD: Cap at 100 (near-linear scaling)
-   ///
-   /// 4. **Absolute bounds**: Clamp to [10, 100]
-   ///    - Minimum 10: Ensure reasonable throughput on any system
-   ///    - Maximum 100: Prevent database connection exhaustion
 
-use sysinfo::System;
 use std::thread;
+/// Dynamic Concurrency Tuning Module
+///
+/// This module provides automatic detection and calculation of optimal concurrency
+/// settings based on system resources (CPU cores, RAM, disk type).
+///
+/// # Architecture
+///
+/// This is a **Trusty Module** - pure logic with comprehensive tests.
+/// - NO I/O operations (system detection is read-only introspection)
+/// - All functions are pure calculations
+/// - Highly testable with different configurations
+///
+/// # Usage
+///
+/// ```rust
+/// use pipeline::core::performance::concurrency::{
+///     detect_system_resources,
+///     calculate_optimal_concurrency
+/// };
+///
+/// // Auto-detect system resources
+/// let resources = detect_system_resources();
+///
+/// // Calculate optimal concurrency
+/// let concurrency = calculate_optimal_concurrency(&resources);
+/// println!("Using {} concurrent workers", concurrency);
+/// ```
+///
+/// # Performance Tuning Strategy
+///
+/// The optimal concurrency is calculated using a multi-factor formula:
+///
+/// 1. **CPU-based baseline**: `cpu_cores × 2`
+///    - Accounts for I/O-bound operations (file reading, database writes)
+///    - Each core can handle ~2 concurrent I/O operations efficiently
+///
+/// 2. **Memory constraints**: Reduce concurrency if RAM < 8GB
+///    - 4GB RAM: Divide by 4 (risk of swapping)
+///    - 6GB RAM: Divide by 2 (limited headroom)
+///    - 8GB+ RAM: No reduction
+///
+/// 3. **Storage type**: Cap based on disk performance
+///    - HDD: Cap at 50 (seek times limit parallelism)
+///    - SSD: Cap at 100 (near-linear scaling)
+///
+/// 4. **Absolute bounds**: Clamp to [10, 100]
+///    - Minimum 10: Ensure reasonable throughput on any system
+///    - Maximum 100: Prevent database connection exhaustion
+use sysinfo::System;
 
 /// System resource information used to calculate optimal concurrency.
 ///
@@ -82,11 +82,7 @@ impl SystemResources {
     /// assert!(resources.is_ssd);
     /// ```
     pub fn new(cpu_cores: usize, available_memory_gb: f64, is_ssd: bool) -> Self {
-        Self {
-            cpu_cores,
-            available_memory_gb,
-            is_ssd,
-        }
+        Self { cpu_cores, available_memory_gb, is_ssd }
     }
 }
 
@@ -120,9 +116,7 @@ impl SystemResources {
 /// ```
 pub fn detect_system_resources() -> SystemResources {
     // Detect CPU cores
-    let cpu_cores = thread::available_parallelism()
-        .map(|n| n.get())
-        .unwrap_or(4); // Fallback to 4 cores if detection fails
+    let cpu_cores = thread::available_parallelism().map(|n| n.get()).unwrap_or(4); // Fallback to 4 cores if detection fails
 
     // Initialize system info
     let sys = System::new_all();
@@ -138,11 +132,7 @@ pub fn detect_system_resources() -> SystemResources {
     // In production, this could be enhanced with platform-specific detection
     let is_ssd = true; // Conservative default: assume SSD for better performance
 
-    SystemResources {
-        cpu_cores,
-        available_memory_gb,
-        is_ssd,
-    }
+    SystemResources { cpu_cores, available_memory_gb, is_ssd }
 }
 
 /// Calculate the optimal concurrency limit based on system resources.
@@ -350,8 +340,8 @@ mod tests {
         // Should detect some memory
         assert!(resources.available_memory_gb > 0.0);
 
-        // is_ssd is boolean
-        assert!(resources.is_ssd || !resources.is_ssd);
+        // is_ssd is a boolean value (no need to assert, just verify it's set)
+        let _ = resources.is_ssd;
     }
 
     #[test]
@@ -427,13 +417,13 @@ mod tests {
     #[test]
     fn test_optimal_concurrency_various_cpu_counts() {
         let test_cases = vec![
-            (4, 16.0, true, 10),   // 4 cores: 4×2=8, clamped to 10
-            (6, 16.0, true, 12),   // 6 cores: 6×2=12
-            (8, 16.0, true, 16),   // 8 cores: 8×2=16
-            (12, 16.0, true, 24),  // 12 cores: 12×2=24
-            (16, 16.0, true, 32),  // 16 cores: 16×2=32
-            (24, 16.0, true, 48),  // 24 cores: 24×2=48
-            (32, 16.0, true, 64),  // 32 cores: 32×2=64
+            (4, 16.0, true, 10),  // 4 cores: 4×2=8, clamped to 10
+            (6, 16.0, true, 12),  // 6 cores: 6×2=12
+            (8, 16.0, true, 16),  // 8 cores: 8×2=16
+            (12, 16.0, true, 24), // 12 cores: 12×2=24
+            (16, 16.0, true, 32), // 16 cores: 16×2=32
+            (24, 16.0, true, 48), // 24 cores: 24×2=48
+            (32, 16.0, true, 64), // 32 cores: 32×2=64
         ];
 
         for (cores, ram, ssd, expected) in test_cases {
@@ -450,9 +440,9 @@ mod tests {
     #[test]
     fn test_database_pool_size() {
         // Test various concurrency levels
-        assert_eq!(calculate_database_pool_size(10), 20);   // Clamped to minimum
-        assert_eq!(calculate_database_pool_size(20), 30);   // 20 × 1.5 = 30
-        assert_eq!(calculate_database_pool_size(50), 75);   // 50 × 1.5 = 75
+        assert_eq!(calculate_database_pool_size(10), 20); // Clamped to minimum
+        assert_eq!(calculate_database_pool_size(20), 30); // 20 × 1.5 = 30
+        assert_eq!(calculate_database_pool_size(50), 75); // 50 × 1.5 = 75
         assert_eq!(calculate_database_pool_size(100), 150); // 100 × 1.5 = 150
         assert_eq!(calculate_database_pool_size(150), 200); // Clamped to maximum
     }
@@ -475,9 +465,9 @@ mod tests {
     #[test]
     fn test_batch_size() {
         // Test various concurrency levels
-        assert_eq!(calculate_batch_size(10), 1000);   // 10 × 100 = 1000
-        assert_eq!(calculate_batch_size(20), 2000);   // 20 × 100 = 2000
-        assert_eq!(calculate_batch_size(50), 5000);   // 50 × 100 = 5000
+        assert_eq!(calculate_batch_size(10), 1000); // 10 × 100 = 1000
+        assert_eq!(calculate_batch_size(20), 2000); // 20 × 100 = 2000
+        assert_eq!(calculate_batch_size(50), 5000); // 50 × 100 = 5000
         assert_eq!(calculate_batch_size(100), 10000); // 100 × 100 = 10000 (clamped)
         assert_eq!(calculate_batch_size(150), 10000); // Clamped to maximum
     }
@@ -508,7 +498,10 @@ mod tests {
 
         // Verify relationships
         assert!(pool_size >= concurrency, "Pool should be >= concurrency");
-        assert!(batch_size >= concurrency * 50, "Batch should be >= concurrency × 50");
+        assert!(
+            batch_size >= concurrency * 50,
+            "Batch should be >= concurrency × 50"
+        );
     }
 
     #[test]

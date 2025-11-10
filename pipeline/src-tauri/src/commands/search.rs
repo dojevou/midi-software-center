@@ -1,16 +1,16 @@
-   /// Search command handlers - GROWN-UP SCRIPT ARCHETYPE
-   ///
-   /// PURPOSE: Advanced search functionality with filters and pagination
-   /// ARCHETYPE: Grown-up Script (I/O operations, reusable logic)
-   ///
-   /// ✅ CAN: Perform database I/O
-   /// ✅ CAN: Have side effects (complex queries)
-   /// ✅ SHOULD: Handle errors properly
-   /// ❌ NO: Complex business logic (delegate to Trusty Modules)
 
+/// Search command handlers - GROWN-UP SCRIPT ARCHETYPE
+///
+/// PURPOSE: Advanced search functionality with filters and pagination
+/// ARCHETYPE: Grown-up Script (I/O operations, reusable logic)
+///
+/// ✅ CAN: Perform database I/O
+/// ✅ CAN: Have side effects (complex queries)
+/// ✅ SHOULD: Handle errors properly
+/// ❌ NO: Complex business logic (delegate to Trusty Modules)
 use crate::AppState;
-use tauri::State;
 use serde::{Deserialize, Serialize};
+use tauri::State;
 
 // =============================================================================
 // DATA STRUCTURES
@@ -33,9 +33,9 @@ pub struct SearchResultItem {
     pub id: i64,
     pub filename: String,
     pub filepath: String,
-    pub bpm: Option<f64>,  // Cast from NUMERIC in SQL
+    pub bpm: Option<f64>, // Cast from NUMERIC in SQL
     pub key_signature: Option<String>,
-    pub duration_seconds: Option<f64>,  // Cast from NUMERIC in SQL
+    pub duration_seconds: Option<f64>, // Cast from NUMERIC in SQL
     pub category: Option<String>,
 }
 
@@ -192,7 +192,7 @@ pub async fn get_all_tags_impl(state: &AppState) -> Result<Vec<String>, String> 
         SELECT DISTINCT tag_name
         FROM file_tags
         ORDER BY tag_name ASC
-        "#
+        "#,
     )
     .fetch_all(&state.database.pool().await)
     .await
@@ -211,9 +211,7 @@ pub async fn get_all_tags_impl(state: &AppState) -> Result<Vec<String>, String> 
 /// const tags = await invoke<string[]>('get_all_tags');
 /// ```
 #[tauri::command]
-pub async fn get_all_tags(
-    state: State<'_, AppState>,
-) -> Result<Vec<String>, String> {
+pub async fn get_all_tags(state: State<'_, AppState>) -> Result<Vec<String>, String> {
     get_all_tags_impl(&state).await
 }
 
@@ -251,7 +249,7 @@ pub async fn get_files_by_tag(
         INNER JOIN file_tags ft ON f.id = ft.file_id
         WHERE ft.tag_name = $1
         ORDER BY f.created_at DESC
-        "#
+        "#,
     )
     .bind(tag)
     .fetch_all(&state.database.pool().await)
@@ -269,7 +267,7 @@ pub async fn get_bpm_range_impl(state: &AppState) -> Result<BpmRange, String> {
         SELECT MIN(bpm)::float8, MAX(bpm)::float8
         FROM musical_metadata
         WHERE bpm IS NOT NULL
-        "#
+        "#,
     )
     .fetch_optional(&pool)
     .await
@@ -291,9 +289,7 @@ pub async fn get_bpm_range_impl(state: &AppState) -> Result<BpmRange, String> {
 /// const range = await invoke<{min: number, max: number}>('get_bpm_range');
 /// ```
 #[tauri::command]
-pub async fn get_bpm_range(
-    state: State<'_, AppState>,
-) -> Result<BpmRange, String> {
+pub async fn get_bpm_range(state: State<'_, AppState>) -> Result<BpmRange, String> {
     get_bpm_range_impl(&state).await
 }
 
@@ -307,16 +303,14 @@ pub async fn get_bpm_range(
 /// const keys = await invoke<string[]>('get_all_keys');
 /// ```
 #[tauri::command]
-pub async fn get_all_keys(
-    state: State<'_, AppState>,
-) -> Result<Vec<String>, String> {
+pub async fn get_all_keys(state: State<'_, AppState>) -> Result<Vec<String>, String> {
     let keys: Vec<(String,)> = sqlx::query_as(
         r#"
         SELECT DISTINCT key_signature::text
         FROM musical_metadata
         WHERE key_signature IS NOT NULL
         ORDER BY key_signature ASC
-        "#
+        "#,
     )
     .fetch_all(&state.database.pool().await)
     .await

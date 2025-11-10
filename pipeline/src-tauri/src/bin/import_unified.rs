@@ -1,68 +1,67 @@
-   /// Unified MIDI Import Pipeline
-   ///
-   /// This binary orchestrates ALL existing modules to provide a complete, single-pass
-   /// import pipeline that processes compressed archives directly into the database with
-   /// FULL analysis (BPM, key, tags, complexity, etc.).
-   ///
-   /// # Architecture: Orchestration Layer
-   /// This is a thin orchestration layer that combines:
-   /// - Archive extraction (io::decompressor)
-   /// - MIDI parsing (core::midi::parser)
-   /// - Musical analysis (core::analysis)
-   /// - Intelligent tagging (core::analysis::auto_tagger)
-   /// - Hash-based deduplication (core::hash)
-   /// - Batch database inserts (database::batch_insert)
-   ///
-   /// # Workflow:
-   /// ```text
-   /// For each archive in input directory:
-   ///   1. Extract archive → temp directory
-   ///   2. Find all .mid/.midi files
-   ///   3. For EACH MIDI file (in parallel with 32 workers):
-   ///      a. Read file bytes
-   ///      b. Parse MIDI
-   ///      c. Detect BPM and key
-   ///      d. Extract tags from path and content
-   ///      e. Analyze notes (complexity, pitch range, polyphony, etc.)
-   ///      f. Calculate BLAKE3 hash for deduplication
-   ///      g. INSERT INTO files + musical_metadata (ONE transaction)
-   ///   4. Clean up temp files
-   ///   5. Move to next archive
-   /// ```
-   ///
-   /// # Performance:
-   /// - Target: 350-400 files/sec with full analysis
-   /// - 1.5M files completed in ~1-1.5 hours
-   /// - Single-pass processing (no re-analysis needed)
-   ///
-   /// # Usage:
-   /// ```bash
-   /// # Process directory of archives
-   /// cargo run --release --bin import_unified -- ~/floorp_downloads/_1.002.000-Midi-Collection_/
-   ///
-   /// # Process single archive
-   /// cargo run --release --bin import_unified -- ~/path/to/archive.zip
-   /// ```
-
+/// Unified MIDI Import Pipeline
+///
+/// This binary orchestrates ALL existing modules to provide a complete, single-pass
+/// import pipeline that processes compressed archives directly into the database with
+/// FULL analysis (BPM, key, tags, complexity, etc.).
+///
+/// # Architecture: Orchestration Layer
+/// This is a thin orchestration layer that combines:
+/// - Archive extraction (io::decompressor)
+/// - MIDI parsing (core::midi::parser)
+/// - Musical analysis (core::analysis)
+/// - Intelligent tagging (core::analysis::auto_tagger)
+/// - Hash-based deduplication (core::hash)
+/// - Batch database inserts (database::batch_insert)
+///
+/// # Workflow:
+/// ```text
+/// For each archive in input directory:
+///   1. Extract archive → temp directory
+///   2. Find all .mid/.midi files
+///   3. For EACH MIDI file (in parallel with 32 workers):
+///      a. Read file bytes
+///      b. Parse MIDI
+///      c. Detect BPM and key
+///      d. Extract tags from path and content
+///      e. Analyze notes (complexity, pitch range, polyphony, etc.)
+///      f. Calculate BLAKE3 hash for deduplication
+///      g. INSERT INTO files + musical_metadata (ONE transaction)
+///   4. Clean up temp files
+///   5. Move to next archive
+/// ```
+///
+/// # Performance:
+/// - Target: 350-400 files/sec with full analysis
+/// - 1.5M files completed in ~1-1.5 hours
+/// - Single-pass processing (no re-analysis needed)
+///
+/// # Usage:
+/// ```bash
+/// # Process directory of archives
+/// cargo run --release --bin import_unified -- ~/floorp_downloads/_1.002.000-Midi-Collection_/
+///
+/// # Process single archive
+/// cargo run --release --bin import_unified -- ~/path/to/archive.zip
+/// ```
 use std::path::{Path, PathBuf};
-use std::sync::atomic::{AtomicUsize, AtomicU64, Ordering};
+use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 use std::sync::Arc;
 use std::time::Instant;
 
-use tokio::sync::Mutex;
-use futures::stream::{self, StreamExt};
 use clap::Parser;
+use futures::stream::{self, StreamExt};
+use tokio::sync::Mutex;
 // Unused: use indicatif::{ProgressBar, ProgressStyle, MultiProgress};
 
 // Import existing modules - we just orchestrate them
-use midi_pipeline::io::decompressor::extractor::{extract_archive, ExtractionConfig};
-use midi_pipeline::core::hash::calculate_file_hash;
 use midi_library_shared::core::midi::parser::parse_midi_file;
 use midi_library_shared::core::midi::types::{Event, MidiFile, TextType};
+use midi_pipeline::core::analysis::auto_tagger::AutoTagger;
 use midi_pipeline::core::analysis::bpm_detector::detect_bpm;
 use midi_pipeline::core::analysis::key_detector::detect_key;
-use midi_pipeline::core::analysis::auto_tagger::AutoTagger;
+use midi_pipeline::core::hash::calculate_file_hash;
 use midi_pipeline::database::Database;
+use midi_pipeline::io::decompressor::extractor::{extract_archive, ExtractionConfig};
 
 //=============================================================================
 // CLI ARGUMENTS
@@ -174,20 +173,17 @@ async fn main() -> anyhow::Result<()> {
     let args = Args::parse();
 
     // Setup logging
-    tracing_subscriber::fmt()
-        .with_max_level(tracing::Level::INFO)
-        .init();
+    tracing_subscriber::fmt().with_max_level(tracing::Level::INFO).init();
 
     println!("\n🎵 UNIFIED MIDI IMPORT PIPELINE");
     println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━\n");
 
     // Connect to database
     let database_url = args.database_url.unwrap_or_else(|| {
-        std::env::var("DATABASE_URL")
-            .unwrap_or_else(|_| {
-                eprintln!("❌ Error: DATABASE_URL must be set in environment or via --database-url");
-                std::process::exit(1);
-            })
+        std::env::var("DATABASE_URL").unwrap_or_else(|_| {
+            eprintln!("❌ Error: DATABASE_URL must be set in environment or via --database-url");
+            std::process::exit(1);
+        })
     });
 
     println!("🔌 Connecting to database...");
@@ -254,24 +250,27 @@ async fn process_archive_directory(
 
     // Process archives sequentially (avoid I/O bottleneck)
     for (index, archive_path) in archives.iter().enumerate() {
-        let archive_name = archive_path
-            .file_name()
-            .and_then(|n| n.to_str())
-            .unwrap_or("unknown");
+        let archive_name = archive_path.file_name().and_then(|n| n.to_str()).unwrap_or("unknown");
 
         println!("\n━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-        println!("📦 Archive [{}/{}]: {}", index + 1, total_archives, archive_name);
+        println!(
+            "📦 Archive [{}/{}]: {}",
+            index + 1,
+            total_archives,
+            archive_name
+        );
         println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
-        match process_archive_with_stats(archive_path, db, workers, batch_size, stats.clone()).await {
+        match process_archive_with_stats(archive_path, db, workers, batch_size, stats.clone()).await
+        {
             Ok(_) => {
                 stats.archives_processed.fetch_add(1, Ordering::SeqCst);
                 print_progress_summary(&stats);
-            }
+            },
             Err(e) => {
                 eprintln!("❌ Failed to process archive {}: {}", archive_name, e);
                 stats.archives_processed.fetch_add(1, Ordering::SeqCst);
-            }
+            },
         }
     }
 
@@ -288,10 +287,7 @@ async fn process_single_archive(
     workers: usize,
     batch_size: usize,
 ) -> anyhow::Result<()> {
-    let archive_name = archive_path
-        .file_name()
-        .and_then(|n| n.to_str())
-        .unwrap_or("unknown");
+    let archive_name = archive_path.file_name().and_then(|n| n.to_str()).unwrap_or("unknown");
 
     println!("📦 Processing archive: {}\n", archive_name);
 
@@ -328,7 +324,8 @@ async fn process_archive_with_stats(
     std::fs::create_dir_all(&temp_dir)?;
 
     let config = ExtractionConfig::default();
-    let extraction_result = extract_archive(archive_path, &temp_dir, &config).map_err(|e| anyhow::anyhow!("{}", e))?;
+    let extraction_result =
+        extract_archive(archive_path, &temp_dir, &config).map_err(|e| anyhow::anyhow!("{}", e))?;
 
     let midi_files = extraction_result.midi_files;
     let midi_count = midi_files.len();
@@ -342,13 +339,13 @@ async fn process_archive_with_stats(
     }
 
     // Extract category from archive name
-    let category = archive_path
-        .file_stem()
-        .and_then(|s| s.to_str())
-        .map(|s| s.to_string());
+    let category = archive_path.file_stem().and_then(|s| s.to_str()).map(|s| s.to_string());
 
     // Step 2: Process MIDI files in parallel with full analysis
-    println!("  ⚡ Processing {} MIDI files with {} workers...", midi_count, workers);
+    println!(
+        "  ⚡ Processing {} MIDI files with {} workers...",
+        midi_count, workers
+    );
 
     // Thread-safe counters
     let processed = Arc::new(AtomicUsize::new(0));
@@ -381,7 +378,7 @@ async fn process_archive_with_stats(
                 let current = processed.fetch_add(1, Ordering::SeqCst) + 1;
 
                 // Show progress every 100 files
-                if current % 100 == 0 || current == midi_count {
+                if current.is_multiple_of(100) || current == midi_count {
                     let elapsed = start_time.elapsed().as_secs_f64();
                     let rate = if elapsed > 0.0 { current as f64 / elapsed } else { 0.0 };
                     println!("    Processing: {}/{} ({:.1}%) - {:.1} files/sec",
@@ -438,11 +435,11 @@ async fn process_archive_with_stats(
                 stats.files_imported.fetch_add(inserted as u64, Ordering::SeqCst);
                 let duplicates = batch.len() - inserted;
                 stats.files_duplicates.fetch_add(duplicates as u64, Ordering::SeqCst);
-            }
+            },
             Err(e) => {
                 eprintln!("      ❌ Final batch insert failed: {}", e);
                 stats.files_errors.fetch_add(batch.len() as u64, Ordering::SeqCst);
-            }
+            },
         }
     }
 
@@ -450,8 +447,15 @@ async fn process_archive_with_stats(
     std::fs::remove_dir_all(&temp_dir)?;
 
     let elapsed = start_time.elapsed().as_secs_f64();
-    let rate = if elapsed > 0.0 { midi_count as f64 / elapsed } else { 0.0 };
-    println!("  ✅ Completed in {:.1}s ({:.1} files/sec)\n", elapsed, rate);
+    let rate = if elapsed > 0.0 {
+        midi_count as f64 / elapsed
+    } else {
+        0.0
+    };
+    println!(
+        "  ✅ Completed in {:.1}s ({:.1} files/sec)\n",
+        elapsed, rate
+    );
 
     Ok(())
 }
@@ -520,11 +524,7 @@ async fn analyze_midi_file(
     let complexity_score = calculate_complexity_score(&note_stats, &midi_file);
 
     // 12. Extract Tags
-    let filename = file_path
-        .file_name()
-        .and_then(|n| n.to_str())
-        .unwrap_or("unknown")
-        .to_string();
+    let filename = file_path.file_name().and_then(|n| n.to_str()).unwrap_or("unknown").to_string();
 
     let filepath = file_path.to_str().unwrap_or("").to_string();
 
@@ -535,15 +535,17 @@ async fn analyze_midi_file(
         &instruments,
         tempo_bpm,
         key_signature.as_deref(),
+        Some(&midi_file),
     );
 
     // Convert tags to strings for database
-    let tags: Vec<String> = tags_obj.iter().map(|t| {
-        match &t.category {
+    let tags: Vec<String> = tags_obj
+        .iter()
+        .map(|t| match &t.category {
             Some(cat) => format!("{}:{}", cat, t.name),
             None => t.name.clone(),
-        }
-    }).collect();
+        })
+        .collect();
 
     // 13. Extract parent folder
     let parent_folder = file_path
@@ -611,7 +613,7 @@ async fn insert_batch(pool: &sqlx::PgPool, files: &[AnalyzedMidiFile]) -> anyhow
             ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())
             ON CONFLICT (content_hash) DO NOTHING
             RETURNING id
-            "#
+            "#,
         )
         .bind(&file.filename)
         .bind(&file.original_filename)
@@ -631,7 +633,7 @@ async fn insert_batch(pool: &sqlx::PgPool, files: &[AnalyzedMidiFile]) -> anyhow
             None => {
                 tx.rollback().await?;
                 continue; // Skip duplicate
-            }
+            },
         };
 
         // Insert musical metadata
@@ -712,7 +714,8 @@ fn analyze_notes(midi_file: &MidiFile) -> NoteStats {
     let mut min_velocity = 127u8;
     let mut max_velocity = 0u8;
     let mut velocity_sum = 0u32;
-    let mut active_notes_per_tick: std::collections::HashMap<u32, usize> = std::collections::HashMap::new();
+    let mut active_notes_per_tick: std::collections::HashMap<u32, usize> =
+        std::collections::HashMap::new();
 
     for track in &midi_file.tracks {
         let mut current_tick = 0u32;
@@ -732,11 +735,11 @@ fn analyze_notes(midi_file: &MidiFile) -> NoteStats {
 
                     active_notes.insert(*note);
                     active_notes_per_tick.insert(current_tick, active_notes.len());
-                }
+                },
                 Event::NoteOff { note, .. } | Event::NoteOn { note, velocity: 0, .. } => {
                     active_notes.remove(note);
-                }
-                _ => {}
+                },
+                _ => {},
             }
         }
     }
@@ -751,7 +754,11 @@ fn analyze_notes(midi_file: &MidiFile) -> NoteStats {
 
     let (pitch_range_low, pitch_range_high, pitch_range_semitones) = if note_count > 0 {
         let semitones = max_pitch.saturating_sub(min_pitch) as i16;
-        (Some(min_pitch as i16), Some(max_pitch as i16), Some(semitones))
+        (
+            Some(min_pitch as i16),
+            Some(max_pitch as i16),
+            Some(semitones),
+        )
     } else {
         (None, None, None)
     };
@@ -819,20 +826,19 @@ fn extract_instrument_names(midi_file: &MidiFile) -> Vec<String> {
         for timed_event in &track.events {
             match &timed_event.event {
                 Event::Text { text_type, text } => {
-                    if matches!(text_type, TextType::InstrumentName | TextType::TrackName) {
-                        if !instruments.contains(text) {
-                            instruments.push(text.clone());
-                        }
+                    if matches!(text_type, TextType::InstrumentName | TextType::TrackName)
+                        && !instruments.contains(text) {
+                        instruments.push(text.clone());
                     }
-                }
+                },
                 Event::ProgramChange { program, .. } => {
                     if let Some(instrument_name) = program_to_instrument_name(*program) {
                         if !instruments.contains(&instrument_name) {
                             instruments.push(instrument_name);
                         }
                     }
-                }
-                _ => {}
+                },
+                _ => {},
             }
         }
     }
@@ -892,7 +898,8 @@ fn calculate_complexity_score(note_stats: &NoteStats, midi_file: &MidiFile) -> O
     let mut score = 0.0;
 
     // Factor 1: Note density
-    let duration_est = calculate_total_ticks(midi_file) as f64 / (midi_file.header.ticks_per_quarter_note as f64 * 2.0);
+    let duration_est = calculate_total_ticks(midi_file) as f64
+        / (midi_file.header.ticks_per_quarter_note as f64 * 2.0);
     if duration_est > 0.0 {
         let note_density = note_stats.note_count as f64 / duration_est;
         score += (note_density / 10.0).min(30.0);
@@ -913,7 +920,10 @@ fn calculate_complexity_score(note_stats: &NoteStats, midi_file: &MidiFile) -> O
     score += (track_count * 2.0).min(15.0);
 
     // Factor 5: Velocity variation
-    if let (Some(low), Some(high)) = (note_stats.velocity_range_low, note_stats.velocity_range_high) {
+    if let (Some(low), Some(high)) = (
+        note_stats.velocity_range_low,
+        note_stats.velocity_range_high,
+    ) {
         let velocity_range = (high - low) as f64;
         score += (velocity_range / 10.0).min(10.0);
     }
@@ -926,44 +936,63 @@ fn calculate_complexity_score(note_stats: &NoteStats, midi_file: &MidiFile) -> O
 //=============================================================================
 
 fn print_progress_summary(stats: &ImportStats) {
-    let elapsed = stats.start_time
-        .map(|t| t.elapsed().as_secs_f64())
-        .unwrap_or(0.0);
+    let elapsed = stats.start_time.map(|t| t.elapsed().as_secs_f64()).unwrap_or(0.0);
     let imported = stats.files_imported.load(Ordering::SeqCst);
-    let rate = if elapsed > 0.0 { imported as f64 / elapsed } else { 0.0 };
+    let rate = if elapsed > 0.0 {
+        imported as f64 / elapsed
+    } else {
+        0.0
+    };
 
     println!("  📊 Progress:");
-    println!("    Archives: {}/{}",
+    println!(
+        "    Archives: {}/{}",
         stats.archives_processed.load(Ordering::SeqCst),
         stats.archives_total.load(Ordering::SeqCst)
     );
     println!("    Imported: {}", imported);
-    println!("    Duplicates: {}", stats.files_duplicates.load(Ordering::SeqCst));
+    println!(
+        "    Duplicates: {}",
+        stats.files_duplicates.load(Ordering::SeqCst)
+    );
     println!("    Errors: {}", stats.files_errors.load(Ordering::SeqCst));
     println!("    Rate: {:.1} files/sec", rate);
 }
 
 fn print_final_summary(stats: &ImportStats) {
-    let elapsed = stats.start_time
+    let elapsed = stats
+        .start_time
         .map(|t| t.elapsed())
         .unwrap_or_else(|| std::time::Duration::from_secs(0));
     let duration_secs = elapsed.as_secs_f64();
     let imported = stats.files_imported.load(Ordering::SeqCst);
-    let rate = if duration_secs > 0.0 { imported as f64 / duration_secs } else { 0.0 };
+    let rate = if duration_secs > 0.0 {
+        imported as f64 / duration_secs
+    } else {
+        0.0
+    };
 
     println!("\n========================================");
     println!("UNIFIED IMPORT COMPLETE");
     println!("========================================");
-    println!("Archives processed: {}/{}",
+    println!(
+        "Archives processed: {}/{}",
         stats.archives_processed.load(Ordering::SeqCst),
         stats.archives_total.load(Ordering::SeqCst)
     );
-    println!("MIDI files found: {}", stats.files_found.load(Ordering::SeqCst));
+    println!(
+        "MIDI files found: {}",
+        stats.files_found.load(Ordering::SeqCst)
+    );
     println!("Successfully imported: {}", imported);
     println!("  With full analysis: {}", imported);
-    println!("Duplicates skipped: {}", stats.files_duplicates.load(Ordering::SeqCst));
+    println!(
+        "Duplicates skipped: {}",
+        stats.files_duplicates.load(Ordering::SeqCst)
+    );
     println!("Errors: {}", stats.files_errors.load(Ordering::SeqCst));
-    println!("Time: {:.0}h {:.0}m {:.0}s",
+    println!(
+        "Time: {:.0}h {:.0}m {:.0}s",
         duration_secs / 3600.0,
         (duration_secs % 3600.0) / 60.0,
         duration_secs % 60.0

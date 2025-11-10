@@ -1,29 +1,23 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Default)]
 pub enum MeteringMode {
     Peak,
     Rms,
+    #[default]
     Both,
 }
 
-impl Default for MeteringMode {
-    fn default() -> Self {
-        MeteringMode::Both
-    }
-}
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Default)]
 pub enum FaderType {
     Linear,
+    #[default]
     Exponential,
 }
 
-impl Default for FaderType {
-    fn default() -> Self {
-        FaderType::Exponential
-    }
-}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MixerSettings {
@@ -80,7 +74,7 @@ impl MixerSettings {
     }
 
     pub fn set_master_level(&mut self, level_db: f32) -> Result<(), String> {
-        if level_db < -60.0 || level_db > 12.0 {
+        if !(-60.0..=12.0).contains(&level_db) {
             return Err("Master level must be between -60.0 and 12.0 dB".to_string());
         }
         self.master_level_db = level_db;
@@ -88,7 +82,7 @@ impl MixerSettings {
     }
 
     pub fn set_clip_threshold(&mut self, threshold_db: f32) -> Result<(), String> {
-        if threshold_db < -12.0 || threshold_db > 0.0 {
+        if !(-12.0..=0.0).contains(&threshold_db) {
             return Err("Clip threshold must be between -12.0 and 0.0 dB".to_string());
         }
         self.clip_threshold_db = threshold_db;

@@ -1,8 +1,7 @@
-   /// MIDI File Parser - Trusty Module
-   ///
-   /// Pure functions for parsing MIDI files into data structures.
-   /// NO I/O - caller reads file and passes bytes.
-
+/// MIDI File Parser - Trusty Module
+///
+/// Pure functions for parsing MIDI files into data structures.
+/// NO I/O - caller reads file and passes bytes.
 use crate::models::midi::{MidiEvent, MidiEventType, MidiPattern};
 
 /// Parse error types
@@ -64,7 +63,9 @@ fn parse_header(reader: &mut MidiReader) -> Result<MidiHeader, ParseError> {
     // Read "MThd"
     let chunk_type = reader.read_bytes(4)?;
     if chunk_type != b"MThd" {
-        return Err(ParseError::InvalidFormat("Expected MThd header".to_string()));
+        return Err(ParseError::InvalidFormat(
+            "Expected MThd header".to_string(),
+        ));
     }
 
     // Read header length (should be 6)
@@ -91,10 +92,7 @@ fn parse_header(reader: &mut MidiReader) -> Result<MidiHeader, ParseError> {
     // Read ticks per quarter note
     let ticks_per_quarter_note = reader.read_u16()?;
 
-    Ok(MidiHeader {
-        num_tracks,
-        ticks_per_quarter_note,
-    })
+    Ok(MidiHeader { num_tracks, ticks_per_quarter_note })
 }
 
 /// Parse a single track (MTrk chunk)
@@ -165,7 +163,7 @@ fn parse_track(reader: &mut MidiReader) -> Result<Vec<MidiEvent>, ParseError> {
                         value: None,
                         program: None,
                     })
-                }
+                },
                 0x80 => {
                     // Note Off
                     let note = reader.read_u8()?;
@@ -180,7 +178,7 @@ fn parse_track(reader: &mut MidiReader) -> Result<Vec<MidiEvent>, ParseError> {
                         value: None,
                         program: None,
                     })
-                }
+                },
                 0xB0 => {
                     // Control Change
                     let controller = reader.read_u8()?;
@@ -195,7 +193,7 @@ fn parse_track(reader: &mut MidiReader) -> Result<Vec<MidiEvent>, ParseError> {
                         value: Some(value),
                         program: None,
                     })
-                }
+                },
                 0xC0 => {
                     // Program Change
                     let program = reader.read_u8()?;
@@ -209,7 +207,7 @@ fn parse_track(reader: &mut MidiReader) -> Result<Vec<MidiEvent>, ParseError> {
                         value: None,
                         program: Some(program),
                     })
-                }
+                },
                 0xE0 => {
                     // Pitch Bend
                     let _lsb = reader.read_u8()?;
@@ -224,7 +222,7 @@ fn parse_track(reader: &mut MidiReader) -> Result<Vec<MidiEvent>, ParseError> {
                         value: None,
                         program: None,
                     })
-                }
+                },
                 0xD0 => {
                     // Aftertouch
                     let _value = reader.read_u8()?;
@@ -238,7 +236,7 @@ fn parse_track(reader: &mut MidiReader) -> Result<Vec<MidiEvent>, ParseError> {
                         value: None,
                         program: None,
                     })
-                }
+                },
                 _ => None,
             };
 

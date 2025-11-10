@@ -1,10 +1,7 @@
-   /// Automation commands for Tauri frontend
-   ///
-   /// Grown-up Script: Tauri commands with side effects for automation management.
-
-use crate::automation::{
-    AutomationLane, AutomationManager, CurveType, ParameterType,
-};
+/// Automation commands for Tauri frontend
+///
+/// Grown-up Script: Tauri commands with side effects for automation management.
+use crate::automation::{AutomationLane, AutomationManager, CurveType, ParameterType};
 use std::sync::Mutex;
 use tauri::State;
 
@@ -15,9 +12,7 @@ pub struct AutomationState {
 
 impl AutomationState {
     pub fn new() -> Self {
-        Self {
-            manager: Mutex::new(AutomationManager::new()),
-        }
+        Self { manager: Mutex::new(AutomationManager::new()) }
     }
 }
 
@@ -41,8 +36,7 @@ pub fn create_automation_lane(
     parameter_type: ParameterType,
     state: State<'_, AutomationState>,
 ) -> Result<i32, String> {
-    let mut manager = state.manager.lock()
-        .map_err(|e| format!("Failed to lock manager: {}", e))?;
+    let mut manager = state.manager.lock().map_err(|e| format!("Failed to lock manager: {}", e))?;
 
     manager.create_lane(track_id, parameter_type)
 }
@@ -61,8 +55,7 @@ pub fn delete_automation_lane(
     parameter_type: ParameterType,
     state: State<'_, AutomationState>,
 ) -> Result<(), String> {
-    let mut manager = state.manager.lock()
-        .map_err(|e| format!("Failed to lock manager: {}", e))?;
+    let mut manager = state.manager.lock().map_err(|e| format!("Failed to lock manager: {}", e))?;
 
     manager.delete_lane(track_id, parameter_type)
 }
@@ -85,8 +78,7 @@ pub fn add_automation_point(
     value: f64,
     state: State<'_, AutomationState>,
 ) -> Result<i32, String> {
-    let mut manager = state.manager.lock()
-        .map_err(|e| format!("Failed to lock manager: {}", e))?;
+    let mut manager = state.manager.lock().map_err(|e| format!("Failed to lock manager: {}", e))?;
 
     manager.add_point(track_id, parameter_type, time, value)
 }
@@ -107,8 +99,7 @@ pub fn remove_automation_point(
     point_id: i32,
     state: State<'_, AutomationState>,
 ) -> Result<(), String> {
-    let mut manager = state.manager.lock()
-        .map_err(|e| format!("Failed to lock manager: {}", e))?;
+    let mut manager = state.manager.lock().map_err(|e| format!("Failed to lock manager: {}", e))?;
 
     manager.remove_point(track_id, parameter_type, point_id)
 }
@@ -133,8 +124,7 @@ pub fn move_automation_point(
     new_value: f64,
     state: State<'_, AutomationState>,
 ) -> Result<(), String> {
-    let mut manager = state.manager.lock()
-        .map_err(|e| format!("Failed to lock manager: {}", e))?;
+    let mut manager = state.manager.lock().map_err(|e| format!("Failed to lock manager: {}", e))?;
 
     manager.move_point(track_id, parameter_type, point_id, new_time, new_value)
 }
@@ -155,8 +145,7 @@ pub fn set_automation_curve_type(
     curve_type: CurveType,
     state: State<'_, AutomationState>,
 ) -> Result<(), String> {
-    let mut manager = state.manager.lock()
-        .map_err(|e| format!("Failed to lock manager: {}", e))?;
+    let mut manager = state.manager.lock().map_err(|e| format!("Failed to lock manager: {}", e))?;
 
     manager.set_curve_type(track_id, parameter_type, curve_type)
 }
@@ -175,8 +164,7 @@ pub fn get_automation_lane(
     parameter_type: ParameterType,
     state: State<'_, AutomationState>,
 ) -> Result<AutomationLane, String> {
-    let manager = state.manager.lock()
-        .map_err(|e| format!("Failed to lock manager: {}", e))?;
+    let manager = state.manager.lock().map_err(|e| format!("Failed to lock manager: {}", e))?;
 
     manager.get_lane(track_id, parameter_type)
 }
@@ -193,8 +181,7 @@ pub fn get_track_automation(
     track_id: i32,
     state: State<'_, AutomationState>,
 ) -> Result<Vec<AutomationLane>, String> {
-    let manager = state.manager.lock()
-        .map_err(|e| format!("Failed to lock manager: {}", e))?;
+    let manager = state.manager.lock().map_err(|e| format!("Failed to lock manager: {}", e))?;
 
     Ok(manager.get_track_lanes(track_id))
 }
@@ -215,8 +202,7 @@ pub fn get_automation_value(
     time: u64,
     state: State<'_, AutomationState>,
 ) -> Result<Option<f64>, String> {
-    let manager = state.manager.lock()
-        .map_err(|e| format!("Failed to lock manager: {}", e))?;
+    let manager = state.manager.lock().map_err(|e| format!("Failed to lock manager: {}", e))?;
 
     Ok(manager.get_value_at(track_id, parameter_type, time))
 }
@@ -233,8 +219,7 @@ pub fn clear_track_automation(
     track_id: i32,
     state: State<'_, AutomationState>,
 ) -> Result<(), String> {
-    let mut manager = state.manager.lock()
-        .map_err(|e| format!("Failed to lock manager: {}", e))?;
+    let mut manager = state.manager.lock().map_err(|e| format!("Failed to lock manager: {}", e))?;
 
     manager.remove_track(track_id);
     Ok(())
@@ -245,11 +230,8 @@ pub fn clear_track_automation(
 /// # Returns
 /// Ok or error message
 #[tauri::command]
-pub fn clear_all_automation(
-    state: State<'_, AutomationState>,
-) -> Result<(), String> {
-    let mut manager = state.manager.lock()
-        .map_err(|e| format!("Failed to lock manager: {}", e))?;
+pub fn clear_all_automation(state: State<'_, AutomationState>) -> Result<(), String> {
+    let mut manager = state.manager.lock().map_err(|e| format!("Failed to lock manager: {}", e))?;
 
     manager.clear_all();
     Ok(())

@@ -1,19 +1,15 @@
-   /// MIDI message validation
-   ///
-   /// Trusty Module: Pure validation functions for MIDI data.
-   /// No I/O operations - all functions are deterministic and testable.
-
-use super::types::{MidiMessage, MidiEventType};
+/// MIDI message validation
+///
+/// Trusty Module: Pure validation functions for MIDI data.
+/// No I/O operations - all functions are deterministic and testable.
+use super::types::{MidiEventType, MidiMessage};
 
 /// Validate MIDI channel (0-15)
 ///
 /// MIDI channels are 0-indexed (0-15 represent MIDI channels 1-16).
 pub fn validate_channel(channel: u8) -> Result<u8, String> {
     if channel > 15 {
-        Err(format!(
-            "Invalid MIDI channel: {}. Must be 0-15",
-            channel
-        ))
+        Err(format!("Invalid MIDI channel: {}. Must be 0-15", channel))
     } else {
         Ok(channel)
     }
@@ -35,10 +31,7 @@ pub fn validate_note(note: u8) -> Result<u8, String> {
 /// Velocity 0 is treated as note off in some contexts.
 pub fn validate_velocity(velocity: u8) -> Result<u8, String> {
     if velocity > 127 {
-        Err(format!(
-            "Invalid velocity: {}. Must be 0-127",
-            velocity
-        ))
+        Err(format!("Invalid velocity: {}. Must be 0-127", velocity))
     } else {
         Ok(velocity)
     }
@@ -49,10 +42,7 @@ pub fn validate_velocity(velocity: u8) -> Result<u8, String> {
 /// Used for control change messages and other data values.
 pub fn validate_control_value(value: u8) -> Result<u8, String> {
     if value > 127 {
-        Err(format!(
-            "Invalid control value: {}. Must be 0-127",
-            value
-        ))
+        Err(format!("Invalid control value: {}. Must be 0-127", value))
     } else {
         Ok(value)
     }
@@ -68,21 +58,21 @@ pub fn validate_message(msg: &MidiMessage) -> Result<(), String> {
         MidiEventType::NoteOn | MidiEventType::NoteOff => {
             validate_note(msg.data1)?;
             validate_velocity(msg.data2)?;
-        }
+        },
         MidiEventType::ControlChange => {
             validate_control_value(msg.data1)?;
             validate_control_value(msg.data2)?;
-        }
+        },
         MidiEventType::ProgramChange => {
             validate_control_value(msg.data1)?;
-        }
+        },
         MidiEventType::Aftertouch => {
             validate_control_value(msg.data1)?;
-        }
+        },
         MidiEventType::PitchBend => {
             // Pitch bend uses 14-bit value split across data1 and data2
             // Each byte is 7-bit (0-127), so no additional validation needed
-        }
+        },
     }
 
     Ok(())

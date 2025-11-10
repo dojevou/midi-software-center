@@ -1,17 +1,14 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Default)]
 pub enum DuplicateHandling {
     KeepFirst,
     KeepLast,
+    #[default]
     Skip,
 }
 
-impl Default for DuplicateHandling {
-    fn default() -> Self {
-        DuplicateHandling::Skip
-    }
-}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ImportExportSettings {
@@ -30,11 +27,7 @@ impl Default for ImportExportSettings {
             analyze_bpm_on_import: true,
             analyze_key_on_import: true,
             nested_archive_depth_limit: 3,
-            skip_patterns: vec![
-                "*.tmp".to_string(),
-                "*.bak".to_string(),
-                "*.log".to_string(),
-            ],
+            skip_patterns: vec!["*.tmp".to_string(), "*.bak".to_string(), "*.log".to_string()],
             duplicate_handling: DuplicateHandling::default(),
         }
     }
@@ -131,9 +124,8 @@ mod tests {
 
     #[test]
     fn test_builder_pattern() {
-        let settings = ImportExportSettings::new()
-            .with_auto_analysis(false)
-            .with_nested_depth_limit(5);
+        let settings =
+            ImportExportSettings::new().with_auto_analysis(false).with_nested_depth_limit(5);
 
         assert!(!settings.auto_tag_on_import);
         assert!(!settings.analyze_bpm_on_import);

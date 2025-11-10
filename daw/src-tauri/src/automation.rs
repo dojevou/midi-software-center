@@ -1,11 +1,10 @@
-   /// Automation Lane System
-   ///
-   /// Provides automation for track parameters (volume, pan, MIDI CC, custom parameters).
-   /// Implements point-based automation curves with multiple interpolation types.
-   ///
-   /// Trusty Module: Pure data structures and algorithms for automation curves.
-   /// Grown-up Script: Tauri commands for automation lane management with side effects.
-
+/// Automation Lane System
+///
+/// Provides automation for track parameters (volume, pan, MIDI CC, custom parameters).
+/// Implements point-based automation curves with multiple interpolation types.
+///
+/// Trusty Module: Pure data structures and algorithms for automation curves.
+/// Grown-up Script: Tauri commands for automation lane management with side effects.
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
@@ -33,11 +32,7 @@ impl AutomationPoint {
     /// # Returns
     /// New automation point with clamped value
     pub fn new(id: i32, time: u64, value: f64) -> Self {
-        Self {
-            id,
-            time,
-            value: value.clamp(0.0, 1.0),
-        }
+        Self { id, time, value: value.clamp(0.0, 1.0) }
     }
 
     /// Validate point data
@@ -55,9 +50,10 @@ impl AutomationPoint {
 /// Curve interpolation type
 ///
 /// Defines how values are interpolated between automation points.
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Default)]
 pub enum CurveType {
     /// Linear interpolation (straight lines)
+    #[default]
     Linear,
     /// Smooth bezier curves
     Bezier,
@@ -65,12 +61,6 @@ pub enum CurveType {
     Exponential,
     /// Step (hold value until next point)
     Step,
-}
-
-impl Default for CurveType {
-    fn default() -> Self {
-        Self::Linear
-    }
 }
 
 /// Parameter type for automation
@@ -90,7 +80,7 @@ pub enum ParameterType {
 
 impl ParameterType {
     /// Convert to display string
-    pub fn to_string(&self) -> String {
+    pub fn as_string(&self) -> String {
         match self {
             Self::Volume => "Volume".to_string(),
             Self::Pan => "Pan".to_string(),
@@ -102,10 +92,10 @@ impl ParameterType {
     /// Get color for visualization
     pub fn color(&self) -> &'static str {
         match self {
-            Self::Volume => "#4ade80",     // green
-            Self::Pan => "#60a5fa",        // blue
-            Self::CC(_) => "#a78bfa",      // purple
-            Self::Custom(_) => "#fbbf24",  // yellow
+            Self::Volume => "#4ade80",    // green
+            Self::Pan => "#60a5fa",       // blue
+            Self::CC(_) => "#a78bfa",     // purple
+            Self::Custom(_) => "#fbbf24", // yellow
         }
     }
 }
@@ -126,11 +116,7 @@ pub struct AutomationCurve {
 impl AutomationCurve {
     /// Create new empty automation curve
     pub fn new() -> Self {
-        Self {
-            points: Vec::new(),
-            curve_type: CurveType::Linear,
-            next_id: 1,
-        }
+        Self { points: Vec::new(), curve_type: CurveType::Linear, next_id: 1 }
     }
 
     /// Add automation point
@@ -149,8 +135,8 @@ impl AutomationCurve {
         self.next_id += 1;
 
         // Insert in sorted order by time
-        let insert_idx = self.points.binary_search_by_key(&time, |p| p.time)
-            .unwrap_or_else(|idx| idx);
+        let insert_idx =
+            self.points.binary_search_by_key(&time, |p| p.time).unwrap_or_else(|idx| idx);
 
         self.points.insert(insert_idx, point);
         Ok(id)
@@ -180,25 +166,31 @@ impl AutomationCurve {
     ///
     /// # Returns
     /// Ok if moved, Err if not found or invalid value
-    pub fn move_point(&mut self, point_id: i32, new_time: u64, new_value: f64) -> Result<(), String> {
+    pub fn move_point(
+        &mut self,
+        point_id: i32,
+        new_time: u64,
+        new_value: f64,
+    ) -> Result<(), String> {
         // Clamp value
         let clamped_value = new_value.clamp(0.0, 1.0);
 
         // Remove old point
-        let old_point_idx = self.points.iter().position(|p| p.id == point_id)
+        let old_point_idx = self
+            .points
+            .iter()
+            .position(|p| p.id == point_id)
             .ok_or_else(|| format!("Point {} not found", point_id))?;
 
         self.points.remove(old_point_idx);
 
         // Create new point with same ID
-        let point = AutomationPoint {
-            id: point_id,
-            time: new_time,
-            value: clamped_value,
-        };
+        let point = AutomationPoint { id: point_id, time: new_time, value: clamped_value };
 
         // Insert in sorted order
-        let insert_idx = self.points.binary_search_by_key(&new_time, |p| p.time)
+        let insert_idx = self
+            .points
+            .binary_search_by_key(&new_time, |p| p.time)
             .unwrap_or_else(|idx| idx);
 
         self.points.insert(insert_idx, point);
@@ -224,22 +216,22 @@ impl AutomationCurve {
             Ok(i) => {
                 // Exact match
                 Some(self.points[i].value)
-            }
+            },
             Err(0) => {
                 // Before first point
                 Some(self.points[0].value)
-            }
+            },
             Err(i) if i >= self.points.len() => {
                 // After last point
                 Some(self.points[self.points.len() - 1].value)
-            }
+            },
             Err(i) => {
                 // Between points i-1 and i
                 let p1 = &self.points[i - 1];
                 let p2 = &self.points[i];
 
                 Some(self.interpolate(p1, p2, time))
-            }
+            },
         }
     }
 
@@ -265,12 +257,12 @@ impl AutomationCurve {
             CurveType::Linear => {
                 // Linear interpolation
                 p1.value + (p2.value - p1.value) * t
-            }
+            },
             CurveType::Bezier => {
                 // Smooth bezier curve (cubic ease in-out)
                 let t_smooth = t * t * (3.0 - 2.0 * t);
                 p1.value + (p2.value - p1.value) * t_smooth
-            }
+            },
             CurveType::Exponential => {
                 // Exponential curve
                 let t_exp = if p2.value > p1.value {
@@ -281,11 +273,11 @@ impl AutomationCurve {
                     1.0 - (1.0 - t) * (1.0 - t)
                 };
                 p1.value + (p2.value - p1.value) * t_exp
-            }
+            },
             CurveType::Step => {
                 // Hold value until next point
                 p1.value
-            }
+            },
         }
     }
 
@@ -298,7 +290,8 @@ impl AutomationCurve {
     /// # Returns
     /// Vector of points in range
     pub fn get_points_in_range(&self, start_time: u64, end_time: u64) -> Vec<AutomationPoint> {
-        self.points.iter()
+        self.points
+            .iter()
             .filter(|p| p.time >= start_time && p.time <= end_time)
             .cloned()
             .collect()
@@ -360,8 +353,7 @@ impl AutomationLane {
 
     /// Get display name
     pub fn display_name(&self) -> String {
-        self.name.clone()
-            .unwrap_or_else(|| self.parameter_type.to_string())
+        self.name.clone().unwrap_or_else(|| self.parameter_type.as_string())
     }
 
     /// Get color for visualization
@@ -386,11 +378,7 @@ pub struct AutomationTrack {
 impl AutomationTrack {
     /// Create new automation track
     pub fn new(track_id: i32) -> Self {
-        Self {
-            track_id,
-            lanes: HashMap::new(),
-            next_lane_id: 1,
-        }
+        Self { track_id, lanes: HashMap::new(), next_lane_id: 1 }
     }
 
     /// Add automation lane
@@ -419,7 +407,8 @@ impl AutomationTrack {
     /// # Returns
     /// Ok if removed, Err if not found
     pub fn remove_lane(&mut self, parameter_type: ParameterType) -> Result<(), String> {
-        self.lanes.remove(&parameter_type)
+        self.lanes
+            .remove(&parameter_type)
             .ok_or_else(|| format!("Lane for {:?} not found", parameter_type))?;
         Ok(())
     }
@@ -457,9 +446,7 @@ pub struct AutomationManager {
 impl AutomationManager {
     /// Create new automation manager
     pub fn new() -> Self {
-        Self {
-            tracks: HashMap::new(),
-        }
+        Self { tracks: HashMap::new() }
     }
 
     /// Get or create automation track
@@ -470,8 +457,7 @@ impl AutomationManager {
     /// # Returns
     /// Mutable reference to automation track
     fn get_or_create_track(&mut self, track_id: i32) -> &mut AutomationTrack {
-        self.tracks.entry(track_id)
-            .or_insert_with(|| AutomationTrack::new(track_id))
+        self.tracks.entry(track_id).or_insert_with(|| AutomationTrack::new(track_id))
     }
 
     /// Create automation lane
@@ -482,7 +468,11 @@ impl AutomationManager {
     ///
     /// # Returns
     /// Lane ID, or Err if lane already exists
-    pub fn create_lane(&mut self, track_id: i32, parameter_type: ParameterType) -> Result<i32, String> {
+    pub fn create_lane(
+        &mut self,
+        track_id: i32,
+        parameter_type: ParameterType,
+    ) -> Result<i32, String> {
         let track = self.get_or_create_track(track_id);
         track.add_lane(parameter_type)
     }
@@ -495,8 +485,14 @@ impl AutomationManager {
     ///
     /// # Returns
     /// Ok if deleted, Err if not found
-    pub fn delete_lane(&mut self, track_id: i32, parameter_type: ParameterType) -> Result<(), String> {
-        let track = self.tracks.get_mut(&track_id)
+    pub fn delete_lane(
+        &mut self,
+        track_id: i32,
+        parameter_type: ParameterType,
+    ) -> Result<(), String> {
+        let track = self
+            .tracks
+            .get_mut(&track_id)
             .ok_or_else(|| format!("Track {} not found", track_id))?;
         track.remove_lane(parameter_type)
     }
@@ -511,11 +507,20 @@ impl AutomationManager {
     ///
     /// # Returns
     /// Point ID, or Err if lane not found
-    pub fn add_point(&mut self, track_id: i32, parameter_type: ParameterType, time: u64, value: f64) -> Result<i32, String> {
-        let track = self.tracks.get_mut(&track_id)
+    pub fn add_point(
+        &mut self,
+        track_id: i32,
+        parameter_type: ParameterType,
+        time: u64,
+        value: f64,
+    ) -> Result<i32, String> {
+        let track = self
+            .tracks
+            .get_mut(&track_id)
             .ok_or_else(|| format!("Track {} not found", track_id))?;
 
-        let lane = track.get_lane_mut(parameter_type)
+        let lane = track
+            .get_lane_mut(parameter_type)
             .ok_or_else(|| format!("Lane for {:?} not found", parameter_type))?;
 
         lane.curve.add_point(time, value)
@@ -530,11 +535,19 @@ impl AutomationManager {
     ///
     /// # Returns
     /// Ok if removed, Err if not found
-    pub fn remove_point(&mut self, track_id: i32, parameter_type: ParameterType, point_id: i32) -> Result<(), String> {
-        let track = self.tracks.get_mut(&track_id)
+    pub fn remove_point(
+        &mut self,
+        track_id: i32,
+        parameter_type: ParameterType,
+        point_id: i32,
+    ) -> Result<(), String> {
+        let track = self
+            .tracks
+            .get_mut(&track_id)
             .ok_or_else(|| format!("Track {} not found", track_id))?;
 
-        let lane = track.get_lane_mut(parameter_type)
+        let lane = track
+            .get_lane_mut(parameter_type)
             .ok_or_else(|| format!("Lane for {:?} not found", parameter_type))?;
 
         lane.curve.remove_point(point_id)
@@ -551,11 +564,21 @@ impl AutomationManager {
     ///
     /// # Returns
     /// Ok if moved, Err if not found or invalid
-    pub fn move_point(&mut self, track_id: i32, parameter_type: ParameterType, point_id: i32, new_time: u64, new_value: f64) -> Result<(), String> {
-        let track = self.tracks.get_mut(&track_id)
+    pub fn move_point(
+        &mut self,
+        track_id: i32,
+        parameter_type: ParameterType,
+        point_id: i32,
+        new_time: u64,
+        new_value: f64,
+    ) -> Result<(), String> {
+        let track = self
+            .tracks
+            .get_mut(&track_id)
             .ok_or_else(|| format!("Track {} not found", track_id))?;
 
-        let lane = track.get_lane_mut(parameter_type)
+        let lane = track
+            .get_lane_mut(parameter_type)
             .ok_or_else(|| format!("Lane for {:?} not found", parameter_type))?;
 
         lane.curve.move_point(point_id, new_time, new_value)
@@ -570,11 +593,19 @@ impl AutomationManager {
     ///
     /// # Returns
     /// Ok if set, Err if lane not found
-    pub fn set_curve_type(&mut self, track_id: i32, parameter_type: ParameterType, curve_type: CurveType) -> Result<(), String> {
-        let track = self.tracks.get_mut(&track_id)
+    pub fn set_curve_type(
+        &mut self,
+        track_id: i32,
+        parameter_type: ParameterType,
+        curve_type: CurveType,
+    ) -> Result<(), String> {
+        let track = self
+            .tracks
+            .get_mut(&track_id)
             .ok_or_else(|| format!("Track {} not found", track_id))?;
 
-        let lane = track.get_lane_mut(parameter_type)
+        let lane = track
+            .get_lane_mut(parameter_type)
             .ok_or_else(|| format!("Lane for {:?} not found", parameter_type))?;
 
         lane.curve.curve_type = curve_type;
@@ -589,11 +620,18 @@ impl AutomationManager {
     ///
     /// # Returns
     /// Lane, or Err if not found
-    pub fn get_lane(&self, track_id: i32, parameter_type: ParameterType) -> Result<AutomationLane, String> {
-        let track = self.tracks.get(&track_id)
+    pub fn get_lane(
+        &self,
+        track_id: i32,
+        parameter_type: ParameterType,
+    ) -> Result<AutomationLane, String> {
+        let track = self
+            .tracks
+            .get(&track_id)
             .ok_or_else(|| format!("Track {} not found", track_id))?;
 
-        track.get_lane(parameter_type)
+        track
+            .get_lane(parameter_type)
             .cloned()
             .ok_or_else(|| format!("Lane for {:?} not found", parameter_type))
     }
@@ -606,7 +644,8 @@ impl AutomationManager {
     /// # Returns
     /// Vector of all lanes, or empty vector if track not found
     pub fn get_track_lanes(&self, track_id: i32) -> Vec<AutomationLane> {
-        self.tracks.get(&track_id)
+        self.tracks
+            .get(&track_id)
             .map(|track| track.get_all_lanes().into_iter().cloned().collect())
             .unwrap_or_default()
     }
@@ -620,7 +659,12 @@ impl AutomationManager {
     ///
     /// # Returns
     /// Interpolated value, or None if lane not found or no points
-    pub fn get_value_at(&self, track_id: i32, parameter_type: ParameterType, time: u64) -> Option<f64> {
+    pub fn get_value_at(
+        &self,
+        track_id: i32,
+        parameter_type: ParameterType,
+        time: u64,
+    ) -> Option<f64> {
         let track = self.tracks.get(&track_id)?;
         let lane = track.get_lane(parameter_type)?;
         lane.curve.get_value_at(time)
@@ -679,10 +723,10 @@ mod tests {
 
     #[test]
     fn test_parameter_type_to_string() {
-        assert_eq!(ParameterType::Volume.to_string(), "Volume");
-        assert_eq!(ParameterType::Pan.to_string(), "Pan");
-        assert_eq!(ParameterType::CC(1).to_string(), "CC1");
-        assert_eq!(ParameterType::Custom(42).to_string(), "Custom42");
+        assert_eq!(ParameterType::Volume.as_string(), "Volume");
+        assert_eq!(ParameterType::Pan.as_string(), "Pan");
+        assert_eq!(ParameterType::CC(1).as_string(), "CC1");
+        assert_eq!(ParameterType::Custom(42).as_string(), "Custom42");
     }
 
     #[test]

@@ -1,13 +1,13 @@
-   /// Tag Commands - Tauri commands for tag operations
-   ///
-   /// This module provides frontend-facing commands for:
-   /// - Retrieving tags for files
-   /// - Getting popular tags (for tag cloud)
-   /// - Searching tags (for autocomplete)
-   /// - Updating file tags
 
-use crate::AppState;
 use crate::db::repositories::tag_repository::{DbTag, TagRepository, TagWithCount};
+/// Tag Commands - Tauri commands for tag operations
+///
+/// This module provides frontend-facing commands for:
+/// - Retrieving tags for files
+/// - Getting popular tags (for tag cloud)
+/// - Searching tags (for autocomplete)
+/// - Updating file tags
+use crate::AppState;
 use serde::{Deserialize, Serialize};
 use tauri::State;
 
@@ -37,12 +37,7 @@ impl From<DbTag> for TagResponse {
 
 impl From<TagWithCount> for TagResponse {
     fn from(tag: TagWithCount) -> Self {
-        Self {
-            id: tag.id,
-            name: tag.name,
-            category: tag.category,
-            usage_count: tag.usage_count,
-        }
+        Self { id: tag.id, name: tag.name, category: tag.category, usage_count: tag.usage_count }
     }
 }
 
@@ -140,9 +135,7 @@ pub async fn search_tags(
 
 /// Get all unique tag categories
 #[tauri::command]
-pub async fn get_tag_categories(
-    state: State<'_, AppState>,
-) -> Result<Vec<String>, String> {
+pub async fn get_tag_categories(state: State<'_, AppState>) -> Result<Vec<String>, String> {
     let pool = state.database.pool().await;
     let repo = TagRepository::new(pool);
 
@@ -214,10 +207,8 @@ pub async fn add_tags_to_file_impl(
     let repo = TagRepository::new(pool);
 
     // Get or create tags and get their IDs
-    let tag_data: Vec<(String, Option<String>)> = tag_names
-        .into_iter()
-        .map(|name| (name, None))
-        .collect();
+    let tag_data: Vec<(String, Option<String>)> =
+        tag_names.into_iter().map(|name| (name, None)).collect();
 
     let tag_ids = repo
         .get_or_create_tags_batch(&tag_data)
@@ -283,10 +274,7 @@ pub async fn get_files_by_tags(
 
 /// Get usage statistics for a tag
 #[tauri::command]
-pub async fn get_tag_stats(
-    tag_id: i32,
-    state: State<'_, AppState>,
-) -> Result<i64, String> {
+pub async fn get_tag_stats(tag_id: i32, state: State<'_, AppState>) -> Result<i64, String> {
     let pool = state.database.pool().await;
     let repo = TagRepository::new(pool);
 

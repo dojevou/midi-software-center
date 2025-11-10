@@ -1,8 +1,7 @@
-   /// MIDI File Writer - Trusty Module
-   ///
-   /// Pure functions for writing MIDI files from event data structures.
-   /// NO I/O - caller receives bytes and writes to file.
-
+/// MIDI File Writer - Trusty Module
+///
+/// Pure functions for writing MIDI files from event data structures.
+/// NO I/O - caller receives bytes and writes to file.
 use crate::models::midi::{MidiEvent, MidiEventType};
 
 /// Write MIDI file from events
@@ -56,12 +55,7 @@ fn write_header(data: &mut Vec<u8>, format: u16, tracks: u16, tpqn: u16) {
 }
 
 /// Write MIDI track chunk (MTrk)
-fn write_track(
-    data: &mut Vec<u8>,
-    events: &[MidiEvent],
-    tempo_bpm: f32,
-    _tpqn: u16,
-) {
+fn write_track(data: &mut Vec<u8>, events: &[MidiEvent], tempo_bpm: f32, _tpqn: u16) {
     let mut track_data = Vec::new();
 
     // Write tempo meta event at the start
@@ -109,32 +103,32 @@ fn write_event(data: &mut Vec<u8>, event: &MidiEvent) {
             data.push(0x90 | (event.channel & 0x0F));
             data.push(event.note.unwrap_or(0) & 0x7F);
             data.push(event.velocity.unwrap_or(100) & 0x7F);
-        }
+        },
         MidiEventType::NoteOff => {
             data.push(0x80 | (event.channel & 0x0F));
             data.push(event.note.unwrap_or(0) & 0x7F);
             data.push(0x00); // Note off velocity is always 0
-        }
+        },
         MidiEventType::ControlChange => {
             data.push(0xB0 | (event.channel & 0x0F));
             data.push(event.controller.unwrap_or(0) & 0x7F);
             data.push(event.value.unwrap_or(0) & 0x7F);
-        }
+        },
         MidiEventType::ProgramChange => {
             data.push(0xC0 | (event.channel & 0x0F));
             data.push(event.program.unwrap_or(0) & 0x7F);
-        }
+        },
         MidiEventType::PitchBend => {
             data.push(0xE0 | (event.channel & 0x0F));
             // Pitch bend is a 14-bit value (0-16383, center = 8192)
             // For now, we'll write a neutral pitch bend
             data.push(0x00); // LSB
             data.push(0x40); // MSB (64 = center)
-        }
+        },
         MidiEventType::Aftertouch => {
             data.push(0xD0 | (event.channel & 0x0F));
             data.push(0x00); // Pressure value
-        }
+        },
     }
 }
 
@@ -252,18 +246,16 @@ mod tests {
 
     #[test]
     fn test_write_control_change() {
-        let events = vec![
-            MidiEvent {
-                event_type: MidiEventType::ControlChange,
-                tick: 0,
-                channel: 0,
-                note: None,
-                velocity: None,
-                controller: Some(7), // Volume
-                value: Some(100),
-                program: None,
-            },
-        ];
+        let events = vec![MidiEvent {
+            event_type: MidiEventType::ControlChange,
+            tick: 0,
+            channel: 0,
+            note: None,
+            velocity: None,
+            controller: Some(7), // Volume
+            value: Some(100),
+            program: None,
+        }];
 
         let result = write_midi_file(&events, 480, 120.0);
         assert!(result.is_ok());
@@ -285,7 +277,7 @@ mod tests {
             MidiEvent {
                 event_type: MidiEventType::NoteOn,
                 tick: 0,
-                channel: 9, // Typically drums
+                channel: 9,     // Typically drums
                 note: Some(36), // Bass drum
                 velocity: Some(120),
                 controller: None,

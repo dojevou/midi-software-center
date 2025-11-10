@@ -1,7 +1,7 @@
-   /// Tempo Editor Undo/Redo Commands - Trusty Module
-   ///
-   /// Commands for tempo editor operations: add/remove markers, set tempo, create ramps.
 
+/// Tempo Editor Undo/Redo Commands - Trusty Module
+///
+/// Commands for tempo editor operations: add/remove markers, set tempo, create ramps.
 use super::core::{Command, UndoRedoError, UndoRedoResult};
 use serde::{Deserialize, Serialize};
 
@@ -25,11 +25,7 @@ pub enum TempoMarkerType {
 
 impl TempoMarker {
     pub fn new(tick: i32, bpm: f32) -> Self {
-        Self {
-            tick,
-            bpm,
-            marker_type: TempoMarkerType::Instant,
-        }
+        Self { tick, bpm, marker_type: TempoMarkerType::Instant }
     }
 
     pub fn with_type(mut self, marker_type: TempoMarkerType) -> Self {
@@ -48,11 +44,7 @@ pub struct AddTempoMarkerCommand {
 
 impl AddTempoMarkerCommand {
     pub fn new(tick: i32, bpm: f32) -> Self {
-        Self {
-            marker: TempoMarker::new(tick, bpm),
-            marker_id: None,
-            executed: false,
-        }
+        Self { marker: TempoMarker::new(tick, bpm), marker_id: None, executed: false }
     }
 
     pub fn with_type(mut self, marker_type: TempoMarkerType) -> Self {
@@ -107,11 +99,7 @@ pub struct RemoveTempoMarkerCommand {
 
 impl RemoveTempoMarkerCommand {
     pub fn new(marker_id: i32) -> Self {
-        Self {
-            marker_id,
-            removed_marker: None,
-            executed: false,
-        }
+        Self { marker_id, removed_marker: None, executed: false }
     }
 }
 
@@ -154,11 +142,7 @@ pub struct SetTempoCommand {
 
 impl SetTempoCommand {
     pub fn new(new_tempo: f32) -> Self {
-        Self {
-            new_tempo,
-            old_tempo: None,
-            executed: false,
-        }
+        Self { new_tempo, old_tempo: None, executed: false }
     }
 }
 

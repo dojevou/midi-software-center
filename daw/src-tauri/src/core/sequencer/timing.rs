@@ -1,8 +1,7 @@
-   /// Sequencer timing calculations
-   ///
-   /// Trusty Module: Pure timing functions for MIDI sequencing.
-   /// All functions are deterministic and thoroughly tested.
-
+/// Sequencer timing calculations
+///
+/// Trusty Module: Pure timing functions for MIDI sequencing.
+/// All functions are deterministic and thoroughly tested.
 /// Bar position structure
 ///
 /// Represents a position in musical time as bar:beat:tick.
@@ -40,11 +39,7 @@ pub fn microseconds_per_tick(bpm: f32, ticks_per_quarter: u16) -> f64 {
 ///
 /// # Returns
 /// Tuple of (bar, beat) as (u32, u32)
-pub fn tick_to_bar_beat(
-    tick: u64,
-    ticks_per_quarter: u16,
-    beats_per_bar: u8,
-) -> (u32, u32) {
+pub fn tick_to_bar_beat(tick: u64, ticks_per_quarter: u16, beats_per_bar: u8) -> (u32, u32) {
     let ticks_per_beat = ticks_per_quarter as u64;
     let ticks_per_bar = ticks_per_beat * beats_per_bar as u64;
 
@@ -66,12 +61,7 @@ pub fn tick_to_bar_beat(
 ///
 /// # Returns
 /// Absolute tick position as u64
-pub fn bar_beat_to_tick(
-    bar: u32,
-    beat: u32,
-    ticks_per_quarter: u16,
-    beats_per_bar: u8,
-) -> u64 {
+pub fn bar_beat_to_tick(bar: u32, beat: u32, ticks_per_quarter: u16, beats_per_bar: u8) -> u64 {
     let ticks_per_beat = ticks_per_quarter as u64;
     let ticks_per_bar = ticks_per_beat * beats_per_bar as u64;
 
@@ -168,11 +158,7 @@ pub fn calculate_bar_position(
     let beat = (tick_in_bar / ticks_per_beat) as u32;
     let tick_in_beat = tick_in_bar % ticks_per_beat;
 
-    BarPosition {
-        bar,
-        beat,
-        tick: tick_in_beat,
-    }
+    BarPosition { bar, beat, tick: tick_in_beat }
 }
 
 /// Calculate ticks per bar

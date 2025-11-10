@@ -1,7 +1,9 @@
-   /// Test macros for common testing patterns
-   ///
-   /// Provides convenience macros for database testing, error handling,
-   /// and performance benchmarking in tests.
+#[allow(dead_code, unused_imports, unused_variables)]
+#[allow(dead_code, unused_imports, unused_variables)]
+/// Test macros for common testing patterns
+///
+/// Provides convenience macros for database testing, error handling,
+/// and performance benchmarking in tests.
 
 /// Execute a test within a database transaction that automatically rolls back
 ///
@@ -52,7 +54,7 @@ macro_rules! assert_db_error {
         match $result {
             Err($error_type) => {
                 // Expected error type
-            }
+            },
             Err(e) => panic!(
                 "Expected error type {}, but got: {:?}",
                 stringify!($error_type),
@@ -86,7 +88,7 @@ macro_rules! assert_db_error_contains {
                     $substring,
                     error_msg
                 );
-            }
+            },
             Ok(_) => panic!("Expected error containing '{}', but got Ok", $substring),
         }
     }};
@@ -193,9 +195,7 @@ macro_rules! test_tag {
     }};
 
     ($name:expr, $category:expr) => {{
-        $crate::fixtures::NewTagBuilder::new($name)
-            .category($category)
-            .build()
+        $crate::fixtures::NewTagBuilder::new($name).category($category).build()
     }};
 }
 
@@ -299,11 +299,11 @@ macro_rules! retry_db_operation {
                 Ok(result) => break Ok(result),
                 Err(e) if attempts >= $max_attempts => {
                     break Err(e);
-                }
+                },
                 Err(_) => {
                     tokio::time::sleep(tokio::time::Duration::from_millis(delay_ms)).await;
                     delay_ms *= 2; // Exponential backoff
-                }
+                },
             }
         }
     }};
@@ -354,9 +354,7 @@ macro_rules! test_with_cleanup {
                 .expect("Pre-test cleanup failed");
 
             // Run test
-            let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| async {
-                $body
-            }));
+            let result = std::panic::catch_unwind(std::panic::AssertUnwindSafe(|| async { $body }));
 
             // Cleanup after test (even if test panicked)
             $crate::helpers::db::cleanup_database(&pool)

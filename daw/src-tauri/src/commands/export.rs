@@ -1,12 +1,11 @@
-   /// Export Tauri commands
-   ///
-   /// Grown-up Script: Handles exporting sequencer projects and MIDI data.
-   /// Delegates MIDI file generation to Trusty Modules (pure functions).
-
+/// Export Tauri commands
+///
+/// Grown-up Script: Handles exporting sequencer projects and MIDI data.
+/// Delegates MIDI file generation to Trusty Modules (pure functions).
 use crate::core::midi::writer;
 use crate::models::midi::{MidiEvent, MidiEventType};
-use tracing::{debug, error, info};
 use std::path::PathBuf;
+use tracing::{debug, error, info};
 
 /// Export project as MIDI file
 ///
@@ -20,9 +19,7 @@ use std::path::PathBuf;
 ///
 /// Current implementation creates a demonstration MIDI file.
 #[tauri::command]
-pub async fn export_project_midi(
-    output_path: String,
-) -> Result<(), String> {
+pub async fn export_project_midi(output_path: String) -> Result<(), String> {
     debug!("Exporting project to MIDI file: {}", output_path);
 
     let path = PathBuf::from(&output_path);
@@ -30,13 +27,17 @@ pub async fn export_project_midi(
     // Validate path
     if let Some(parent) = path.parent() {
         if !parent.exists() {
-            return Err(format!("Parent directory does not exist: {}", parent.display()));
+            return Err(format!(
+                "Parent directory does not exist: {}",
+                parent.display()
+            ));
         }
     }
 
     // Validate extension
-    if path.extension().and_then(|s| s.to_str()) != Some("mid") &&
-       path.extension().and_then(|s| s.to_str()) != Some("midi") {
+    if path.extension().and_then(|s| s.to_str()) != Some("mid")
+        && path.extension().and_then(|s| s.to_str()) != Some("midi")
+    {
         return Err("Output file must have .mid or .midi extension".to_string());
     }
 
@@ -45,18 +46,16 @@ pub async fn export_project_midi(
     let events = create_demo_events();
 
     // Use Trusty Module (pure function) to generate MIDI file
-    let midi_data = writer::write_midi_file(&events, 480, 120.0)
-        .map_err(|e| {
-            error!("Failed to generate MIDI data: {}", e);
-            format!("Failed to generate MIDI: {}", e)
-        })?;
+    let midi_data = writer::write_midi_file(&events, 480, 120.0).map_err(|e| {
+        error!("Failed to generate MIDI data: {}", e);
+        format!("Failed to generate MIDI: {}", e)
+    })?;
 
     // I/O operation (Grown-up Script responsibility)
-    std::fs::write(&path, midi_data)
-        .map_err(|e| {
-            error!("Failed to write MIDI file: {}", e);
-            format!("Failed to write file: {}", e)
-        })?;
+    std::fs::write(&path, midi_data).map_err(|e| {
+        error!("Failed to write MIDI file: {}", e);
+        format!("Failed to write file: {}", e)
+    })?;
 
     info!("Exported project to: {}", output_path);
     Ok(())

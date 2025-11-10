@@ -1,6 +1,7 @@
-   /// Tests for pipeline/src-tauri/src/commands/tags.rs
-   /// Commands: get_file_tags, get_popular_tags, search_tags, update_file_tags, etc.
+#[allow(dead_code, unused_imports, unused_variables)]
 
+/// Tests for pipeline/src-tauri/src/commands/tags.rs
+/// Commands: get_file_tags, get_popular_tags, search_tags, update_file_tags, etc.
 use crate::common::*;
 
 #[tokio::test]

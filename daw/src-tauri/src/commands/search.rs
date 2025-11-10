@@ -1,9 +1,8 @@
-   /// Search Tauri commands
-   ///
-   /// Thin wrappers that expose search functionality to the frontend.
-   /// Queries the PostgreSQL database for MIDI files with filtering and sorting.
-   /// Updated to use proper JOINs with actual database schema.
-
+/// Search Tauri commands
+///
+/// Thin wrappers that expose search functionality to the frontend.
+/// Queries the PostgreSQL database for MIDI files with filtering and sorting.
+/// Updated to use proper JOINs with actual database schema.
 use crate::commands::AppState;
 use crate::models::midi_file::FileDetails;
 use crate::models::search::{SearchFilters, SearchResponse, Suggestion};
@@ -60,7 +59,7 @@ pub async fn search_files(
         LEFT JOIN file_categories fc ON f.id = fc.file_id
         LEFT JOIN favorites fav ON f.id = fav.file_id
         WHERE 1=1
-        "#
+        "#,
     );
 
     let mut conditions = Vec::new();
@@ -116,7 +115,10 @@ pub async fn search_files(
     // Text search in filename
     if let Some(ref search_text) = filters.search_text {
         if !search_text.is_empty() {
-            conditions.push(format!("f.filename ILIKE '%{}%'", search_text.replace("'", "''")));
+            conditions.push(format!(
+                "f.filename ILIKE '%{}%'",
+                search_text.replace("'", "''")
+            ));
         }
     }
 
@@ -192,7 +194,7 @@ pub async fn search_files(
          LEFT JOIN musical_metadata mm ON f.id = mm.file_id \
          LEFT JOIN file_categories fc ON f.id = fc.file_id \
          LEFT JOIN favorites fav ON f.id = fav.file_id \
-         WHERE 1=1"
+         WHERE 1=1",
     );
     for condition in &conditions {
         count_query.push_str(&format!(" AND {}", condition));
@@ -206,12 +208,13 @@ pub async fn search_files(
             format!("Failed to count results: {}", e)
         })?;
 
-    debug!("Found {} total results, returning {} files", total, files.len());
+    debug!(
+        "Found {} total results, returning {} files",
+        total,
+        files.len()
+    );
 
-    Ok(SearchResponse {
-        files,
-        total: total as i32,
-    })
+    Ok(SearchResponse { files, total: total as i32 })
 }
 
 /// Get detailed information about a specific file
@@ -280,39 +283,42 @@ pub async fn get_search_suggestions(
     field: String,
     state: State<'_, AppState>,
 ) -> Result<Vec<Suggestion>, String> {
-    debug!("Getting suggestions for field '{}' with query '{}'", field, query);
+    debug!(
+        "Getting suggestions for field '{}' with query '{}'",
+        field, query
+    );
 
     let suggestions: Vec<Suggestion> = match field.as_str() {
         "category" => {
             let rows: Vec<(String,)> = sqlx::query_as(
                 "SELECT DISTINCT primary_category::TEXT as category FROM file_categories
                  WHERE primary_category IS NOT NULL
-                 ORDER BY category LIMIT 10"
+                 ORDER BY category LIMIT 10",
             )
             .bind(format!("%{}%", query))
-            .fetch_all(state.db_pool.as_ref().ok_or_else(|| "Database not initialized".to_string())?)
+            .fetch_all(
+                state.db_pool.as_ref().ok_or_else(|| "Database not initialized".to_string())?,
+            )
             .await
             .map_err(|e| format!("Failed to get category suggestions: {}", e))?;
 
-            rows.into_iter()
-                .map(|(value,)| Suggestion { value })
-                .collect()
-        }
+            rows.into_iter().map(|(value,)| Suggestion { value }).collect()
+        },
         "key_signature" => {
             let rows: Vec<(String,)> = sqlx::query_as(
                 "SELECT DISTINCT key_signature::TEXT FROM musical_metadata
                  WHERE key_signature IS NOT NULL AND key_signature::TEXT ILIKE $1
-                 ORDER BY key_signature LIMIT 10"
+                 ORDER BY key_signature LIMIT 10",
             )
             .bind(format!("%{}%", query))
-            .fetch_all(state.db_pool.as_ref().ok_or_else(|| "Database not initialized".to_string())?)
+            .fetch_all(
+                state.db_pool.as_ref().ok_or_else(|| "Database not initialized".to_string())?,
+            )
             .await
             .map_err(|e| format!("Failed to get key suggestions: {}", e))?;
 
-            rows.into_iter()
-                .map(|(value,)| Suggestion { value })
-                .collect()
-        }
+            rows.into_iter().map(|(value,)| Suggestion { value }).collect()
+        },
         "time_signature" => {
             let rows: Vec<(String,)> = sqlx::query_as(
                 "SELECT DISTINCT
@@ -327,13 +333,11 @@ pub async fn get_search_suggestions(
             .await
             .map_err(|e| format!("Failed to get time signature suggestions: {}", e))?;
 
-            rows.into_iter()
-                .map(|(value,)| Suggestion { value })
-                .collect()
-        }
+            rows.into_iter().map(|(value,)| Suggestion { value }).collect()
+        },
         _ => {
             return Err(format!("Unknown field for suggestions: {}", field));
-        }
+        },
     };
 
     debug!("Returning {} suggestions", suggestions.len());

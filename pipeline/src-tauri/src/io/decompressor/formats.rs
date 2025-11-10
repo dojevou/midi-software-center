@@ -1,5 +1,5 @@
-   /// Archive Format Detection
 
+/// Archive Format Detection
 use std::path::Path;
 
 /// Supported archive formats

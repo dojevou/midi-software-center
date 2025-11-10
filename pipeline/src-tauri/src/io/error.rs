@@ -1,8 +1,8 @@
-   /// I/O Error Types
-   ///
-   /// Defines error types for the I/O layer using thiserror.
-   /// These errors cover file operations, archive extraction, and temporary file management.
 
+/// I/O Error Types
+///
+/// Defines error types for the I/O layer using thiserror.
+/// These errors cover file operations, archive extraction, and temporary file management.
 use std::path::PathBuf;
 use thiserror::Error;
 

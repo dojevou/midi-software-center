@@ -1,29 +1,29 @@
-   /// Musical Analysis Commands - HIGH-PERFORMANCE PARALLEL IMPLEMENTATION
-   ///
-   /// Architecture: Grown-up Script
-   /// Purpose: Analyze all imported MIDI files using existing analysis modules
-   ///
-   /// This module processes 1.1M+ imported files by:
-   /// - Reading unanalyzed files from database in batches
-   /// - Parallel processing with buffer_unordered (32 workers)
-   /// - Running BPM detection, key detection, and auto-tagging
-   /// - Batch database inserts for musical_metadata
-   /// - Real-time progress updates
-   ///
-   /// Performance Target: 400-500 files/sec (complete 1.1M files in ~40-60 minutes)
 
+use crate::core::analysis::bpm_detector::detect_bpm;
+use crate::core::analysis::key_detector::detect_key;
+/// Musical Analysis Commands - HIGH-PERFORMANCE PARALLEL IMPLEMENTATION
+///
+/// Architecture: Grown-up Script
+/// Purpose: Analyze all imported MIDI files using existing analysis modules
+///
+/// This module processes 1.1M+ imported files by:
+/// - Reading unanalyzed files from database in batches
+/// - Parallel processing with buffer_unordered (32 workers)
+/// - Running BPM detection, key detection, and auto-tagging
+/// - Batch database inserts for musical_metadata
+/// - Real-time progress updates
+///
+/// Performance Target: 400-500 files/sec (complete 1.1M files in ~40-60 minutes)
 use crate::AppState;
 use midi_library_shared::core::midi::parser::parse_midi_file;
 use midi_library_shared::core::midi::types::{Event, MidiFile, TextType};
-use crate::core::analysis::bpm_detector::detect_bpm;
-use crate::core::analysis::key_detector::detect_key;
 // Unused: use crate::core::analysis::auto_tagger::{AutoTagger, Tag};
 
+use futures::stream::{self, StreamExt};
 use serde::{Deserialize, Serialize};
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 use tauri::{Emitter, State, Window};
-use futures::stream::{self, StreamExt};
-use std::sync::atomic::{AtomicUsize, Ordering};
 use tokio::sync::Mutex;
 
 //=============================================================================
@@ -131,12 +131,10 @@ pub async fn start_analysis(
     let pool: sqlx::PgPool = state.database.pool().await;
 
     // Get total count of unanalyzed files
-    let total: i64 = sqlx::query_scalar(
-        "SELECT COUNT(*) FROM files WHERE analyzed_at IS NULL"
-    )
-    .fetch_one(&pool)
-    .await
-    .map_err(|e| format!("Failed to count unanalyzed files: {}", e))?;
+    let total: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM files WHERE analyzed_at IS NULL")
+        .fetch_one(&pool)
+        .await
+        .map_err(|e| format!("Failed to count unanalyzed files: {}", e))?;
 
     println!("🔍 Found {} unanalyzed files", total);
 
@@ -183,7 +181,7 @@ pub async fn start_analysis(
              FROM files
              WHERE analyzed_at IS NULL
              ORDER BY id
-             LIMIT $1 OFFSET $2"
+             LIMIT $1 OFFSET $2",
         )
         .bind(batch_size)
         .bind(offset)
@@ -196,7 +194,10 @@ pub async fn start_analysis(
         }
 
         let batch_len = files.len();
-        println!("📦 Processing batch: {} files (offset: {})", batch_len, offset);
+        println!(
+            "📦 Processing batch: {} files (offset: {})",
+            batch_len, offset
+        );
 
         // Process batch in parallel
         stream::iter(files)
@@ -298,7 +299,11 @@ pub async fn start_analysis(
     // Calculate final statistics
     let duration = start_time.elapsed().as_secs_f64();
     let analyzed_count = analyzed.load(Ordering::SeqCst);
-    let rate = if duration > 0.0 { analyzed_count as f64 / duration } else { 0.0 };
+    let rate = if duration > 0.0 {
+        analyzed_count as f64 / duration
+    } else {
+        0.0
+    };
 
     println!("\n✅ Analysis complete!");
     println!("  Total files: {}", total_usize);
@@ -493,12 +498,10 @@ async fn batch_insert_analyzed_files(
         .await?;
 
         // Update files.analyzed_at timestamp
-        sqlx::query(
-            "UPDATE files SET analyzed_at = NOW() WHERE id = $1"
-        )
-        .bind(file.file_id)
-        .execute(&mut *tx)
-        .await?;
+        sqlx::query("UPDATE files SET analyzed_at = NOW() WHERE id = $1")
+            .bind(file.file_id)
+            .execute(&mut *tx)
+            .await?;
     }
 
     tx.commit().await?;
@@ -532,7 +535,8 @@ fn analyze_notes(midi_file: &MidiFile) -> NoteStats {
     let mut min_velocity = 127u8;
     let mut max_velocity = 0u8;
     let mut velocity_sum = 0u32;
-    let mut active_notes_per_tick: std::collections::HashMap<u32, usize> = std::collections::HashMap::new();
+    let mut active_notes_per_tick: std::collections::HashMap<u32, usize> =
+        std::collections::HashMap::new();
 
     for track in &midi_file.tracks {
         let mut current_tick = 0u32;
@@ -552,11 +556,11 @@ fn analyze_notes(midi_file: &MidiFile) -> NoteStats {
 
                     active_notes.insert(*note);
                     active_notes_per_tick.insert(current_tick, active_notes.len());
-                }
+                },
                 Event::NoteOff { note, .. } | Event::NoteOn { note, velocity: 0, .. } => {
                     active_notes.remove(note);
-                }
-                _ => {}
+                },
+                _ => {},
             }
         }
     }
@@ -571,7 +575,11 @@ fn analyze_notes(midi_file: &MidiFile) -> NoteStats {
 
     let (pitch_range_low, pitch_range_high, pitch_range_semitones) = if note_count > 0 {
         let semitones = max_pitch.saturating_sub(min_pitch) as i16;
-        (Some(min_pitch as i16), Some(max_pitch as i16), Some(semitones))
+        (
+            Some(min_pitch as i16),
+            Some(max_pitch as i16),
+            Some(semitones),
+        )
     } else {
         (None, None, None)
     };
@@ -649,18 +657,19 @@ fn extract_instrument_names(midi_file: &MidiFile) -> Vec<String> {
             match &timed_event.event {
                 Event::Text { text_type, text } => {
                     if matches!(text_type, TextType::InstrumentName | TextType::TrackName)
-                        && !instruments.contains(text) {
-                            instruments.push(text.clone());
-                        }
-                }
+                        && !instruments.contains(text)
+                    {
+                        instruments.push(text.clone());
+                    }
+                },
                 Event::ProgramChange { program, .. } => {
                     if let Some(instrument_name) = program_to_instrument_name(*program) {
                         if !instruments.contains(&instrument_name) {
                             instruments.push(instrument_name);
                         }
                     }
-                }
-                _ => {}
+                },
+                _ => {},
             }
         }
     }
@@ -725,7 +734,8 @@ fn calculate_complexity_score(note_stats: &NoteStats, midi_file: &MidiFile) -> O
 
     // Factor 1: Note density (notes per second)
     // Assume average 120 BPM for rough estimate
-    let duration_est = calculate_total_ticks(midi_file) as f64 / (midi_file.header.ticks_per_quarter_note as f64 * 2.0);
+    let duration_est = calculate_total_ticks(midi_file) as f64
+        / (midi_file.header.ticks_per_quarter_note as f64 * 2.0);
     if duration_est > 0.0 {
         let note_density = note_stats.note_count as f64 / duration_est;
         score += (note_density / 10.0).min(30.0); // Max 30 points
@@ -746,7 +756,10 @@ fn calculate_complexity_score(note_stats: &NoteStats, midi_file: &MidiFile) -> O
     score += (track_count * 2.0).min(15.0); // Max 15 points
 
     // Factor 5: Velocity variation
-    if let (Some(low), Some(high)) = (note_stats.velocity_range_low, note_stats.velocity_range_high) {
+    if let (Some(low), Some(high)) = (
+        note_stats.velocity_range_low,
+        note_stats.velocity_range_high,
+    ) {
         let velocity_range = (high - low) as f64;
         score += (velocity_range / 10.0).min(10.0); // Max 10 points
     }

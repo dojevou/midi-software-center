@@ -1,19 +1,18 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Default)]
 pub enum Theme {
+    #[default]
     Dark,
     Light,
 }
 
-impl Default for Theme {
-    fn default() -> Self {
-        Theme::Dark
-    }
-}
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Default)]
 pub enum Language {
+    #[default]
     English,
     Spanish,
     French,
@@ -22,24 +21,16 @@ pub enum Language {
     Chinese,
 }
 
-impl Default for Language {
-    fn default() -> Self {
-        Language::English
-    }
-}
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Default)]
 pub enum StartupBehavior {
     ShowSplashScreen,
     OpenLastProject,
+    #[default]
     ShowStartPage,
 }
 
-impl Default for StartupBehavior {
-    fn default() -> Self {
-        StartupBehavior::ShowStartPage
-    }
-}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct GeneralSettings {

@@ -1,5 +1,5 @@
-   /// Temporary File Management
 
+/// Temporary File Management
 use std::fs;
 use std::path::{Path, PathBuf};
 use uuid::Uuid;
@@ -21,10 +21,7 @@ impl TempManager {
         let base_dir = std::env::temp_dir().join("midi_extraction");
         fs::create_dir_all(&base_dir)?;
 
-        Ok(Self {
-            base_dir,
-            active_dirs: Vec::new(),
-        })
+        Ok(Self { base_dir, active_dirs: Vec::new() })
     }
 
     /// Creates a new temporary directory

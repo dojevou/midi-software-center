@@ -1,18 +1,15 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Default)]
 pub enum SyncInterval {
+    #[default]
     Manual,
     Minutes5,
     Minutes15,
     Hour1,
 }
 
-impl Default for SyncInterval {
-    fn default() -> Self {
-        SyncInterval::Manual
-    }
-}
 
 impl SyncInterval {
     pub fn as_minutes(&self) -> Option<u32> {
@@ -26,21 +23,13 @@ impl SyncInterval {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Default)]
 pub struct SyncSettings {
     pub cloud_sync_enabled: bool,
     pub sync_interval: SyncInterval,
     pub sync_folders: Vec<String>,
 }
 
-impl Default for SyncSettings {
-    fn default() -> Self {
-        Self {
-            cloud_sync_enabled: false,
-            sync_interval: SyncInterval::default(),
-            sync_folders: Vec::new(),
-        }
-    }
-}
 
 impl SyncSettings {
     pub fn new() -> Self {
@@ -121,9 +110,8 @@ mod tests {
 
     #[test]
     fn test_builder_pattern() {
-        let settings = SyncSettings::new()
-            .with_cloud_sync(true)
-            .with_interval(SyncInterval::Minutes15);
+        let settings =
+            SyncSettings::new().with_cloud_sync(true).with_interval(SyncInterval::Minutes15);
 
         assert!(settings.cloud_sync_enabled);
         assert_eq!(settings.sync_interval, SyncInterval::Minutes15);

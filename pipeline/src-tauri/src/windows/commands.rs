@@ -1,9 +1,9 @@
-   /// Tauri command handlers for window management
-   ///
-   /// These commands expose window management functionality to the frontend.
-
-use tauri::command;
+#[allow(dead_code)]
 use std::sync::Arc;
+/// Tauri command handlers for window management
+///
+/// These commands expose window management functionality to the frontend.
+use tauri::command;
 use tokio::sync::Mutex;
 
 use crate::windows::manager::WindowManager;

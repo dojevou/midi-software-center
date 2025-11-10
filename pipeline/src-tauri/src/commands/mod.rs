@@ -1,15 +1,15 @@
-   /// Tauri command handlers
-   ///
-   /// All commands are Grown-up Scripts:
-   /// - Perform I/O (file system, database, network)
-   /// - Delegate business logic to Trusty Modules
-   /// - Handle errors and convert to frontend-friendly format
-   /// - Provide progress updates for long-running operations
 
+/// Tauri command handlers
+///
+/// All commands are Grown-up Scripts:
+/// - Perform I/O (file system, database, network)
+/// - Delegate business logic to Trusty Modules
+/// - Handle errors and convert to frontend-friendly format
+/// - Provide progress updates for long-running operations
 pub mod analyze;
 pub mod archive_import;
-pub mod files;
 pub mod file_import;
+pub mod files;
 pub mod progress;
 pub mod search;
 pub mod split_file;

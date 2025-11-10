@@ -1,5 +1,6 @@
-   /// Test data builders with fluent API for easy test setup
-
+#[allow(dead_code, unused_imports, unused_variables)]
+#[allow(dead_code, unused_imports, unused_variables)]
+/// Test data builders with fluent API for easy test setup
 use sqlx::PgPool;
 
 //=============================================================================
@@ -59,8 +60,9 @@ pub async fn create_test_files(pool: &PgPool, count: usize) -> Vec<i64> {
 
 /// Setup test app state with database connection
 pub async fn setup_test_state() -> midi_pipeline::AppState {
-    let database_url = std::env::var("TEST_DATABASE_URL")
-        .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string());
+    let database_url = std::env::var("TEST_DATABASE_URL").unwrap_or_else(|_| {
+        "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()
+    });
 
     let pool = PgPool::connect(&database_url)
         .await
@@ -80,9 +82,7 @@ pub async fn setup_test_state() -> midi_pipeline::AppState {
         .await
         .expect("Failed to initialize test database");
 
-    midi_pipeline::AppState {
-        database,
-    }
+    midi_pipeline::AppState { database }
 }
 
 /// Import and analyze a file in one operation
@@ -127,22 +127,22 @@ impl MidiFileBuilder {
         self.content_hash = hash.to_string();
         self
     }
-    
+
     pub fn with_size(mut self, size: i64) -> Self {
         self.file_size_bytes = size;
         self
     }
-    
+
     pub fn with_manufacturer(mut self, manufacturer: &str) -> Self {
         self.manufacturer = Some(manufacturer.to_string());
         self
     }
-    
+
     pub fn with_collection(mut self, collection: &str) -> Self {
         self.collection_name = Some(collection.to_string());
         self
     }
-    
+
     pub async fn insert(self, pool: &PgPool) -> i64 {
         sqlx::query_scalar::<_, i64>(
             "INSERT INTO files (filename, filepath, original_filename, content_hash, file_size_bytes, manufacturer, collection_name)
@@ -177,12 +177,7 @@ pub struct MetadataBuilder {
 
 impl MetadataBuilder {
     pub fn new(file_id: i64) -> Self {
-        Self {
-            file_id,
-            bpm: None,
-            key_signature: None,
-            time_signature: None,
-        }
+        Self { file_id, bpm: None, key_signature: None, time_signature: None }
     }
 
     pub fn with_bpm(mut self, bpm: f64) -> Self {
@@ -194,16 +189,16 @@ impl MetadataBuilder {
         self.key_signature = Some(key.to_string());
         self
     }
-    
+
     pub fn with_time_signature(mut self, time_sig: &str) -> Self {
         self.time_signature = Some(time_sig.to_string());
         self
     }
-    
+
     pub async fn insert(self, pool: &PgPool) -> i64 {
         sqlx::query_scalar::<_, i64>(
             "INSERT INTO musical_metadata (file_id, bpm, key_signature, time_signature)
-             VALUES ($1, $2, $3, $4) RETURNING file_id"
+             VALUES ($1, $2, $3, $4) RETURNING file_id",
         )
         .bind(self.file_id)
         .bind(self.bpm)
@@ -223,10 +218,7 @@ pub struct TagBuilder {
 
 impl TagBuilder {
     pub fn new(tag_name: &str) -> Self {
-        Self {
-            name: tag_name.to_string(),
-            category: None,
-        }
+        Self { name: tag_name.to_string(), category: None }
     }
 
     pub fn with_category(mut self, category: &str) -> Self {
@@ -238,7 +230,7 @@ impl TagBuilder {
         sqlx::query_scalar::<_, i64>(
             "INSERT INTO tags (name, category) VALUES ($1, $2)
              ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
-             RETURNING id"
+             RETURNING id",
         )
         .bind(self.name)
         .bind(self.category)

@@ -1,36 +1,36 @@
-   /// Filename normalization utilities for MIDI files.
-   ///
-   /// This module provides pure functions for normalizing MIDI filenames,
-   /// specifically converting `.midi` extensions to `.mid` and replacing
-   /// spaces with underscores.
-   ///
-   /// # Archetype: Trusty Module
-   ///
-   /// This is a pure logic module with NO side effects:
-   /// - ❌ NO file I/O
-   /// - ❌ NO database access
-   /// - ❌ NO printing/logging
-   /// - ✅ Pure functions only
-   /// - ✅ Comprehensive tests
-   ///
-   /// # Examples
-   ///
-   /// ```
-   /// use pipeline::core::normalization::filename::normalize_midi_filename;
-   ///
-   /// // Extension normalization
-   /// let normalized = normalize_midi_filename("song.midi");
-   /// assert_eq!(normalized, "song.mid");
-   ///
-   /// // Space replacement
-   /// let normalized = normalize_midi_filename("my song.mid");
-   /// assert_eq!(normalized, "my_song.mid");
-   ///
-   /// // Both transformations
-   /// let normalized = normalize_midi_filename("Cool Track.midi");
-   /// assert_eq!(normalized, "Cool_Track.mid");
-   /// ```
 
+/// Filename normalization utilities for MIDI files.
+///
+/// This module provides pure functions for normalizing MIDI filenames,
+/// specifically converting `.midi` extensions to `.mid` and replacing
+/// spaces with underscores.
+///
+/// # Archetype: Trusty Module
+///
+/// This is a pure logic module with NO side effects:
+/// - ❌ NO file I/O
+/// - ❌ NO database access
+/// - ❌ NO printing/logging
+/// - ✅ Pure functions only
+/// - ✅ Comprehensive tests
+///
+/// # Examples
+///
+/// ```
+/// use pipeline::core::normalization::filename::normalize_midi_filename;
+///
+/// // Extension normalization
+/// let normalized = normalize_midi_filename("song.midi");
+/// assert_eq!(normalized, "song.mid");
+///
+/// // Space replacement
+/// let normalized = normalize_midi_filename("my song.mid");
+/// assert_eq!(normalized, "my_song.mid");
+///
+/// // Both transformations
+/// let normalized = normalize_midi_filename("Cool Track.midi");
+/// assert_eq!(normalized, "Cool_Track.mid");
+/// ```
 /// Normalize a MIDI filename by converting `.midi` extension to `.mid`
 /// and replacing all spaces with underscores.
 ///
@@ -192,34 +192,22 @@ mod tests {
     // Space replacement tests
     #[test]
     fn test_space_replacement() {
-        assert_eq!(
-            normalize_midi_filename("my song.mid"),
-            "my_song.mid"
-        );
+        assert_eq!(normalize_midi_filename("my song.mid"), "my_song.mid");
     }
 
     #[test]
     fn test_multiple_spaces() {
-        assert_eq!(
-            normalize_midi_filename("my  song.midi"),
-            "my__song.mid"
-        );
+        assert_eq!(normalize_midi_filename("my  song.midi"), "my__song.mid");
     }
 
     #[test]
     fn test_space_and_midi_extension() {
-        assert_eq!(
-            normalize_midi_filename("Cool Track.midi"),
-            "Cool_Track.mid"
-        );
+        assert_eq!(normalize_midi_filename("Cool Track.midi"), "Cool_Track.mid");
     }
 
     #[test]
     fn test_no_spaces_no_change() {
-        assert_eq!(
-            normalize_midi_filename("song.mid"),
-            "song.mid"
-        );
+        assert_eq!(normalize_midi_filename("song.mid"), "song.mid");
     }
 
     #[test]
@@ -258,22 +246,13 @@ mod tests {
 
     #[test]
     fn test_filename_with_unicode() {
-        assert_eq!(
-            normalize_midi_filename("歌曲.midi"),
-            "歌曲.mid"
-        );
-        assert_eq!(
-            normalize_midi_filename("café-song.midi"),
-            "café-song.mid"
-        );
+        assert_eq!(normalize_midi_filename("歌曲.midi"), "歌曲.mid");
+        assert_eq!(normalize_midi_filename("café-song.midi"), "café-song.mid");
     }
 
     #[test]
     fn test_spaces_with_unicode() {
-        assert_eq!(
-            normalize_midi_filename("café song.midi"),
-            "café_song.mid"
-        );
+        assert_eq!(normalize_midi_filename("café song.midi"), "café_song.mid");
     }
 
     // Multiple dots
@@ -295,10 +274,7 @@ mod tests {
 
     #[test]
     fn test_dots_and_spaces() {
-        assert_eq!(
-            normalize_midi_filename("my.song v2.midi"),
-            "my.song_v2.mid"
-        );
+        assert_eq!(normalize_midi_filename("my.song v2.midi"), "my.song_v2.mid");
     }
 
     // Edge cases
@@ -331,10 +307,7 @@ mod tests {
             normalize_midi_filename("song.midi.backup"),
             "song.midi.backup"
         );
-        assert_eq!(
-            normalize_midi_filename("midi.txt"),
-            "midi.txt"
-        );
+        assert_eq!(normalize_midi_filename("midi.txt"), "midi.txt");
     }
 
     #[test]

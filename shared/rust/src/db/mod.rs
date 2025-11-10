@@ -1,5 +1,5 @@
-   /// Database models and repositories
 
+/// Database models and repositories
 pub mod models;
 pub mod repositories;
 

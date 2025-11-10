@@ -1,11 +1,10 @@
-   /// Compatibility scoring - Overall compatibility calculation
-   ///
-   /// Trusty Module: Pure function that calculates compatibility scores.
-   /// NO database access - receives file data as parameters.
-
-use crate::models::midi_file::MidiFile;
 use super::music::{bpm_compatibility_score, bpm_time_stretchable, key_compatibility_score};
 use super::types::{CompatibilityScore, KeySignature};
+/// Compatibility scoring - Overall compatibility calculation
+///
+/// Trusty Module: Pure function that calculates compatibility scores.
+/// NO database access - receives file data as parameters.
+use crate::models::midi_file::MidiFile;
 
 /// Calculate overall compatibility score between two MIDI files
 ///
@@ -21,10 +20,7 @@ use super::types::{CompatibilityScore, KeySignature};
 ///
 /// # Returns
 /// CompatibilityScore with detailed breakdown
-pub fn calculate_compatibility(
-    source: &MidiFile,
-    candidate: &MidiFile,
-) -> CompatibilityScore {
+pub fn calculate_compatibility(source: &MidiFile, candidate: &MidiFile) -> CompatibilityScore {
     let mut total_score = 0.0;
     let mut explanations = Vec::new();
 
@@ -33,8 +29,8 @@ pub fn calculate_compatibility(
         (&source.key_signature, &candidate.key_signature)
     {
         if let (Some(key1), Some(key2)) = (
-            KeySignature::from_str(key1_str),
-            KeySignature::from_str(key2_str),
+            KeySignature::parse(key1_str),
+            KeySignature::parse(key2_str),
         ) {
             let score = key_compatibility_score(&key1, &key2);
 
@@ -79,24 +75,23 @@ pub fn calculate_compatibility(
     };
 
     // Category compatibility (20% weight)
-    let category_score = if let (Some(cat1), Some(cat2)) =
-        (&source.primary_category, &candidate.primary_category)
-    {
-        let score = if cat1 == cat2 {
-            100.0
+    let category_score =
+        if let (Some(cat1), Some(cat2)) = (&source.primary_category, &candidate.primary_category) {
+            let score = if cat1 == cat2 {
+                100.0
+            } else {
+                category_compatibility(cat1, cat2)
+            };
+
+            if score >= 90.0 {
+                explanations.push("Same or complementary category".to_string());
+            }
+
+            total_score += score * 0.2;
+            score
         } else {
-            category_compatibility(cat1, cat2)
+            50.0
         };
-
-        if score >= 90.0 {
-            explanations.push("Same or complementary category".to_string());
-        }
-
-        total_score += score * 0.2;
-        score
-    } else {
-        50.0
-    };
 
     // Build explanation
     let explanation = if explanations.is_empty() {
@@ -105,13 +100,7 @@ pub fn calculate_compatibility(
         explanations.join(". ")
     };
 
-    CompatibilityScore {
-        total_score,
-        key_score,
-        bpm_score,
-        category_score,
-        explanation,
-    }
+    CompatibilityScore { total_score, key_score, bpm_score, category_score, explanation }
 }
 
 /// Determine category compatibility

@@ -1,16 +1,16 @@
-   /// System command handlers - GROWN-UP SCRIPT ARCHETYPE
-   ///
-   /// PURPOSE: System-level operations and information
-   /// ARCHETYPE: Grown-up Script (I/O operations)
-   ///
-   /// ✅ CAN: Perform system I/O
-   /// ✅ CAN: Have side effects
-   /// ✅ SHOULD: Handle errors properly
-   /// ❌ NO: Complex business logic
 
+use crate::AppState;
+/// System command handlers - GROWN-UP SCRIPT ARCHETYPE
+///
+/// PURPOSE: System-level operations and information
+/// ARCHETYPE: Grown-up Script (I/O operations)
+///
+/// ✅ CAN: Perform system I/O
+/// ✅ CAN: Have side effects
+/// ✅ SHOULD: Handle errors properly
+/// ❌ NO: Complex business logic
 use serde::Serialize;
 use tauri::State;
-use crate::AppState;
 
 // =============================================================================
 // DATA STRUCTURES
@@ -57,7 +57,7 @@ pub async fn get_system_info() -> Result<SystemInfo, String> {
 /// // Now all database commands will work
 /// ```
 #[tauri::command]
-pub async fn initialize_database(state: State<'_, AppState>) -> Result<(), String> {
+pub async fn initialize_database(_state: State<'_, AppState>) -> Result<(), String> {
     // Database is eagerly initialized in main.rs, so this is a no-op
     // This command exists for completeness if we switch to lazy initialization
     Ok(())

@@ -1,7 +1,8 @@
-   /// Track Editor Undo/Redo Commands - Trusty Module
-   ///
-   /// Commands for track operations: add/remove/rename tracks, set properties.
+#![allow(dead_code)]
 
+/// Track Editor Undo/Redo Commands - Trusty Module
+///
+/// Commands for track operations: add/remove/rename tracks, set properties.
 use super::core::{Command, UndoRedoError, UndoRedoResult};
 use crate::windows::state::TrackInfo;
 
@@ -15,11 +16,7 @@ pub struct AddTrackCommand {
 
 impl AddTrackCommand {
     pub fn new(label: String) -> Self {
-        Self {
-            label,
-            track_id: None,
-            executed: false,
-        }
+        Self { label, track_id: None, executed: false }
     }
 }
 
@@ -62,11 +59,7 @@ pub struct RemoveTrackCommand {
 
 impl RemoveTrackCommand {
     pub fn new(track_id: i32) -> Self {
-        Self {
-            track_id,
-            removed_track: None,
-            executed: false,
-        }
+        Self { track_id, removed_track: None, executed: false }
     }
 }
 
@@ -110,12 +103,7 @@ pub struct RenameTrackCommand {
 
 impl RenameTrackCommand {
     pub fn new(track_id: i32, new_name: String) -> Self {
-        Self {
-            track_id,
-            new_name,
-            old_name: None,
-            executed: false,
-        }
+        Self { track_id, new_name, old_name: None, executed: false }
     }
 }
 
@@ -160,12 +148,7 @@ pub struct SetTrackColorCommand {
 
 impl SetTrackColorCommand {
     pub fn new(track_id: i32, new_color: String) -> Self {
-        Self {
-            track_id,
-            new_color,
-            old_color: None,
-            executed: false,
-        }
+        Self { track_id, new_color, old_color: None, executed: false }
     }
 }
 
@@ -216,12 +199,7 @@ pub struct SetTrackVolumeCommand {
 
 impl SetTrackVolumeCommand {
     pub fn new(track_id: i32, new_volume: f32) -> Self {
-        Self {
-            track_id,
-            new_volume,
-            old_volume: None,
-            executed: false,
-        }
+        Self { track_id, new_volume, old_volume: None, executed: false }
     }
 }
 

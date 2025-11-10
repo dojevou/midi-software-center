@@ -1,7 +1,7 @@
-   /// Naming Templates
-   ///
-   /// Provides different template formats for filename generation.
 
+/// Naming Templates
+///
+/// Provides different template formats for filename generation.
 /// Naming template format
 #[derive(Debug, Clone, PartialEq, Default)]
 pub enum NamingTemplate {
@@ -58,15 +58,15 @@ pub fn apply_template(
     match template {
         NamingTemplate::Standard => {
             format!("{}_{}_{:.0}BPM_{}_{}", category, key, bpm, description, id)
-        }
+        },
 
         NamingTemplate::Compact => {
             format!("{}_{}_{:.0}BPM_{}", category, key, bpm, id)
-        }
+        },
 
         NamingTemplate::BpmFirst => {
             format!("{:.0}BPM_{}_{}_{}", bpm, key, category, description)
-        }
+        },
 
         NamingTemplate::Custom(template_str) => template_str
             .replace("{CATEGORY}", category)

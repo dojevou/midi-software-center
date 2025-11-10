@@ -1,17 +1,17 @@
-   /// Common test infrastructure for DAW command tests
-   /// Provides database mocks, MIDI device mocks, fixtures, builders, and assertions
 
-pub mod database;
-pub mod mocks;
-pub mod builders;
 pub mod assertions;
+pub mod builders;
+/// Common test infrastructure for DAW command tests
+/// Provides database mocks, MIDI device mocks, fixtures, builders, and assertions
+pub mod database;
 pub mod fixtures;
+pub mod mocks;
 
-pub use database::TestDatabase;
-pub use mocks::{MockWindow, MockAppHandle, MockMidiDevice, EmittedEvent};
-pub use builders::{MidiFileBuilder, TrackBuilder, SequencerStateBuilder};
 pub use assertions::*;
-pub use fixtures::{TestFixtures, FileFixtures};
+pub use builders::{MidiFileBuilder, SequencerStateBuilder, TrackBuilder};
+pub use database::TestDatabase;
+pub use fixtures::{FileFixtures, TestFixtures};
+pub use mocks::{EmittedEvent, MockAppHandle, MockMidiDevice, MockWindow};
 
 // Re-export commonly used items
 pub use sqlx::PgPool;

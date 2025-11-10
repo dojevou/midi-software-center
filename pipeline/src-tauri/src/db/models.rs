@@ -1,8 +1,8 @@
-   /// Database models aligned with actual schema
-   ///
-   /// These models match the database schema from 001_initial_schema.sql
-   /// Database: midi_library on port 5433
 
+/// Database models aligned with actual schema
+///
+/// These models match the database schema from 001_initial_schema.sql
+/// Database: midi_library on port 5433
 use chrono::{DateTime, Utc};
 use serde::Deserialize;
 use sqlx::types::BigDecimal;
@@ -91,7 +91,7 @@ pub struct MusicalMetadata {
     pub tempo_changes: Option<serde_json::Value>,
 
     // Key signature (enum type in database)
-    pub key_signature: Option<String>,  // We'll handle the enum as String
+    pub key_signature: Option<String>, // We'll handle the enum as String
     pub key_confidence: Option<f32>,
     pub has_key_changes: Option<bool>,
     pub key_changes: Option<serde_json::Value>,

@@ -2,32 +2,22 @@ use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Default)]
 pub enum WatchMode {
     Disabled,
+    #[default]
     ActiveOnly,
     Continuous,
 }
 
-impl Default for WatchMode {
-    fn default() -> Self {
-        WatchMode::ActiveOnly
-    }
-}
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Default)]
 pub struct LibrarySettings {
     pub library_paths: Vec<PathBuf>,
     pub watch_mode: WatchMode,
 }
 
-impl Default for LibrarySettings {
-    fn default() -> Self {
-        Self {
-            library_paths: Vec::new(),
-            watch_mode: WatchMode::default(),
-        }
-    }
-}
 
 impl LibrarySettings {
     pub fn new() -> Self {

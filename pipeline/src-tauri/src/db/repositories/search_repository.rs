@@ -1,6 +1,6 @@
-   /// Search operations repository
-   /// Aligned with actual schema from 001_initial_schema.sql
 
+/// Search operations repository
+/// Aligned with actual schema from 001_initial_schema.sql
 use crate::db::models::File;
 use sqlx::PgPool;
 
@@ -230,10 +230,9 @@ mod tests {
     use sqlx::postgres::PgPoolOptions;
 
     async fn setup_test_pool() -> PgPool {
-        let database_url = std::env::var("DATABASE_URL")
-            .unwrap_or_else(|_| {
-                "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()
-            });
+        let database_url = std::env::var("DATABASE_URL").unwrap_or_else(|_| {
+            "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()
+        });
 
         PgPoolOptions::new()
             .max_connections(5)

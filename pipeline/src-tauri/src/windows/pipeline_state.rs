@@ -1,8 +1,9 @@
-   /// Pipeline Window State
-   ///
-   /// Trusty Module: Pure data structures for pipeline processing state including
-   /// processing status, progress tracking, and statistics. No I/O, no side effects.
-
+#![allow(dead_code)]
+#[allow(dead_code)]
+/// Pipeline Window State
+///
+/// Trusty Module: Pure data structures for pipeline processing state including
+/// processing status, progress tracking, and statistics. No I/O, no side effects.
 use serde::{Deserialize, Serialize};
 
 /// Processing status for pipeline operations
@@ -23,11 +24,13 @@ pub enum ProcessingStatus {
     Error,
 }
 
-
 impl ProcessingStatus {
     /// Check if pipeline is currently active (processing or paused)
     pub fn is_active(&self) -> bool {
-        matches!(self, ProcessingStatus::Processing | ProcessingStatus::Paused)
+        matches!(
+            self,
+            ProcessingStatus::Processing | ProcessingStatus::Paused
+        )
     }
 
     /// Check if can be paused
@@ -50,8 +53,7 @@ impl ProcessingStatus {
 }
 
 /// Processing statistics
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct ProcessingStats {
     /// Total files to process
     pub total_files: usize,
@@ -71,14 +73,10 @@ pub struct ProcessingStats {
     pub estimated_time_remaining: Option<f32>,
 }
 
-
 impl ProcessingStats {
     /// Create new processing stats
     pub fn new(total_files: usize) -> Self {
-        ProcessingStats {
-            total_files,
-            ..Default::default()
-        }
+        ProcessingStats { total_files, ..Default::default() }
     }
 
     /// Calculate progress percentage (0.0 to 100.0)
@@ -108,14 +106,12 @@ impl ProcessingStats {
     /// Calculate elapsed time in seconds
     pub fn elapsed_time(&self) -> Option<u64> {
         let start = self.start_time?;
-        let end = self
-            .end_time
-            .or_else(|| {
-                std::time::SystemTime::now()
-                    .duration_since(std::time::UNIX_EPOCH)
-                    .ok()
-                    .map(|d| d.as_secs())
-            })?;
+        let end = self.end_time.or_else(|| {
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .ok()
+                .map(|d| d.as_secs())
+        })?;
         Some(end.saturating_sub(start))
     }
 
@@ -168,7 +164,6 @@ pub enum OperationType {
     /// Database cleanup/maintenance
     DatabaseMaintenance,
 }
-
 
 /// Pipeline window state
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -294,11 +289,7 @@ impl PipelineWindowState {
             .map(|d| d.as_secs())
             .unwrap_or(0);
 
-        self.log_messages.push(LogMessage {
-            timestamp,
-            level,
-            message,
-        });
+        self.log_messages.push(LogMessage { timestamp, level, message });
 
         // Keep only last 100 messages
         if self.log_messages.len() > 100 {

@@ -1,19 +1,18 @@
-   /// MIDI Analysis CLI Tool
-   ///
-   /// Standalone binary to analyze all imported MIDI files
-   ///
-   /// Usage:
-   ///   cargo run --bin analyze
-   ///
-   /// Environment Variables:
-   ///   DATABASE_URL - PostgreSQL connection string
-   ///                  Default: postgresql://midiuser:145278963@localhost:5433/midi_library
-
-use std::env;
-use std::sync::Arc;
-use std::sync::atomic::{AtomicUsize, Ordering};
-use tokio::sync::Mutex;
 use futures::stream::{self, StreamExt};
+/// MIDI Analysis CLI Tool
+///
+/// Standalone binary to analyze all imported MIDI files
+///
+/// Usage:
+///   cargo run --bin analyze
+///
+/// Environment Variables:
+///   DATABASE_URL - PostgreSQL connection string
+///                  Default: postgresql://midiuser:145278963@localhost:5433/midi_library
+use std::env;
+use std::sync::atomic::{AtomicUsize, Ordering};
+use std::sync::Arc;
+use tokio::sync::Mutex;
 
 // Import from the main library
 use midi_library_shared::core::midi::parser::parse_midi_file;
@@ -22,6 +21,7 @@ use midi_pipeline::core::analysis::bpm_detector::detect_bpm;
 use midi_pipeline::core::analysis::key_detector::detect_key;
 
 #[derive(Debug, Clone, sqlx::FromRow)]
+#[allow(dead_code)]
 struct FileRecord {
     id: i64,
     filepath: String,
@@ -61,8 +61,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     println!("====================\n");
 
     // Get database URL from environment
-    let database_url = env::var("DATABASE_URL")
-        .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string());
+    let database_url = env::var("DATABASE_URL").unwrap_or_else(|_| {
+        "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()
+    });
 
     println!("📡 Connecting to database...");
     let pool = sqlx::postgres::PgPoolOptions::new()
@@ -72,11 +73,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     println!("✅ Connected to database\n");
 
     // Get total count of unanalyzed files
-    let total: i64 = sqlx::query_scalar(
-        "SELECT COUNT(*) FROM files WHERE analyzed_at IS NULL"
-    )
-    .fetch_one(&pool)
-    .await?;
+    let total: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM files WHERE analyzed_at IS NULL")
+        .fetch_one(&pool)
+        .await?;
 
     println!("🔍 Found {} unanalyzed files\n", total);
 
@@ -119,7 +118,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
              FROM files
              WHERE analyzed_at IS NULL
              ORDER BY id
-             LIMIT $1 OFFSET $2"
+             LIMIT $1 OFFSET $2",
         )
         .bind(batch_size)
         .bind(offset)
@@ -149,17 +148,25 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                         Err(_) => {
                             eprintln!("Warning: Semaphore closed during analysis");
                             return;
-                        }
+                        },
                     };
 
                     let current = current_index.fetch_add(1, Ordering::SeqCst) + 1;
 
                     // Print progress every 100 files
-                    if current % 100 == 0 || current == total_usize {
+                    if current.is_multiple_of(100) || current == total_usize {
                         let elapsed = start_time.elapsed().as_secs_f64();
-                        let rate = if elapsed > 0.0 { current as f64 / elapsed } else { 0.0 };
+                        let rate = if elapsed > 0.0 {
+                            current as f64 / elapsed
+                        } else {
+                            0.0
+                        };
                         let remaining = total_usize - current;
-                        let eta_seconds = if rate > 0.0 { remaining as f64 / rate } else { 0.0 };
+                        let eta_seconds = if rate > 0.0 {
+                            remaining as f64 / rate
+                        } else {
+                            0.0
+                        };
 
                         println!(
                             "Analyzing: {}/{} ({:.1}%) - {:.1} files/sec - ETA: {}",
@@ -187,7 +194,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                                     errors.lock().await.push(format!("Batch insert failed: {}", e));
                                 }
                             }
-                        }
+                        },
                         Err(e) => {
                             skipped.fetch_add(1, Ordering::SeqCst);
                             // Only log first 10 errors to avoid spam
@@ -195,7 +202,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
                             if err_list.len() < 10 {
                                 err_list.push(format!("{}: {}", file_record.filepath, e));
                             }
-                        }
+                        },
                     }
                 }
             })
@@ -219,7 +226,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error + Send + Sync>> {
     let duration = start_time.elapsed().as_secs_f64();
     let analyzed_count = analyzed.load(Ordering::SeqCst);
     let skipped_count = skipped.load(Ordering::SeqCst);
-    let rate = if duration > 0.0 { analyzed_count as f64 / duration } else { 0.0 };
+    let rate = if duration > 0.0 {
+        analyzed_count as f64 / duration
+    } else {
+        0.0
+    };
 
     println!("\n✅ Analysis complete!");
     println!("==================");
@@ -425,7 +436,8 @@ fn analyze_notes(midi_file: &MidiFile) -> NoteStats {
     let mut min_velocity = 127u8;
     let mut max_velocity = 0u8;
     let mut velocity_sum = 0u32;
-    let mut active_notes_per_tick: std::collections::HashMap<u32, usize> = std::collections::HashMap::new();
+    let mut active_notes_per_tick: std::collections::HashMap<u32, usize> =
+        std::collections::HashMap::new();
 
     for track in &midi_file.tracks {
         let mut current_tick = 0u32;
@@ -445,11 +457,11 @@ fn analyze_notes(midi_file: &MidiFile) -> NoteStats {
 
                     active_notes.insert(*note);
                     active_notes_per_tick.insert(current_tick, active_notes.len());
-                }
+                },
                 Event::NoteOff { note, .. } | Event::NoteOn { note, velocity: 0, .. } => {
                     active_notes.remove(note);
-                }
-                _ => {}
+                },
+                _ => {},
             }
         }
     }
@@ -464,7 +476,11 @@ fn analyze_notes(midi_file: &MidiFile) -> NoteStats {
 
     let (pitch_range_low, pitch_range_high, pitch_range_semitones) = if note_count > 0 {
         let semitones = max_pitch.saturating_sub(min_pitch) as i16;
-        (Some(min_pitch as i16), Some(max_pitch as i16), Some(semitones))
+        (
+            Some(min_pitch as i16),
+            Some(max_pitch as i16),
+            Some(semitones),
+        )
     } else {
         (None, None, None)
     };
@@ -530,20 +546,19 @@ fn extract_instrument_names(midi_file: &MidiFile) -> Vec<String> {
         for timed_event in &track.events {
             match &timed_event.event {
                 Event::Text { text_type, text } => {
-                    if matches!(text_type, TextType::InstrumentName | TextType::TrackName) {
-                        if !instruments.contains(text) {
+                    if matches!(text_type, TextType::InstrumentName | TextType::TrackName)
+                        && !instruments.contains(text) {
                             instruments.push(text.clone());
                         }
-                    }
-                }
+                },
                 Event::ProgramChange { program, .. } => {
                     if let Some(name) = program_to_instrument_name(*program) {
                         if !instruments.contains(&name) {
                             instruments.push(name);
                         }
                     }
-                }
-                _ => {}
+                },
+                _ => {},
             }
         }
     }
@@ -601,7 +616,8 @@ fn calculate_complexity_score(note_stats: &NoteStats, midi_file: &MidiFile) -> O
 
     let mut score = 0.0;
 
-    let duration_est = calculate_total_ticks(midi_file) as f64 / (midi_file.header.ticks_per_quarter_note as f64 * 2.0);
+    let duration_est = calculate_total_ticks(midi_file) as f64
+        / (midi_file.header.ticks_per_quarter_note as f64 * 2.0);
     if duration_est > 0.0 {
         let note_density = note_stats.note_count as f64 / duration_est;
         score += (note_density / 10.0).min(30.0);
@@ -618,7 +634,10 @@ fn calculate_complexity_score(note_stats: &NoteStats, midi_file: &MidiFile) -> O
     let track_count = midi_file.tracks.len() as f64;
     score += (track_count * 2.0).min(15.0);
 
-    if let (Some(low), Some(high)) = (note_stats.velocity_range_low, note_stats.velocity_range_high) {
+    if let (Some(low), Some(high)) = (
+        note_stats.velocity_range_low,
+        note_stats.velocity_range_high,
+    ) {
         let velocity_range = (high - low) as f64;
         score += (velocity_range / 10.0).min(10.0);
     }

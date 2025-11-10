@@ -10,14 +10,13 @@
 //! 2. Channel Detection (10 tests)
 
 use crate::core::analysis::drum_analyzer::{
-    note_to_drum_type, has_drum_channel, extract_drum_notes, detect_cymbal_types,
-    extract_time_signature_from_meta, extract_time_signature_from_path,
-    extract_bpm_from_filename, extract_pattern_type, extract_rhythmic_feel,
-    extract_song_structure, detect_techniques, generate_drum_tags, DrumAnalysis,
-    DrumNote, CymbalType, PatternType, RhythmicFeel, SongStructure, DrumTechnique,
-    TimeSignature,
+    detect_cymbal_types, detect_techniques, extract_bpm_from_filename, extract_drum_notes,
+    extract_pattern_type, extract_rhythmic_feel, extract_song_structure,
+    extract_time_signature_from_meta, extract_time_signature_from_path, generate_drum_tags,
+    has_drum_channel, note_to_drum_type, CymbalType, DrumAnalysis, DrumNote, DrumTechnique,
+    PatternType, RhythmicFeel, SongStructure, TimeSignature,
 };
-use midi_library_shared::core::midi::types::{MidiFile, Header, Track, TimedEvent, Event};
+use midi_library_shared::core::midi::types::{Event, Header, MidiFile, TimedEvent, Track};
 use std::collections::HashMap;
 
 // ============================================================================
@@ -32,33 +31,19 @@ fn create_test_midi(events: Vec<(u32, Event)>) -> MidiFile {
         .collect();
 
     MidiFile {
-        header: Header {
-            format: 1,
-            num_tracks: 1,
-            ticks_per_quarter_note: 480,
-        },
-        tracks: vec![Track {
-            events: timed_events,
-        }],
+        header: Header { format: 1, num_tracks: 1, ticks_per_quarter_note: 480 },
+        tracks: vec![Track { events: timed_events }],
     }
 }
 
 /// Create a NoteOn event
 fn note_on(channel: u8, note: u8, velocity: u8) -> Event {
-    Event::NoteOn {
-        channel,
-        note,
-        velocity,
-    }
+    Event::NoteOn { channel, note, velocity }
 }
 
 /// Create a NoteOff event
 fn note_off(channel: u8, note: u8, velocity: u8) -> Event {
-    Event::NoteOff {
-        channel,
-        note,
-        velocity,
-    }
+    Event::NoteOff { channel, note, velocity }
 }
 
 /// Create a TimeSignature event
@@ -169,7 +154,7 @@ fn test_note_to_drum_type_edge_cases() {
 fn test_has_drum_channel_true() {
     // Test: MIDI file with channel 10 (index 9) notes
     let midi = create_test_midi(vec![
-        (0, note_on(9, 36, 100)),  // Channel 10 kick
+        (0, note_on(9, 36, 100)), // Channel 10 kick
         (480, note_off(9, 36, 0)),
     ]);
 
@@ -180,9 +165,9 @@ fn test_has_drum_channel_true() {
 fn test_has_drum_channel_false() {
     // Test: MIDI file with no channel 10 notes
     let midi = create_test_midi(vec![
-        (0, note_on(0, 60, 100)),  // Channel 1, middle C
+        (0, note_on(0, 60, 100)), // Channel 1, middle C
         (480, note_off(0, 60, 0)),
-        (0, note_on(1, 64, 100)),  // Channel 2, E
+        (0, note_on(1, 64, 100)), // Channel 2, E
         (480, note_off(1, 64, 0)),
     ]);
 
@@ -197,7 +182,7 @@ fn test_extract_drum_notes_empty() {
     // even though it's on channel 1 (index 0). This is a known issue.
     // To test "truly empty", we need to use notes outside the GM drum range.
     let midi = create_test_midi(vec![
-        (0, note_on(0, 20, 100)),  // Channel 1, note 20 (below GM drum range)
+        (0, note_on(0, 20, 100)), // Channel 1, note 20 (below GM drum range)
         (480, note_off(0, 20, 0)),
     ]);
 
@@ -209,7 +194,7 @@ fn test_extract_drum_notes_empty() {
 fn test_extract_drum_notes_single_kick() {
     // Test: MIDI file with single kick drum note
     let midi = create_test_midi(vec![
-        (0, note_on(9, 36, 100)),  // Channel 10, kick
+        (0, note_on(9, 36, 100)), // Channel 10, kick
         (480, note_off(9, 36, 0)),
     ]);
 
@@ -222,13 +207,13 @@ fn test_extract_drum_notes_single_kick() {
 fn test_extract_drum_notes_mixed_drums() {
     // Test: MIDI file with multiple drum types
     let midi = create_test_midi(vec![
-        (0, note_on(9, 36, 100)),   // Kick
+        (0, note_on(9, 36, 100)), // Kick
         (240, note_off(9, 36, 0)),
-        (0, note_on(9, 38, 80)),    // Snare
+        (0, note_on(9, 38, 80)), // Snare
         (240, note_off(9, 38, 0)),
-        (0, note_on(9, 42, 60)),    // Closed hi-hat
+        (0, note_on(9, 42, 60)), // Closed hi-hat
         (240, note_off(9, 42, 0)),
-        (0, note_on(9, 36, 100)),   // Kick again (count = 2)
+        (0, note_on(9, 36, 100)), // Kick again (count = 2)
         (240, note_off(9, 36, 0)),
     ]);
 
@@ -243,19 +228,19 @@ fn test_extract_drum_notes_mixed_drums() {
 fn test_extract_drum_notes_channel_10_only() {
     // Test: Only notes on channel 10 are counted as drums
     let midi = create_test_midi(vec![
-        (0, note_on(9, 36, 100)),   // Channel 10, kick - COUNTED
+        (0, note_on(9, 36, 100)), // Channel 10, kick - COUNTED
         (240, note_off(9, 36, 0)),
-        (0, note_on(0, 36, 100)),   // Channel 1, note 36 (non-drum) - COUNTED (in GM range)
+        (0, note_on(0, 36, 100)), // Channel 1, note 36 (non-drum) - COUNTED (in GM range)
         (240, note_off(0, 36, 0)),
-        (0, note_on(1, 38, 80)),    // Channel 2, note 38 (non-drum) - COUNTED (in GM range)
+        (0, note_on(1, 38, 80)), // Channel 2, note 38 (non-drum) - COUNTED (in GM range)
         (240, note_off(1, 38, 0)),
     ]);
 
     let drum_notes = extract_drum_notes(&midi);
 
     // Notes in GM range (35-81) on any channel are counted
-    assert_eq!(drum_notes.get(&DrumNote::BassDrum1), Some(&2));  // 2x note 36
-    assert_eq!(drum_notes.get(&DrumNote::AcousticSnare), Some(&1));  // 1x note 38
+    assert_eq!(drum_notes.get(&DrumNote::BassDrum1), Some(&2)); // 2x note 36
+    assert_eq!(drum_notes.get(&DrumNote::AcousticSnare), Some(&1)); // 1x note 38
 }
 
 #[test]
@@ -304,7 +289,7 @@ fn test_detect_cymbal_types_multiple() {
 fn test_extract_time_signature_from_meta() {
     // Test: Extract time signature from MIDI meta event
     let midi = create_test_midi(vec![
-        (0, time_signature(4, 2)),  // 4/4 (denominator 2 = 2^2 = 4)
+        (0, time_signature(4, 2)), // 4/4 (denominator 2 = 2^2 = 4)
         (0, note_on(9, 36, 100)),
         (480, note_off(9, 36, 0)),
     ]);
@@ -314,7 +299,7 @@ fn test_extract_time_signature_from_meta() {
 
     let ts = time_sig.unwrap();
     assert_eq!(ts.numerator, 4);
-    assert_eq!(ts.denominator, 4);  // 2^2 = 4
+    assert_eq!(ts.denominator, 4); // 2^2 = 4
 }
 
 // ============================================================================
@@ -379,7 +364,7 @@ fn test_extract_bpm_from_filename_bpm_uppercase() {
 #[test]
 fn test_extract_bpm_from_filename_invalid() {
     // Test: Invalid BPM values (outside 30-300 range)
-    assert_eq!(extract_bpm_from_filename("20bpm.mid"), None);  // Too slow
+    assert_eq!(extract_bpm_from_filename("20bpm.mid"), None); // Too slow
     assert_eq!(extract_bpm_from_filename("350bpm.mid"), None); // Too fast
     assert_eq!(extract_bpm_from_filename("no_bpm.mid"), None); // No BPM
 }
@@ -452,11 +437,7 @@ fn test_extract_song_structure_verse() {
 
 // Helper: Create NoteOn with specific velocity
 fn note_on_vel(channel: u8, note: u8, velocity: u8) -> Event {
-    Event::NoteOn {
-        channel,
-        note,
-        velocity,
-    }
+    Event::NoteOn { channel, note, velocity }
 }
 
 // ======= Ghost Notes Detection (5 tests) =======
@@ -469,13 +450,13 @@ fn test_detect_techniques_ghost_notes_detected() {
 
     // Ghost notes (velocity < 40) - 7 hits
     for i in 0..7 {
-        events.push((i * 480, note_on_vel(9, 38, 30)));  // Snare at low velocity
+        events.push((i * 480, note_on_vel(9, 38, 30))); // Snare at low velocity
         events.push((240, note_off(9, 38, 0)));
     }
 
     // Regular notes (velocity >= 40) - 3 hits
-    for i in 0..3 {
-        events.push((480, note_on_vel(9, 38, 80)));  // Snare at normal velocity
+    for _i in 0..3 {
+        events.push((480, note_on_vel(9, 38, 80))); // Snare at normal velocity
         events.push((240, note_off(9, 38, 0)));
     }
 
@@ -492,7 +473,7 @@ fn test_detect_techniques_ghost_notes_not_detected() {
     let mut events = vec![];
 
     for i in 0..10 {
-        events.push((i * 480, note_on_vel(9, 38, 80)));  // All normal velocity
+        events.push((i * 480, note_on_vel(9, 38, 80))); // All normal velocity
         events.push((240, note_off(9, 38, 0)));
     }
 
@@ -515,7 +496,7 @@ fn test_detect_techniques_ghost_notes_threshold() {
     }
 
     // 7 regular notes (70%)
-    for i in 0..7 {
+    for _i in 0..7 {
         events.push((480, note_on_vel(9, 38, 80)));
         events.push((240, note_off(9, 38, 0)));
     }
@@ -532,7 +513,7 @@ fn test_detect_techniques_ghost_notes_threshold() {
 fn test_detect_techniques_ghost_notes_no_snares() {
     // Test: No ghost notes if there are no snare hits
     let events = vec![
-        (0, note_on_vel(9, 36, 100)),   // Kick only
+        (0, note_on_vel(9, 36, 100)), // Kick only
         (480, note_off(9, 36, 0)),
     ];
 
@@ -547,9 +528,9 @@ fn test_detect_techniques_ghost_notes_no_snares() {
 fn test_detect_techniques_ghost_notes_velocity_boundary() {
     // Test: Velocity at boundary (39 is ghost, 40 is not)
     let events = vec![
-        (0, note_on_vel(9, 38, 39)),    // Ghost note (< 40)
+        (0, note_on_vel(9, 38, 39)), // Ghost note (< 40)
         (240, note_off(9, 38, 0)),
-        (240, note_on_vel(9, 38, 40)),  // Regular note (>= 40)
+        (240, note_on_vel(9, 38, 40)), // Regular note (>= 40)
         (240, note_off(9, 38, 0)),
     ];
 
@@ -569,7 +550,7 @@ fn test_detect_techniques_double_bass_detected() {
     let mut events = vec![];
 
     for i in 0..120 {
-        events.push((i * 120, note_on(9, 36, 100)));  // 120 kicks
+        events.push((i * 120, note_on(9, 36, 100))); // 120 kicks
         events.push((60, note_off(9, 36, 0)));
     }
 
@@ -640,7 +621,7 @@ fn test_detect_techniques_double_bass_both_kick_types() {
     }
 
     // 60 kicks on note 36 (Bass Drum 1)
-    for i in 0..60 {
+    for _i in 0..60 {
         events.push((120, note_on(9, 36, 100)));
         events.push((60, note_off(9, 36, 0)));
     }
@@ -667,11 +648,11 @@ fn test_detect_techniques_multiple_techniques() {
     }
 
     // Ghost notes: 7 low-velocity, 3 regular
-    for i in 0..7 {
+    for _i in 0..7 {
         events.push((120, note_on_vel(9, 38, 30)));
         events.push((60, note_off(9, 38, 0)));
     }
-    for i in 0..3 {
+    for _i in 0..3 {
         events.push((120, note_on_vel(9, 38, 80)));
         events.push((60, note_off(9, 38, 0)));
     }
@@ -689,11 +670,11 @@ fn test_detect_techniques_multiple_techniques() {
 fn test_detect_techniques_no_techniques() {
     // Test: No techniques detected (normal drum pattern)
     let events = vec![
-        (0, note_on_vel(9, 36, 100)),    // Regular kick
+        (0, note_on_vel(9, 36, 100)), // Regular kick
         (240, note_off(9, 36, 0)),
-        (0, note_on_vel(9, 38, 80)),     // Regular snare
+        (0, note_on_vel(9, 38, 80)), // Regular snare
         (240, note_off(9, 38, 0)),
-        (0, note_on_vel(9, 42, 70)),     // Hi-hat
+        (0, note_on_vel(9, 42, 70)), // Hi-hat
         (240, note_off(9, 42, 0)),
     ];
 
@@ -718,9 +699,9 @@ fn test_detect_techniques_empty_midi() {
 fn test_detect_techniques_non_drum_notes() {
     // Test: Non-drum notes don't trigger techniques
     let events = vec![
-        (0, note_on_vel(0, 60, 100)),   // Channel 1, middle C
+        (0, note_on_vel(0, 60, 100)), // Channel 1, middle C
         (480, note_off(0, 60, 0)),
-        (0, note_on_vel(1, 64, 100)),   // Channel 2, E
+        (0, note_on_vel(1, 64, 100)), // Channel 2, E
         (480, note_off(1, 64, 0)),
     ];
 
@@ -745,12 +726,12 @@ fn test_detect_techniques_realistic_jazz_pattern() {
     }
 
     // Jazz snare with ghost notes: 8 ghost, 4 regular (75% ghost notes)
-    for i in 0..8 {
-        events.push((240, note_on_vel(9, 38, 25)));  // Ghost note
+    for _i in 0..8 {
+        events.push((240, note_on_vel(9, 38, 25))); // Ghost note
         events.push((120, note_off(9, 38, 0)));
     }
-    for i in 0..4 {
-        events.push((240, note_on_vel(9, 38, 90)));  // Accent
+    for _i in 0..4 {
+        events.push((240, note_on_vel(9, 38, 90))); // Accent
         events.push((120, note_off(9, 38, 0)));
     }
 
@@ -769,12 +750,12 @@ fn test_detect_techniques_realistic_metal_pattern() {
 
     // Fast double bass: 150 kicks
     for i in 0..150 {
-        events.push((i * 60, note_on_vel(9, 36, 110)));  // Fast 16th notes
+        events.push((i * 60, note_on_vel(9, 36, 110))); // Fast 16th notes
         events.push((30, note_off(9, 36, 0)));
     }
 
     // Snare backbeat: all loud hits
-    for i in 0..8 {
+    for _i in 0..8 {
         events.push((240, note_on_vel(9, 38, 100)));
         events.push((120, note_off(9, 38, 0)));
     }
@@ -784,7 +765,7 @@ fn test_detect_techniques_realistic_metal_pattern() {
     let techniques = detect_techniques(&midi, &drum_notes);
 
     assert!(techniques.contains(&DrumTechnique::DoubleBass));
-    assert!(!techniques.contains(&DrumTechnique::GhostNotes));  // No ghost notes
+    assert!(!techniques.contains(&DrumTechnique::GhostNotes)); // No ghost notes
 }
 
 // ============================================================================
@@ -858,11 +839,7 @@ fn test_generate_drum_tags_basic() {
 fn test_generate_drum_tags_with_cymbals() {
     // Test: Tag generation includes cymbal-specific tags
     let mut analysis = create_test_drum_analysis();
-    analysis.cymbal_types = vec![
-        CymbalType::ClosedHat,
-        CymbalType::Ride,
-        CymbalType::Crash,
-    ];
+    analysis.cymbal_types = vec![CymbalType::ClosedHat, CymbalType::Ride, CymbalType::Crash];
 
     let tags = generate_drum_tags(&analysis, "/path/to", "file.mid");
 
@@ -877,10 +854,7 @@ fn test_generate_drum_tags_with_cymbals() {
 fn test_generate_drum_tags_with_time_signature() {
     // Test: Time signature tags are generated
     let mut analysis = create_test_drum_analysis();
-    analysis.time_signature = Some(TimeSignature {
-        numerator: 9,
-        denominator: 8,
-    });
+    analysis.time_signature = Some(TimeSignature { numerator: 9, denominator: 8 });
 
     let tags = generate_drum_tags(&analysis, "/path/to", "file.mid");
 
@@ -949,8 +923,12 @@ fn test_generate_drum_tags_confidence_scores() {
     let tags = generate_drum_tags(&analysis, "/path/to", "174_Crash_Groove.mid");
 
     for tag in &tags {
-        assert!(tag.confidence >= 0.60 && tag.confidence <= 0.95,
-            "Tag '{}' has invalid confidence: {}", tag.name, tag.confidence);
+        assert!(
+            tag.confidence >= 0.60 && tag.confidence <= 0.95,
+            "Tag '{}' has invalid confidence: {}",
+            tag.name,
+            tag.confidence
+        );
     }
 }
 
@@ -964,8 +942,12 @@ fn test_generate_drum_tags_priority_ordering() {
     let tags = generate_drum_tags(&analysis, "/path/to", "file.mid");
 
     for tag in &tags {
-        assert!(tag.priority >= 10 && tag.priority <= 90,
-            "Tag '{}' has invalid priority: {}", tag.name, tag.priority);
+        assert!(
+            tag.priority >= 10 && tag.priority <= 90,
+            "Tag '{}' has invalid priority: {}",
+            tag.name,
+            tag.priority
+        );
     }
 
     // Verify priority relationships make sense (optional check)
@@ -992,19 +974,32 @@ fn test_generate_drum_tags_detection_methods() {
     let tags = generate_drum_tags(&analysis, "/path/to", "140bpm_Ride.mid");
 
     for tag in &tags {
-        assert!(!tag.detection_method.is_empty(),
-            "Tag '{}' has empty detection method", tag.name);
+        assert!(
+            !tag.detection_method.is_empty(),
+            "Tag '{}' has empty detection method",
+            tag.name
+        );
 
         // Common detection methods
         let valid_methods = vec![
-            "midi_channel_10", "midi_notes", "midi_meta_event",
-            "filename_exact", "filename_bpm", "time_sig_derived",
-            "midi_pattern_analysis", "cymbal_notes", "midi_drum_notes"
+            "midi_channel_10",
+            "midi_notes",
+            "midi_meta_event",
+            "filename_exact",
+            "filename_bpm",
+            "time_sig_derived",
+            "midi_pattern_analysis",
+            "cymbal_notes",
+            "midi_drum_notes",
         ];
 
         // Detection method should be from known set
-        assert!(valid_methods.iter().any(|&m| tag.detection_method.contains(m)),
-            "Tag '{}' has unexpected detection method: {}", tag.name, tag.detection_method);
+        assert!(
+            valid_methods.iter().any(|&m| tag.detection_method.contains(m)),
+            "Tag '{}' has unexpected detection method: {}",
+            tag.name,
+            tag.detection_method
+        );
     }
 }
 
@@ -1047,24 +1042,45 @@ fn test_autotagger_backward_compatibility_none_parameter() {
     );
 
     // Should still generate tags from path, filename, instruments, BPM, key
-    assert!(!tags.is_empty(), "Should generate tags even without MIDI file");
+    assert!(
+        !tags.is_empty(),
+        "Should generate tags even without MIDI file"
+    );
 
     // Should have BPM tag
     assert!(tags.iter().any(|t| t.name == "174"), "Should have BPM tag");
 
     // Should have tempo range tag
-    assert!(tags.iter().any(|t| t.name == "very-fast"), "Should have tempo range tag");
+    assert!(
+        tags.iter().any(|t| t.name == "very-fast"),
+        "Should have tempo range tag"
+    );
 
     // Should have key tag
-    assert!(tags.iter().any(|t| t.name == "g minor"), "Should have key tag");
+    assert!(
+        tags.iter().any(|t| t.name == "g minor"),
+        "Should have key tag"
+    );
 
     // Should have drums tag from instruments
-    assert!(tags.iter().any(|t| t.name == "drums"), "Should have drums tag from instruments");
+    assert!(
+        tags.iter().any(|t| t.name == "drums"),
+        "Should have drums tag from instruments"
+    );
 
     // Should NOT have drum-specific tags (no MIDI file provided)
-    assert!(!tags.iter().any(|t| t.name == "kick"), "Should not have kick tag without MIDI");
-    assert!(!tags.iter().any(|t| t.name == "snare"), "Should not have snare tag without MIDI");
-    assert!(!tags.iter().any(|t| t.name == "closed-hat"), "Should not have cymbal tags without MIDI");
+    assert!(
+        !tags.iter().any(|t| t.name == "kick"),
+        "Should not have kick tag without MIDI"
+    );
+    assert!(
+        !tags.iter().any(|t| t.name == "snare"),
+        "Should not have snare tag without MIDI"
+    );
+    assert!(
+        !tags.iter().any(|t| t.name == "closed-hat"),
+        "Should not have cymbal tags without MIDI"
+    );
 }
 
 /// Test drum file detection and tag generation with MidiFile
@@ -1089,13 +1105,28 @@ fn test_autotagger_drum_file_generates_drum_tags() {
     assert!(!tags.is_empty(), "Should generate tags");
 
     // Should have drum-specific tags from MIDI analysis
-    assert!(tags.iter().any(|t| t.name == "kick"), "Should have kick tag from MIDI");
-    assert!(tags.iter().any(|t| t.name == "snare"), "Should have snare tag from MIDI");
-    assert!(tags.iter().any(|t| t.name == "hihat"), "Should have hihat tag from MIDI");
-    assert!(tags.iter().any(|t| t.name == "closed-hat"), "Should have closed-hat cymbal tag");
+    assert!(
+        tags.iter().any(|t| t.name == "kick"),
+        "Should have kick tag from MIDI"
+    );
+    assert!(
+        tags.iter().any(|t| t.name == "snare"),
+        "Should have snare tag from MIDI"
+    );
+    assert!(
+        tags.iter().any(|t| t.name == "hihat"),
+        "Should have hihat tag from MIDI"
+    );
+    assert!(
+        tags.iter().any(|t| t.name == "closed-hat"),
+        "Should have closed-hat cymbal tag"
+    );
 
     // Should have drums tag (from channel 10 detection)
-    assert!(tags.iter().any(|t| t.name == "drums"), "Should have drums tag from channel-10 detection");
+    assert!(
+        tags.iter().any(|t| t.name == "drums"),
+        "Should have drums tag from channel-10 detection"
+    );
 }
 
 /// Test non-drum file handling - non-drum files don't get drum tags
@@ -1120,11 +1151,26 @@ fn test_autotagger_non_drum_file_no_drum_tags() {
     assert!(!tags.is_empty(), "Should generate tags");
 
     // Should NOT have drum-specific tags (not a drum file)
-    assert!(!tags.iter().any(|t| t.name == "kick"), "Should not have kick tag");
-    assert!(!tags.iter().any(|t| t.name == "snare"), "Should not have snare tag");
-    assert!(!tags.iter().any(|t| t.name == "hihat"), "Should not have hihat tag");
-    assert!(!tags.iter().any(|t| t.name == "closed-hat"), "Should not have cymbal tags");
-    assert!(!tags.iter().any(|t| t.name == "channel-10"), "Should not have channel-10 tag");
+    assert!(
+        !tags.iter().any(|t| t.name == "kick"),
+        "Should not have kick tag"
+    );
+    assert!(
+        !tags.iter().any(|t| t.name == "snare"),
+        "Should not have snare tag"
+    );
+    assert!(
+        !tags.iter().any(|t| t.name == "hihat"),
+        "Should not have hihat tag"
+    );
+    assert!(
+        !tags.iter().any(|t| t.name == "closed-hat"),
+        "Should not have cymbal tags"
+    );
+    assert!(
+        !tags.iter().any(|t| t.name == "channel-10"),
+        "Should not have channel-10 tag"
+    );
 }
 
 /// Test tag deduplication - HashSet properly deduplicates drum tags
@@ -1140,7 +1186,7 @@ fn test_autotagger_tag_deduplication() {
     let tags = auto_tagger.extract_tags(
         "/music/drums/DrumGroove_174bpm.mid",
         "DrumGroove_174bpm.mid", // "drums" in filename
-        &["Drums".to_string()],   // "drums" in instruments
+        &["Drums".to_string()],  // "drums" in instruments
         Some(174.0),
         None,
         Some(&midi_file),
@@ -1176,7 +1222,10 @@ fn test_autotagger_full_drum_workflow() {
     // Should have standard tags
     assert!(tags.iter().any(|t| t.name == "174"), "Should have BPM");
     assert!(tags.iter().any(|t| t.name == "g minor"), "Should have key");
-    assert!(tags.iter().any(|t| t.name == "drums"), "Should have drums tag");
+    assert!(
+        tags.iter().any(|t| t.name == "drums"),
+        "Should have drums tag"
+    );
 
     // Should have drum-specific tags
     assert!(tags.iter().any(|t| t.name == "kick"), "Should have kick");
@@ -1184,21 +1233,36 @@ fn test_autotagger_full_drum_workflow() {
     assert!(tags.iter().any(|t| t.name == "hihat"), "Should have hihat");
 
     // Should have cymbal tags
-    assert!(tags.iter().any(|t| t.name == "closed-hat"), "Should have closed-hat");
+    assert!(
+        tags.iter().any(|t| t.name == "closed-hat"),
+        "Should have closed-hat"
+    );
     assert!(tags.iter().any(|t| t.name == "ride"), "Should have ride");
     assert!(tags.iter().any(|t| t.name == "crash"), "Should have crash");
 
     // Should have time signature from MIDI meta event
-    assert!(tags.iter().any(|t| t.name == "9-8"), "Should have time signature");
+    assert!(
+        tags.iter().any(|t| t.name == "9-8"),
+        "Should have time signature"
+    );
 
     // Should have pattern type from filename
-    assert!(tags.iter().any(|t| t.name == "groove"), "Should have pattern type");
+    assert!(
+        tags.iter().any(|t| t.name == "groove"),
+        "Should have pattern type"
+    );
 
     // Should have rhythmic feel from filename
-    assert!(tags.iter().any(|t| t.name == "swing"), "Should have rhythmic feel");
+    assert!(
+        tags.iter().any(|t| t.name == "swing"),
+        "Should have rhythmic feel"
+    );
 
     // Should have drums tag (from channel 10 detection)
-    assert!(tags.iter().any(|t| t.name == "drums"), "Should have drums tag from channel-10 detection");
+    assert!(
+        tags.iter().any(|t| t.name == "drums"),
+        "Should have drums tag from channel-10 detection"
+    );
 }
 
 /// Test tag metadata - drum tags have correct categories
@@ -1225,18 +1289,34 @@ fn test_autotagger_drum_tag_categories() {
 
     // Drum instrument tags should have "instrument" category
     if let Some(tag) = kick_tag {
-        assert_eq!(tag.category.as_deref(), Some("instrument"), "Kick should be instrument category");
+        assert_eq!(
+            tag.category.as_deref(),
+            Some("instrument"),
+            "Kick should be instrument category"
+        );
     }
     if let Some(tag) = snare_tag {
-        assert_eq!(tag.category.as_deref(), Some("instrument"), "Snare should be instrument category");
+        assert_eq!(
+            tag.category.as_deref(),
+            Some("instrument"),
+            "Snare should be instrument category"
+        );
     }
     if let Some(tag) = hihat_tag {
-        assert_eq!(tag.category.as_deref(), Some("instrument"), "Hihat should be instrument category");
+        assert_eq!(
+            tag.category.as_deref(),
+            Some("instrument"),
+            "Hihat should be instrument category"
+        );
     }
 
     // Pattern type tags should have "pattern-type" category
     if let Some(tag) = groove_tag {
-        assert_eq!(tag.category.as_deref(), Some("pattern-type"), "Groove should be pattern-type category");
+        assert_eq!(
+            tag.category.as_deref(),
+            Some("pattern-type"),
+            "Groove should be pattern-type category"
+        );
     }
 }
 
@@ -1258,12 +1338,18 @@ fn test_autotagger_drum_tag_confidence_scores() {
 
     // All drum tags should have confidence in valid range (0.60-0.95)
     for tag in tags.iter().filter(|t| {
-        t.name == "kick" || t.name == "snare" || t.name == "hihat" ||
-        t.name == "closed-hat" || t.name == "drums"
+        t.name == "kick"
+            || t.name == "snare"
+            || t.name == "hihat"
+            || t.name == "closed-hat"
+            || t.name == "drums"
     }) {
-        assert!(tag.confidence >= 0.60 && tag.confidence <= 0.95,
+        assert!(
+            tag.confidence >= 0.60 && tag.confidence <= 0.95,
             "Tag '{}' confidence {} should be in range 0.60-0.95",
-            tag.name, tag.confidence);
+            tag.name,
+            tag.confidence
+        );
     }
 }
 
@@ -1284,13 +1370,16 @@ fn test_autotagger_drum_tag_priorities() {
     );
 
     // All drum tags should have priority in valid range (10-90)
-    for tag in tags.iter().filter(|t| {
-        t.name == "kick" || t.name == "snare" || t.name == "hihat" ||
-        t.name == "drums"
-    }) {
-        assert!(tag.priority >= 10 && tag.priority <= 90,
+    for tag in tags
+        .iter()
+        .filter(|t| t.name == "kick" || t.name == "snare" || t.name == "hihat" || t.name == "drums")
+    {
+        assert!(
+            tag.priority >= 10 && tag.priority <= 90,
             "Tag '{}' priority {} should be in range 10-90",
-            tag.name, tag.priority);
+            tag.name,
+            tag.priority
+        );
     }
 }
 
@@ -1312,18 +1401,31 @@ fn test_autotagger_drum_tag_detection_methods() {
 
     // Valid detection methods for drum tags
     let valid_methods = vec![
-        "midi_channel_10", "midi_notes", "midi_meta_event",
-        "filename_exact", "filename_bpm", "time_sig_derived",
-        "midi_pattern_analysis", "cymbal_notes", "midi_drum_notes"
+        "midi_channel_10",
+        "midi_notes",
+        "midi_meta_event",
+        "filename_exact",
+        "filename_bpm",
+        "time_sig_derived",
+        "midi_pattern_analysis",
+        "cymbal_notes",
+        "midi_drum_notes",
     ];
 
     // All drum tags should have valid detection methods
     for tag in tags.iter().filter(|t| {
-        t.name == "kick" || t.name == "snare" || t.name == "hihat" ||
-        t.name == "closed-hat" || t.name == "drums"
+        t.name == "kick"
+            || t.name == "snare"
+            || t.name == "hihat"
+            || t.name == "closed-hat"
+            || t.name == "drums"
     }) {
-        assert!(valid_methods.iter().any(|&m| tag.detection_method.contains(m)),
-            "Tag '{}' has unexpected detection method: {}", tag.name, tag.detection_method);
+        assert!(
+            valid_methods.iter().any(|&m| tag.detection_method.contains(m)),
+            "Tag '{}' has unexpected detection method: {}",
+            tag.name,
+            tag.detection_method
+        );
     }
 }
 
@@ -1347,8 +1449,14 @@ fn test_autotagger_empty_midi_file() {
 
     // Should generate at least filename tags (even if file is empty)
     // No drum tags should be present
-    assert!(!tags.iter().any(|t| t.name == "kick"), "Empty file should not have kick");
-    assert!(!tags.iter().any(|t| t.name == "snare"), "Empty file should not have snare");
+    assert!(
+        !tags.iter().any(|t| t.name == "kick"),
+        "Empty file should not have kick"
+    );
+    assert!(
+        !tags.iter().any(|t| t.name == "snare"),
+        "Empty file should not have snare"
+    );
 }
 
 // ============================================================================

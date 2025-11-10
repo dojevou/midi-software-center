@@ -1,6 +1,7 @@
-   /// Tests for pipeline/src-tauri/src/commands/progress.rs
-   /// Commands: start_progress_tracking, update_progress, complete_progress, get_current_progress, etc.
+#[allow(dead_code, unused_imports, unused_variables)]
 
+/// Tests for pipeline/src-tauri/src/commands/progress.rs
+/// Commands: start_progress_tracking, update_progress, complete_progress, get_current_progress, etc.
 use crate::common::*;
 
 #[tokio::test]

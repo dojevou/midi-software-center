@@ -1,7 +1,6 @@
-   /// Analysis and compatibility models
-   ///
-   /// Trusty Module: Pure data structures for musical compatibility analysis.
-
+/// Analysis and compatibility models
+///
+/// Trusty Module: Pure data structures for musical compatibility analysis.
 use serde::Serialize;
 use std::str::FromStr;
 
@@ -14,7 +13,7 @@ use std::str::FromStr;
 pub struct CompatibleFile {
     pub id: i32,
     pub file_name: String,
-    pub compatibility_score: i32,         // 0-100
+    pub compatibility_score: i32, // 0-100
     pub key_match: bool,
     pub bpm_difference: Option<f32>,
     pub time_signature_match: bool,

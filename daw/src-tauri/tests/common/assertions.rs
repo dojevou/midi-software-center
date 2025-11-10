@@ -1,7 +1,7 @@
-   /// Custom assertions for DAW command tests
 
-use sqlx::PgPool;
 use sqlx::types::BigDecimal;
+/// Custom assertions for DAW command tests
+use sqlx::PgPool;
 use std::str::FromStr;
 
 /// Assert file exists in database
@@ -43,24 +43,16 @@ pub async fn assert_file_has_metadata(pool: &PgPool, file_id: i64, expected_bpm:
             (&expected_bd - &actual_val).to_string().parse::<f64>().unwrap_or(0.0)
         };
 
-        assert!(
-            diff < 0.01,
-            "Expected BPM {}, got {}",
-            expected,
-            actual_val
-        );
+        assert!(diff < 0.01, "Expected BPM {}, got {}", expected, actual_val);
     }
 }
 
 /// Assert favorite exists
 pub async fn assert_favorite_exists(pool: &PgPool, file_id: i64, should_exist: bool) {
-    let result = sqlx::query!(
-        "SELECT file_id FROM favorites WHERE file_id = $1",
-        file_id
-    )
-    .fetch_optional(pool)
-    .await
-    .expect("Database query failed");
+    let result = sqlx::query!("SELECT file_id FROM favorites WHERE file_id = $1", file_id)
+        .fetch_optional(pool)
+        .await
+        .expect("Database query failed");
 
     if should_exist {
         assert!(

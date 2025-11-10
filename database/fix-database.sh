@@ -1,3 +1,4 @@
+#\!/bin/bash
 \#!/bin/bash
 cd ~/projects/midi-library-system/database
 

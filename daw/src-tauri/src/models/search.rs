@@ -1,9 +1,8 @@
-   /// Search and filter models
-   ///
-   /// Trusty Module: Pure data structures for search operations.
-
-use serde::{Deserialize, Serialize};
 use super::midi_file::FileDetails;
+/// Search and filter models
+///
+/// Trusty Module: Pure data structures for search operations.
+use serde::{Deserialize, Serialize};
 
 /**
  * Search filters

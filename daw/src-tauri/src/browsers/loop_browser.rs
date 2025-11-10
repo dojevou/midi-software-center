@@ -41,16 +41,7 @@ impl LoopInfo {
         duration_bars: u32,
         category: String,
     ) -> Self {
-        Self {
-            id,
-            name,
-            path,
-            bpm,
-            key: None,
-            duration_bars,
-            tags: Vec::new(),
-            category,
-        }
+        Self { id, name, path, bpm, key: None, duration_bars, tags: Vec::new(), category }
     }
 
     pub fn matches_filter(&self, filter: &LoopFilter) -> bool {
@@ -71,7 +62,7 @@ impl LoopInfo {
             match &self.key {
                 Some(loop_key) if loop_key != filter_key => return false,
                 None => return false,
-                _ => {}
+                _ => {},
             }
         }
 
@@ -107,12 +98,7 @@ pub struct LoopFilter {
 
 impl LoopFilter {
     pub fn new() -> Self {
-        Self {
-            min_bpm: None,
-            max_bpm: None,
-            key: None,
-            tags: Vec::new(),
-        }
+        Self { min_bpm: None, max_bpm: None, key: None, tags: Vec::new() }
     }
 
     pub fn validate(&self) -> Result<(), LoopBrowserError> {
@@ -165,7 +151,10 @@ impl LoopBrowserState {
         self.get_filtered_loops()
     }
 
-    pub fn set_filter_impl(&mut self, filter: LoopFilter) -> Result<Vec<LoopInfo>, LoopBrowserError> {
+    pub fn set_filter_impl(
+        &mut self,
+        filter: LoopFilter,
+    ) -> Result<Vec<LoopInfo>, LoopBrowserError> {
         filter.validate()?;
         self.filter = filter;
         Ok(self.get_filtered_loops())
@@ -175,7 +164,8 @@ impl LoopBrowserState {
         self.loops
             .values()
             .filter(|loop_info| {
-                loop_info.matches_search(&self.search_query) && loop_info.matches_filter(&self.filter)
+                loop_info.matches_search(&self.search_query)
+                    && loop_info.matches_filter(&self.filter)
             })
             .cloned()
             .collect()
@@ -227,18 +217,15 @@ impl Default for LoopBrowserState {
 }
 
 // Tauri Command Handlers (Task-O-Matic)
-use tauri::State;
 use std::sync::Mutex;
+use tauri::State;
 
 #[tauri::command]
 pub async fn search_loops(
     state: State<'_, Mutex<LoopBrowserState>>,
     query: String,
 ) -> Result<Vec<LoopInfo>, String> {
-    Ok(state
-        .lock()
-        .map_err(|e| format!("Lock error: {}", e))?
-        .search_loops_impl(query))
+    Ok(state.lock().map_err(|e| format!("Lock error: {}", e))?.search_loops_impl(query))
 }
 
 #[tauri::command]
@@ -281,20 +268,12 @@ mod tests {
     fn test_loop_info_matches_filter_bpm() {
         let loop_info = create_test_loop("loop1", "Test", 120.0);
 
-        let filter = LoopFilter {
-            min_bpm: Some(100.0),
-            max_bpm: Some(140.0),
-            key: None,
-            tags: vec![],
-        };
+        let filter =
+            LoopFilter { min_bpm: Some(100.0), max_bpm: Some(140.0), key: None, tags: vec![] };
         assert!(loop_info.matches_filter(&filter));
 
-        let filter = LoopFilter {
-            min_bpm: Some(130.0),
-            max_bpm: Some(140.0),
-            key: None,
-            tags: vec![],
-        };
+        let filter =
+            LoopFilter { min_bpm: Some(130.0), max_bpm: Some(140.0), key: None, tags: vec![] };
         assert!(!loop_info.matches_filter(&filter));
     }
 
@@ -303,20 +282,12 @@ mod tests {
         let mut loop_info = create_test_loop("loop1", "Test", 120.0);
         loop_info.key = Some("C".to_string());
 
-        let filter = LoopFilter {
-            min_bpm: None,
-            max_bpm: None,
-            key: Some("C".to_string()),
-            tags: vec![],
-        };
+        let filter =
+            LoopFilter { min_bpm: None, max_bpm: None, key: Some("C".to_string()), tags: vec![] };
         assert!(loop_info.matches_filter(&filter));
 
-        let filter = LoopFilter {
-            min_bpm: None,
-            max_bpm: None,
-            key: Some("D".to_string()),
-            tags: vec![],
-        };
+        let filter =
+            LoopFilter { min_bpm: None, max_bpm: None, key: Some("D".to_string()), tags: vec![] };
         assert!(!loop_info.matches_filter(&filter));
     }
 
@@ -325,20 +296,12 @@ mod tests {
         let mut loop_info = create_test_loop("loop1", "Test", 120.0);
         loop_info.tags = vec!["rock".to_string(), "heavy".to_string()];
 
-        let filter = LoopFilter {
-            min_bpm: None,
-            max_bpm: None,
-            key: None,
-            tags: vec!["rock".to_string()],
-        };
+        let filter =
+            LoopFilter { min_bpm: None, max_bpm: None, key: None, tags: vec!["rock".to_string()] };
         assert!(loop_info.matches_filter(&filter));
 
-        let filter = LoopFilter {
-            min_bpm: None,
-            max_bpm: None,
-            key: None,
-            tags: vec!["jazz".to_string()],
-        };
+        let filter =
+            LoopFilter { min_bpm: None, max_bpm: None, key: None, tags: vec!["jazz".to_string()] };
         assert!(!loop_info.matches_filter(&filter));
     }
 
@@ -355,20 +318,12 @@ mod tests {
 
     #[test]
     fn test_loop_filter_validate() {
-        let filter = LoopFilter {
-            min_bpm: Some(100.0),
-            max_bpm: Some(140.0),
-            key: None,
-            tags: vec![],
-        };
+        let filter =
+            LoopFilter { min_bpm: Some(100.0), max_bpm: Some(140.0), key: None, tags: vec![] };
         assert!(filter.validate().is_ok());
 
-        let filter = LoopFilter {
-            min_bpm: Some(140.0),
-            max_bpm: Some(100.0),
-            key: None,
-            tags: vec![],
-        };
+        let filter =
+            LoopFilter { min_bpm: Some(140.0), max_bpm: Some(100.0), key: None, tags: vec![] };
         assert!(matches!(
             filter.validate(),
             Err(LoopBrowserError::InvalidBpmRange(_, _))
@@ -429,12 +384,8 @@ mod tests {
         state.add_loop(create_test_loop("loop1", "Test", 110.0));
         state.add_loop(create_test_loop("loop2", "Test", 130.0));
 
-        let filter = LoopFilter {
-            min_bpm: Some(120.0),
-            max_bpm: Some(140.0),
-            key: None,
-            tags: vec![],
-        };
+        let filter =
+            LoopFilter { min_bpm: Some(120.0), max_bpm: Some(140.0), key: None, tags: vec![] };
 
         let results = state.set_filter_impl(filter).unwrap();
         assert_eq!(results.len(), 1);
@@ -445,15 +396,14 @@ mod tests {
     fn test_set_filter_invalid() {
         let mut state = LoopBrowserState::new();
 
-        let filter = LoopFilter {
-            min_bpm: Some(140.0),
-            max_bpm: Some(100.0),
-            key: None,
-            tags: vec![],
-        };
+        let filter =
+            LoopFilter { min_bpm: Some(140.0), max_bpm: Some(100.0), key: None, tags: vec![] };
 
         let result = state.set_filter_impl(filter);
-        assert!(matches!(result, Err(LoopBrowserError::InvalidBpmRange(_, _))));
+        assert!(matches!(
+            result,
+            Err(LoopBrowserError::InvalidBpmRange(_, _))
+        ));
     }
 
     #[test]
@@ -524,12 +474,8 @@ mod tests {
         state.add_loop(create_test_loop("loop1", "Test", 110.0));
         state.add_loop(create_test_loop("loop2", "Test", 130.0));
 
-        let filter = LoopFilter {
-            min_bpm: Some(120.0),
-            max_bpm: Some(140.0),
-            key: None,
-            tags: vec![],
-        };
+        let filter =
+            LoopFilter { min_bpm: Some(120.0), max_bpm: Some(140.0), key: None, tags: vec![] };
         state.set_filter_impl(filter).unwrap();
 
         assert_eq!(state.loop_count(), 2);

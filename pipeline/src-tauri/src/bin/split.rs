@@ -1,5 +1,4 @@
-   /// Split binary - standalone executable for splitting multi-track MIDI files
-
+/// Split binary - standalone executable for splitting multi-track MIDI files
 use anyhow::{Context, Result};
 use clap::Parser;
 use sqlx::PgPool;
@@ -31,7 +30,7 @@ async fn main() -> Result<()> {
     println!("Output: {:?}", args.output);
 
     // Connect to database
-    let pool = PgPool::connect(&args.database_url)
+    let _pool = PgPool::connect(&args.database_url)
         .await
         .context("Failed to connect to database")?;
 

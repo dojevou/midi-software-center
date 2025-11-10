@@ -1,8 +1,7 @@
-   /// DAW Database Integration Tests - Phase 3
-   ///
-   /// Comprehensive database integration testing for the DAW application.
-   /// Tests connectivity, file queries, metadata retrieval, and performance.
-
+/// DAW Database Integration Tests - Phase 3
+///
+/// Comprehensive database integration testing for the DAW application.
+/// Tests connectivity, file queries, metadata retrieval, and performance.
 use sqlx::PgPool;
 use std::env;
 use std::time::Instant;
@@ -12,9 +11,7 @@ async fn setup_db() -> PgPool {
     let database_url = env::var("DATABASE_URL")
         .unwrap_or_else(|_| "postgres://midiuser:midipass@localhost:5433/midi_library".to_string());
 
-    PgPool::connect(&database_url)
-        .await
-        .expect("Failed to connect to database")
+    PgPool::connect(&database_url).await.expect("Failed to connect to database")
 }
 
 /// Test 1: Database connectivity and schema verification
@@ -39,8 +36,14 @@ async fn test_1_database_connectivity() {
         .await
         .expect("Failed to query musical_metadata table");
 
-    println!("✓ Musical metadata table accessible: {} records", metadata_count);
-    assert!(metadata_count > 1600, "Expected at least 1600 metadata records");
+    println!(
+        "✓ Musical metadata table accessible: {} records",
+        metadata_count
+    );
+    assert!(
+        metadata_count > 1600,
+        "Expected at least 1600 metadata records"
+    );
 
     // Verify file_categories table
     let categories_count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM file_categories")
@@ -48,7 +51,10 @@ async fn test_1_database_connectivity() {
         .await
         .expect("Failed to query file_categories table");
 
-    println!("✓ File categories table accessible: {} records", categories_count);
+    println!(
+        "✓ File categories table accessible: {} records",
+        categories_count
+    );
 
     pool.close().await;
     println!("✓ Database connectivity test PASSED\n");
@@ -68,7 +74,7 @@ async fn test_2_query_sample_files() {
          LEFT JOIN musical_metadata mm ON f.id = mm.file_id
          WHERE f.parent_folder LIKE '%minor chord%'
          ORDER BY f.id
-         LIMIT 5"
+         LIMIT 5",
     )
     .fetch_all(&pool)
     .await
@@ -76,7 +82,12 @@ async fn test_2_query_sample_files() {
 
     println!("\n--- Chord Files (1200 Chords collection) ---");
     for (id, filename, notes) in &chord_files {
-        println!("  ID: {}, File: {}, Notes: {}", id, filename, notes.unwrap_or(0));
+        println!(
+            "  ID: {}, File: {}, Notes: {}",
+            id,
+            filename,
+            notes.unwrap_or(0)
+        );
     }
     assert_eq!(chord_files.len(), 5, "Expected 5 chord files");
 
@@ -87,7 +98,7 @@ async fn test_2_query_sample_files() {
          LEFT JOIN musical_metadata mm ON f.id = mm.file_id
          WHERE f.filepath LIKE '%Africa%'
          ORDER BY f.id
-         LIMIT 5"
+         LIMIT 5",
     )
     .fetch_all(&pool)
     .await
@@ -95,7 +106,12 @@ async fn test_2_query_sample_files() {
 
     println!("\n--- Africa Collection (Percussion) ---");
     for (id, filename, notes) in &africa_files {
-        println!("  ID: {}, File: {}, Notes: {}", id, filename, notes.unwrap_or(0));
+        println!(
+            "  ID: {}, File: {}, Notes: {}",
+            id,
+            filename,
+            notes.unwrap_or(0)
+        );
     }
     assert_eq!(africa_files.len(), 5, "Expected 5 Africa files");
 
@@ -106,7 +122,7 @@ async fn test_2_query_sample_files() {
          LEFT JOIN musical_metadata mm ON f.id = mm.file_id
          WHERE f.filepath LIKE '%Asia%'
          ORDER BY f.id
-         LIMIT 5"
+         LIMIT 5",
     )
     .fetch_all(&pool)
     .await
@@ -114,7 +130,12 @@ async fn test_2_query_sample_files() {
 
     println!("\n--- Asia Collection (World Percussion) ---");
     for (id, filename, notes) in &asia_files {
-        println!("  ID: {}, File: {}, Notes: {}", id, filename, notes.unwrap_or(0));
+        println!(
+            "  ID: {}, File: {}, Notes: {}",
+            id,
+            filename,
+            notes.unwrap_or(0)
+        );
     }
     assert_eq!(asia_files.len(), 5, "Expected 5 Asia files");
 
@@ -146,7 +167,7 @@ async fn test_3_query_performance() {
         "SELECT f.id, f.filename
          FROM files f
          LEFT JOIN musical_metadata mm ON f.id = mm.file_id
-         WHERE f.id = $1"
+         WHERE f.id = $1",
     )
     .bind(29470_i64)
     .fetch_one(&pool)
@@ -163,7 +184,7 @@ async fn test_3_query_performance() {
          FROM files f
          LEFT JOIN musical_metadata mm ON f.id = mm.file_id
          WHERE mm.total_notes > 10
-         LIMIT 50"
+         LIMIT 50",
     )
     .fetch_all(&pool)
     .await
@@ -176,15 +197,22 @@ async fn test_3_query_performance() {
     let start = Instant::now();
     let (total, max_notes): (i64, Option<i32>) = sqlx::query_as(
         "SELECT COUNT(*) as total, MAX(mm.total_notes) as max_notes
-         FROM musical_metadata mm"
+         FROM musical_metadata mm",
     )
     .fetch_one(&pool)
     .await
     .expect("Failed to execute aggregation query");
     let agg_query_time = start.elapsed();
     println!("  Aggregation query: {:?}", agg_query_time);
-    println!("    Stats: {} files, max notes: {}", total, max_notes.unwrap_or(0));
-    assert!(agg_query_time.as_millis() < 1000, "Aggregation query too slow");
+    println!(
+        "    Stats: {} files, max notes: {}",
+        total,
+        max_notes.unwrap_or(0)
+    );
+    assert!(
+        agg_query_time.as_millis() < 1000,
+        "Aggregation query too slow"
+    );
 
     pool.close().await;
     println!("\n✓ Query performance test PASSED\n");
@@ -198,12 +226,10 @@ async fn test_4_sequential_loading_performance() {
     let pool = setup_db().await;
 
     // Get 50 random file IDs
-    let file_ids: Vec<(i64,)> = sqlx::query_as(
-        "SELECT id FROM files ORDER BY RANDOM() LIMIT 50"
-    )
-    .fetch_all(&pool)
-    .await
-    .expect("Failed to query file IDs");
+    let file_ids: Vec<(i64,)> = sqlx::query_as("SELECT id FROM files ORDER BY RANDOM() LIMIT 50")
+        .fetch_all(&pool)
+        .await
+        .expect("Failed to query file IDs");
 
     println!("Loading {} files sequentially...", file_ids.len());
 
@@ -214,7 +240,7 @@ async fn test_4_sequential_loading_performance() {
         let result: Result<(i64, String, i64), _> = sqlx::query_as(
             "SELECT f.id, f.filename, f.file_size_bytes
              FROM files f
-             WHERE f.id = $1"
+             WHERE f.id = $1",
         )
         .bind(file_id)
         .fetch_one(&pool)
@@ -233,11 +259,16 @@ async fn test_4_sequential_loading_performance() {
     println!("  Successful loads: {}", successful_loads);
     println!("  Total time: {:?}", total_time);
     println!("  Average time per file: {}ms", avg_time_per_file);
-    println!("  Throughput: {:.2} files/sec",
-        successful_loads as f64 / total_time.as_secs_f64());
+    println!(
+        "  Throughput: {:.2} files/sec",
+        successful_loads as f64 / total_time.as_secs_f64()
+    );
 
     assert_eq!(successful_loads, 50, "All files should load successfully");
-    assert!(avg_time_per_file < 100, "Average load time should be < 100ms");
+    assert!(
+        avg_time_per_file < 100,
+        "Average load time should be < 100ms"
+    );
 
     pool.close().await;
     println!("\n✓ Sequential loading performance test PASSED\n");
@@ -257,7 +288,7 @@ async fn test_5_edge_cases() {
          LEFT JOIN musical_metadata mm ON f.id = mm.file_id
          WHERE mm.total_notes IS NOT NULL
          ORDER BY mm.total_notes DESC
-         LIMIT 1"
+         LIMIT 1",
     )
     .fetch_one(&pool)
     .await
@@ -269,15 +300,17 @@ async fn test_5_edge_cases() {
     println!("  File size: {} bytes", file_size);
     println!("  Total notes: {}", total_notes);
 
-    assert!(total_notes >= 90, "Largest file should have at least 90 notes");
+    assert!(
+        total_notes >= 90,
+        "Largest file should have at least 90 notes"
+    );
 
     // Test files from largest collection (chord files)
-    let (chord_count,): (i64,) = sqlx::query_as(
-        "SELECT COUNT(*) FROM files WHERE parent_folder LIKE '%minor chord%'"
-    )
-    .fetch_one(&pool)
-    .await
-    .expect("Failed to count chord files");
+    let (chord_count,): (i64,) =
+        sqlx::query_as("SELECT COUNT(*) FROM files WHERE parent_folder LIKE '%minor chord%'")
+            .fetch_one(&pool)
+            .await
+            .expect("Failed to count chord files");
 
     println!("\n--- Chord Collection Size ---");
     println!("  Total chord files: {}", chord_count);
@@ -295,18 +328,22 @@ async fn test_6_comprehensive_statistics() {
     let pool = setup_db().await;
 
     // Overall statistics
-    let (total_analyzed, files_with_bpm, max_notes, percussive_files): (i64, i64, Option<i32>, i64) =
-        sqlx::query_as(
-            "SELECT
+    let (total_analyzed, files_with_bpm, max_notes, percussive_files): (
+        i64,
+        i64,
+        Option<i32>,
+        i64,
+    ) = sqlx::query_as(
+        "SELECT
                 COUNT(*) as total_analyzed,
                 COUNT(mm.bpm) as files_with_bpm,
                 MAX(mm.total_notes) as max_notes,
                 COUNT(CASE WHEN mm.is_percussive THEN 1 END) as percussive_files
-             FROM musical_metadata mm"
-        )
-        .fetch_one(&pool)
-        .await
-        .expect("Failed to query statistics");
+             FROM musical_metadata mm",
+    )
+    .fetch_one(&pool)
+    .await
+    .expect("Failed to query statistics");
 
     println!("\n--- Database Statistics ---");
     println!("  Total files analyzed: {}", total_analyzed);
@@ -321,7 +358,7 @@ async fn test_6_comprehensive_statistics() {
          WHERE parent_folder IS NOT NULL
          GROUP BY parent_folder
          ORDER BY count DESC
-         LIMIT 10"
+         LIMIT 10",
     )
     .fetch_all(&pool)
     .await
@@ -329,7 +366,11 @@ async fn test_6_comprehensive_statistics() {
 
     println!("\n--- Top 10 Collections ---");
     for (folder, count) in &collections {
-        println!("  {}: {} files", folder.as_ref().unwrap_or(&"Unknown".to_string()), count);
+        println!(
+            "  {}: {} files",
+            folder.as_ref().unwrap_or(&"Unknown".to_string()),
+            count
+        );
     }
 
     // Production readiness assessment
@@ -341,7 +382,10 @@ async fn test_6_comprehensive_statistics() {
     };
 
     println!("  ✓ Total files imported: {}", total_analyzed);
-    println!("  ✓ Files with complete metadata: {} ({:.1}%)", files_with_bpm, metadata_coverage);
+    println!(
+        "  ✓ Files with complete metadata: {} ({:.1}%)",
+        files_with_bpm, metadata_coverage
+    );
     println!("  ✓ Database queries: < 100ms average");
     println!("  ✓ File loading: < 100ms per file");
     println!("  ✓ Edge cases handled: Large files, extreme values");

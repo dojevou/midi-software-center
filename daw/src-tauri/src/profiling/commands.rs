@@ -1,26 +1,26 @@
-   /// Tauri commands for memory profiling
-   ///
-   /// Provides frontend access to memory metrics, cache management,
-   /// and rendering statistics.
-   ///
-   /// # Architecture
-   ///
-   /// This is a **Grown-up Script** - Tauri command wrappers with error handling:
-   /// - Entry point for profiling operations
-   /// - State management for memory tracker and caches
-   /// - Error conversion to String for Tauri
-   ///
-   /// # Commands
-   ///
-   /// - `get_memory_metrics` - Get current memory usage
-   /// - `get_cache_stats` - Get cache statistics
-   /// - `cache_clear` - Clear all caches
-   /// - `get_render_metrics` - Get rendering performance
 
+/// Tauri commands for memory profiling
+///
+/// Provides frontend access to memory metrics, cache management,
+/// and rendering statistics.
+///
+/// # Architecture
+///
+/// This is a **Grown-up Script** - Tauri command wrappers with error handling:
+/// - Entry point for profiling operations
+/// - State management for memory tracker and caches
+/// - Error conversion to String for Tauri
+///
+/// # Commands
+///
+/// - `get_memory_metrics` - Get current memory usage
+/// - `get_cache_stats` - Get cache statistics
+/// - `cache_clear` - Clear all caches
+/// - `get_render_metrics` - Get rendering performance
 use crate::profiling::{MemoryMetrics, MemoryTracker, RenderMetrics};
-use std::sync::Arc;
 use parking_lot::RwLock;
 use serde::{Deserialize, Serialize};
+use std::sync::Arc;
 
 /// Global profiling state
 pub struct ProfilingState {
@@ -86,9 +86,7 @@ pub async fn get_memory_metrics(
 /// console.log(`Hit rate: ${stats.hit_rate * 100}%`);
 /// ```
 #[tauri::command]
-pub async fn get_cache_stats(
-    cache_name: String,
-) -> Result<CacheStatsResponse, String> {
+pub async fn get_cache_stats(cache_name: String) -> Result<CacheStatsResponse, String> {
     // Note: This is a simplified example. In a real implementation,
     // you would need to maintain cache instances in the state
     Ok(CacheStatsResponse {
@@ -253,9 +251,7 @@ pub async fn reset_render_metrics(
 /// console.log(report);
 /// ```
 #[tauri::command]
-pub async fn get_memory_report(
-    state: tauri::State<'_, ProfilingState>,
-) -> Result<String, String> {
+pub async fn get_memory_report(state: tauri::State<'_, ProfilingState>) -> Result<String, String> {
     Ok(state.memory_tracker.format_report())
 }
 

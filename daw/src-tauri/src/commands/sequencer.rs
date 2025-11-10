@@ -1,7 +1,6 @@
-   /// Sequencer Tauri commands
-   ///
-   /// Thin wrappers that expose sequencer functionality to the frontend.
-
+/// Sequencer Tauri commands
+///
+/// Thin wrappers that expose sequencer functionality to the frontend.
 use crate::commands::AppState;
 use crate::core::midi::loader::load_midi_file;
 use crate::models::sequencer::{PlaybackPosition, Track, TrackProperties};
@@ -12,35 +11,27 @@ use tracing::{error, info};
 
 /// Start sequencer playback
 #[tauri::command]
-pub async fn start_sequencer(
-    engine: State<'_, Arc<SequencerEngine>>,
-) -> Result<(), String> {
+pub async fn start_sequencer(engine: State<'_, Arc<SequencerEngine>>) -> Result<(), String> {
     engine.start().await
 }
 
 /// Stop sequencer playback (resets position)
 #[tauri::command]
-pub async fn stop_sequencer(
-    engine: State<'_, Arc<SequencerEngine>>,
-) -> Result<(), String> {
+pub async fn stop_sequencer(engine: State<'_, Arc<SequencerEngine>>) -> Result<(), String> {
     engine.stop().await;
     Ok(())
 }
 
 /// Pause sequencer playback (maintains position)
 #[tauri::command]
-pub async fn pause_sequencer(
-    engine: State<'_, Arc<SequencerEngine>>,
-) -> Result<(), String> {
+pub async fn pause_sequencer(engine: State<'_, Arc<SequencerEngine>>) -> Result<(), String> {
     engine.pause().await;
     Ok(())
 }
 
 /// Resume sequencer playback from paused state
 #[tauri::command]
-pub async fn resume_sequencer(
-    engine: State<'_, Arc<SequencerEngine>>,
-) -> Result<(), String> {
+pub async fn resume_sequencer(engine: State<'_, Arc<SequencerEngine>>) -> Result<(), String> {
     engine.resume().await
 }
 
@@ -72,18 +63,13 @@ pub async fn seek_position(
 
 /// Set global tempo (BPM)
 #[tauri::command]
-pub async fn set_tempo(
-    bpm: f32,
-    engine: State<'_, Arc<SequencerEngine>>,
-) -> Result<(), String> {
+pub async fn set_tempo(bpm: f32, engine: State<'_, Arc<SequencerEngine>>) -> Result<(), String> {
     engine.set_bpm(bpm).await
 }
 
 /// Get current tempo
 #[tauri::command]
-pub async fn get_tempo(
-    engine: State<'_, Arc<SequencerEngine>>,
-) -> Result<f32, String> {
+pub async fn get_tempo(engine: State<'_, Arc<SequencerEngine>>) -> Result<f32, String> {
     Ok(engine.get_bpm().await)
 }
 
@@ -110,7 +96,12 @@ pub async fn add_track(
         "#,
         file_id as i64
     )
-    .fetch_one(state.db_pool.as_ref().ok_or_else(|| "Database pool not initialized".to_string())?)
+    .fetch_one(
+        state
+            .db_pool
+            .as_ref()
+            .ok_or_else(|| "Database pool not initialized".to_string())?,
+    )
     .await
     .map_err(|e| {
         error!("Failed to query file {} from database: {}", file_id, e);
@@ -118,11 +109,10 @@ pub async fn add_track(
     })?;
 
     // Load MIDI file and parse events
-    let loaded_midi = load_midi_file(&file_result.filepath)
-        .map_err(|e| {
-            error!("Failed to load MIDI file {}: {}", file_result.filepath, e);
-            format!("Failed to load MIDI file: {}", e)
-        })?;
+    let loaded_midi = load_midi_file(&file_result.filepath).map_err(|e| {
+        error!("Failed to load MIDI file {}: {}", file_result.filepath, e);
+        format!("Failed to load MIDI file: {}", e)
+    })?;
 
     info!(
         "Loaded {} events from file {} ({})",
@@ -175,27 +165,21 @@ pub async fn update_track(
 
 /// Get all tracks in current project
 #[tauri::command]
-pub async fn get_tracks(
-    engine: State<'_, Arc<SequencerEngine>>,
-) -> Result<Vec<Track>, String> {
+pub async fn get_tracks(engine: State<'_, Arc<SequencerEngine>>) -> Result<Vec<Track>, String> {
     let track_manager = engine.track_manager();
     Ok(track_manager.get_tracks().await)
 }
 
 /// Load tracks into sequencer and prepare for playback
 #[tauri::command]
-pub async fn load_sequencer_tracks(
-    engine: State<'_, Arc<SequencerEngine>>,
-) -> Result<(), String> {
+pub async fn load_sequencer_tracks(engine: State<'_, Arc<SequencerEngine>>) -> Result<(), String> {
     engine.load_tracks().await;
     Ok(())
 }
 
 /// Check if sequencer is currently playing
 #[tauri::command]
-pub async fn is_sequencer_playing(
-    engine: State<'_, Arc<SequencerEngine>>,
-) -> Result<bool, String> {
+pub async fn is_sequencer_playing(engine: State<'_, Arc<SequencerEngine>>) -> Result<bool, String> {
     use crate::sequencer::engine::PlaybackState;
 
     let state = engine.get_state().await;

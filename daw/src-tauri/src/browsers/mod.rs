@@ -37,12 +37,8 @@ mod tests {
 
     #[test]
     fn test_loop_filter_serialization() {
-        let filter = LoopFilter {
-            min_bpm: Some(120.0),
-            max_bpm: Some(140.0),
-            key: None,
-            tags: vec![],
-        };
+        let filter =
+            LoopFilter { min_bpm: Some(120.0), max_bpm: Some(140.0), key: None, tags: vec![] };
         let json = serde_json::to_string(&filter).unwrap();
         let deserialized: LoopFilter = serde_json::from_str(&json).unwrap();
         assert_eq!(filter.min_bpm, deserialized.min_bpm);

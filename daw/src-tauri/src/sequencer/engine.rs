@@ -1,8 +1,8 @@
-   /// Sequencer playback engine
-   ///
-   /// Grown-up Script: Coordinates playback, timing, and MIDI output.
-   /// Integrates TrackManager, EventScheduler, and MidiManager.
-
+#![allow(dead_code)]
+/// Sequencer playback engine
+///
+/// Grown-up Script: Coordinates playback, timing, and MIDI output.
+/// Integrates TrackManager, EventScheduler, and MidiManager.
 use crate::core::sequencer::timing;
 use crate::midi::MidiManager;
 use crate::models::sequencer::PlaybackPosition;
@@ -39,6 +39,7 @@ pub struct SequencerEngine {
     ticks_per_quarter: u16,
     beats_per_bar: u8,
 
+#[allow(dead_code)]
     // Playback control
     loop_enabled: Arc<RwLock<bool>>,
     loop_start: Arc<RwLock<u64>>,
@@ -190,13 +191,10 @@ impl SequencerEngine {
     /// Get current playback position
     pub async fn get_position(&self) -> PlaybackPosition {
         let tick = *self.current_tick.read().await;
-        let (bar, beat) = timing::tick_to_bar_beat(tick, self.ticks_per_quarter, self.beats_per_bar);
+        let (bar, beat) =
+            timing::tick_to_bar_beat(tick, self.ticks_per_quarter, self.beats_per_bar);
 
-        PlaybackPosition {
-            current_tick: tick,
-            current_bar: bar,
-            current_beat: beat,
-        }
+        PlaybackPosition { current_tick: tick, current_bar: bar, current_beat: beat }
     }
 
     /// Seek to a specific tick position
@@ -266,16 +264,15 @@ impl SequencerEngine {
                     },
                 };
 
-                all_events.push(ScheduledEvent {
-                    message,
-                    tick: event.tick,
-                    track_id: track.id,
-                });
+                all_events.push(ScheduledEvent { message, tick: event.tick, track_id: track.id });
             }
         }
 
         self.scheduler.schedule_many(all_events).await;
-        info!("Loaded {} events into scheduler", self.scheduler.len().await);
+        info!(
+            "Loaded {} events into scheduler",
+            self.scheduler.len().await
+        );
     }
 
     /// Send MIDI panic (all notes off on all channels)
@@ -329,16 +326,13 @@ impl SequencerEngine {
                         None => {
                             error!("Start time not set in sequencer playback loop");
                             break;
-                        }
+                        },
                     }
                 };
 
                 let bpm_val = *bpm.read().await;
-                let tick = timing::seconds_to_ticks(
-                    elapsed.as_secs_f64(),
-                    bpm_val,
-                    ticks_per_quarter,
-                );
+                let tick =
+                    timing::seconds_to_ticks(elapsed.as_secs_f64(), bpm_val, ticks_per_quarter);
 
                 // Update current tick
                 {

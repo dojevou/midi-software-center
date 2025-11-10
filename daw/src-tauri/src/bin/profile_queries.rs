@@ -1,25 +1,24 @@
-   /// Database Query Profiling CLI Tool
-   ///
-   /// This binary analyzes all database queries in the MIDI Software Center
-   /// and generates a comprehensive profiling report with optimization recommendations.
-   ///
-   /// Usage:
-   ///   cargo run --bin profile_queries
-   ///   cargo run --bin profile_queries -- --output report.md
-   ///   cargo run --bin profile_queries -- --no-load-tests
-   ///
-   /// Output:
-   ///   - Markdown report with query analysis
-   ///   - Index recommendations with SQL
-   ///   - Cache strategy recommendations
-   ///   - Load test results
-   ///   - Connection pool metrics
-
+/// Database Query Profiling CLI Tool
+///
+/// This binary analyzes all database queries in the MIDI Software Center
+/// and generates a comprehensive profiling report with optimization recommendations.
+///
+/// Usage:
+///   cargo run --bin profile_queries
+///   cargo run --bin profile_queries -- --output report.md
+///   cargo run --bin profile_queries -- --no-load-tests
+///
+/// Output:
+///   - Markdown report with query analysis
+///   - Index recommendations with SQL
+///   - Cache strategy recommendations
+///   - Load test results
+///   - Connection pool metrics
 use clap::Parser;
 use sqlx::postgres::PgPoolOptions;
 use std::fs;
 use std::path::PathBuf;
-use tracing::{info, error};
+use tracing::{error, info};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 // Import from daw crate (will be added to Cargo.toml)
@@ -78,14 +77,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     info!("Connecting to database: {}", mask_password(&database_url));
 
     // Create connection pool
-    let pool = PgPoolOptions::new()
-        .max_connections(10)
-        .connect(&database_url)
-        .await
-        .map_err(|e| {
-            error!("Failed to connect to database: {}", e);
-            e
-        })?;
+    let pool =
+        PgPoolOptions::new()
+            .max_connections(10)
+            .connect(&database_url)
+            .await
+            .map_err(|e| {
+                error!("Failed to connect to database: {}", e);
+                e
+            })?;
 
     info!("✅ Database connection established");
     info!("");
@@ -109,25 +109,39 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     info!("");
 
     // Generate profiling report
-    let report = analyzer.generate_report().await
-        .map_err(|e| {
-            error!("Failed to generate profiling report: {}", e);
-            e
-        })?;
+    let report = analyzer.generate_report().await.map_err(|e| {
+        error!("Failed to generate profiling report: {}", e);
+        e
+    })?;
 
     info!("");
     info!("✅ Profiling complete!");
     info!("");
     info!("Summary:");
-    info!("  - Total Queries Analyzed: {}", report.summary.total_queries_analyzed);
-    info!("  - Meeting Targets: {} ({:.0}%)",
-        report.summary.queries_meeting_targets,
-        (report.summary.queries_meeting_targets as f64 / report.summary.total_queries_analyzed as f64) * 100.0
+    info!(
+        "  - Total Queries Analyzed: {}",
+        report.summary.total_queries_analyzed
     );
-    info!("  - Needing Optimization: {}", report.summary.queries_needing_optimization);
+    info!(
+        "  - Meeting Targets: {} ({:.0}%)",
+        report.summary.queries_meeting_targets,
+        (report.summary.queries_meeting_targets as f64
+            / report.summary.total_queries_analyzed as f64)
+            * 100.0
+    );
+    info!(
+        "  - Needing Optimization: {}",
+        report.summary.queries_needing_optimization
+    );
     info!("  - Critical Issues: {}", report.summary.critical_issues);
-    info!("  - Index Recommendations: {}", report.summary.index_recommendations_count);
-    info!("  - Overall Health Score: {}/100", report.summary.overall_health_score);
+    info!(
+        "  - Index Recommendations: {}",
+        report.summary.index_recommendations_count
+    );
+    info!(
+        "  - Overall Health Score: {}/100",
+        report.summary.overall_health_score
+    );
     info!("");
 
     // Write report to file
@@ -147,10 +161,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         info!("⚠️  CRITICAL ISSUES FOUND:");
         for analysis in &report.query_analyses {
             if analysis.optimization_score < 50 {
-                info!("  - {}: Score {}/100, Time: {:.2}ms",
-                    analysis.query_name,
-                    analysis.optimization_score,
-                    analysis.execution_time_ms
+                info!(
+                    "  - {}: Score {}/100, Time: {:.2}ms",
+                    analysis.query_name, analysis.optimization_score, analysis.execution_time_ms
                 );
             }
         }
@@ -161,7 +174,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     if !report.index_recommendations.is_empty() {
         info!("Top Index Recommendations:");
         for (i, rec) in report.index_recommendations.iter().take(3).enumerate() {
-            info!("  {}. [{:?}] {}.{} - {}",
+            info!(
+                "  {}. [{:?}] {}.{} - {}",
                 i + 1,
                 rec.priority,
                 rec.table_name,

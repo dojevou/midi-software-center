@@ -27,11 +27,11 @@ pub mod batch_insert;
 pub mod window_state;
 
 use crate::core::performance::concurrency::calculate_all_settings;
-use sqlx::postgres::{PgPool, PgPoolOptions, PgConnectOptions};
-use std::time::{Duration, Instant};
+use sqlx::postgres::{PgConnectOptions, PgPool, PgPoolOptions};
 use std::future::Future;
 use std::str::FromStr;
 use std::sync::Arc;
+use std::time::{Duration, Instant};
 use tokio::sync::RwLock;
 
 /// Database connection pool wrapper with performance optimizations
@@ -177,11 +177,15 @@ impl Database {
             .await?;
 
         println!("✓ Database connected successfully");
-        println!("📊 Pool configuration: {} max, {} min, 10s timeout",
-                 pool_size, min_connections);
+        println!(
+            "📊 Pool configuration: {} max, {} min, 10s timeout",
+            pool_size, min_connections
+        );
         println!("🚀 Prepared statement cache: enabled (100 statements)");
-        println!("⚡ Expected performance: ~{} files/sec parallel import",
-                 concurrency * 25);
+        println!(
+            "⚡ Expected performance: ~{} files/sec parallel import",
+            concurrency * 25
+        );
 
         Ok(Self {
             pool: Arc::new(RwLock::new(pool)),
@@ -262,8 +266,10 @@ impl Database {
             let delay_secs = std::cmp::min(2_u64.pow(attempt - 1), MAX_DELAY_SECS);
 
             if attempt > 1 {
-                println!("⏳ Waiting {} seconds before reconnection attempt {}/{}...",
-                    delay_secs, attempt, MAX_ATTEMPTS);
+                println!(
+                    "⏳ Waiting {} seconds before reconnection attempt {}/{}...",
+                    delay_secs, attempt, MAX_ATTEMPTS
+                );
                 tokio::time::sleep(Duration::from_secs(delay_secs)).await;
             }
 
@@ -278,7 +284,7 @@ impl Database {
 
                     println!("✓ Database reconnected successfully on attempt {}", attempt);
                     return Ok(());
-                }
+                },
                 Err(e) => {
                     eprintln!("❌ Reconnection attempt {} failed: {}", attempt, e);
 
@@ -286,7 +292,7 @@ impl Database {
                         eprintln!("💥 All reconnection attempts exhausted");
                         return Err(e);
                     }
-                }
+                },
             }
         }
 
@@ -347,10 +353,7 @@ impl Database {
     ///         .await
     /// }).await?;
     /// ```
-    pub async fn execute_with_reconnect<T, F, Fut>(
-        &self,
-        operation: F,
-    ) -> Result<T, sqlx::Error>
+    pub async fn execute_with_reconnect<T, F, Fut>(&self, operation: F) -> Result<T, sqlx::Error>
     where
         F: Fn() -> Fut,
         Fut: Future<Output = Result<T, sqlx::Error>>,
@@ -359,7 +362,10 @@ impl Database {
         match operation().await {
             Ok(result) => Ok(result),
             Err(e) if is_connection_error(&e) => {
-                eprintln!("⚠️  Connection error detected: {}. Attempting reconnection...", e);
+                eprintln!(
+                    "⚠️  Connection error detected: {}. Attempting reconnection...",
+                    e
+                );
 
                 // Try to reconnect
                 if let Err(reconnect_err) = self.reconnect().await {
@@ -373,13 +379,13 @@ impl Database {
                     Ok(result) => {
                         println!("✓ Operation succeeded after reconnection");
                         Ok(result)
-                    }
+                    },
                     Err(retry_err) => {
                         eprintln!("❌ Operation failed even after reconnection: {}", retry_err);
                         Err(retry_err)
-                    }
+                    },
                 }
-            }
+            },
             Err(e) => Err(e),
         }
     }
@@ -407,23 +413,27 @@ impl Database {
         match error {
             // Connection errors
             sqlx::Error::PoolTimedOut => {
-                "Database is busy. Too many concurrent requests. Please try again in a moment.".to_string()
-            }
+                "Database is busy. Too many concurrent requests. Please try again in a moment."
+                    .to_string()
+            },
             sqlx::Error::PoolClosed => {
-                "Database connection lost. The application is attempting to reconnect...".to_string()
-            }
+                "Database connection lost. The application is attempting to reconnect..."
+                    .to_string()
+            },
             sqlx::Error::Io(io_err) => {
-                format!("Network error while connecting to database: {}. Please check your connection.",
-                    io_err)
-            }
+                format!(
+                    "Network error while connecting to database: {}. Please check your connection.",
+                    io_err
+                )
+            },
 
             // Query errors
             sqlx::Error::RowNotFound => {
                 "The requested item was not found in the database.".to_string()
-            }
+            },
             sqlx::Error::ColumnNotFound(col) => {
                 format!("Database structure error: Column '{}' not found. Please update your database schema.", col)
-            }
+            },
 
             // Database errors with detailed handling
             sqlx::Error::Database(db_err) => {
@@ -456,22 +466,25 @@ impl Database {
                     _ => format!("Database error ({}): {}. Please contact support if this persists.",
                         code, db_err.message())
                 }
-            }
+            },
 
             // Timeout
             sqlx::Error::WorkerCrashed => {
                 "Database operation failed unexpectedly. Please try again.".to_string()
-            }
+            },
 
             // Type conversion errors
             sqlx::Error::Decode(decode_err) => {
-                format!("Data format error: {}. The database may contain unexpected data.", decode_err)
-            }
+                format!(
+                    "Data format error: {}. The database may contain unexpected data.",
+                    decode_err
+                )
+            },
 
             // Default fallback
             _ => {
                 format!("An unexpected database error occurred: {}. Please try again or contact support.", error)
-            }
+            },
         }
     }
 
@@ -498,9 +511,7 @@ impl Database {
     /// ```
     pub async fn test_connection(&self) -> Result<bool, sqlx::Error> {
         let pool = self.pool().await;
-        sqlx::query("SELECT 1")
-            .fetch_one(&pool)
-            .await?;
+        sqlx::query("SELECT 1").fetch_one(&pool).await?;
         Ok(true)
     }
 
@@ -575,13 +586,16 @@ impl Database {
                     );
                     tokio::time::sleep(delay).await;
                     delay *= 2; // Exponential backoff
-                }
+                },
                 Err(e) => {
                     if retries > 0 {
-                        eprintln!("❌ Database operation failed after {} retries: {}", retries, e);
+                        eprintln!(
+                            "❌ Database operation failed after {} retries: {}",
+                            retries, e
+                        );
                     }
                     return Err(e);
-                }
+                },
             }
         }
     }
@@ -626,11 +640,7 @@ impl Database {
         let idle = pool.num_idle();
         let active = size as usize - idle;
 
-        PoolStats {
-            size,
-            idle,
-            active,
-        }
+        PoolStats { size, idle, active }
     }
 
     /// Comprehensive health check (OPTIMIZATION #5)
@@ -682,21 +692,17 @@ impl Database {
         let response_time_ms = start.elapsed().as_millis() as u64;
 
         // Determine overall health
-        let is_healthy = connection_test
-            && pool_stats.size > 0
-            && response_time_ms < 1000; // Consider unhealthy if > 1s response
+        let is_healthy = connection_test && pool_stats.size > 0 && response_time_ms < 1000; // Consider unhealthy if > 1s response
 
         // Log slow health checks (OPTIMIZATION #6 - slow query logging)
         if response_time_ms > 100 {
-            eprintln!("⚠️  Slow health check: {} ms (threshold: 100ms)", response_time_ms);
+            eprintln!(
+                "⚠️  Slow health check: {} ms (threshold: 100ms)",
+                response_time_ms
+            );
         }
 
-        HealthStatus {
-            is_healthy,
-            pool_stats,
-            connection_test,
-            response_time_ms,
-        }
+        HealthStatus { is_healthy, pool_stats, connection_test, response_time_ms }
     }
 
     /// Close all connections gracefully
@@ -770,7 +776,11 @@ pub struct HealthStatus {
 
 impl std::fmt::Display for HealthStatus {
     fn fmt(&self, f: &mut std::fmt::Formatter<'_>) -> std::fmt::Result {
-        let status = if self.is_healthy { "HEALTHY ✓" } else { "UNHEALTHY ✗" };
+        let status = if self.is_healthy {
+            "HEALTHY ✓"
+        } else {
+            "UNHEALTHY ✗"
+        };
         write!(
             f,
             "{} - Response: {}ms, {}, Connection: {}",
@@ -833,8 +843,11 @@ fn is_connection_error(error: &sqlx::Error) -> bool {
         // Check for specific database connection errors
         sqlx::Error::Database(db_err) => {
             let code = db_err.code().unwrap_or_default();
-            matches!(code.as_ref(), "08000" | "08003" | "08006" | "57P01" | "57P02" | "57P03")
-        }
+            matches!(
+                code.as_ref(),
+                "08000" | "08003" | "08006" | "57P01" | "57P02" | "57P03"
+            )
+        },
 
         // All other errors are not connection errors
         _ => false,
@@ -854,14 +867,9 @@ mod tests {
     /// Test database connection with optimized settings
     #[tokio::test]
     async fn test_database_connection() {
-        let db = Database::new(TEST_DATABASE_URL)
-            .await
-            .expect("Failed to connect to database");
+        let db = Database::new(TEST_DATABASE_URL).await.expect("Failed to connect to database");
 
-        let is_connected = db
-            .test_connection()
-            .await
-            .expect("Connection test failed");
+        let is_connected = db.test_connection().await.expect("Connection test failed");
 
         assert!(is_connected);
     }
@@ -869,14 +877,16 @@ mod tests {
     /// Test pool statistics with optimized pool
     #[tokio::test]
     async fn test_pool_stats() {
-        let db = Database::new(TEST_DATABASE_URL)
-            .await
-            .expect("Failed to connect to database");
+        let db = Database::new(TEST_DATABASE_URL).await.expect("Failed to connect to database");
 
         let stats = db.get_pool_stats().await;
 
         // Pool size varies by environment (dev:9+, test:3-5, ci:2+)
-        assert!(stats.size >= 2, "Pool size should be >= 2, got {}", stats.size);
+        assert!(
+            stats.size >= 2,
+            "Pool size should be >= 2, got {}",
+            stats.size
+        );
         assert_eq!(stats.idle + stats.active, stats.size as usize);
         println!("✓ {}", stats);
     }
@@ -884,15 +894,16 @@ mod tests {
     /// Test health check functionality
     #[tokio::test]
     async fn test_health_check() {
-        let db = Database::new(TEST_DATABASE_URL)
-            .await
-            .expect("Failed to connect to database");
+        let db = Database::new(TEST_DATABASE_URL).await.expect("Failed to connect to database");
 
         let health = db.health_check().await;
 
         assert!(health.is_healthy, "Database should be healthy");
         assert!(health.connection_test, "Connection test should pass");
-        assert!(health.response_time_ms < 1000, "Response time should be < 1s");
+        assert!(
+            health.response_time_ms < 1000,
+            "Response time should be < 1s"
+        );
         assert!(health.pool_stats.size > 0, "Pool should have connections");
 
         println!("✓ {}", health);
@@ -901,16 +912,14 @@ mod tests {
     /// Test retry logic with successful operation
     #[tokio::test]
     async fn test_retry_success() {
-        let db = Database::new(TEST_DATABASE_URL)
-            .await
-            .expect("Failed to connect to database");
+        let db = Database::new(TEST_DATABASE_URL).await.expect("Failed to connect to database");
 
-        let result = db.execute_with_retry(3, || async {
-            let pool = db.pool().await;
-            sqlx::query_as::<_, (i32,)>("SELECT 1")
-                .fetch_one(&pool)
-                .await
-        }).await;
+        let result = db
+            .execute_with_retry(3, || async {
+                let pool = db.pool().await;
+                sqlx::query_as::<_, (i32,)>("SELECT 1").fetch_one(&pool).await
+            })
+            .await;
 
         assert!(result.is_ok(), "Retry should succeed on first attempt");
         assert_eq!(result.unwrap().0, 1);
@@ -919,17 +928,13 @@ mod tests {
     /// Test pool reference access with optimized pool
     #[tokio::test]
     async fn test_pool_reference() {
-        let db = Database::new(TEST_DATABASE_URL)
-            .await
-            .expect("Failed to connect to database");
+        let db = Database::new(TEST_DATABASE_URL).await.expect("Failed to connect to database");
 
         let pool = db.pool().await;
 
         // Execute query using pool reference
-        let result: (i32,) = sqlx::query_as("SELECT 1")
-            .fetch_one(&pool)
-            .await
-            .expect("Query failed");
+        let result: (i32,) =
+            sqlx::query_as("SELECT 1").fetch_one(&pool).await.expect("Query failed");
 
         assert_eq!(result.0, 1);
     }
@@ -937,9 +942,7 @@ mod tests {
     /// Test graceful shutdown
     #[tokio::test]
     async fn test_close_connections() {
-        let db = Database::new(TEST_DATABASE_URL)
-            .await
-            .expect("Failed to connect to database");
+        let db = Database::new(TEST_DATABASE_URL).await.expect("Failed to connect to database");
 
         // Verify pool is active
         let pool = db.pool().await;
@@ -956,18 +959,14 @@ mod tests {
     /// Test prepared statement cache is enabled
     #[tokio::test]
     async fn test_prepared_statement_cache() {
-        let db = Database::new(TEST_DATABASE_URL)
-            .await
-            .expect("Failed to connect to database");
+        let db = Database::new(TEST_DATABASE_URL).await.expect("Failed to connect to database");
 
         let pool = db.pool().await;
 
         // Execute same query multiple times - should benefit from cache
         for _ in 0..10 {
-            let _: (i32,) = sqlx::query_as("SELECT 1")
-                .fetch_one(&pool)
-                .await
-                .expect("Query failed");
+            let _: (i32,) =
+                sqlx::query_as("SELECT 1").fetch_one(&pool).await.expect("Query failed");
         }
 
         // If cache is working, these queries should be fast

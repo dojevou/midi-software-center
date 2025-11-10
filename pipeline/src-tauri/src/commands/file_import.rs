@@ -1,34 +1,38 @@
-   /// File Import Commands - HIGH-PERFORMANCE PARALLEL IMPLEMENTATION
-   ///
-   /// Architecture: Grown-up Script
-   /// Purpose: Tauri commands for importing MIDI files with parallel processing
-   ///
-   /// This module integrates ALL optimizations:
-   /// - BLAKE3 hashing (7x faster than SHA-256)
-   /// - Parallel processing with buffer_unordered (40x speedup)
-   /// - Batch database inserts (10x faster writes)
-   /// - Dynamic concurrency tuning (optimal for any system)
-   ///
-   /// Performance Targets:
-   /// - 1,000 files: < 2 seconds
-   /// - 10,000 files: ~25 seconds
-   /// - 3,000,000 files: 1.5-2 hours (400-500 files/sec)
 
-use crate::AppState;
-use crate::core::hash::calculate_file_hash;
-use midi_library_shared::core::midi::parser::parse_midi_file;
+use crate::core::analysis::auto_tagger::{AutoTagger, Tag};
 use crate::core::analysis::bpm_detector::detect_bpm;
 use crate::core::analysis::key_detector::detect_key;
-use crate::core::analysis::auto_tagger::{AutoTagger, Tag};
-use crate::core::performance::concurrency::{detect_system_resources, calculate_optimal_concurrency};
+use crate::core::analysis::FilenameMetadata;
+use crate::core::hash::calculate_file_hash;
+use crate::core::performance::concurrency::{
+    calculate_optimal_concurrency, detect_system_resources,
+};
 use crate::database::batch_insert::BatchInserter;
+/// File Import Commands - HIGH-PERFORMANCE PARALLEL IMPLEMENTATION
+///
+/// Architecture: Grown-up Script
+/// Purpose: Tauri commands for importing MIDI files with parallel processing
+///
+/// This module integrates ALL optimizations:
+/// - BLAKE3 hashing (7x faster than SHA-256)
+/// - Parallel processing with buffer_unordered (40x speedup)
+/// - Batch database inserts (10x faster writes)
+/// - Dynamic concurrency tuning (optimal for any system)
+///
+/// Performance Targets:
+/// - 1,000 files: < 2 seconds
+/// - 10,000 files: ~25 seconds
+/// - 3,000,000 files: 1.5-2 hours (400-500 files/sec)
+use crate::AppState;
+use midi_library_shared::core::midi::parser::parse_midi_file;
+use midi_library_shared::core::midi::text_metadata::TextMetadata;
 
+use futures::stream::{self, StreamExt};
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 use tauri::{Emitter, State, Window};
-use futures::stream::{self, StreamExt};
-use std::sync::atomic::{AtomicUsize, Ordering};
 use tokio::sync::Mutex;
 
 //=============================================================================
@@ -79,9 +83,21 @@ struct ProcessedFile {
     content_hash: Vec<u8>,
     file_size_bytes: i64,
     category: Option<String>, // Handled separately via file_categories table
-    bpm: Option<f64>,         // numeric(6,2) in DB
-    key_signature: Option<String>,
+    bpm: Option<f64>,         // numeric(6,2) in DB - from MIDI analysis
+    key_signature: Option<String>, // from MIDI analysis
     tags: Vec<Tag>,           // Auto-extracted tags from filename, path, and MIDI content
+    // Filename-based metadata (Phase 2 - Auto-Tagger v2.1)
+    filename_bpm: Option<f32>,
+    filename_key: Option<String>,
+    filename_genres: Vec<String>,
+    structure_tags: Vec<String>,
+    track_number: Option<u32>,
+    // Text metadata from MIDI file content
+    track_names: Vec<String>,
+    copyright: Option<String>,
+    instrument_names_text: Vec<String>, // From MIDI text events
+    markers: Vec<String>,
+    lyrics: Vec<String>,
 }
 
 //=============================================================================
@@ -130,7 +146,7 @@ pub async fn import_single_file_impl(
         FROM files f
         LEFT JOIN musical_metadata m ON f.id = m.file_id
         WHERE f.id = $1
-        "#
+        "#,
     )
     .bind(file_id)
     .fetch_one(&pool)
@@ -156,12 +172,10 @@ pub async fn import_single_file(
     let file = import_single_file_impl(file_path, category, &state).await?;
 
     // Emit progress event
-    let _ = window.emit("import-progress", ImportProgress {
-        current: 1,
-        total: 1,
-        current_file: file.filename.clone(),
-        rate: 1.0,
-    });
+    let _ = window.emit(
+        "import-progress",
+        ImportProgress { current: 1, total: 1, current_file: file.filename.clone(), rate: 1.0 },
+    );
 
     Ok(file)
 }
@@ -207,7 +221,10 @@ pub async fn import_directory_impl(
 
     println!("🚀 System resources detected:");
     println!("  CPU cores: {}", resources.cpu_cores);
-    println!("  Available memory: {:.2} GB", resources.available_memory_gb);
+    println!(
+        "  Available memory: {:.2} GB",
+        resources.available_memory_gb
+    );
     println!("  Optimal concurrency: {}", concurrency_limit);
 
     // Thread-safe counters for parallel processing
@@ -225,7 +242,7 @@ pub async fn import_directory_impl(
     let processed_files = Arc::new(Mutex::new(Vec::new()));
 
     let category_clone = category.clone();
-    let total_clone = total;
+    let _total_clone = total;
 
     // ⚡ PARALLEL PROCESSING WITH ALL OPTIMIZATIONS
     stream::iter(files)
@@ -313,17 +330,20 @@ pub async fn import_directory_impl(
         drop(remaining_files); // Release lock before async operation
 
         // Convert ProcessedFile to FileRecord for batch insert
-        let file_records: Vec<crate::database::batch_insert::FileRecord> = batch.iter().map(|f| {
-            crate::database::batch_insert::FileRecord::new(
-                f.filename.clone(),
-                f.original_filename.clone(),
-                f.filepath.clone(),
-                f.parent_folder.clone(),
-                hex::encode(&f.content_hash), // Convert bytea to hex string
-                f.file_size_bytes,
-                f.category.clone(),
-            )
-        }).collect();
+        let file_records: Vec<crate::database::batch_insert::FileRecord> = batch
+            .iter()
+            .map(|f| {
+                crate::database::batch_insert::FileRecord::new(
+                    f.filename.clone(),
+                    f.original_filename.clone(),
+                    f.filepath.clone(),
+                    f.parent_folder.clone(),
+                    hex::encode(&f.content_hash), // Convert bytea to hex string
+                    f.file_size_bytes,
+                    f.category.clone(),
+                )
+            })
+            .collect();
 
         if let Err(e) = batch_inserter.insert_files_batch(file_records).await {
             errors.lock().await.push(format!("Final batch insert failed: {}", e));
@@ -333,7 +353,11 @@ pub async fn import_directory_impl(
     // Calculate final statistics
     let duration = start_time.elapsed().as_secs_f64();
     let imported_count = imported.load(Ordering::SeqCst);
-    let rate = if duration > 0.0 { imported_count as f64 / duration } else { 0.0 };
+    let rate = if duration > 0.0 {
+        imported_count as f64 / duration
+    } else {
+        0.0
+    };
 
     // Extract errors before creating summary
     let error_list = errors.lock().await.clone();
@@ -363,7 +387,7 @@ pub async fn import_directory(
     recursive: bool,
     category: Option<String>,
     state: State<'_, AppState>,
-    window: Window,
+    _window: Window,
 ) -> Result<ImportSummary, String> {
     import_directory_impl(directory_path, recursive, category, &state).await
 }
@@ -417,17 +441,19 @@ async fn process_single_file(
         None
     };
 
+    // 5b. Extract text metadata (track names, copyright, lyrics, markers)
+    let text_meta = TextMetadata::extract(&midi_data);
+
     // 6. Get file info
-    let filename = file_path.file_name()
+    let filename = file_path
+        .file_name()
         .and_then(|n| n.to_str())
         .ok_or("Invalid filename")?
         .to_string();
 
     let original_filename = filename.clone(); // Store original filename
 
-    let filepath = file_path.to_str()
-        .ok_or("Invalid file path")?
-        .to_string();
+    let filepath = file_path.to_str().ok_or("Invalid file path")?.to_string();
 
     let file_size_bytes = tokio::fs::metadata(file_path).await?.len() as i64;
 
@@ -435,8 +461,8 @@ async fn process_single_file(
     let midi_instruments = extract_instrument_names(&midi_data);
 
     // 8. Auto-tag extraction (NEW: intelligently extract tags from filename, path, and MIDI content)
-    let auto_tagger = AutoTagger::new()
-        .map_err(|e| format!("Failed to initialize auto-tagger: {}", e))?;
+    let auto_tagger =
+        AutoTagger::new().map_err(|e| format!("Failed to initialize auto-tagger: {}", e))?;
     let tags = auto_tagger.extract_tags(
         &filepath,
         &filename,
@@ -445,6 +471,9 @@ async fn process_single_file(
         key_signature.as_deref(),
         None, // TODO: Pass parsed MidiFile for drum analysis (v2.1 enhancement)
     );
+
+    // Phase 2: Extract filename metadata (Auto-Tagger v2.1)
+    let filename_meta = FilenameMetadata::extract_from_filename(&filename);
 
     Ok(ProcessedFile {
         filename,
@@ -457,11 +486,25 @@ async fn process_single_file(
         bpm,
         key_signature,
         tags,
+        // Filename-based metadata
+        filename_bpm: filename_meta.bpm,
+        filename_key: filename_meta.key,
+        filename_genres: filename_meta.genres,
+        structure_tags: filename_meta.structure_tags,
+        track_number: filename_meta.track_number,
+        // Text metadata from MIDI file
+        track_names: text_meta.track_names,
+        copyright: text_meta.copyright,
+        instrument_names_text: text_meta.instrument_names,
+        markers: text_meta.markers,
+        lyrics: text_meta.lyrics,
     })
 }
 
 /// Extract instrument names from MIDI file for tag extraction
-fn extract_instrument_names(midi: &midi_library_shared::core::midi::types::MidiFile) -> Vec<String> {
+fn extract_instrument_names(
+    midi: &midi_library_shared::core::midi::types::MidiFile,
+) -> Vec<String> {
     use midi_library_shared::core::midi::types::{Event, TextType};
 
     let mut instruments = Vec::new();
@@ -474,14 +517,14 @@ fn extract_instrument_names(midi: &midi_library_shared::core::midi::types::MidiF
                     if matches!(text_type, TextType::InstrumentName | TextType::TrackName) {
                         instruments.push(text.clone());
                     }
-                }
+                },
                 // Map MIDI program changes to GM instrument names
                 Event::ProgramChange { program, .. } => {
                     if let Some(instrument_name) = program_to_instrument_name(*program) {
                         instruments.push(instrument_name);
                     }
-                }
-                _ => {}
+                },
+                _ => {},
             }
         }
     }
@@ -537,6 +580,14 @@ async fn insert_single_file(
     // Insert in transaction
     let mut tx = pool.begin().await?;
 
+    // Calculate metadata source for tracking
+    let metadata_source = match (&file.bpm, &file.filename_bpm) {
+        (Some(_), Some(_)) => "both",
+        (Some(_), None) => "analyzed",
+        (None, Some(_)) => "filename",
+        (None, None) => "none",
+    };
+
     // Insert file with ON CONFLICT to handle duplicates
     let file_id_opt = sqlx::query_scalar::<_, i64>(
         r#"
@@ -547,17 +598,39 @@ async fn insert_single_file(
             content_hash,
             file_size_bytes,
             num_tracks,
+            filename_bpm,
+            filename_key,
+            filename_genres,
+            structure_tags,
+            track_number,
+            metadata_source,
+            track_names,
+            copyright,
+            instrument_names_text,
+            markers,
+            lyrics,
             created_at
-        ) VALUES ($1, $2, $3, $4, $5, 1, NOW())
+        ) VALUES ($1, $2, $3, $4, $5, 1, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, NOW())
         ON CONFLICT (content_hash) DO NOTHING
         RETURNING id
-        "#
+        "#,
     )
     .bind(&file.filename)
     .bind(&file.original_filename)
     .bind(&file.filepath)
     .bind(&file.content_hash)
     .bind(file.file_size_bytes)
+    .bind(file.filename_bpm)
+    .bind(file.filename_key.as_ref())
+    .bind(&file.filename_genres)
+    .bind(&file.structure_tags)
+    .bind(file.track_number.map(|n| n as i32))
+    .bind(metadata_source)
+    .bind(&file.track_names)
+    .bind(file.copyright.as_ref())
+    .bind(&file.instrument_names_text)
+    .bind(&file.markers)
+    .bind(&file.lyrics)
     .fetch_optional(&mut *tx)
     .await?;
 
@@ -567,7 +640,7 @@ async fn insert_single_file(
         None => {
             tx.rollback().await?;
             return Err("File already exists (duplicate hash)".into());
-        }
+        },
     };
 
     // Insert musical metadata if available
@@ -584,7 +657,7 @@ async fn insert_single_file(
             ON CONFLICT (file_id) DO UPDATE SET
                 bpm = EXCLUDED.bpm,
                 key_signature = EXCLUDED.key_signature
-            "#
+            "#,
         )
         .bind(file_id)
         .bind(file.bpm)
@@ -602,7 +675,7 @@ async fn insert_single_file(
             VALUES ($1, NOW())
             ON CONFLICT (name) DO UPDATE SET name = EXCLUDED.name
             RETURNING id
-            "#
+            "#,
         )
         .bind(category_name)
         .fetch_one(&mut *tx)
@@ -614,7 +687,7 @@ async fn insert_single_file(
             INSERT INTO file_categories (file_id, category_id)
             VALUES ($1, $2)
             ON CONFLICT DO NOTHING
-            "#
+            "#,
         )
         .bind(file_id)
         .bind(category_id)
@@ -625,11 +698,8 @@ async fn insert_single_file(
     // Insert auto-generated tags
     if !file.tags.is_empty() {
         // Prepare tag data (name, category)
-        let tag_data: Vec<(String, Option<String>)> = file
-            .tags
-            .iter()
-            .map(|tag| (tag.name.clone(), tag.category.clone()))
-            .collect();
+        let tag_data: Vec<(String, Option<String>)> =
+            file.tags.iter().map(|tag| (tag.name.clone(), tag.category.clone())).collect();
 
         // Create/get tags and insert file_tags associations
         for (name, category) in tag_data {
@@ -684,9 +754,13 @@ fn find_midi_files_recursive(dir: &Path) -> Result<Vec<PathBuf>, std::io::Error>
             match find_midi_files_recursive(&path) {
                 Ok(subfiles) => files.extend(subfiles),
                 Err(e) => {
-                    eprintln!("Warning: Failed to read directory {}: {}", path.display(), e);
+                    eprintln!(
+                        "Warning: Failed to read directory {}: {}",
+                        path.display(),
+                        e
+                    );
                     // Continue with other directories
-                }
+                },
             }
         } else if is_midi_file(&path) {
             files.push(path);
@@ -776,14 +850,15 @@ mod tests {
             Ok(pool) => {
                 println!("✅ Connected to database");
                 pool
-            }
+            },
             Err(e) => {
                 panic!("❌ Failed to connect to database: {:?}", e);
-            }
+            },
         };
 
         // 2. Verify test file exists
-        let test_file_path = std::path::Path::new("/tmp/midi_test_import/Vengeance_Deep_House_Kick_128_C.mid");
+        let test_file_path =
+            std::path::Path::new("/tmp/midi_test_import/Vengeance_Deep_House_Kick_128_C.mid");
         if !test_file_path.exists() {
             panic!("❌ Test file not found: {:?}", test_file_path);
         }
@@ -803,10 +878,10 @@ mod tests {
                     }
                 }
                 p
-            }
+            },
             Err(e) => {
                 panic!("❌ Failed to process file: {:?}", e);
-            }
+            },
         };
 
         // 4. Insert into database (including tags)
@@ -815,10 +890,10 @@ mod tests {
             Ok(id) => {
                 println!("✅ File inserted with ID: {}", id);
                 id
-            }
+            },
             Err(e) => {
                 panic!("❌ Failed to insert file: {:?}", e);
-            }
+            },
         };
 
         // 5. Verify tags were stored in database
@@ -830,7 +905,7 @@ mod tests {
             JOIN file_tags ft ON t.id = ft.tag_id
             WHERE ft.file_id = $1
             ORDER BY t.category, t.name
-            "#
+            "#,
         )
         .bind(file_id)
         .fetch_all(&pool)
@@ -846,28 +921,41 @@ mod tests {
         }
 
         // 6. Verify expected tags exist
-        let tag_names: Vec<String> = tags.iter().map(|(name, cat)| {
-            match cat {
+        let tag_names: Vec<String> = tags
+            .iter()
+            .map(|(name, cat)| match cat {
                 Some(c) => format!("{}:{}", c, name),
                 None => name.clone(),
-            }
-        }).collect();
+            })
+            .collect();
 
         println!("\n🔍 Checking for expected tags...");
 
         // Check for "vengeance" tag (should be brand:vengeance or just vengeance)
         let has_vengeance = tag_names.iter().any(|t| t.to_lowercase().contains("vengeance"));
-        assert!(has_vengeance, "❌ Missing 'vengeance' tag. Found tags: {:?}", tag_names);
+        assert!(
+            has_vengeance,
+            "❌ Missing 'vengeance' tag. Found tags: {:?}",
+            tag_names
+        );
         println!("   ✅ Found vengeance tag");
 
         // Check for "house" tag (should be genre:house or just house)
         let has_house = tag_names.iter().any(|t| t.to_lowercase().contains("house"));
-        assert!(has_house, "❌ Missing 'house' tag. Found tags: {:?}", tag_names);
+        assert!(
+            has_house,
+            "❌ Missing 'house' tag. Found tags: {:?}",
+            tag_names
+        );
         println!("   ✅ Found house tag");
 
         // Check for "kick" tag (should be instrument:kick or category:kick)
         let has_kick = tag_names.iter().any(|t| t.to_lowercase().contains("kick"));
-        assert!(has_kick, "❌ Missing 'kick' tag. Found tags: {:?}", tag_names);
+        assert!(
+            has_kick,
+            "❌ Missing 'kick' tag. Found tags: {:?}",
+            tag_names
+        );
         println!("   ✅ Found kick tag");
 
         // Check for BPM tag
@@ -876,7 +964,9 @@ mod tests {
         println!("   ✅ Found BPM tag");
 
         // Check for key tag
-        let has_key = tag_names.iter().any(|t| t.to_lowercase().contains("key:") || t.to_lowercase().contains(":c"));
+        let has_key = tag_names
+            .iter()
+            .any(|t| t.to_lowercase().contains("key:") || t.to_lowercase().contains(":c"));
         assert!(has_key, "❌ Missing key tag. Found tags: {:?}", tag_names);
         println!("   ✅ Found key tag");
 

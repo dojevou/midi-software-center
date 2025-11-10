@@ -1,9 +1,8 @@
 #!/usr/bin/env cargo
-   /// Batch import using existing repository layer
-   ///
-   /// This imports MIDI files using the FileRepository and MetadataRepository
-   /// which are already aligned with the database schema.
-
+/// Batch import using existing repository layer
+///
+/// This imports MIDI files using the FileRepository and MetadataRepository
+/// which are already aligned with the database schema.
 use anyhow::Result;
 use clap::Parser;
 use sqlx::types::BigDecimal;
@@ -12,13 +11,13 @@ use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 use std::sync::Arc;
 use std::time::Instant;
 
+use midi_library_shared::core::midi::parser::parse_midi_file;
 use midi_pipeline::core::analysis::bpm_detector::detect_bpm;
 use midi_pipeline::core::analysis::key_detector::detect_key;
 use midi_pipeline::core::hash::calculate_file_hash;
 use midi_pipeline::db::models::{NewFile, NewMusicalMetadata};
 use midi_pipeline::db::repositories::file_repository::FileRepository;
 use midi_pipeline::db::repositories::metadata_repository::MetadataRepository;
-use midi_library_shared::core::midi::parser::parse_midi_file;
 
 #[derive(Parser)]
 #[command(name = "batch-import")]
@@ -57,11 +56,10 @@ async fn main() -> Result<()> {
 
     // Connect to database
     let database_url = args.database_url.unwrap_or_else(|| {
-        std::env::var("DATABASE_URL")
-            .unwrap_or_else(|_| {
-                eprintln!("❌ Error: DATABASE_URL environment variable must be set");
-                std::process::exit(1);
-            })
+        std::env::var("DATABASE_URL").unwrap_or_else(|_| {
+            eprintln!("❌ Error: DATABASE_URL environment variable must be set");
+            std::process::exit(1);
+        })
     });
 
     println!("🔌 Connecting to database...");
@@ -69,7 +67,10 @@ async fn main() -> Result<()> {
     println!("✅ Database connected\n");
 
     // Find all MIDI files
-    println!("📂 Scanning for MIDI files in: {}", args.directory.display());
+    println!(
+        "📂 Scanning for MIDI files in: {}",
+        args.directory.display()
+    );
     let midi_files = find_midi_files(&args.directory)?;
     let total_files = midi_files.len();
 
@@ -88,7 +89,10 @@ async fn main() -> Result<()> {
     });
 
     // Process files in parallel
-    println!("⚡ Processing {} files with {} workers...\n", total_files, args.workers);
+    println!(
+        "⚡ Processing {} files with {} workers...\n",
+        total_files, args.workers
+    );
 
     use futures::stream::{self, StreamExt};
 
@@ -108,17 +112,20 @@ async fn main() -> Result<()> {
                     Err(_) => {
                         eprintln!("Warning: Semaphore closed during import");
                         return;
-                    }
+                    },
                 };
 
                 let current = processed.fetch_add(1, Ordering::SeqCst) + 1;
 
                 // Show progress every 100 files
-                if current % 100 == 0 || current == total_files {
-                    let elapsed = stats.start_time
-                        .map(|t| t.elapsed().as_secs_f64())
-                        .unwrap_or(0.0);
-                    let rate = if elapsed > 0.0 { current as f64 / elapsed } else { 0.0 };
+                if current.is_multiple_of(100) || current == total_files {
+                    let elapsed =
+                        stats.start_time.map(|t| t.elapsed().as_secs_f64()).unwrap_or(0.0);
+                    let rate = if elapsed > 0.0 {
+                        current as f64 / elapsed
+                    } else {
+                        0.0
+                    };
                     println!(
                         "    Processing: {}/{} ({:.1}%) - {:.1} files/sec",
                         current,
@@ -136,11 +143,11 @@ async fn main() -> Result<()> {
                         } else {
                             stats.files_duplicates.fetch_add(1, Ordering::SeqCst);
                         }
-                    }
+                    },
                     Err(e) => {
                         eprintln!("      ⚠️  Error processing {}: {}", file_path.display(), e);
                         stats.files_errors.fetch_add(1, Ordering::SeqCst);
-                    }
+                    },
                 }
             }
         })
@@ -172,11 +179,7 @@ async fn process_file(pool: &sqlx::PgPool, file_path: &Path) -> Result<bool> {
     let midi_file = parse_midi_file(&file_bytes)?;
 
     // 5. Extract file metadata
-    let filename = file_path
-        .file_name()
-        .and_then(|n| n.to_str())
-        .unwrap_or("unknown")
-        .to_string();
+    let filename = file_path.file_name().and_then(|n| n.to_str()).unwrap_or("unknown").to_string();
 
     let filepath = file_path.to_str().unwrap_or("").to_string();
 
@@ -207,7 +210,7 @@ async fn process_file(pool: &sqlx::PgPool, file_path: &Path) -> Result<bool> {
 
     // 9. Calculate duration
     let total_ticks = calculate_total_ticks(&midi_file);
-    let duration_seconds = if let Some(ref bpm_val) = bpm {
+    let duration_seconds = if bpm.is_some() {
         let bpm_f64 = bpm_result.bpm;
         let ticks = total_ticks as f64;
         let tpq = midi_file.header.ticks_per_quarter_note as f64;
@@ -294,7 +297,9 @@ fn find_midi_files(dir: &Path) -> Result<Vec<PathBuf>> {
 }
 
 /// Extract time signature from MIDI file
-fn extract_time_signature(midi_file: &midi_library_shared::core::midi::types::MidiFile) -> (Option<i16>, Option<i16>) {
+fn extract_time_signature(
+    midi_file: &midi_library_shared::core::midi::types::MidiFile,
+) -> (Option<i16>, Option<i16>) {
     use midi_library_shared::core::midi::types::Event;
 
     for track in &midi_file.tracks {
@@ -361,11 +366,11 @@ fn analyze_notes(midi_file: &midi_library_shared::core::midi::types::MidiFile) -
 
                     active_notes.insert(*note);
                     active_notes_per_tick.insert(current_tick, active_notes.len());
-                }
+                },
                 Event::NoteOff { note, .. } | Event::NoteOn { note, velocity: 0, .. } => {
                     active_notes.remove(note);
-                }
-                _ => {}
+                },
+                _ => {},
             }
         }
     }
@@ -376,11 +381,7 @@ fn analyze_notes(midi_file: &midi_library_shared::core::midi::types::MidiFile) -
         None
     };
 
-    let polyphony_max = active_notes_per_tick
-        .values()
-        .max()
-        .copied()
-        .map(|v| v as i16);
+    let polyphony_max = active_notes_per_tick.values().max().copied().map(|v| v as i16);
 
     let (pitch_min, pitch_max) = if note_count > 0 {
         (Some(min_pitch as i16), Some(max_pitch as i16))
@@ -400,7 +401,8 @@ fn analyze_notes(midi_file: &midi_library_shared::core::midi::types::MidiFile) -
 
 /// Print final summary
 fn print_summary(stats: &ImportStats) {
-    let elapsed = stats.start_time
+    let elapsed = stats
+        .start_time
         .map(|t| t.elapsed())
         .unwrap_or_else(|| std::time::Duration::from_secs(0));
     let duration_secs = elapsed.as_secs_f64();
@@ -416,9 +418,13 @@ fn print_summary(stats: &ImportStats) {
     println!("========================================");
     println!("Files found: {}", stats.files_found.load(Ordering::SeqCst));
     println!("Successfully imported: {}", imported);
-    println!("Duplicates skipped: {}", stats.files_duplicates.load(Ordering::SeqCst));
+    println!(
+        "Duplicates skipped: {}",
+        stats.files_duplicates.load(Ordering::SeqCst)
+    );
     println!("Errors: {}", stats.files_errors.load(Ordering::SeqCst));
-    println!("Time: {:.0}h {:.0}m {:.0}s",
+    println!(
+        "Time: {:.0}h {:.0}m {:.0}s",
         duration_secs / 3600.0,
         (duration_secs % 3600.0) / 60.0,
         duration_secs % 60.0

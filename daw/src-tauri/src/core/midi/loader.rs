@@ -1,12 +1,11 @@
-   /// MIDI file loading and parsing
-   ///
-   /// Trusty Module: Pure functions for loading and parsing MIDI files.
-   /// Uses midly crate for efficient MIDI parsing.
-
-use midly::{Smf, Timing, TrackEventKind, MidiMessage as MidlyMessage};
+use crate::models::midi::{MidiEvent, MidiEventType};
+/// MIDI file loading and parsing
+///
+/// Trusty Module: Pure functions for loading and parsing MIDI files.
+/// Uses midly crate for efficient MIDI parsing.
+use midly::{MidiMessage as MidlyMessage, Smf, Timing, TrackEventKind};
 use std::fs;
 use std::path::Path;
-use crate::models::midi::{MidiEvent, MidiEventType};
 use tracing::debug;
 
 /// Load and parse a MIDI file from disk
@@ -26,12 +25,12 @@ pub fn load_midi_file(filepath: &str) -> Result<LoadedMidiFile, String> {
     }
 
     // Read file bytes
-    let bytes = fs::read(path)
-        .map_err(|e| format!("Failed to read MIDI file {}: {}", filepath, e))?;
+    let bytes =
+        fs::read(path).map_err(|e| format!("Failed to read MIDI file {}: {}", filepath, e))?;
 
     // Parse MIDI file
-    let smf = Smf::parse(&bytes)
-        .map_err(|e| format!("Failed to parse MIDI file {}: {}", filepath, e))?;
+    let smf =
+        Smf::parse(&bytes).map_err(|e| format!("Failed to parse MIDI file {}: {}", filepath, e))?;
 
     // Extract timing information
     let ticks_per_quarter = match smf.header.timing {
@@ -40,7 +39,7 @@ pub fn load_midi_file(filepath: &str) -> Result<LoadedMidiFile, String> {
             // Convert timecode to ticks per quarter note (approximate)
             let ticks_per_second = fps.as_f32() * sub as f32;
             (ticks_per_second * 0.5) as u32 // Assume 120 BPM default
-        }
+        },
     };
 
     let format_num = match smf.header.format {
@@ -102,29 +101,30 @@ fn parse_track_events(
             TrackEventKind::Midi { channel, message } => {
                 current_channel = channel.as_int();
 
-                if let Some(midi_event) = convert_midi_message(
-                    message,
-                    current_channel,
-                    absolute_tick,
-                    ticks_per_quarter,
-                ) {
+                if let Some(midi_event) =
+                    convert_midi_message(message, current_channel, absolute_tick, ticks_per_quarter)
+                {
                     events.push(midi_event);
                 }
-            }
+            },
             TrackEventKind::Meta(_) => {
                 // Skip meta events for now (tempo, time signature, etc.)
                 // These could be parsed in future for more accurate playback
-            }
+            },
             TrackEventKind::SysEx(_) => {
                 // Skip SysEx events
-            }
+            },
             TrackEventKind::Escape(_) => {
                 // Skip escape events
-            }
+            },
         }
     }
 
-    debug!("Parsed {} events from track (channel {})", events.len(), current_channel);
+    debug!(
+        "Parsed {} events from track (channel {})",
+        events.len(),
+        current_channel
+    );
     Ok(events)
 }
 
@@ -164,7 +164,7 @@ fn convert_midi_message(
                 value: None,
                 program: None,
             })
-        }
+        },
         MidlyMessage::Aftertouch { key, vel } => Some(MidiEvent {
             event_type: MidiEventType::Aftertouch,
             tick,
@@ -218,7 +218,7 @@ fn convert_midi_message(
                 controller: None,
                 program: None,
             })
-        }
+        },
     }
 }
 
@@ -235,10 +235,7 @@ mod tests {
 
     #[test]
     fn test_convert_note_on() {
-        let message = MidlyMessage::NoteOn {
-            key: 60.into(),
-            vel: 100.into(),
-        };
+        let message = MidlyMessage::NoteOn { key: 60.into(), vel: 100.into() };
 
         let event = convert_midi_message(message, 0, 0, 480).unwrap();
         assert_eq!(event.event_type, MidiEventType::NoteOn);
@@ -248,10 +245,7 @@ mod tests {
 
     #[test]
     fn test_convert_note_on_zero_velocity() {
-        let message = MidlyMessage::NoteOn {
-            key: 60.into(),
-            vel: 0.into(),
-        };
+        let message = MidlyMessage::NoteOn { key: 60.into(), vel: 0.into() };
 
         let event = convert_midi_message(message, 0, 0, 480).unwrap();
         // Zero velocity Note On should become Note Off

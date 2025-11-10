@@ -2,7 +2,9 @@ use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Default)]
 pub enum KeybindingProfile {
+    #[default]
     Default,
     Ableton,
     ProTools,
@@ -12,11 +14,6 @@ pub enum KeybindingProfile {
     Reaper,
 }
 
-impl Default for KeybindingProfile {
-    fn default() -> Self {
-        KeybindingProfile::Default
-    }
-}
 
 impl KeybindingProfile {
     pub fn all_profiles() -> Vec<KeybindingProfile> {
@@ -45,19 +42,12 @@ impl KeybindingProfile {
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Default)]
 pub struct KeyboardSettings {
     pub profile: KeybindingProfile,
     pub custom_keybindings: HashMap<String, String>,
 }
 
-impl Default for KeyboardSettings {
-    fn default() -> Self {
-        Self {
-            profile: KeybindingProfile::default(),
-            custom_keybindings: HashMap::new(),
-        }
-    }
-}
 
 impl KeyboardSettings {
     pub fn new() -> Self {
@@ -126,37 +116,50 @@ impl KeyboardSettings {
         match profile {
             KeybindingProfile::Default => {
                 // Use default keybindings (already defined in command_palette)
-            }
+            },
             KeybindingProfile::Ableton => {
-                self.custom_keybindings.insert("transport.play".to_string(), "Space".to_string());
+                self.custom_keybindings
+                    .insert("transport.play".to_string(), "Space".to_string());
                 self.custom_keybindings.insert("transport.record".to_string(), "F9".to_string());
-                self.custom_keybindings.insert("track.new".to_string(), "Ctrl+Shift+T".to_string());
-            }
+                self.custom_keybindings
+                    .insert("track.new".to_string(), "Ctrl+Shift+T".to_string());
+            },
             KeybindingProfile::ProTools => {
-                self.custom_keybindings.insert("transport.play".to_string(), "Space".to_string());
-                self.custom_keybindings.insert("transport.record".to_string(), "F12".to_string());
-                self.custom_keybindings.insert("track.new".to_string(), "Ctrl+Shift+N".to_string());
-            }
+                self.custom_keybindings
+                    .insert("transport.play".to_string(), "Space".to_string());
+                self.custom_keybindings
+                    .insert("transport.record".to_string(), "F12".to_string());
+                self.custom_keybindings
+                    .insert("track.new".to_string(), "Ctrl+Shift+N".to_string());
+            },
             KeybindingProfile::StudioOne => {
-                self.custom_keybindings.insert("transport.play".to_string(), "Space".to_string());
-                self.custom_keybindings.insert("transport.record".to_string(), "Num*".to_string());
+                self.custom_keybindings
+                    .insert("transport.play".to_string(), "Space".to_string());
+                self.custom_keybindings
+                    .insert("transport.record".to_string(), "Num*".to_string());
                 self.custom_keybindings.insert("track.new".to_string(), "T".to_string());
-            }
+            },
             KeybindingProfile::FLStudio => {
-                self.custom_keybindings.insert("transport.play".to_string(), "Space".to_string());
-                self.custom_keybindings.insert("transport.record".to_string(), "Ctrl+R".to_string());
-                self.custom_keybindings.insert("track.new".to_string(), "Ctrl+Shift+A".to_string());
-            }
+                self.custom_keybindings
+                    .insert("transport.play".to_string(), "Space".to_string());
+                self.custom_keybindings
+                    .insert("transport.record".to_string(), "Ctrl+R".to_string());
+                self.custom_keybindings
+                    .insert("track.new".to_string(), "Ctrl+Shift+A".to_string());
+            },
             KeybindingProfile::Logic => {
-                self.custom_keybindings.insert("transport.play".to_string(), "Space".to_string());
+                self.custom_keybindings
+                    .insert("transport.play".to_string(), "Space".to_string());
                 self.custom_keybindings.insert("transport.record".to_string(), "R".to_string());
                 self.custom_keybindings.insert("track.new".to_string(), "Ctrl+N".to_string());
-            }
+            },
             KeybindingProfile::Reaper => {
-                self.custom_keybindings.insert("transport.play".to_string(), "Space".to_string());
-                self.custom_keybindings.insert("transport.record".to_string(), "Ctrl+R".to_string());
+                self.custom_keybindings
+                    .insert("transport.play".to_string(), "Space".to_string());
+                self.custom_keybindings
+                    .insert("transport.record".to_string(), "Ctrl+R".to_string());
                 self.custom_keybindings.insert("track.new".to_string(), "Ctrl+T".to_string());
-            }
+            },
         }
 
         Ok(())
@@ -241,13 +244,18 @@ mod tests {
         let mut settings = KeyboardSettings::default();
         let result = settings.set_keybinding("transport.play".to_string(), "Space".to_string());
         assert!(result.is_ok());
-        assert_eq!(settings.get_keybinding("transport.play"), Some(&"Space".to_string()));
+        assert_eq!(
+            settings.get_keybinding("transport.play"),
+            Some(&"Space".to_string())
+        );
     }
 
     #[test]
     fn test_set_keybinding_duplicate() {
         let mut settings = KeyboardSettings::default();
-        settings.set_keybinding("transport.play".to_string(), "Space".to_string()).unwrap();
+        settings
+            .set_keybinding("transport.play".to_string(), "Space".to_string())
+            .unwrap();
 
         let result = settings.set_keybinding("transport.stop".to_string(), "Space".to_string());
         assert!(result.is_err());
@@ -256,7 +264,9 @@ mod tests {
     #[test]
     fn test_remove_keybinding() {
         let mut settings = KeyboardSettings::default();
-        settings.set_keybinding("transport.play".to_string(), "Space".to_string()).unwrap();
+        settings
+            .set_keybinding("transport.play".to_string(), "Space".to_string())
+            .unwrap();
 
         assert!(settings.remove_keybinding("transport.play"));
         assert!(settings.get_keybinding("transport.play").is_none());
@@ -271,16 +281,23 @@ mod tests {
     #[test]
     fn test_get_keybinding() {
         let mut settings = KeyboardSettings::default();
-        settings.set_keybinding("transport.play".to_string(), "Space".to_string()).unwrap();
+        settings
+            .set_keybinding("transport.play".to_string(), "Space".to_string())
+            .unwrap();
 
-        assert_eq!(settings.get_keybinding("transport.play"), Some(&"Space".to_string()));
+        assert_eq!(
+            settings.get_keybinding("transport.play"),
+            Some(&"Space".to_string())
+        );
         assert_eq!(settings.get_keybinding("nonexistent"), None);
     }
 
     #[test]
     fn test_reset_to_defaults() {
         let mut settings = KeyboardSettings::default();
-        settings.set_keybinding("transport.play".to_string(), "Space".to_string()).unwrap();
+        settings
+            .set_keybinding("transport.play".to_string(), "Space".to_string())
+            .unwrap();
         settings.set_profile(KeybindingProfile::Ableton);
 
         settings.reset_to_defaults();
@@ -307,7 +324,9 @@ mod tests {
     #[test]
     fn test_import_profile_clears_existing() {
         let mut settings = KeyboardSettings::default();
-        settings.set_keybinding("custom.command".to_string(), "Ctrl+X".to_string()).unwrap();
+        settings
+            .set_keybinding("custom.command".to_string(), "Ctrl+X".to_string())
+            .unwrap();
 
         settings.import_profile(KeybindingProfile::Logic).unwrap();
 
@@ -317,8 +336,12 @@ mod tests {
     #[test]
     fn test_validate_no_conflicts() {
         let mut settings = KeyboardSettings::default();
-        settings.set_keybinding("transport.play".to_string(), "Space".to_string()).unwrap();
-        settings.set_keybinding("transport.stop".to_string(), "Ctrl+S".to_string()).unwrap();
+        settings
+            .set_keybinding("transport.play".to_string(), "Space".to_string())
+            .unwrap();
+        settings
+            .set_keybinding("transport.stop".to_string(), "Ctrl+S".to_string())
+            .unwrap();
 
         assert!(settings.validate().is_ok());
     }
@@ -326,8 +349,12 @@ mod tests {
     #[test]
     fn test_has_conflicts_false() {
         let mut settings = KeyboardSettings::default();
-        settings.set_keybinding("transport.play".to_string(), "Space".to_string()).unwrap();
-        settings.set_keybinding("transport.stop".to_string(), "Ctrl+S".to_string()).unwrap();
+        settings
+            .set_keybinding("transport.play".to_string(), "Space".to_string())
+            .unwrap();
+        settings
+            .set_keybinding("transport.stop".to_string(), "Ctrl+S".to_string())
+            .unwrap();
 
         assert!(!settings.has_conflicts());
     }
@@ -335,7 +362,9 @@ mod tests {
     #[test]
     fn test_find_conflicts_empty() {
         let mut settings = KeyboardSettings::default();
-        settings.set_keybinding("transport.play".to_string(), "Space".to_string()).unwrap();
+        settings
+            .set_keybinding("transport.play".to_string(), "Space".to_string())
+            .unwrap();
 
         let conflicts = settings.find_conflicts();
         assert!(conflicts.is_empty());

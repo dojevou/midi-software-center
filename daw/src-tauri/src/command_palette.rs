@@ -55,10 +55,7 @@ impl Default for CommandPalette {
 impl CommandPalette {
     pub fn new() -> Self {
         let commands = Self::initialize_commands();
-        Self {
-            commands,
-            recently_used: Mutex::new(VecDeque::with_capacity(10)),
-        }
+        Self { commands, recently_used: Mutex::new(VecDeque::with_capacity(10)) }
     }
 
     fn initialize_commands() -> Vec<CommandEntry> {
@@ -396,10 +393,7 @@ impl CommandPalette {
             .filter_map(|cmd| {
                 let score = self.calculate_match_score(cmd, &query_lower);
                 if score > 0 {
-                    Some(SearchResult {
-                        command: cmd.clone(),
-                        score,
-                    })
+                    Some(SearchResult { command: cmd.clone(), score })
                 } else {
                     None
                 }
@@ -478,7 +472,7 @@ impl CommandPalette {
         words
             .iter()
             .zip(abbr_chars.iter())
-            .all(|(word, &ch)| word.chars().next().map_or(false, |first| first == ch))
+            .all(|(word, &ch)| word.starts_with(ch))
     }
 
     pub fn get_recently_used(&self) -> Vec<SearchResult> {
@@ -486,13 +480,10 @@ impl CommandPalette {
         recent
             .iter()
             .filter_map(|id| {
-                self.commands
-                    .iter()
-                    .find(|cmd| &cmd.id == id)
-                    .map(|cmd| SearchResult {
-                        command: cmd.clone(),
-                        score: 0, // Recently used items don't need scores
-                    })
+                self.commands.iter().find(|cmd| &cmd.id == id).map(|cmd| SearchResult {
+                    command: cmd.clone(),
+                    score: 0, // Recently used items don't need scores
+                })
             })
             .collect()
     }
@@ -553,7 +544,11 @@ mod tests {
         let palette = CommandPalette::new();
         assert!(!palette.commands.is_empty());
         // We have 42 commands defined
-        assert!(palette.commands.len() >= 30, "Expected at least 30 commands, got {}", palette.commands.len());
+        assert!(
+            palette.commands.len() >= 30,
+            "Expected at least 30 commands, got {}",
+            palette.commands.len()
+        );
     }
 
     #[test]
@@ -645,8 +640,8 @@ mod tests {
         let all_commands = palette.get_all_commands();
 
         // Add 12 real command IDs (more than limit of 10)
-        for i in 0..12.min(all_commands.len()) {
-            palette.record_usage(&all_commands[i].id).ok();
+        for command in all_commands.iter().take(12.min(all_commands.len())) {
+            palette.record_usage(&command.id).ok();
         }
 
         let recent = palette.get_recently_used();
@@ -672,7 +667,11 @@ mod tests {
         let all = palette.get_all_commands();
 
         assert!(!all.is_empty());
-        assert!(all.len() >= 30, "Expected at least 30 commands, got {}", all.len());
+        assert!(
+            all.len() >= 30,
+            "Expected at least 30 commands, got {}",
+            all.len()
+        );
     }
 
     #[test]
@@ -692,11 +691,13 @@ mod tests {
         let palette = CommandPalette::new();
         let all = palette.get_all_commands();
 
-        let transport = all.iter().filter(|c| matches!(c.category, CommandCategory::Transport)).count();
+        let transport =
+            all.iter().filter(|c| matches!(c.category, CommandCategory::Transport)).count();
         let track = all.iter().filter(|c| matches!(c.category, CommandCategory::Track)).count();
         let edit = all.iter().filter(|c| matches!(c.category, CommandCategory::Edit)).count();
         let view = all.iter().filter(|c| matches!(c.category, CommandCategory::View)).count();
-        let settings = all.iter().filter(|c| matches!(c.category, CommandCategory::Settings)).count();
+        let settings =
+            all.iter().filter(|c| matches!(c.category, CommandCategory::Settings)).count();
         let help = all.iter().filter(|c| matches!(c.category, CommandCategory::Help)).count();
 
         assert!(transport > 0);
@@ -752,7 +753,8 @@ mod tests {
         // Should find transport-related commands
         assert!(!results.is_empty());
         // Most results should be Transport category, but may include others with "transport" in description
-        let has_transport = results.iter().any(|r| matches!(r.command.category, CommandCategory::Transport));
+        let has_transport =
+            results.iter().any(|r| matches!(r.command.category, CommandCategory::Transport));
         assert!(has_transport);
     }
 

@@ -1,7 +1,6 @@
-   /// Compatibility types - Music theory data structures
-   ///
-   /// Trusty Module: Pure data types for compatibility calculations.
-
+/// Compatibility types - Music theory data structures
+///
+/// Trusty Module: Pure data types for compatibility calculations.
 use serde::{Deserialize, Serialize};
 
 /// Musical key
@@ -27,7 +26,7 @@ impl Key {
     /// Parse key from string (e.g., "C", "C#", "Db")
     ///
     /// Supports both sharp and flat notation (enharmonic equivalents).
-    pub fn from_str(s: &str) -> Option<Self> {
+    pub fn parse(s: &str) -> Option<Self> {
         let normalized = s.to_uppercase().replace(" ", "");
 
         match normalized.as_str() {
@@ -82,7 +81,7 @@ impl Mode {
     /// Parse mode from string
     ///
     /// Detects 'm' or 'min' for minor, defaults to major.
-    pub fn from_str(s: &str) -> Self {
+    pub fn parse(s: &str) -> Self {
         let lower = s.to_lowercase();
         if lower.contains('m') && !lower.contains("maj") {
             Mode::Minor
@@ -103,17 +102,13 @@ pub struct KeySignature {
 
 impl KeySignature {
     /// Parse from string (e.g., "C", "Am", "F# Major")
-    pub fn from_str(s: &str) -> Option<Self> {
-        let mode = Mode::from_str(s);
+    pub fn parse(s: &str) -> Option<Self> {
+        let mode = Mode::parse(s);
 
         // Extract key name (first part before mode indicator)
-        let key_part = s
-            .split_whitespace()
-            .next()
-            .unwrap_or(s)
-            .trim_end_matches('m');
+        let key_part = s.split_whitespace().next().unwrap_or(s).trim_end_matches('m');
 
-        let key = Key::from_str(key_part)?;
+        let key = Key::parse(key_part)?;
 
         Some(KeySignature { key, mode })
     }
@@ -132,11 +127,11 @@ impl KeySignature {
 /// All scores are 0-100 (percentage compatibility).
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct CompatibilityScore {
-    pub total_score: f32,      // Overall compatibility (0-100)
-    pub key_score: f32,         // Key/harmony compatibility (0-100)
-    pub bpm_score: f32,         // Tempo compatibility (0-100)
-    pub category_score: f32,    // Category/style compatibility (0-100)
-    pub explanation: String,    // Human-readable explanation
+    pub total_score: f32,    // Overall compatibility (0-100)
+    pub key_score: f32,      // Key/harmony compatibility (0-100)
+    pub bpm_score: f32,      // Tempo compatibility (0-100)
+    pub category_score: f32, // Category/style compatibility (0-100)
+    pub explanation: String, // Human-readable explanation
 }
 
 #[cfg(test)]
@@ -145,11 +140,11 @@ mod tests {
 
     #[test]
     fn test_key_from_str() {
-        assert_eq!(Key::from_str("C").unwrap(), Key::C);
-        assert_eq!(Key::from_str("C#").unwrap(), Key::CSharp);
-        assert_eq!(Key::from_str("Db").unwrap(), Key::CSharp); // Enharmonic
-        assert_eq!(Key::from_str("G").unwrap(), Key::G);
-        assert!(Key::from_str("invalid").is_none());
+        assert_eq!(Key::parse("C").unwrap(), Key::C);
+        assert_eq!(Key::parse("C#").unwrap(), Key::CSharp);
+        assert_eq!(Key::parse("Db").unwrap(), Key::CSharp); // Enharmonic
+        assert_eq!(Key::parse("G").unwrap(), Key::G);
+        assert!(Key::parse("invalid").is_none());
     }
 
     #[test]
@@ -161,23 +156,23 @@ mod tests {
 
     #[test]
     fn test_mode_from_str() {
-        assert_eq!(Mode::from_str("Major"), Mode::Major);
-        assert_eq!(Mode::from_str("Minor"), Mode::Minor);
-        assert_eq!(Mode::from_str("m"), Mode::Minor);
-        assert_eq!(Mode::from_str(""), Mode::Major); // Default
+        assert_eq!(Mode::parse("Major"), Mode::Major);
+        assert_eq!(Mode::parse("Minor"), Mode::Minor);
+        assert_eq!(Mode::parse("m"), Mode::Minor);
+        assert_eq!(Mode::parse(""), Mode::Major); // Default
     }
 
     #[test]
     fn test_key_signature_from_str() {
-        let c_maj = KeySignature::from_str("C").unwrap();
+        let c_maj = KeySignature::parse("C").unwrap();
         assert_eq!(c_maj.key, Key::C);
         assert_eq!(c_maj.mode, Mode::Major);
 
-        let a_min = KeySignature::from_str("Am").unwrap();
+        let a_min = KeySignature::parse("Am").unwrap();
         assert_eq!(a_min.key, Key::A);
         assert_eq!(a_min.mode, Mode::Minor);
 
-        let g_maj = KeySignature::from_str("G Major").unwrap();
+        let g_maj = KeySignature::parse("G Major").unwrap();
         assert_eq!(g_maj.key, Key::G);
         assert_eq!(g_maj.mode, Mode::Major);
     }

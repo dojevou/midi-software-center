@@ -46,10 +46,8 @@ mod tests {
 
     #[test]
     fn test_invalid_track_construction() {
-        let error = MidiParseError::InvalidTrack {
-            position: 42,
-            reason: "unexpected end".to_string(),
-        };
+        let error =
+            MidiParseError::InvalidTrack { position: 42, reason: "unexpected end".to_string() };
         assert!(matches!(error, MidiParseError::InvalidTrack { .. }));
     }
 
@@ -70,10 +68,7 @@ mod tests {
 
     #[test]
     fn test_incomplete_data_construction() {
-        let error = MidiParseError::IncompleteData {
-            expected: 100,
-            actual: 50,
-        };
+        let error = MidiParseError::IncompleteData { expected: 100, actual: 50 };
         assert!(matches!(error, MidiParseError::IncompleteData { .. }));
     }
 
@@ -97,10 +92,8 @@ mod tests {
 
     #[test]
     fn test_invalid_track_message_includes_position() {
-        let error = MidiParseError::InvalidTrack {
-            position: 42,
-            reason: "unexpected end".to_string(),
-        };
+        let error =
+            MidiParseError::InvalidTrack { position: 42, reason: "unexpected end".to_string() };
         let msg = error.to_string();
         assert!(msg.contains("42"));
         assert!(msg.contains("unexpected end"));
@@ -128,10 +121,7 @@ mod tests {
 
     #[test]
     fn test_incomplete_data_shows_expected_vs_actual() {
-        let error = MidiParseError::IncompleteData {
-            expected: 100,
-            actual: 50,
-        };
+        let error = MidiParseError::IncompleteData { expected: 100, actual: 50 };
         let msg = error.to_string();
         assert!(msg.contains("100"));
         assert!(msg.contains("50"));
@@ -207,10 +197,7 @@ mod tests {
 
     #[test]
     fn test_error_debug_includes_data() {
-        let error = MidiParseError::IncompleteData {
-            expected: 100,
-            actual: 50,
-        };
+        let error = MidiParseError::IncompleteData { expected: 100, actual: 50 };
         let debug = format!("{:?}", error);
         assert!(debug.contains("100"));
         assert!(debug.contains("50"));
@@ -223,7 +210,7 @@ mod tests {
     #[test]
     fn test_result_type_alias_ok() {
         let result: Result<i32> = Ok(42);
-        assert_eq!(result.unwrap(), 42);
+        assert!(matches!(result, Ok(42)));
     }
 
     #[test]
@@ -268,10 +255,8 @@ mod tests {
 
     #[test]
     fn test_position_boundaries() {
-        let error_min = MidiParseError::InvalidTrack {
-            position: 0,
-            reason: "start of file".to_string(),
-        };
+        let error_min =
+            MidiParseError::InvalidTrack { position: 0, reason: "start of file".to_string() };
         let error_max = MidiParseError::InvalidTrack {
             position: usize::MAX,
             reason: "end of file".to_string(),
@@ -293,13 +278,7 @@ mod tests {
 
     #[test]
     fn test_expected_actual_boundaries() {
-        let cases = vec![
-            (0, 0),
-            (1, 0),
-            (100, 50),
-            (usize::MAX, 0),
-            (1000, 999),
-        ];
+        let cases = vec![(0, 0), (1, 0), (100, 50), (usize::MAX, 0), (1000, 999)];
 
         for (expected, actual) in cases {
             let error = MidiParseError::IncompleteData { expected, actual };
@@ -329,10 +308,7 @@ mod tests {
         let positions = vec![0, 1, usize::MAX - 1, usize::MAX];
 
         for pos in positions {
-            let error = MidiParseError::InvalidEvent {
-                position: pos,
-                reason: "test".to_string(),
-            };
+            let error = MidiParseError::InvalidEvent { position: pos, reason: "test".to_string() };
             let msg = error.to_string();
             assert!(msg.contains(&pos.to_string()));
         }
@@ -345,10 +321,6 @@ mod tests {
         let size = mem::size_of::<MidiParseError>();
 
         // thiserror errors should be reasonably sized (< 200 bytes typical)
-        assert!(
-            size < 256,
-            "MidiParseError is too large: {} bytes",
-            size
-        );
+        assert!(size < 256, "MidiParseError is too large: {} bytes", size);
     }
 }

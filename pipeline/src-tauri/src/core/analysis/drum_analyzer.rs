@@ -13,8 +13,8 @@
 //!
 //! **Archetype: Trusty Module** (Pure functions, no I/O, 80%+ test coverage)
 
-use midi_library_shared::core::midi::types::{MidiFile, Event};
 use crate::core::analysis::auto_tagger::Tag;
+use midi_library_shared::core::midi::types::{Event, MidiFile};
 use std::collections::HashMap;
 
 // ============================================================================
@@ -86,38 +86,38 @@ pub enum DrumNote {
 /// Drum pattern types (from collection analysis)
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum PatternType {
-    Groove,      // Main beat pattern
-    Fill,        // Transitional fill
-    Intro,       // Song intro
-    Ending,      // Song ending/outro
-    Breakdown,   // Breakdown section
-    Turnaround,  // Turnaround pattern
-    Sequence,    // Sequenced pattern
-    OneShot,     // Single hit
+    Groove,     // Main beat pattern
+    Fill,       // Transitional fill
+    Intro,      // Song intro
+    Ending,     // Song ending/outro
+    Breakdown,  // Breakdown section
+    Turnaround, // Turnaround pattern
+    Sequence,   // Sequenced pattern
+    OneShot,    // Single hit
 }
 
 /// Rhythmic feel classification
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum RhythmicFeel {
-    Straight,    // Straight 8ths or 16ths
-    Swing,       // Swing feel (jazz)
-    Shuffle,     // Shuffle feel (blues/rock)
-    Triplet,     // Triplet-based
-    Half,        // Half-time feel
-    Double,      // Double-time feel
-    Pocket,      // Laid-back pocket
+    Straight, // Straight 8ths or 16ths
+    Swing,    // Swing feel (jazz)
+    Shuffle,  // Shuffle feel (blues/rock)
+    Triplet,  // Triplet-based
+    Half,     // Half-time feel
+    Double,   // Double-time feel
+    Pocket,   // Laid-back pocket
 }
 
 /// Drum technique classification
 #[derive(Debug, Clone, PartialEq, Eq)]
 pub enum DrumTechnique {
-    GhostNotes,  // Low-velocity grace notes
-    Linear,      // Linear drumming (no simultaneous notes)
-    DoubleBass,  // Double bass drum
-    BlastBeat,   // Extreme metal blast beat
-    Paradiddle,  // Rudiment pattern
-    Flam,        // Flam rudiment
-    Roll,        // Drum roll
+    GhostNotes, // Low-velocity grace notes
+    Linear,     // Linear drumming (no simultaneous notes)
+    DoubleBass, // Double bass drum
+    BlastBeat,  // Extreme metal blast beat
+    Paradiddle, // Rudiment pattern
+    Flam,       // Flam rudiment
+    Roll,       // Drum roll
 }
 
 /// Time signature
@@ -187,7 +187,7 @@ pub fn analyze_drum_midi(midi_file: &MidiFile) -> DrumAnalysis {
         is_drum_file: drum_channel_detected || !drum_notes.is_empty(),
         drum_channel_detected,
         drum_notes,
-        pattern_type: None, // Set from filename analysis
+        pattern_type: None,  // Set from filename analysis
         rhythmic_feel: None, // Set from filename analysis
         time_signature,
         bpm: None, // Set from filename analysis
@@ -205,11 +205,12 @@ pub fn has_drum_channel(midi_file: &MidiFile) -> bool {
         for timed_event in &track.events {
             match timed_event.event {
                 Event::NoteOn { channel, .. } | Event::NoteOff { channel, .. } => {
-                    if channel == 9 { // MIDI channel 10 = index 9
+                    if channel == 9 {
+                        // MIDI channel 10 = index 9
                         return true;
                     }
-                }
-                _ => {}
+                },
+                _ => {},
             }
         }
     }
@@ -308,13 +309,17 @@ pub fn detect_cymbal_types(drum_notes: &HashMap<DrumNote, usize>) -> Vec<CymbalT
     if drum_notes.contains_key(&DrumNote::OpenHiHat) {
         cymbals.push(CymbalType::OpenHat);
     }
-    if drum_notes.contains_key(&DrumNote::RideCymbal1) || drum_notes.contains_key(&DrumNote::RideCymbal2) {
+    if drum_notes.contains_key(&DrumNote::RideCymbal1)
+        || drum_notes.contains_key(&DrumNote::RideCymbal2)
+    {
         cymbals.push(CymbalType::Ride);
     }
     if drum_notes.contains_key(&DrumNote::RideBell) {
         cymbals.push(CymbalType::RideBell);
     }
-    if drum_notes.contains_key(&DrumNote::CrashCymbal1) || drum_notes.contains_key(&DrumNote::CrashCymbal2) {
+    if drum_notes.contains_key(&DrumNote::CrashCymbal1)
+        || drum_notes.contains_key(&DrumNote::CrashCymbal2)
+    {
         cymbals.push(CymbalType::Crash);
     }
     if drum_notes.contains_key(&DrumNote::ChineseCymbal) {
@@ -349,7 +354,10 @@ pub fn extract_time_signature_from_meta(midi_file: &MidiFile) -> Option<TimeSign
 /// Detect drum techniques from note patterns
 ///
 /// **Trusty Module**: Pure function
-pub fn detect_techniques(midi_file: &MidiFile, drum_notes: &HashMap<DrumNote, usize>) -> Vec<DrumTechnique> {
+pub fn detect_techniques(
+    midi_file: &MidiFile,
+    drum_notes: &HashMap<DrumNote, usize>,
+) -> Vec<DrumTechnique> {
     let mut techniques = Vec::new();
 
     // Ghost notes: Check for many low-velocity snare hits
@@ -362,7 +370,8 @@ pub fn detect_techniques(midi_file: &MidiFile, drum_notes: &HashMap<DrumNote, us
     let kick_count_2 = drum_notes.get(&DrumNote::AcousticBassDrum).copied().unwrap_or(0);
     let kick_count = kick_count_1 + kick_count_2;
 
-    if kick_count > 100 { // Threshold for double-bass
+    if kick_count > 100 {
+        // Threshold for double-bass
         techniques.push(DrumTechnique::DoubleBass);
     }
 
@@ -379,9 +388,11 @@ fn has_ghost_notes(midi_file: &MidiFile) -> bool {
     for track in &midi_file.tracks {
         for timed_event in &track.events {
             if let Event::NoteOn { note, velocity, .. } = timed_event.event {
-                if note == 38 || note == 40 { // Snare notes
+                if note == 38 || note == 40 {
+                    // Snare notes
                     total_snare += 1;
-                    if velocity > 0 && velocity < 40 { // Ghost note threshold
+                    if velocity > 0 && velocity < 40 {
+                        // Ghost note threshold
                         ghost_count += 1;
                     }
                 }
@@ -409,25 +420,33 @@ pub fn extract_time_signature_from_path(file_path: &str, file_name: &str) -> Opt
 
     // Common time signature patterns
     let patterns = [
-        ("12-8", (12, 8)), ("12/8", (12, 8)),
-        ("9-8", (9, 8)), ("9/8", (9, 8)),
-        ("6-8", (6, 8)), ("6/8", (6, 8)),
-        ("7-8", (7, 8)), ("7/8", (7, 8)),
-        ("11-8", (11, 8)), ("11/8", (11, 8)),
-        ("15-8", (15, 8)), ("15/8", (15, 8)),
-        ("7-4", (7, 4)), ("7/4", (7, 4)),
-        ("5-4", (5, 4)), ("5/4", (5, 4)),
-        ("3-4", (3, 4)), ("3/4", (3, 4)),
-        ("4-4", (4, 4)), ("4/4", (4, 4)),
-        ("2-4", (2, 4)), ("2/4", (2, 4)),
+        ("12-8", (12, 8)),
+        ("12/8", (12, 8)),
+        ("9-8", (9, 8)),
+        ("9/8", (9, 8)),
+        ("6-8", (6, 8)),
+        ("6/8", (6, 8)),
+        ("7-8", (7, 8)),
+        ("7/8", (7, 8)),
+        ("11-8", (11, 8)),
+        ("11/8", (11, 8)),
+        ("15-8", (15, 8)),
+        ("15/8", (15, 8)),
+        ("7-4", (7, 4)),
+        ("7/4", (7, 4)),
+        ("5-4", (5, 4)),
+        ("5/4", (5, 4)),
+        ("3-4", (3, 4)),
+        ("3/4", (3, 4)),
+        ("4-4", (4, 4)),
+        ("4/4", (4, 4)),
+        ("2-4", (2, 4)),
+        ("2/4", (2, 4)),
     ];
 
     for (pattern, (num, denom)) in &patterns {
         if combined.contains(pattern) {
-            return Some(TimeSignature {
-                numerator: *num,
-                denominator: *denom,
-            });
+            return Some(TimeSignature { numerator: *num, denominator: *denom });
         }
     }
 
@@ -578,9 +597,15 @@ fn drum_note_to_tag(drum_note: DrumNote) -> (&'static str, &'static str) {
     match drum_note {
         DrumNote::AcousticBassDrum | DrumNote::BassDrum1 => ("kick", "instrument"),
         DrumNote::AcousticSnare | DrumNote::ElectricSnare => ("snare", "instrument"),
-        DrumNote::ClosedHiHat | DrumNote::OpenHiHat | DrumNote::PedalHiHat => ("hihat", "instrument"),
-        DrumNote::LowFloorTom | DrumNote::HighFloorTom | DrumNote::LowTom |
-        DrumNote::LowMidTom | DrumNote::HighMidTom | DrumNote::HighTom => ("toms", "instrument"),
+        DrumNote::ClosedHiHat | DrumNote::OpenHiHat | DrumNote::PedalHiHat => {
+            ("hihat", "instrument")
+        },
+        DrumNote::LowFloorTom
+        | DrumNote::HighFloorTom
+        | DrumNote::LowTom
+        | DrumNote::LowMidTom
+        | DrumNote::HighMidTom
+        | DrumNote::HighTom => ("toms", "instrument"),
         DrumNote::CrashCymbal1 | DrumNote::CrashCymbal2 => ("crash", "instrument"),
         DrumNote::RideCymbal1 | DrumNote::RideCymbal2 => ("ride", "instrument"),
         DrumNote::ChineseCymbal => ("china", "instrument"),
@@ -591,7 +616,9 @@ fn drum_note_to_tag(drum_note: DrumNote) -> (&'static str, &'static str) {
         DrumNote::Cowbell => ("cowbell", "instrument"),
         DrumNote::Tambourine => ("tambourine", "instrument"),
         DrumNote::HighBongo | DrumNote::LowBongo => ("bongo", "instrument"),
-        DrumNote::MuteHighConga | DrumNote::OpenHighConga | DrumNote::LowConga => ("conga", "instrument"),
+        DrumNote::MuteHighConga | DrumNote::OpenHighConga | DrumNote::LowConga => {
+            ("conga", "instrument")
+        },
         _ => ("percussion", "instrument"),
     }
 }
@@ -665,11 +692,7 @@ fn technique_to_tag_name(technique: &DrumTechnique) -> &'static str {
 /// **Trusty Module**: Pure function
 ///
 /// Returns tags compatible with AutoTagger Tag structure
-pub fn generate_drum_tags(
-    analysis: &DrumAnalysis,
-    file_path: &str,
-    file_name: &str,
-) -> Vec<Tag> {
+pub fn generate_drum_tags(analysis: &DrumAnalysis, file_path: &str, file_name: &str) -> Vec<Tag> {
     let mut tags = Vec::new();
 
     // 1. Drum detection tag
@@ -685,7 +708,8 @@ pub fn generate_drum_tags(
 
     // 2. Specific drum instrument tags
     for (drum_note, count) in &analysis.drum_notes {
-        if *count > 5 { // Threshold for significant presence
+        if *count > 5 {
+            // Threshold for significant presence
             let (tag_name, category) = drum_note_to_tag(*drum_note);
             tags.push(Tag::with_metadata(
                 tag_name.to_string(),

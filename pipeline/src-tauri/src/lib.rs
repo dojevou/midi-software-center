@@ -1,7 +1,6 @@
-   /// MIDI Library Pipeline Processor
-   ///
-   /// Core library for MIDI file processing, analysis, and management.
-
+/// MIDI Library Pipeline Processor
+///
+/// Core library for MIDI file processing, analysis, and management.
 pub mod commands;
 pub mod core;
 pub mod db;
@@ -17,13 +16,13 @@ pub mod error;
 pub mod windows;
 
 // Re-export commonly used types
-pub use database::Database;
 pub use database::window_state::{
-    DatabaseWindowState, SearchFilters, SearchResult, PaginationInfo, ViewMode,
-    SortField, SortOrder,
+    DatabaseWindowState, PaginationInfo, SearchFilters, SearchResult, SortField, SortOrder,
+    ViewMode,
 };
-pub use error::{AppError, AppResult, TauriResult};
+pub use database::Database;
 pub use db::models::{File, MusicalMetadata};
+pub use error::{AppError, AppResult, TauriResult};
 
 /// Application state shared across all Tauri commands
 #[derive(Clone)]

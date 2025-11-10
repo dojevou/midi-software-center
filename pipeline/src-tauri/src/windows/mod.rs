@@ -1,34 +1,29 @@
-   /// Window Management System for MIDI Software Center
-   ///
-   /// Provides a comprehensive window management system similar to Pro Tools,
-   /// featuring multi-window support, docking, layout persistence, and keyboard shortcuts.
-   ///
-   /// # Architecture
-   ///
-   /// - `manager`: Core window management logic
-   /// - `state`: Window state structures
-   /// - `commands`: Tauri command handlers
-   /// - `menu`: Menu creation functions
-   /// - `shortcuts`: Global shortcut registration
-   /// - `layout`: Layout persistence
-   /// - `pipeline_state`: Pipeline window-specific state (processing, progress)
-
+#[allow(dead_code)]
+pub mod commands;
+/// Window Management System for MIDI Software Center
+///
+/// Provides a comprehensive window management system similar to Pro Tools,
+/// featuring multi-window support, docking, layout persistence, and keyboard shortcuts.
+///
+/// # Architecture
+///
+/// - `manager`: Core window management logic
+/// - `state`: Window state structures
+/// - `commands`: Tauri command handlers
+/// - `menu`: Menu creation functions
+/// - `shortcuts`: Global shortcut registration
+/// - `layout`: Layout persistence
+/// - `pipeline_state`: Pipeline window-specific state (processing, progress)
 pub mod manager;
 pub mod state;
-pub mod commands;
 // TODO: Fix Tauri 2.x API compatibility
 // pub mod menu;
 // pub mod shortcuts;
 pub mod layout;
 pub mod pipeline_state;
 
-pub use manager::WindowManager;
-pub use state::{WindowState, WindowInfo, WindowType, Position, Docking, DockSide};
 pub use layout::Layout;
-pub use pipeline_state::{
-    PipelineWindowState, ProcessingStatus, ProcessingStats, OperationType,
-    LogMessage, LogLevel,
-};
+pub use manager::WindowManager;
 
 #[cfg(test)]
 mod tests {

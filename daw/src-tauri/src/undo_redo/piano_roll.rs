@@ -1,8 +1,8 @@
-   /// Piano Roll Undo/Redo Commands - Trusty Module
-   ///
-   /// Commands for piano roll operations: add/delete/move notes, set velocity, quantize, transpose.
-   /// All commands are pure data transformations without I/O.
 
+/// Piano Roll Undo/Redo Commands - Trusty Module
+///
+/// Commands for piano roll operations: add/delete/move notes, set velocity, quantize, transpose.
+/// All commands are pure data transformations without I/O.
 use super::core::{Command, UndoRedoError, UndoRedoResult};
 use crate::editors::piano_roll::{MidiNote, PianoRollState};
 use std::collections::HashMap;
@@ -27,14 +27,7 @@ impl AddNoteCommand {
         start_tick: i32,
         duration: i32,
     ) -> Self {
-        Self {
-            state,
-            pitch,
-            velocity,
-            start_tick,
-            duration,
-            note_id: None,
-        }
+        Self { state, pitch, velocity, start_tick, duration, note_id: None }
     }
 }
 
@@ -89,11 +82,7 @@ pub struct DeleteNoteCommand {
 
 impl DeleteNoteCommand {
     pub fn new(state: Arc<Mutex<PianoRollState>>, note_id: i32) -> Self {
-        Self {
-            state,
-            note_id,
-            deleted_note: None,
-        }
+        Self { state, note_id, deleted_note: None }
     }
 }
 
@@ -150,14 +139,7 @@ pub struct MoveNoteCommand {
 
 impl MoveNoteCommand {
     pub fn new(state: Arc<Mutex<PianoRollState>>, note_id: i32, new_tick: i32) -> Self {
-        Self {
-            state,
-            note_id,
-            new_tick,
-            new_pitch: None,
-            old_tick: None,
-            old_pitch: None,
-        }
+        Self { state, note_id, new_tick, new_pitch: None, old_tick: None, old_pitch: None }
     }
 
     pub fn with_pitch(mut self, new_pitch: u8) -> Self {
@@ -244,12 +226,7 @@ pub struct SetVelocityCommand {
 
 impl SetVelocityCommand {
     pub fn new(state: Arc<Mutex<PianoRollState>>, note_id: i32, new_velocity: u8) -> Self {
-        Self {
-            state,
-            note_id,
-            new_velocity,
-            old_velocity: None,
-        }
+        Self { state, note_id, new_velocity, old_velocity: None }
     }
 }
 
@@ -309,11 +286,7 @@ pub struct QuantizeNotesCommand {
 
 impl QuantizeNotesCommand {
     pub fn new(state: Arc<Mutex<PianoRollState>>, note_ids: Vec<i32>) -> Self {
-        Self {
-            state,
-            note_ids,
-            old_positions: HashMap::new(),
-        }
+        Self { state, note_ids, old_positions: HashMap::new() }
     }
 }
 
@@ -376,12 +349,7 @@ pub struct TransposeCommand {
 
 impl TransposeCommand {
     pub fn new(state: Arc<Mutex<PianoRollState>>, note_ids: Vec<i32>, semitones: i8) -> Self {
-        Self {
-            state,
-            note_ids,
-            semitones,
-            old_pitches: HashMap::new(),
-        }
+        Self { state, note_ids, semitones, old_pitches: HashMap::new() }
     }
 }
 

@@ -1,7 +1,6 @@
-   /// Project and track loading commands
-   ///
-   /// Commands for loading multiple tracks into the sequencer from the database.
-
+/// Project and track loading commands
+///
+/// Commands for loading multiple tracks into the sequencer from the database.
 use crate::commands::AppState;
 use crate::core::midi::loader::load_midi_file;
 use crate::models::sequencer::Track;
@@ -56,7 +55,7 @@ pub async fn load_multiple_tracks(
                 error!("Failed to query file {} from database: {}", file_id, e);
                 failed_count += 1;
                 continue;
-            }
+            },
         };
 
         // Load MIDI file and parse events
@@ -69,7 +68,7 @@ pub async fn load_multiple_tracks(
                 );
                 failed_count += 1;
                 continue;
-            }
+            },
         };
 
         info!(
@@ -92,7 +91,7 @@ pub async fn load_multiple_tracks(
             Err(e) => {
                 error!("Failed to add track for file {}: {}", file_id, e);
                 failed_count += 1;
-            }
+            },
         }
     }
 
@@ -117,9 +116,7 @@ pub async fn load_multiple_tracks(
 
 /// Clear all tracks from the sequencer
 #[tauri::command]
-pub async fn clear_all_tracks(
-    engine: State<'_, Arc<SequencerEngine>>,
-) -> Result<(), String> {
+pub async fn clear_all_tracks(engine: State<'_, Arc<SequencerEngine>>) -> Result<(), String> {
     info!("Clearing all tracks from sequencer");
 
     let track_manager = engine.track_manager();

@@ -1,10 +1,9 @@
-   /// Window manager - core logic for managing application windows
-   ///
-   /// Handles creation, destruction, positioning, and layout management of windows.
-
-
-use crate::windows::state::{WindowInfo, WindowState, WindowType, Position, DockSide};
+#[allow(dead_code)]
 use crate::windows::layout::{Layout, LayoutStorage};
+/// Window manager - core logic for managing application windows
+///
+/// Handles creation, destruction, positioning, and layout management of windows.
+use crate::windows::state::{DockSide, Position, WindowInfo, WindowState, WindowType};
 
 /// Central window management system
 pub struct WindowManager {
@@ -12,22 +11,17 @@ pub struct WindowManager {
     layout_storage: Option<LayoutStorage>,
 }
 
+#[allow(dead_code)]
 impl WindowManager {
     /// Create a new window manager
     pub fn new() -> Self {
-        WindowManager {
-            state: WindowState::new(),
-            layout_storage: None,
-        }
+        WindowManager { state: WindowState::new(), layout_storage: None }
     }
 
     /// Create with layout persistence
     pub fn with_storage(layout_dir: std::path::PathBuf) -> Result<Self, String> {
         let storage = LayoutStorage::new(layout_dir)?;
-        Ok(WindowManager {
-            state: WindowState::new(),
-            layout_storage: Some(storage),
-        })
+        Ok(WindowManager { state: WindowState::new(), layout_storage: Some(storage) })
     }
 
     // ========== Window Registration & Management ==========
@@ -217,12 +211,7 @@ impl WindowManager {
         self.state
             .windows
             .values()
-            .filter(|w| {
-                w.docking
-                    .docked_to
-                    .as_ref()
-                    .is_some_and(|p| p == parent)
-            })
+            .filter(|w| w.docking.docked_to.as_ref().is_some_and(|p| p == parent))
             .cloned()
             .collect()
     }
@@ -231,10 +220,7 @@ impl WindowManager {
 
     /// Save current layout
     pub fn save_layout(&mut self, name: String) -> Result<(), String> {
-        let storage = self
-            .layout_storage
-            .as_ref()
-            .ok_or("Layout storage not configured")?;
+        let storage = self.layout_storage.as_ref().ok_or("Layout storage not configured")?;
 
         let mut layout = Layout::new(&name);
 
@@ -250,10 +236,7 @@ impl WindowManager {
 
     /// Load a layout
     pub fn load_layout(&mut self, name: &str) -> Result<(), String> {
-        let storage = self
-            .layout_storage
-            .as_ref()
-            .ok_or("Layout storage not configured")?;
+        let storage = self.layout_storage.as_ref().ok_or("Layout storage not configured")?;
 
         let layout = storage.load_layout(name)?;
 
@@ -269,10 +252,7 @@ impl WindowManager {
 
     /// Delete a layout
     pub fn delete_layout(&mut self, name: &str) -> Result<(), String> {
-        let storage = self
-            .layout_storage
-            .as_ref()
-            .ok_or("Layout storage not configured")?;
+        let storage = self.layout_storage.as_ref().ok_or("Layout storage not configured")?;
 
         storage.delete_layout(name)?;
         self.state.saved_layouts.remove(name);
@@ -282,10 +262,7 @@ impl WindowManager {
 
     /// List all available layouts
     pub fn list_layouts(&self) -> Result<Vec<String>, String> {
-        let storage = self
-            .layout_storage
-            .as_ref()
-            .ok_or("Layout storage not configured")?;
+        let storage = self.layout_storage.as_ref().ok_or("Layout storage not configured")?;
 
         storage.list_layouts()
     }
@@ -304,20 +281,12 @@ impl WindowManager {
 
     /// Get visible windows
     pub fn get_visible_windows(&self) -> Vec<WindowInfo> {
-        self.state
-            .get_visible_windows()
-            .into_iter()
-            .cloned()
-            .collect()
+        self.state.get_visible_windows().into_iter().cloned().collect()
     }
 
     /// Get windows by type
     pub fn get_windows_by_type(&self, wtype: WindowType) -> Vec<WindowInfo> {
-        self.state
-            .get_windows_by_type(wtype)
-            .into_iter()
-            .cloned()
-            .collect()
+        self.state.get_windows_by_type(wtype).into_iter().cloned().collect()
     }
 
     /// Get window count

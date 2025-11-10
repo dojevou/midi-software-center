@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
-use midi_library_shared::core::midi::{parse_midi_file, Event, MidiFile};
 use midi_library_shared::core::analysis::detect_bpm;
+use midi_library_shared::core::midi::{parse_midi_file, Event, MidiFile};
 use serde::{Deserialize, Serialize};
 use std::env;
 use std::fs;
@@ -44,11 +44,7 @@ struct TestResult {
 
 fn analyze_file(file_path: &Path) -> Result<TestResult> {
     let start = Instant::now();
-    let file_name = file_path
-        .file_name()
-        .and_then(|n| n.to_str())
-        .unwrap_or("unknown")
-        .to_string();
+    let file_name = file_path.file_name().and_then(|n| n.to_str()).unwrap_or("unknown").to_string();
 
     println!("\n📄 Analyzing: {}", file_name);
 
@@ -78,7 +74,11 @@ fn analyze_file(file_path: &Path) -> Result<TestResult> {
     };
 
     if let Some(bpm_value) = bpm {
-        println!("  ⏱️  BPM: {:.1} (confidence: {:.1}%)", bpm_value, bpm_result.confidence * 100.0);
+        println!(
+            "  ⏱️  BPM: {:.1} (confidence: {:.1}%)",
+            bpm_value,
+            bpm_result.confidence * 100.0
+        );
     } else {
         println!("  ⚠️  BPM: Not detected");
     }
@@ -164,7 +164,7 @@ fn main() -> Result<()> {
                     }
 
                     results.push(result);
-                }
+                },
                 Err(e) => {
                     failed += 1;
                     println!("\n❌ Error: {}", e);
@@ -186,7 +186,7 @@ fn main() -> Result<()> {
                         track_count: None,
                         note_count: None,
                     });
-                }
+                },
             }
         }
     }
@@ -196,10 +196,28 @@ fn main() -> Result<()> {
     println!("📊 SUMMARY");
     println!("====================================");
     println!("✅ Files tested: {}", total_files);
-    println!("✅ Successful parses: {} ({:.1}%)", successful, (successful as f64 / total_files as f64) * 100.0);
-    println!("❌ Failed parses: {} ({:.1}%)", failed, (failed as f64 / total_files as f64) * 100.0);
-    println!("⏱️  BPM detection rate: {}/{} ({:.1}%)", bpm_detected, total_files, (bpm_detected as f64 / total_files as f64) * 100.0);
-    println!("🎼 Key detection rate: {}/{} ({:.1}%)", key_detected, total_files, (key_detected as f64 / total_files as f64) * 100.0);
+    println!(
+        "✅ Successful parses: {} ({:.1}%)",
+        successful,
+        (successful as f64 / total_files as f64) * 100.0
+    );
+    println!(
+        "❌ Failed parses: {} ({:.1}%)",
+        failed,
+        (failed as f64 / total_files as f64) * 100.0
+    );
+    println!(
+        "⏱️  BPM detection rate: {}/{} ({:.1}%)",
+        bpm_detected,
+        total_files,
+        (bpm_detected as f64 / total_files as f64) * 100.0
+    );
+    println!(
+        "🎼 Key detection rate: {}/{} ({:.1}%)",
+        key_detected,
+        total_files,
+        (key_detected as f64 / total_files as f64) * 100.0
+    );
 
     if total_files > 0 {
         let avg_time = total_time_ms / total_files as u128;
@@ -219,7 +237,10 @@ fn main() -> Result<()> {
     } else if success_rate >= 85.0 {
         println!("⚠️  Parse success rate: ACCEPTABLE ({:.1}%)", success_rate);
     } else {
-        println!("❌ Parse success rate: NEEDS IMPROVEMENT ({:.1}%)", success_rate);
+        println!(
+            "❌ Parse success rate: NEEDS IMPROVEMENT ({:.1}%)",
+            success_rate
+        );
     }
 
     if total_files > 0 {

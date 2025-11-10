@@ -1,7 +1,7 @@
-   /// Filename Generator
-   ///
-   /// Generates intelligent filenames from MIDI file metadata.
 
+/// Filename Generator
+///
+/// Generates intelligent filenames from MIDI file metadata.
 use crate::core::analysis::{BpmDetectionResult, KeyDetectionResult};
 use crate::core::naming::{sanitizer, templates};
 
@@ -105,7 +105,7 @@ fn process_description(description: &Option<String>, max_length: usize) -> Strin
             } else {
                 cleaned
             }
-        }
+        },
     }
 }
 
@@ -146,9 +146,7 @@ pub fn generate_from_analysis(
 /// Extracts useful parts from original filename
 fn extract_useful_description(original_filename: &str) -> Option<String> {
     // Remove extension
-    let without_ext = original_filename
-        .trim_end_matches(".mid")
-        .trim_end_matches(".MID");
+    let without_ext = original_filename.trim_end_matches(".mid").trim_end_matches(".MID");
 
     // Remove common prefixes
     let prefixes = ["MIDI_", "Track_", "File_", "Song_"];
@@ -232,10 +230,7 @@ mod tests {
             file_id: "042".to_string(),
         };
 
-        let config = NamingConfig {
-            include_description: false,
-            ..Default::default()
-        };
+        let config = NamingConfig { include_description: false, ..Default::default() };
 
         let filename = generate_filename(&metadata, &config);
 

@@ -1,23 +1,23 @@
-   /// Track Splitting Commands - GROWN-UP SCRIPT
-   ///
-   /// Architecture: Grown-up Script
-   /// Purpose: I/O wrapper around track_splitter Trusty Module
-   ///
-   /// This module provides Tauri commands for splitting multi-track MIDI files
-   /// into individual single-track files. It handles:
-   /// - Database queries (fetch file info)
-   /// - File I/O (read original, write splits)
-   /// - Database transactions (insert splits, create relationships)
-   /// - Error handling and user-friendly messages
-   ///
-   /// The actual splitting logic is delegated to the track_splitter Trusty Module,
-   /// which operates on byte arrays with no I/O.
 
-use crate::core::hash::calculate_file_hash;
-use midi_library_shared::core::midi::parser::parse_midi_file;
 use crate::core::analysis::bpm_detector::detect_bpm;
 use crate::core::analysis::key_detector::detect_key;
-use crate::core::splitting::track_splitter::{split_tracks, SplitTrack, SplitError};
+/// Track Splitting Commands - GROWN-UP SCRIPT
+///
+/// Architecture: Grown-up Script
+/// Purpose: I/O wrapper around track_splitter Trusty Module
+///
+/// This module provides Tauri commands for splitting multi-track MIDI files
+/// into individual single-track files. It handles:
+/// - Database queries (fetch file info)
+/// - File I/O (read original, write splits)
+/// - Database transactions (insert splits, create relationships)
+/// - Error handling and user-friendly messages
+///
+/// The actual splitting logic is delegated to the track_splitter Trusty Module,
+/// which operates on byte arrays with no I/O.
+use crate::core::hash::calculate_file_hash;
+use crate::core::splitting::track_splitter::{split_tracks, SplitError, SplitTrack};
+use midi_library_shared::core::midi::parser::parse_midi_file;
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 use thiserror::Error;
@@ -194,33 +194,20 @@ pub async fn split_and_import(
         tokio::fs::write(&split_path, &split_track.midi_bytes).await?;
 
         // Import split file to database with full metadata
-        let split_file_id = import_split_track(
-            &split_path,
-            &filename,
-            &split_track.midi_bytes,
-            pool,
-        )
-        .await
-        .map_err(|e| SplitCommandError::DatabaseError(e.to_string()))?;
+        let split_file_id =
+            import_split_track(&split_path, &filename, &split_track.midi_bytes, pool)
+                .await
+                .map_err(|e| SplitCommandError::DatabaseError(e.to_string()))?;
 
         // Create relationship in track_splits table
-        insert_track_split_relationship(
-            file_id,
-            split_file_id,
-            split_track,
-            pool,
-        )
-        .await
-        .map_err(|e| SplitCommandError::TransactionError(e.to_string()))?;
+        insert_track_split_relationship(file_id, split_file_id, split_track, pool)
+            .await
+            .map_err(|e| SplitCommandError::TransactionError(e.to_string()))?;
 
         split_file_ids.push(split_file_id);
     }
 
-    Ok(SplitResult {
-        split_file_ids,
-        tracks_split: split_tracks.len(),
-        output_dir,
-    })
+    Ok(SplitResult { split_file_ids, tracks_split: split_tracks.len(), output_dir })
 }
 
 //=============================================================================

@@ -1,11 +1,11 @@
-   /// Tag Repository - Database operations for tags
-   ///
-   /// This module handles all database operations related to tags:
-   /// - Creating/retrieving tags
-   /// - Associating tags with files
-   /// - Searching and filtering tags
-   /// - Tag usage statistics
 
+/// Tag Repository - Database operations for tags
+///
+/// This module handles all database operations related to tags:
+/// - Creating/retrieving tags
+/// - Associating tags with files
+/// - Searching and filtering tags
+/// - Tag usage statistics
 use sqlx::{PgPool, Postgres, Transaction};
 use thiserror::Error;
 
@@ -52,11 +52,7 @@ impl TagRepository {
     ///
     /// Returns the tag ID. If the tag exists, returns existing ID.
     /// If not, creates a new tag and returns the new ID.
-    pub async fn get_or_create_tag(
-        &self,
-        name: &str,
-        category: Option<&str>,
-    ) -> Result<i32> {
+    pub async fn get_or_create_tag(&self, name: &str, category: Option<&str>) -> Result<i32> {
         let tag_id = sqlx::query_scalar::<_, i32>(
             r#"
             INSERT INTO tags (name, category, usage_count, created_at)
@@ -355,7 +351,12 @@ impl TagRepository {
     /// Add a single tag to a file (wrapper for test compatibility)
     ///
     /// This is a convenience method that wraps get_or_create_tag + add_tags_to_file
-    pub async fn add_tag_to_file(&self, file_id: i64, tag_name: &str, category: Option<&str>) -> Result<()> {
+    pub async fn add_tag_to_file(
+        &self,
+        file_id: i64,
+        tag_name: &str,
+        category: Option<&str>,
+    ) -> Result<()> {
         let tag_id = self.get_or_create_tag(tag_name, category).await?;
         self.add_tags_to_file(file_id, &[tag_id]).await
     }

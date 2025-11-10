@@ -102,9 +102,7 @@ impl TempoEditorState {
         if bar == 0 {
             return Err(TempoError::TempoPointNotFound(bar)); // Cannot delete initial tempo
         }
-        self.tempo_points
-            .remove(&bar)
-            .ok_or(TempoError::TempoPointNotFound(bar))
+        self.tempo_points.remove(&bar).ok_or(TempoError::TempoPointNotFound(bar))
     }
 
     pub fn get_tempo_at_bar(&self, bar: i32) -> f32 {
@@ -152,8 +150,8 @@ impl Default for TempoEditorState {
 }
 
 // Tauri Command Handlers (Task-O-Matic)
-use tauri::State;
 use std::sync::Mutex;
+use tauri::State;
 
 #[tauri::command]
 pub async fn tempo_editor_set_tempo(

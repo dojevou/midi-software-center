@@ -1,9 +1,8 @@
-   /// Track management for sequencer
-   ///
-   /// Grown-up Script: Manages collection of tracks with their properties and MIDI events.
-
-use crate::models::sequencer::{Track, TrackProperties};
 use crate::models::midi::MidiEvent;
+/// Track management for sequencer
+///
+/// Grown-up Script: Manages collection of tracks with their properties and MIDI events.
+use crate::models::sequencer::{Track, TrackProperties};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tokio::sync::RwLock;
@@ -20,10 +19,7 @@ pub struct TrackManager {
 impl TrackManager {
     /// Create a new empty track manager
     pub fn new() -> Self {
-        Self {
-            tracks: Arc::new(RwLock::new(HashMap::new())),
-            next_id: Arc::new(RwLock::new(1)),
-        }
+        Self { tracks: Arc::new(RwLock::new(HashMap::new())), next_id: Arc::new(RwLock::new(1)) }
     }
 
     /// Add a new track with specified properties
@@ -142,13 +138,7 @@ impl TrackManager {
 
         tracks
             .values()
-            .filter(|t| {
-                if has_solo {
-                    t.solo
-                } else {
-                    !t.muted
-                }
-            })
+            .filter(|t| if has_solo { t.solo } else { !t.muted })
             .cloned()
             .collect()
     }
@@ -250,12 +240,7 @@ mod tests {
 
         let track = manager.add_track(1, 0, events).await.unwrap();
 
-        let props = TrackProperties {
-            muted: None,
-            solo: None,
-            volume: Some(128),
-            pan: None,
-        };
+        let props = TrackProperties { muted: None, solo: None, volume: Some(128), pan: None };
 
         let result = manager.update_track(track.id, props).await;
         assert!(result.is_err());
@@ -272,12 +257,13 @@ mod tests {
         manager.add_track(3, 2, vec![create_test_event(2)]).await.unwrap();
 
         // Mute track 2
-        manager.update_track(track2.id, TrackProperties {
-            muted: Some(true),
-            solo: None,
-            volume: None,
-            pan: None,
-        }).await.unwrap();
+        manager
+            .update_track(
+                track2.id,
+                TrackProperties { muted: Some(true), solo: None, volume: None, pan: None },
+            )
+            .await
+            .unwrap();
 
         let active = manager.get_active_tracks().await;
         assert_eq!(active.len(), 2); // Only unmuted tracks
@@ -293,12 +279,13 @@ mod tests {
         manager.add_track(3, 2, vec![create_test_event(2)]).await.unwrap();
 
         // Solo track 2
-        manager.update_track(track2.id, TrackProperties {
-            muted: None,
-            solo: Some(true),
-            volume: None,
-            pan: None,
-        }).await.unwrap();
+        manager
+            .update_track(
+                track2.id,
+                TrackProperties { muted: None, solo: Some(true), volume: None, pan: None },
+            )
+            .await
+            .unwrap();
 
         let active = manager.get_active_tracks().await;
         assert_eq!(active.len(), 1); // Only solo track

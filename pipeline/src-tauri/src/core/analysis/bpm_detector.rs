@@ -1,14 +1,14 @@
-   /// BPM Detection Module
-   ///
-   /// This module provides BPM (Beats Per Minute) detection for MIDI files.
-   /// It analyzes tempo change events and provides confidence scores.
-   ///
-   /// # Archetype: Trusty Module
-   /// - Pure functions with no side effects
-   /// - No I/O operations
-   /// - Highly testable
-   /// - Reusable across the application
 
+/// BPM Detection Module
+///
+/// This module provides BPM (Beats Per Minute) detection for MIDI files.
+/// It analyzes tempo change events and provides confidence scores.
+///
+/// # Archetype: Trusty Module
+/// - Pure functions with no side effects
+/// - No I/O operations
+/// - Highly testable
+/// - Reusable across the application
 use midi_library_shared::core::midi::types::{Event, MidiFile};
 
 /// Default BPM when no tempo events are found
@@ -102,11 +102,7 @@ pub fn detect_bpm(midi_file: &MidiFile) -> BpmDetectionResult {
             bpm: DEFAULT_BPM,
             confidence: 0.3, // Low confidence for default tempo
             method: BpmDetectionMethod::DefaultTempo,
-            metadata: BpmMetadata {
-                tempo_changes: vec![],
-                is_constant: true,
-                tempo_range: None,
-            },
+            metadata: BpmMetadata { tempo_changes: vec![], is_constant: true, tempo_range: None },
         };
     }
 
@@ -146,11 +142,7 @@ pub fn detect_bpm(midi_file: &MidiFile) -> BpmDetectionResult {
         bpm: avg_bpm,
         confidence,
         method,
-        metadata: BpmMetadata {
-            tempo_changes,
-            is_constant,
-            tempo_range,
-        },
+        metadata: BpmMetadata { tempo_changes, is_constant, tempo_range },
     }
 }
 
@@ -164,10 +156,7 @@ fn extract_tempo_events(midi_file: &MidiFile) -> Vec<(u32, u32)> {
         for timed_event in &track.events {
             current_tick += timed_event.delta_ticks;
 
-            if let Event::TempoChange {
-                microseconds_per_quarter,
-            } = timed_event.event
-            {
+            if let Event::TempoChange { microseconds_per_quarter } = timed_event.event {
                 tempo_events.push((current_tick, microseconds_per_quarter));
             }
         }

@@ -2481,6 +2481,7 @@ name = "import-tool"
 version = "1.0.0"
 dependencies = [
  "chrono",
+ "regex",
  "sha2",
  "sqlx",
  "tokio",
@@ -3190,6 +3191,25 @@ dependencies = [
  "walkdir",
  "xxhash-rust",
  "zip",
+]
+
+[[package]]
+name = "midi-software-center"
+version = "1.0.0"
+dependencies = [
+ "chrono",
+ "dotenv",
+ "midi-daw",
+ "midi-pipeline",
+ "serde",
+ "serde_json",
+ "sqlx",
+ "tauri",
+ "tauri-build",
+ "tokio",
+ "tracing",
+ "tracing-appender",
+ "tracing-subscriber",
 ]
 
 [[package]]

@@ -9,7 +9,7 @@
 
 use std::sync::Arc;
 use tokio::sync::Mutex;
-use tracing::{info};
+use tracing::info;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 // Import from lib
@@ -29,28 +29,33 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     info!("Starting MIDI Pipeline application");
 
     // Get database URL from environment
-    let database_url = std::env::var("DATABASE_URL")
-        .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string());
+    let database_url = std::env::var("DATABASE_URL").unwrap_or_else(|_| {
+        "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()
+    });
 
     // Initialize database connection
     let database = match Database::new(&database_url).await {
         Ok(db) => {
             info!("Database connection established");
             db
-        }
+        },
         Err(e) => {
-            info!("Database initialization deferred (will retry on first command): {}", e);
+            info!(
+                "Database initialization deferred (will retry on first command): {}",
+                e
+            );
             // Retry once
             Database::new(&database_url).await.map_err(|retry_err| {
-                format!("Failed to create database instance after retry: {}", retry_err)
+                format!(
+                    "Failed to create database instance after retry: {}",
+                    retry_err
+                )
             })?
-        }
+        },
     };
 
     // Create application state
-    let state = AppState {
-        database,
-    };
+    let state = AppState { database };
 
     // Create window manager
     let window_manager = Arc::new(Mutex::new(windows::WindowManager::new()));
@@ -69,22 +74,18 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             midi_pipeline::commands::files::get_files_by_category,
             midi_pipeline::commands::files::get_recent_files,
             midi_pipeline::commands::files::delete_file,
-
             // Import commands
             midi_pipeline::commands::file_import::import_single_file,
             midi_pipeline::commands::file_import::import_directory,
             midi_pipeline::commands::archive_import::import_archive_collection,
-
             // Search commands
             midi_pipeline::commands::search::search_files,
             midi_pipeline::commands::search::get_all_tags,
             midi_pipeline::commands::search::get_files_by_tag,
             midi_pipeline::commands::search::get_bpm_range,
             midi_pipeline::commands::search::get_all_keys,
-
             // Analysis commands
             midi_pipeline::commands::analyze::start_analysis,
-
             // Statistics commands
             midi_pipeline::commands::stats::get_category_stats,
             midi_pipeline::commands::stats::get_manufacturer_stats,
@@ -93,7 +94,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             midi_pipeline::commands::stats::get_duplicate_count,
             midi_pipeline::commands::stats::get_database_size,
             midi_pipeline::commands::stats::check_database_health,
-
             // Tag commands
             midi_pipeline::commands::tags::get_file_tags,
             midi_pipeline::commands::tags::get_popular_tags,
@@ -105,7 +105,6 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             midi_pipeline::commands::tags::remove_tag_from_file,
             midi_pipeline::commands::tags::get_files_by_tags,
             midi_pipeline::commands::tags::get_tag_stats,
-
             // Progress tracking commands
             midi_pipeline::commands::progress::start_progress_tracking,
             midi_pipeline::commands::progress::update_progress,
@@ -114,10 +113,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             midi_pipeline::commands::progress::complete_progress,
             midi_pipeline::commands::progress::get_current_progress,
             midi_pipeline::commands::progress::reset_progress,
-
             // System commands
             midi_pipeline::commands::system::get_system_info,
-
             // Window management commands
             windows::commands::show_window,
             windows::commands::hide_window,
@@ -134,7 +131,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             windows::commands::set_focused_window,
             windows::commands::get_current_layout,
         ])
-        .setup(|app| {
+        .setup(|_app| {
             info!("Application setup complete");
             // TODO: Setup window shortcuts (disabled until Tauri 2.x API compatibility fixed)
             // windows::shortcuts::setup_window_shortcuts(app.handle())?;

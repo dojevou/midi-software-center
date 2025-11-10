@@ -1,7 +1,7 @@
-   /// Velocity Editor Undo/Redo Commands - Trusty Module
-   ///
-   /// Commands for velocity editor operations: set range, interpolate, reset velocities.
 
+/// Velocity Editor Undo/Redo Commands - Trusty Module
+///
+/// Commands for velocity editor operations: set range, interpolate, reset velocities.
 use super::core::{Command, UndoRedoError, UndoRedoResult};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -23,11 +23,7 @@ pub struct SetVelocityRangeCommand {
 
 impl SetVelocityRangeCommand {
     pub fn new(note_velocities: HashMap<i32, u8>) -> Self {
-        Self {
-            note_velocities,
-            old_velocities: HashMap::new(),
-            executed: false,
-        }
+        Self { note_velocities, old_velocities: HashMap::new(), executed: false }
     }
 
     pub fn with_old_velocities(mut self, old_velocities: HashMap<i32, u8>) -> Self {
@@ -98,8 +94,8 @@ impl InterpolateVelocityCommand {
         }
 
         let ratio = index as f32 / (self.note_ids.len() - 1) as f32;
-        let interpolated =
-            self.start_velocity as f32 + ratio * (self.end_velocity as i16 - self.start_velocity as i16) as f32;
+        let interpolated = self.start_velocity as f32
+            + ratio * (self.end_velocity as i16 - self.start_velocity as i16) as f32;
 
         interpolated.round().clamp(1.0, 127.0) as u8
     }
@@ -157,12 +153,7 @@ pub struct ResetVelocityCommand {
 
 impl ResetVelocityCommand {
     pub fn new(note_ids: Vec<i32>, default_velocity: u8) -> Self {
-        Self {
-            note_ids,
-            default_velocity,
-            old_velocities: HashMap::new(),
-            executed: false,
-        }
+        Self { note_ids, default_velocity, old_velocities: HashMap::new(), executed: false }
     }
 }
 
@@ -189,7 +180,11 @@ impl Command for ResetVelocityCommand {
     }
 
     fn description(&self) -> String {
-        format!("Reset Velocity to {} for {} notes", self.default_velocity, self.note_ids.len())
+        format!(
+            "Reset Velocity to {} for {} notes",
+            self.default_velocity,
+            self.note_ids.len()
+        )
     }
 
     fn memory_usage(&self) -> usize {
@@ -259,7 +254,10 @@ mod tests {
         let note_ids = vec![1, 2, 3];
         let cmd = InterpolateVelocityCommand::new(note_ids, 50, 100);
 
-        assert_eq!(cmd.description(), "Interpolate Velocity (50 to 100) for 3 notes");
+        assert_eq!(
+            cmd.description(),
+            "Interpolate Velocity (50 to 100) for 3 notes"
+        );
     }
 
     #[test]

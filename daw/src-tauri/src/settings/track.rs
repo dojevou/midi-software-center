@@ -24,12 +24,12 @@ impl TrackColor {
             return Err("Hex color must be 6 characters".to_string());
         }
 
-        let r = u8::from_str_radix(&hex[0..2], 16)
-            .map_err(|_| "Invalid red component".to_string())?;
+        let r =
+            u8::from_str_radix(&hex[0..2], 16).map_err(|_| "Invalid red component".to_string())?;
         let g = u8::from_str_radix(&hex[2..4], 16)
             .map_err(|_| "Invalid green component".to_string())?;
-        let b = u8::from_str_radix(&hex[4..6], 16)
-            .map_err(|_| "Invalid blue component".to_string())?;
+        let b =
+            u8::from_str_radix(&hex[4..6], 16).map_err(|_| "Invalid blue component".to_string())?;
 
         Ok(Self { r, g, b })
     }
@@ -90,7 +90,7 @@ impl TrackSettings {
     }
 
     pub fn set_default_track_volume(&mut self, volume: f32) -> Result<(), String> {
-        if volume < 0.0 || volume > 1.0 {
+        if !(0.0..=1.0).contains(&volume) {
             return Err("Volume must be between 0.0 and 1.0".to_string());
         }
         self.default_track_volume = volume;
@@ -98,7 +98,7 @@ impl TrackSettings {
     }
 
     pub fn set_default_track_pan(&mut self, pan: f32) -> Result<(), String> {
-        if pan < -1.0 || pan > 1.0 {
+        if !(-1.0..=1.0).contains(&pan) {
             return Err("Pan must be between -1.0 and 1.0".to_string());
         }
         self.default_track_pan = pan;
@@ -165,9 +165,7 @@ mod tests {
 
     #[test]
     fn test_builder_pattern() {
-        let settings = TrackSettings::new()
-            .with_color(TrackColor::new(255, 0, 0))
-            .with_volume(0.5);
+        let settings = TrackSettings::new().with_color(TrackColor::new(255, 0, 0)).with_volume(0.5);
 
         assert_eq!(settings.default_track_color.r, 255);
         assert_eq!(settings.default_track_volume, 0.5);

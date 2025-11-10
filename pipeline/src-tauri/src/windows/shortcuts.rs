@@ -1,3 +1,4 @@
+#[allow(dead_code)]
    /// Global keyboard shortcuts for window management
 
 use tauri::{AppHandle, GlobalShortcutManager};

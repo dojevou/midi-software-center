@@ -1,17 +1,14 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Default)]
 pub enum DataRetentionPolicy {
     Days7,
+    #[default]
     Days30,
     Days90,
 }
 
-impl Default for DataRetentionPolicy {
-    fn default() -> Self {
-        DataRetentionPolicy::Days30
-    }
-}
 
 impl DataRetentionPolicy {
     pub fn as_days(&self) -> u32 {
@@ -239,6 +236,9 @@ mod tests {
         let deserialized: PrivacySettings = serde_json::from_str(&json).unwrap();
 
         assert_eq!(settings.analytics_enabled, deserialized.analytics_enabled);
-        assert_eq!(settings.data_retention_policy, deserialized.data_retention_policy);
+        assert_eq!(
+            settings.data_retention_policy,
+            deserialized.data_retention_policy
+        );
     }
 }

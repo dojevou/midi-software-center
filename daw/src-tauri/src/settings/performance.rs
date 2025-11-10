@@ -1,18 +1,15 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Default)]
 pub enum VirtualScrollingThreshold {
     Items100 = 100,
     Items500 = 500,
+    #[default]
     Items1000 = 1000,
     Items5000 = 5000,
 }
 
-impl Default for VirtualScrollingThreshold {
-    fn default() -> Self {
-        VirtualScrollingThreshold::Items1000
-    }
-}
 
 impl VirtualScrollingThreshold {
     pub fn as_usize(self) -> usize {
@@ -73,7 +70,7 @@ impl PerformanceSettings {
     }
 
     pub fn set_cache_size(&mut self, size_mb: u32) -> Result<(), String> {
-        if size_mb < 100 || size_mb > 2048 {
+        if !(100..=2048).contains(&size_mb) {
             return Err("Cache size must be between 100 MB and 2048 MB".to_string());
         }
         self.cache_size_mb = size_mb;
@@ -85,7 +82,7 @@ impl PerformanceSettings {
     }
 
     pub fn set_thread_count(&mut self, count: u32) -> Result<(), String> {
-        if count < 1 || count > 16 {
+        if !(1..=16).contains(&count) {
             return Err("Thread count must be between 1 and 16".to_string());
         }
         self.batch_operation_thread_count = count;
@@ -97,7 +94,7 @@ impl PerformanceSettings {
     }
 
     pub fn set_memory_limit(&mut self, limit_mb: u32) -> Result<(), String> {
-        if limit_mb < 512 || limit_mb > 16384 {
+        if !(512..=16384).contains(&limit_mb) {
             return Err("Memory limit must be between 512 MB and 16384 MB".to_string());
         }
         self.memory_limit_mb = limit_mb;
@@ -114,7 +111,10 @@ mod tests {
         let settings = PerformanceSettings::default();
 
         assert_eq!(settings.cache_size_mb, 500);
-        assert_eq!(settings.virtual_scrolling_threshold, VirtualScrollingThreshold::Items1000);
+        assert_eq!(
+            settings.virtual_scrolling_threshold,
+            VirtualScrollingThreshold::Items1000
+        );
         assert_eq!(settings.batch_operation_thread_count, 4);
         assert!(settings.memory_limit_alert_enabled);
         assert_eq!(settings.memory_limit_mb, 2048);
@@ -130,9 +130,7 @@ mod tests {
 
     #[test]
     fn test_builder_pattern() {
-        let settings = PerformanceSettings::new()
-            .with_cache_size(1000)
-            .with_thread_count(8);
+        let settings = PerformanceSettings::new().with_cache_size(1000).with_thread_count(8);
 
         assert_eq!(settings.cache_size_mb, 1000);
         assert_eq!(settings.batch_operation_thread_count, 8);
@@ -204,7 +202,10 @@ mod tests {
     fn test_set_virtual_scrolling_threshold() {
         let mut settings = PerformanceSettings::default();
         settings.set_virtual_scrolling_threshold(VirtualScrollingThreshold::Items5000);
-        assert_eq!(settings.virtual_scrolling_threshold, VirtualScrollingThreshold::Items5000);
+        assert_eq!(
+            settings.virtual_scrolling_threshold,
+            VirtualScrollingThreshold::Items5000
+        );
     }
 
     #[test]

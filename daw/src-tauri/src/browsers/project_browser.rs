@@ -31,7 +31,11 @@ pub struct ProjectInfo {
 }
 
 impl ProjectInfo {
-    pub fn new(name: String, path: String, last_modified: i64) -> Result<Self, ProjectBrowserError> {
+    pub fn new(
+        name: String,
+        path: String,
+        last_modified: i64,
+    ) -> Result<Self, ProjectBrowserError> {
         if name.is_empty() {
             return Err(ProjectBrowserError::InvalidProjectName(name));
         }
@@ -39,12 +43,7 @@ impl ProjectInfo {
             return Err(ProjectBrowserError::InvalidPath(path));
         }
 
-        Ok(Self {
-            name,
-            path,
-            last_modified,
-            is_favorite: false,
-        })
+        Ok(Self { name, path, last_modified, is_favorite: false })
     }
 
     pub fn with_favorite(mut self, is_favorite: bool) -> Self {
@@ -103,7 +102,10 @@ impl ProjectBrowserState {
         Ok(project)
     }
 
-    pub fn delete_project_impl(&mut self, path: String) -> Result<ProjectInfo, ProjectBrowserError> {
+    pub fn delete_project_impl(
+        &mut self,
+        path: String,
+    ) -> Result<ProjectInfo, ProjectBrowserError> {
         let project = self
             .projects
             .remove(&path)
@@ -218,8 +220,8 @@ impl Default for ProjectBrowserState {
 }
 
 // Tauri Command Handlers (Task-O-Matic)
-use tauri::State;
 use std::sync::Mutex;
+use tauri::State;
 
 #[tauri::command]
 pub async fn create_project(
@@ -324,9 +326,7 @@ mod tests {
     #[test]
     fn test_create_project_already_exists() {
         let mut state = ProjectBrowserState::new();
-        state
-            .create_project_impl("Test".to_string(), "/path".to_string())
-            .unwrap();
+        state.create_project_impl("Test".to_string(), "/path".to_string()).unwrap();
 
         let result = state.create_project_impl("Test2".to_string(), "/path".to_string());
         assert!(matches!(
@@ -338,9 +338,7 @@ mod tests {
     #[test]
     fn test_open_project() {
         let mut state = ProjectBrowserState::new();
-        state
-            .create_project_impl("Test".to_string(), "/path".to_string())
-            .unwrap();
+        state.create_project_impl("Test".to_string(), "/path".to_string()).unwrap();
 
         let project = state.open_project_impl("/path".to_string()).unwrap();
         assert_eq!(project.name, "Test");
@@ -359,9 +357,7 @@ mod tests {
     #[test]
     fn test_delete_project() {
         let mut state = ProjectBrowserState::new();
-        state
-            .create_project_impl("Test".to_string(), "/path".to_string())
-            .unwrap();
+        state.create_project_impl("Test".to_string(), "/path".to_string()).unwrap();
 
         let deleted = state.delete_project_impl("/path".to_string()).unwrap();
         assert_eq!(deleted.name, "Test");
@@ -382,9 +378,7 @@ mod tests {
     #[test]
     fn test_toggle_favorite() {
         let mut state = ProjectBrowserState::new();
-        state
-            .create_project_impl("Test".to_string(), "/path".to_string())
-            .unwrap();
+        state.create_project_impl("Test".to_string(), "/path".to_string()).unwrap();
 
         let is_favorite = state.toggle_favorite_impl("/path".to_string()).unwrap();
         assert!(is_favorite);
@@ -408,9 +402,7 @@ mod tests {
     #[test]
     fn test_update_last_modified() {
         let mut state = ProjectBrowserState::new();
-        state
-            .create_project_impl("Test".to_string(), "/path".to_string())
-            .unwrap();
+        state.create_project_impl("Test".to_string(), "/path".to_string()).unwrap();
 
         let original_time = state.get_project("/path").unwrap().last_modified;
 
@@ -426,15 +418,9 @@ mod tests {
     #[test]
     fn test_recent_projects_ordering() {
         let mut state = ProjectBrowserState::new();
-        state
-            .create_project_impl("P1".to_string(), "/path1".to_string())
-            .unwrap();
-        state
-            .create_project_impl("P2".to_string(), "/path2".to_string())
-            .unwrap();
-        state
-            .create_project_impl("P3".to_string(), "/path3".to_string())
-            .unwrap();
+        state.create_project_impl("P1".to_string(), "/path1".to_string()).unwrap();
+        state.create_project_impl("P2".to_string(), "/path2".to_string()).unwrap();
+        state.create_project_impl("P3".to_string(), "/path3".to_string()).unwrap();
 
         let recent = state.get_recent_projects();
         assert_eq!(recent.len(), 3);
@@ -449,9 +435,7 @@ mod tests {
         state.max_recent = 3;
 
         for i in 0..5 {
-            state
-                .create_project_impl(format!("P{}", i), format!("/path{}", i))
-                .unwrap();
+            state.create_project_impl(format!("P{}", i), format!("/path{}", i)).unwrap();
         }
 
         assert_eq!(state.recent_projects.len(), 3);
@@ -463,12 +447,8 @@ mod tests {
     #[test]
     fn test_recent_projects_reopen() {
         let mut state = ProjectBrowserState::new();
-        state
-            .create_project_impl("P1".to_string(), "/path1".to_string())
-            .unwrap();
-        state
-            .create_project_impl("P2".to_string(), "/path2".to_string())
-            .unwrap();
+        state.create_project_impl("P1".to_string(), "/path1".to_string()).unwrap();
+        state.create_project_impl("P2".to_string(), "/path2".to_string()).unwrap();
 
         // Reopen first project
         state.open_project_impl("/path1".to_string()).unwrap();
@@ -481,15 +461,9 @@ mod tests {
     #[test]
     fn test_get_favorite_projects() {
         let mut state = ProjectBrowserState::new();
-        state
-            .create_project_impl("P1".to_string(), "/path1".to_string())
-            .unwrap();
-        state
-            .create_project_impl("P2".to_string(), "/path2".to_string())
-            .unwrap();
-        state
-            .create_project_impl("P3".to_string(), "/path3".to_string())
-            .unwrap();
+        state.create_project_impl("P1".to_string(), "/path1".to_string()).unwrap();
+        state.create_project_impl("P2".to_string(), "/path2".to_string()).unwrap();
+        state.create_project_impl("P3".to_string(), "/path3".to_string()).unwrap();
 
         state.toggle_favorite_impl("/path1".to_string()).unwrap();
         state.toggle_favorite_impl("/path3".to_string()).unwrap();
@@ -529,12 +503,8 @@ mod tests {
     #[test]
     fn test_clear_recent() {
         let mut state = ProjectBrowserState::new();
-        state
-            .create_project_impl("P1".to_string(), "/path1".to_string())
-            .unwrap();
-        state
-            .create_project_impl("P2".to_string(), "/path2".to_string())
-            .unwrap();
+        state.create_project_impl("P1".to_string(), "/path1".to_string()).unwrap();
+        state.create_project_impl("P2".to_string(), "/path2".to_string()).unwrap();
 
         state.clear_recent();
         assert_eq!(state.recent_projects.len(), 0);

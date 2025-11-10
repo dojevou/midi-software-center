@@ -1,22 +1,19 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Default)]
 pub enum BufferSize {
     Samples32 = 32,
     Samples64 = 64,
     Samples128 = 128,
     Samples256 = 256,
+    #[default]
     Samples512 = 512,
     Samples1024 = 1024,
     Samples2048 = 2048,
     Samples4096 = 4096,
 }
 
-impl Default for BufferSize {
-    fn default() -> Self {
-        BufferSize::Samples512
-    }
-}
 
 impl BufferSize {
     pub fn as_u32(self) -> u32 {
@@ -45,8 +42,10 @@ impl BufferSize {
 }
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Default)]
 pub enum SampleRate {
     Hz44100 = 44100,
+    #[default]
     Hz48000 = 48000,
     Hz88200 = 88200,
     Hz96000 = 96000,
@@ -54,11 +53,6 @@ pub enum SampleRate {
     Hz192000 = 192000,
 }
 
-impl Default for SampleRate {
-    fn default() -> Self {
-        SampleRate::Hz48000
-    }
-}
 
 impl SampleRate {
     pub fn as_u32(self) -> u32 {
@@ -212,7 +206,10 @@ mod tests {
         let settings = AudioSettings::new()
             .with_buffer_size(BufferSize::Samples256)
             .with_sample_rate(SampleRate::Hz44100)
-            .with_devices(Some("Input Device".to_string()), Some("Output Device".to_string()));
+            .with_devices(
+                Some("Input Device".to_string()),
+                Some("Output Device".to_string()),
+            );
 
         assert_eq!(settings.buffer_size, BufferSize::Samples256);
         assert_eq!(settings.sample_rate, SampleRate::Hz44100);
@@ -288,11 +285,7 @@ mod tests {
 
     #[test]
     fn test_buffer_size_latency_various() {
-        let rates = [
-            SampleRate::Hz44100,
-            SampleRate::Hz48000,
-            SampleRate::Hz96000,
-        ];
+        let rates = [SampleRate::Hz44100, SampleRate::Hz48000, SampleRate::Hz96000];
 
         for rate in rates {
             let latency_256 = BufferSize::Samples256.latency_ms(rate);

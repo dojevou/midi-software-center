@@ -1,12 +1,11 @@
-   /// MIDI hardware Tauri commands
-   ///
-   /// Grown-up Scripts: Thin wrappers around MIDI manager for frontend access.
-   /// Delegate all business logic to Trusty Modules and MIDI manager.
-
-use tauri::State;
-use std::sync::Arc;
 use crate::midi::MidiManager;
 use crate::models::MidiDevice;
+use std::sync::Arc;
+/// MIDI hardware Tauri commands
+///
+/// Grown-up Scripts: Thin wrappers around MIDI manager for frontend access.
+/// Delegate all business logic to Trusty Modules and MIDI manager.
+use tauri::State;
 
 /// List all available MIDI output devices
 ///
@@ -33,9 +32,7 @@ pub async fn midi_connect(
 ///
 /// Closes the active MIDI connection if one exists.
 #[tauri::command]
-pub async fn midi_disconnect(
-    midi_manager: State<'_, Arc<MidiManager>>,
-) -> Result<(), String> {
+pub async fn midi_disconnect(midi_manager: State<'_, Arc<MidiManager>>) -> Result<(), String> {
     midi_manager.disconnect().await;
     Ok(())
 }
@@ -44,9 +41,7 @@ pub async fn midi_disconnect(
 ///
 /// Returns true if a MIDI device is connected, false otherwise.
 #[tauri::command]
-pub async fn midi_is_connected(
-    midi_manager: State<'_, Arc<MidiManager>>,
-) -> Result<bool, String> {
+pub async fn midi_is_connected(midi_manager: State<'_, Arc<MidiManager>>) -> Result<bool, String> {
     Ok(midi_manager.is_connected().await)
 }
 
@@ -58,10 +53,7 @@ pub async fn midi_get_current_device(
     midi_manager: State<'_, Arc<MidiManager>>,
 ) -> Result<Option<MidiDevice>, String> {
     if let Some(name) = midi_manager.current_device().await {
-        Ok(Some(MidiDevice {
-            name,
-            manufacturer: None,
-        }))
+        Ok(Some(MidiDevice { name, manufacturer: None }))
     } else {
         Ok(None)
     }

@@ -1,33 +1,33 @@
-   /// Query Performance Analyzer - Comprehensive Database Query Profiling
-   ///
-   /// This module provides comprehensive profiling and optimization analysis for all
-   /// database queries in the MIDI Software Center system.
-   ///
-   /// Architecture: Task-O-Matic (Analysis & Reporting Tool)
-   /// Purpose: Measure, analyze, and optimize database query performance
-   ///
-   /// ## Query Categories Analyzed:
-   ///
-   /// 1. **Search Queries (DatabaseWindow)** - Full-text search with filters
-   /// 2. **File Import Queries** - Batch insert operations
-   /// 3. **Track List Queries (DAW)** - Multi-track loading
-   /// 4. **Metadata Queries** - Musical analysis data retrieval
-   ///
-   /// ## Performance Targets:
-   ///
-   /// - Search queries: < 500ms for 100K+ files
-   /// - File imports: > 1,000 files/sec with batching
-   /// - Track loading: < 10ms per query
-   /// - Count queries: < 100ms with proper indexing
-   ///
-   /// ## Optimization Strategies:
-   ///
-   /// - Index analysis and recommendations
-   /// - Query plan examination (EXPLAIN ANALYZE)
-   /// - Connection pool tuning
-   /// - Query caching strategies
-   /// - Batch operation optimization
 
+/// Query Performance Analyzer - Comprehensive Database Query Profiling
+///
+/// This module provides comprehensive profiling and optimization analysis for all
+/// database queries in the MIDI Software Center system.
+///
+/// Architecture: Task-O-Matic (Analysis & Reporting Tool)
+/// Purpose: Measure, analyze, and optimize database query performance
+///
+/// ## Query Categories Analyzed:
+///
+/// 1. **Search Queries (DatabaseWindow)** - Full-text search with filters
+/// 2. **File Import Queries** - Batch insert operations
+/// 3. **Track List Queries (DAW)** - Multi-track loading
+/// 4. **Metadata Queries** - Musical analysis data retrieval
+///
+/// ## Performance Targets:
+///
+/// - Search queries: < 500ms for 100K+ files
+/// - File imports: > 1,000 files/sec with batching
+/// - Track loading: < 10ms per query
+/// - Count queries: < 100ms with proper indexing
+///
+/// ## Optimization Strategies:
+///
+/// - Index analysis and recommendations
+/// - Query plan examination (EXPLAIN ANALYZE)
+/// - Connection pool tuning
+/// - Query caching strategies
+/// - Batch operation optimization
 use serde::{Deserialize, Serialize};
 use sqlx::{PgPool, Row};
 use std::time::{Duration, Instant};
@@ -138,10 +138,10 @@ pub struct CacheRecommendation {
 /// Cache type
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum CacheType {
-    InMemory,      // Application-level (e.g., moka, cached)
-    Redis,         // Distributed cache
-    PostgreSQL,    // Database-level materialized views
-    ResultSet,     // Query result caching
+    InMemory,   // Application-level (e.g., moka, cached)
+    Redis,      // Distributed cache
+    PostgreSQL, // Database-level materialized views
+    ResultSet,  // Query result caching
 }
 
 /// Load test result
@@ -186,11 +186,7 @@ pub struct QueryAnalyzer {
 impl QueryAnalyzer {
     /// Create new query analyzer
     pub fn new(pool: PgPool) -> Self {
-        Self {
-            pool,
-            enable_explain: true,
-            enable_load_tests: true,
-        }
+        Self { pool, enable_explain: true, enable_load_tests: true }
     }
 
     /// Generate comprehensive profiling report
@@ -201,7 +197,10 @@ impl QueryAnalyzer {
 
         // Gather database statistics
         let database_stats = self.gather_database_stats().await?;
-        info!("Database stats: {} files, {} MB", database_stats.total_files, database_stats.database_size_mb);
+        info!(
+            "Database stats: {} files, {} MB",
+            database_stats.total_files, database_stats.database_size_mb
+        );
 
         // Analyze critical queries
         let mut query_analyses = Vec::new();
@@ -240,7 +239,8 @@ impl QueryAnalyzer {
         };
 
         // Generate summary
-        let summary = self.generate_summary(&query_analyses, &index_recommendations, &load_test_results);
+        let summary =
+            self.generate_summary(&query_analyses, &index_recommendations, &load_test_results);
 
         Ok(QueryProfilingReport {
             timestamp,
@@ -272,43 +272,42 @@ impl QueryAnalyzer {
             .map_err(|e| format!("Failed to count tags: {}", e))?;
 
         // Count metadata records
-        let total_metadata_records: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM musical_metadata")
-            .fetch_one(&self.pool)
-            .await
-            .map_err(|e| format!("Failed to count metadata: {}", e))?;
+        let total_metadata_records: i64 =
+            sqlx::query_scalar("SELECT COUNT(*) FROM musical_metadata")
+                .fetch_one(&self.pool)
+                .await
+                .map_err(|e| format!("Failed to count metadata: {}", e))?;
 
         // Database size
         let database_size_mb: f64 = sqlx::query_scalar(
-            "SELECT pg_database_size(current_database())::NUMERIC / (1024.0 * 1024.0) as size_mb"
+            "SELECT pg_database_size(current_database())::NUMERIC / (1024.0 * 1024.0) as size_mb",
         )
         .fetch_one(&self.pool)
         .await
         .map_err(|e| format!("Failed to get database size: {}", e))?;
 
         // Index count
-        let index_count: i64 = sqlx::query_scalar(
-            "SELECT COUNT(*) FROM pg_indexes WHERE schemaname = 'public'"
-        )
-        .fetch_one(&self.pool)
-        .await
-        .map_err(|e| format!("Failed to count indexes: {}", e))?;
+        let index_count: i64 =
+            sqlx::query_scalar("SELECT COUNT(*) FROM pg_indexes WHERE schemaname = 'public'")
+                .fetch_one(&self.pool)
+                .await
+                .map_err(|e| format!("Failed to count indexes: {}", e))?;
 
         // Table count
         let table_count: i64 = sqlx::query_scalar(
             "SELECT COUNT(*) FROM information_schema.tables
-             WHERE table_schema = 'public' AND table_type = 'BASE TABLE'"
+             WHERE table_schema = 'public' AND table_type = 'BASE TABLE'",
         )
         .fetch_one(&self.pool)
         .await
         .map_err(|e| format!("Failed to count tables: {}", e))?;
 
         // Active connections
-        let active_connections: i64 = sqlx::query_scalar(
-            "SELECT COUNT(*) FROM pg_stat_activity WHERE state = 'active'"
-        )
-        .fetch_one(&self.pool)
-        .await
-        .map_err(|e| format!("Failed to count connections: {}", e))?;
+        let active_connections: i64 =
+            sqlx::query_scalar("SELECT COUNT(*) FROM pg_stat_activity WHERE state = 'active'")
+                .fetch_one(&self.pool)
+                .await
+                .map_err(|e| format!("Failed to count connections: {}", e))?;
 
         Ok(DatabaseStats {
             total_files,
@@ -350,8 +349,9 @@ impl QueryAnalyzer {
             self.analyze_single_query(
                 "Search: Full-text search (text='bass')",
                 QueryType::Select,
-                query
-            ).await?
+                query,
+            )
+            .await?,
         );
 
         // Test 2: BPM range search
@@ -368,11 +368,8 @@ impl QueryAnalyzer {
         "#;
 
         analyses.push(
-            self.analyze_single_query(
-                "Search: BPM range (120-140)",
-                QueryType::Select,
-                query
-            ).await?
+            self.analyze_single_query("Search: BPM range (120-140)", QueryType::Select, query)
+                .await?,
         );
 
         // Test 3: Complex multi-filter search
@@ -398,8 +395,9 @@ impl QueryAnalyzer {
             self.analyze_single_query(
                 "Search: Multi-filter (BPM + key + notes + category)",
                 QueryType::Join,
-                query
-            ).await?
+                query,
+            )
+            .await?,
         );
 
         // Test 4: Count query for pagination
@@ -415,8 +413,9 @@ impl QueryAnalyzer {
             self.analyze_single_query(
                 "Search: Count query for pagination",
                 QueryType::Count,
-                query
-            ).await?
+                query,
+            )
+            .await?,
         );
 
         Ok(analyses)
@@ -445,11 +444,8 @@ impl QueryAnalyzer {
         "#;
 
         analyses.push(
-            self.analyze_single_query(
-                "Import: Single file insert",
-                QueryType::Insert,
-                query
-            ).await?
+            self.analyze_single_query("Import: Single file insert", QueryType::Insert, query)
+                .await?,
         );
 
         // Test 2: Duplicate check query
@@ -458,11 +454,8 @@ impl QueryAnalyzer {
         "#;
 
         analyses.push(
-            self.analyze_single_query(
-                "Import: Duplicate check by hash",
-                QueryType::Count,
-                query
-            ).await?
+            self.analyze_single_query("Import: Duplicate check by hash", QueryType::Count, query)
+                .await?,
         );
 
         // Test 3: Find by path query
@@ -473,11 +466,8 @@ impl QueryAnalyzer {
         "#;
 
         analyses.push(
-            self.analyze_single_query(
-                "Import: Find file by path",
-                QueryType::Select,
-                query
-            ).await?
+            self.analyze_single_query("Import: Find file by path", QueryType::Select, query)
+                .await?,
         );
 
         Ok(analyses)
@@ -498,11 +488,8 @@ impl QueryAnalyzer {
         "#;
 
         analyses.push(
-            self.analyze_single_query(
-                "Track: Single file lookup by ID",
-                QueryType::Select,
-                query
-            ).await?
+            self.analyze_single_query("Track: Single file lookup by ID", QueryType::Select, query)
+                .await?,
         );
 
         // Test 2: Batch track loading (10 files)
@@ -514,11 +501,8 @@ impl QueryAnalyzer {
         "#;
 
         analyses.push(
-            self.analyze_single_query(
-                "Track: Batch loading (10 files)",
-                QueryType::Select,
-                query
-            ).await?
+            self.analyze_single_query("Track: Batch loading (10 files)", QueryType::Select, query)
+                .await?,
         );
 
         Ok(analyses)
@@ -555,8 +539,9 @@ impl QueryAnalyzer {
             self.analyze_single_query(
                 "Metadata: Full file details with all joins",
                 QueryType::Join,
-                query
-            ).await?
+                query,
+            )
+            .await?,
         );
 
         // Test 2: Mark file as analyzed
@@ -567,11 +552,8 @@ impl QueryAnalyzer {
         "#;
 
         analyses.push(
-            self.analyze_single_query(
-                "Metadata: Mark file as analyzed",
-                QueryType::Update,
-                query
-            ).await?
+            self.analyze_single_query("Metadata: Mark file as analyzed", QueryType::Update, query)
+                .await?,
         );
 
         Ok(analyses)
@@ -591,9 +573,7 @@ impl QueryAnalyzer {
 
         // Execute query and measure time
         let start = Instant::now();
-        let result = sqlx::query(sql)
-            .fetch_all(&self.pool)
-            .await;
+        let result = sqlx::query(sql).fetch_all(&self.pool).await;
         let execution_time = start.elapsed();
 
         let rows_returned = match result {
@@ -617,12 +597,8 @@ impl QueryAnalyzer {
         );
 
         // Identify bottlenecks
-        let bottlenecks = self.identify_bottlenecks(
-            execution_time,
-            rows_returned,
-            uses_index,
-            &query_plan,
-        );
+        let bottlenecks =
+            self.identify_bottlenecks(execution_time, rows_returned, uses_index, &query_plan);
 
         // Generate recommendations
         let recommendations = self.generate_query_recommendations(
@@ -653,36 +629,33 @@ impl QueryAnalyzer {
     async fn get_query_plan(&self, sql: &str) -> Result<(String, f64, bool, Vec<String>), String> {
         let explain_query = format!("EXPLAIN (ANALYZE, BUFFERS, FORMAT JSON) {}", sql);
 
-        let result = sqlx::query(&explain_query)
-            .fetch_one(&self.pool)
-            .await;
+        let result = sqlx::query(&explain_query).fetch_one(&self.pool).await;
 
         match result {
             Ok(row) => {
-                let plan_json: serde_json::Value = row.try_get(0)
-                    .map_err(|e| format!("Failed to parse EXPLAIN output: {}", e))?;
+                let plan_json: serde_json::Value =
+                    row.try_get(0).map_err(|e| format!("Failed to parse EXPLAIN output: {}", e))?;
 
                 let plan_text = serde_json::to_string_pretty(&plan_json)
                     .unwrap_or_else(|_| "Failed to format plan".to_string());
 
                 // Extract cost estimate
-                let cost_estimate = plan_json[0]["Plan"]["Total Cost"]
-                    .as_f64()
-                    .unwrap_or(0.0);
+                let cost_estimate = plan_json[0]["Plan"]["Total Cost"].as_f64().unwrap_or(0.0);
 
                 // Check if indexes are used
                 let plan_str = plan_text.to_lowercase();
-                let uses_index = plan_str.contains("index scan") || plan_str.contains("index only scan");
+                let uses_index =
+                    plan_str.contains("index scan") || plan_str.contains("index only scan");
 
                 // Extract index names
                 let index_names = self.extract_index_names(&plan_text);
 
                 Ok((plan_text, cost_estimate, uses_index, index_names))
-            }
+            },
             Err(_) => {
                 // Query might fail for test data, return defaults
                 Ok((String::from("Plan unavailable"), 0.0, false, Vec::new()))
-            }
+            },
         }
     }
 
@@ -726,7 +699,12 @@ impl QueryAnalyzer {
         }
 
         // Penalty for not using index on SELECT/JOIN
-        if !uses_index && matches!(query_type, QueryType::Select | QueryType::Join | QueryType::Count) {
+        if !uses_index
+            && matches!(
+                query_type,
+                QueryType::Select | QueryType::Join | QueryType::Count
+            )
+        {
             score = score.saturating_sub(20);
         }
 
@@ -759,10 +737,13 @@ impl QueryAnalyzer {
         }
 
         if query_plan.to_lowercase().contains("nested loop") && rows_returned > 100 {
-            bottlenecks.push("Nested loop join with large result set - consider hash join".to_string());
+            bottlenecks
+                .push("Nested loop join with large result set - consider hash join".to_string());
         }
 
-        if query_plan.to_lowercase().contains("sort") && !query_plan.to_lowercase().contains("index") {
+        if query_plan.to_lowercase().contains("sort")
+            && !query_plan.to_lowercase().contains("index")
+        {
             bottlenecks.push("External sort operation - consider indexed sort column".to_string());
         }
 
@@ -784,11 +765,13 @@ impl QueryAnalyzer {
         }
 
         if bottlenecks.iter().any(|b| b.contains("Nested loop")) {
-            recommendations.push("Consider hash join instead of nested loop - increase work_mem".to_string());
+            recommendations
+                .push("Consider hash join instead of nested loop - increase work_mem".to_string());
         }
 
         if bottlenecks.iter().any(|b| b.contains("sort")) {
-            recommendations.push("Add index on ORDER BY columns to avoid external sort".to_string());
+            recommendations
+                .push("Add index on ORDER BY columns to avoid external sort".to_string());
         }
 
         if index_names.is_empty() && matches!(query_type, QueryType::Join) {
@@ -810,9 +793,13 @@ impl QueryAnalyzer {
 
         // Analyze missing indexes from query plans
         for analysis in query_analyses {
-            if !analysis.uses_index && matches!(analysis.query_type, QueryType::Select | QueryType::Join) {
+            if !analysis.uses_index
+                && matches!(analysis.query_type, QueryType::Select | QueryType::Join)
+            {
                 // Extract table and column info from SQL (simplified)
-                if analysis.sql.contains("mm.bpm") && !analysis.index_names.iter().any(|i| i.contains("bpm")) {
+                if analysis.sql.contains("mm.bpm")
+                    && !analysis.index_names.iter().any(|i| i.contains("bpm"))
+                {
                     recommendations.push(IndexRecommendation {
                         priority: Priority::High,
                         table_name: "musical_metadata".to_string(),
@@ -827,9 +814,9 @@ impl QueryAnalyzer {
         }
 
         // Check for missing composite indexes
-        let has_multi_filter_slow = query_analyses.iter().any(|a| {
-            a.query_name.contains("Multi-filter") && a.execution_time_ms > 100.0
-        });
+        let has_multi_filter_slow = query_analyses
+            .iter()
+            .any(|a| a.query_name.contains("Multi-filter") && a.execution_time_ms > 100.0);
 
         if has_multi_filter_slow {
             recommendations.push(IndexRecommendation {
@@ -876,11 +863,14 @@ impl QueryAnalyzer {
         let mut recommendations = Vec::new();
 
         if active_connections > 20 {
-            recommendations.push("High connection count - consider connection pooling optimization".to_string());
+            recommendations.push(
+                "High connection count - consider connection pooling optimization".to_string(),
+            );
         }
 
         if idle_connections > 10 {
-            recommendations.push("Many idle connections - reduce max_connections or idle timeout".to_string());
+            recommendations
+                .push("Many idle connections - reduce max_connections or idle timeout".to_string());
         }
 
         Ok(ConnectionPoolMetrics {
@@ -905,9 +895,9 @@ impl QueryAnalyzer {
         let mut recommendations = Vec::new();
 
         // Search results caching
-        let search_slow = query_analyses.iter().any(|a| {
-            a.query_name.contains("Search") && a.execution_time_ms > 200.0
-        });
+        let search_slow = query_analyses
+            .iter()
+            .any(|a| a.query_name.contains("Search") && a.execution_time_ms > 200.0);
 
         if search_slow {
             recommendations.push(CacheRecommendation {
@@ -972,10 +962,10 @@ impl QueryAnalyzer {
             match sqlx::query(query).fetch_all(&self.pool).await {
                 Ok(_) => {
                     latencies.push(query_start.elapsed().as_secs_f64() * 1000.0);
-                }
+                },
                 Err(_) => {
                     errors += 1;
-                }
+                },
             }
         }
 
@@ -1043,15 +1033,13 @@ impl QueryAnalyzer {
     ) -> ProfilingSummary {
         let total_queries_analyzed = query_analyses.len() as u32;
 
-        let queries_meeting_targets = query_analyses.iter()
-            .filter(|a| a.optimization_score >= 70)
-            .count() as u32;
+        let queries_meeting_targets =
+            query_analyses.iter().filter(|a| a.optimization_score >= 70).count() as u32;
 
         let queries_needing_optimization = total_queries_analyzed - queries_meeting_targets;
 
-        let critical_issues = query_analyses.iter()
-            .filter(|a| a.optimization_score < 50)
-            .count() as u32;
+        let critical_issues =
+            query_analyses.iter().filter(|a| a.optimization_score < 50).count() as u32;
 
         let index_recommendations_count = index_recommendations.len() as u32;
 
@@ -1070,16 +1058,15 @@ impl QueryAnalyzer {
             0
         };
 
-        let load_tests_passing = load_test_results.iter()
-            .filter(|r| r.meets_target)
-            .count();
+        let load_tests_passing = load_test_results.iter().filter(|r| r.meets_target).count();
         let load_test_score = if !load_test_results.is_empty() {
             (load_tests_passing as f64 / load_test_results.len() as f64) * 100.0
         } else {
             100.0
         };
 
-        let overall_health_score = ((avg_optimization_score as f64 * 0.7) + (load_test_score * 0.3)) as u8;
+        let overall_health_score =
+            ((avg_optimization_score as f64 * 0.7) + (load_test_score * 0.3)) as u8;
 
         ProfilingSummary {
             total_queries_analyzed,
@@ -1103,41 +1090,96 @@ impl QueryProfilingReport {
         let mut output = String::new();
 
         output.push_str("# Database Query Profiling Report\n\n");
-        output.push_str(&format!("**Generated:** {}\n\n", self.timestamp.format("%Y-%m-%d %H:%M:%S UTC")));
+        output.push_str(&format!(
+            "**Generated:** {}\n\n",
+            self.timestamp.format("%Y-%m-%d %H:%M:%S UTC")
+        ));
 
         // Executive Summary
         output.push_str("## Executive Summary\n\n");
-        output.push_str(&format!("- **Overall Health Score:** {}/100\n", self.summary.overall_health_score));
-        output.push_str(&format!("- **Queries Analyzed:** {}\n", self.summary.total_queries_analyzed));
-        output.push_str(&format!("- **Meeting Targets:** {} ({:.0}%)\n",
-            self.summary.queries_meeting_targets,
-            (self.summary.queries_meeting_targets as f64 / self.summary.total_queries_analyzed as f64) * 100.0
+        output.push_str(&format!(
+            "- **Overall Health Score:** {}/100\n",
+            self.summary.overall_health_score
         ));
-        output.push_str(&format!("- **Needing Optimization:** {}\n", self.summary.queries_needing_optimization));
-        output.push_str(&format!("- **Critical Issues:** {}\n", self.summary.critical_issues));
-        output.push_str(&format!("- **Index Recommendations:** {}\n", self.summary.index_recommendations_count));
-        output.push_str(&format!("- **Estimated Improvement:** {:.1}%\n\n", self.summary.estimated_improvement_percent));
+        output.push_str(&format!(
+            "- **Queries Analyzed:** {}\n",
+            self.summary.total_queries_analyzed
+        ));
+        output.push_str(&format!(
+            "- **Meeting Targets:** {} ({:.0}%)\n",
+            self.summary.queries_meeting_targets,
+            (self.summary.queries_meeting_targets as f64
+                / self.summary.total_queries_analyzed as f64)
+                * 100.0
+        ));
+        output.push_str(&format!(
+            "- **Needing Optimization:** {}\n",
+            self.summary.queries_needing_optimization
+        ));
+        output.push_str(&format!(
+            "- **Critical Issues:** {}\n",
+            self.summary.critical_issues
+        ));
+        output.push_str(&format!(
+            "- **Index Recommendations:** {}\n",
+            self.summary.index_recommendations_count
+        ));
+        output.push_str(&format!(
+            "- **Estimated Improvement:** {:.1}%\n\n",
+            self.summary.estimated_improvement_percent
+        ));
 
         // Database Statistics
         output.push_str("## Database Statistics\n\n");
-        output.push_str(&format!("- **Total Files:** {}\n", self.database_stats.total_files));
-        output.push_str(&format!("- **Total Tags:** {}\n", self.database_stats.total_tags));
-        output.push_str(&format!("- **Metadata Records:** {}\n", self.database_stats.total_metadata_records));
-        output.push_str(&format!("- **Database Size:** {:.2} MB\n", self.database_stats.database_size_mb));
-        output.push_str(&format!("- **Index Count:** {}\n", self.database_stats.index_count));
-        output.push_str(&format!("- **Table Count:** {}\n", self.database_stats.table_count));
-        output.push_str(&format!("- **Active Connections:** {}\n\n", self.database_stats.active_connections));
+        output.push_str(&format!(
+            "- **Total Files:** {}\n",
+            self.database_stats.total_files
+        ));
+        output.push_str(&format!(
+            "- **Total Tags:** {}\n",
+            self.database_stats.total_tags
+        ));
+        output.push_str(&format!(
+            "- **Metadata Records:** {}\n",
+            self.database_stats.total_metadata_records
+        ));
+        output.push_str(&format!(
+            "- **Database Size:** {:.2} MB\n",
+            self.database_stats.database_size_mb
+        ));
+        output.push_str(&format!(
+            "- **Index Count:** {}\n",
+            self.database_stats.index_count
+        ));
+        output.push_str(&format!(
+            "- **Table Count:** {}\n",
+            self.database_stats.table_count
+        ));
+        output.push_str(&format!(
+            "- **Active Connections:** {}\n\n",
+            self.database_stats.active_connections
+        ));
 
         // Query Analyses
         output.push_str("## Query Performance Analysis\n\n");
         for analysis in &self.query_analyses {
             output.push_str(&format!("### {}\n\n", analysis.query_name));
-            output.push_str(&format!("**Type:** {:?} | **Score:** {}/100 | **Time:** {:.2}ms | **Rows:** {}\n\n",
-                analysis.query_type, analysis.optimization_score, analysis.execution_time_ms, analysis.rows_returned));
+            output.push_str(&format!(
+                "**Type:** {:?} | **Score:** {}/100 | **Time:** {:.2}ms | **Rows:** {}\n\n",
+                analysis.query_type,
+                analysis.optimization_score,
+                analysis.execution_time_ms,
+                analysis.rows_returned
+            ));
 
-            output.push_str(&format!("**Uses Index:** {} | **Indexes:** {}\n\n",
+            output.push_str(&format!(
+                "**Uses Index:** {} | **Indexes:** {}\n\n",
                 if analysis.uses_index { "Yes" } else { "No" },
-                if analysis.index_names.is_empty() { "None".to_string() } else { analysis.index_names.join(", ") }
+                if analysis.index_names.is_empty() {
+                    "None".to_string()
+                } else {
+                    analysis.index_names.join(", ")
+                }
             ));
 
             if !analysis.bottlenecks.is_empty() {
@@ -1161,9 +1203,17 @@ impl QueryProfilingReport {
         if !self.index_recommendations.is_empty() {
             output.push_str("## Index Recommendations\n\n");
             for (i, rec) in self.index_recommendations.iter().enumerate() {
-                output.push_str(&format!("### {}. {:?} Priority - {}.{}\n\n",
-                    i + 1, rec.priority, rec.table_name, rec.columns.join(", ")));
-                output.push_str(&format!("**Type:** {} | **Improvement:** {}\n\n", rec.index_type, rec.estimated_improvement));
+                output.push_str(&format!(
+                    "### {}. {:?} Priority - {}.{}\n\n",
+                    i + 1,
+                    rec.priority,
+                    rec.table_name,
+                    rec.columns.join(", ")
+                ));
+                output.push_str(&format!(
+                    "**Type:** {} | **Improvement:** {}\n\n",
+                    rec.index_type, rec.estimated_improvement
+                ));
                 output.push_str(&format!("**Rationale:** {}\n\n", rec.rationale));
                 output.push_str("**SQL:**\n```sql\n");
                 output.push_str(&rec.sql);
@@ -1187,15 +1237,31 @@ impl QueryProfilingReport {
             output.push_str("## Load Test Results\n\n");
             for result in &self.load_test_results {
                 output.push_str(&format!("### {}\n\n", result.test_name));
-                output.push_str(&format!("**Target:** {} | **Status:** {}\n\n",
+                output.push_str(&format!(
+                    "**Target:** {} | **Status:** {}\n\n",
                     result.target_metric,
                     if result.meets_target { "PASS" } else { "FAIL" }
                 ));
-                output.push_str(&format!("- **Throughput:** {:.2} queries/sec\n", result.throughput_qps));
-                output.push_str(&format!("- **Latency P50:** {:.2}ms\n", result.latency_p50_ms));
-                output.push_str(&format!("- **Latency P95:** {:.2}ms\n", result.latency_p95_ms));
-                output.push_str(&format!("- **Latency P99:** {:.2}ms\n", result.latency_p99_ms));
-                output.push_str(&format!("- **Errors:** {}/{}\n\n", result.errors, result.total_requests));
+                output.push_str(&format!(
+                    "- **Throughput:** {:.2} queries/sec\n",
+                    result.throughput_qps
+                ));
+                output.push_str(&format!(
+                    "- **Latency P50:** {:.2}ms\n",
+                    result.latency_p50_ms
+                ));
+                output.push_str(&format!(
+                    "- **Latency P95:** {:.2}ms\n",
+                    result.latency_p95_ms
+                ));
+                output.push_str(&format!(
+                    "- **Latency P99:** {:.2}ms\n",
+                    result.latency_p99_ms
+                ));
+                output.push_str(&format!(
+                    "- **Errors:** {}/{}\n\n",
+                    result.errors, result.total_requests
+                ));
             }
         }
 
@@ -1211,7 +1277,7 @@ mod tests {
     fn test_optimization_score_calculation() {
         let analyzer = QueryAnalyzer::new(
             // Mock pool - not used in this test
-            PgPool::connect_lazy("postgresql://localhost/test").unwrap()
+            PgPool::connect_lazy("postgresql://localhost/test").unwrap(),
         );
 
         // Fast query with index
@@ -1235,9 +1301,8 @@ mod tests {
 
     #[test]
     fn test_bottleneck_identification() {
-        let analyzer = QueryAnalyzer::new(
-            PgPool::connect_lazy("postgresql://localhost/test").unwrap()
-        );
+        let analyzer =
+            QueryAnalyzer::new(PgPool::connect_lazy("postgresql://localhost/test").unwrap());
 
         let bottlenecks = analyzer.identify_bottlenecks(
             Duration::from_millis(600),

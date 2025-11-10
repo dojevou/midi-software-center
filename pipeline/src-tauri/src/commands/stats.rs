@@ -1,25 +1,23 @@
-   /// Statistics command handlers - GROWN-UP SCRIPT ARCHETYPE
-   ///
-   /// PURPOSE: Database statistics and metrics
-   /// ARCHETYPE: Grown-up Script (I/O operations)
-   ///
-   /// ✅ CAN: Perform database I/O
-   /// ✅ CAN: Have side effects (complex queries)
-   /// ✅ SHOULD: Handle errors properly
-   /// ❌ NO: Complex business logic (delegate to Trusty Modules)
 
+/// Statistics command handlers - GROWN-UP SCRIPT ARCHETYPE
+///
+/// PURPOSE: Database statistics and metrics
+/// ARCHETYPE: Grown-up Script (I/O operations)
+///
+/// ✅ CAN: Perform database I/O
+/// ✅ CAN: Have side effects (complex queries)
+/// ✅ SHOULD: Handle errors properly
+/// ❌ NO: Complex business logic (delegate to Trusty Modules)
 use crate::AppState;
-use tauri::State;
 use std::collections::HashMap;
+use tauri::State;
 
 // =============================================================================
 // TAURI COMMANDS
 // =============================================================================
 
 /// Get file count breakdown by category (implementation for tests and reuse)
-pub async fn get_category_stats_impl(
-    state: &AppState,
-) -> Result<HashMap<String, i64>, String> {
+pub async fn get_category_stats_impl(state: &AppState) -> Result<HashMap<String, i64>, String> {
     let results: Vec<(Option<String>, i64)> = sqlx::query_as(
         r#"
         SELECT fc.primary_category::text as category, COUNT(*) as count
@@ -27,7 +25,7 @@ pub async fn get_category_stats_impl(
         LEFT JOIN file_categories fc ON f.id = fc.file_id
         GROUP BY fc.primary_category
         ORDER BY count DESC
-        "#
+        "#,
     )
     .fetch_all(&state.database.pool().await)
     .await
@@ -80,7 +78,7 @@ pub async fn get_manufacturer_stats(
         WHERE mm.manufacturer IS NOT NULL
         GROUP BY mm.manufacturer
         ORDER BY count DESC
-        "#
+        "#,
     )
     .fetch_all(&state.database.pool().await)
     .await
@@ -117,7 +115,7 @@ pub async fn get_key_signature_stats(
         WHERE mm.key_signature IS NOT NULL
         GROUP BY mm.key_signature
         ORDER BY count DESC
-        "#
+        "#,
     )
     .fetch_all(&state.database.pool().await)
     .await
@@ -141,15 +139,13 @@ pub async fn get_key_signature_stats(
 /// const count = await invoke<number>('get_recently_added_count');
 /// ```
 #[tauri::command]
-pub async fn get_recently_added_count(
-    state: State<'_, AppState>,
-) -> Result<i64, String> {
+pub async fn get_recently_added_count(state: State<'_, AppState>) -> Result<i64, String> {
     let count: (i64,) = sqlx::query_as(
         r#"
         SELECT COUNT(*)
         FROM files
         WHERE created_at >= NOW() - INTERVAL '7 days'
-        "#
+        "#,
     )
     .fetch_one(&state.database.pool().await)
     .await
@@ -168,9 +164,7 @@ pub async fn get_recently_added_count(
 /// const count = await invoke<number>('get_duplicate_count');
 /// ```
 #[tauri::command]
-pub async fn get_duplicate_count(
-    state: State<'_, AppState>,
-) -> Result<i64, String> {
+pub async fn get_duplicate_count(state: State<'_, AppState>) -> Result<i64, String> {
     let count: (i64,) = sqlx::query_as(
         r#"
         SELECT COUNT(*)
@@ -180,7 +174,7 @@ pub async fn get_duplicate_count(
             GROUP BY content_hash
             HAVING COUNT(*) > 1
         ) as duplicates
-        "#
+        "#,
     )
     .fetch_one(&state.database.pool().await)
     .await
@@ -194,7 +188,7 @@ pub async fn get_database_size_impl(state: &AppState) -> Result<String, String> 
     let size: (Option<String>,) = sqlx::query_as(
         r#"
         SELECT pg_size_pretty(pg_database_size(current_database()))
-        "#
+        "#,
     )
     .fetch_one(&state.database.pool().await)
     .await
@@ -214,9 +208,7 @@ pub async fn get_database_size_impl(state: &AppState) -> Result<String, String> 
 /// // "125.4 MB"
 /// ```
 #[tauri::command]
-pub async fn get_database_size(
-    state: State<'_, AppState>,
-) -> Result<String, String> {
+pub async fn get_database_size(state: State<'_, AppState>) -> Result<String, String> {
     get_database_size_impl(&state).await
 }
 
@@ -230,9 +222,7 @@ pub async fn get_database_size(
 /// const health = await invoke<'good' | 'warning' | 'error'>('check_database_health');
 /// ```
 #[tauri::command]
-pub async fn check_database_health(
-    state: State<'_, AppState>,
-) -> Result<String, String> {
+pub async fn check_database_health(state: State<'_, AppState>) -> Result<String, String> {
     // Try a simple query
     match state.database.test_connection().await {
         Ok(_) => {
@@ -244,7 +234,7 @@ pub async fn check_database_health(
                 Ok(_) => Ok("good".to_string()),
                 Err(_) => Ok("warning".to_string()),
             }
-        }
+        },
         Err(_) => Ok("error".to_string()),
     }
 }

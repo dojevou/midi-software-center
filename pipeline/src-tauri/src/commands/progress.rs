@@ -53,10 +53,7 @@ impl ProgressTracker {
 
     /// Get current progress state
     pub fn get_state(&self) -> ProgressState {
-        self.state
-            .lock()
-            .unwrap_or_else(|poisoned| poisoned.into_inner())
-            .clone()
+        self.state.lock().unwrap_or_else(|poisoned| poisoned.into_inner()).clone()
     }
 
     /// Update state and return the new state
@@ -64,20 +61,14 @@ impl ProgressTracker {
     where
         F: FnOnce(&mut ProgressState),
     {
-        let mut state = self
-            .state
-            .lock()
-            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        let mut state = self.state.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
         updater(&mut state);
         state.clone()
     }
 
     /// Calculate metrics based on current progress
     fn calculate_metrics(&self, current_index: usize, total_files: usize) -> (f64, f64) {
-        let start_time = self
-            .start_time
-            .lock()
-            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        let start_time = self.start_time.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
 
         if let Some(start) = *start_time {
             let elapsed = start.elapsed().as_secs_f64();
@@ -113,10 +104,8 @@ pub async fn start_progress_tracking(
     app: AppHandle,
 ) -> Result<(), String> {
     // Reset start time
-    *tracker
-        .start_time
-        .lock()
-        .unwrap_or_else(|poisoned| poisoned.into_inner()) = Some(std::time::Instant::now());
+    *tracker.start_time.lock().unwrap_or_else(|poisoned| poisoned.into_inner()) =
+        Some(std::time::Instant::now());
 
     // Initialize state
     let state = tracker.update_state(|s| {
@@ -148,16 +137,12 @@ pub async fn update_progress(
     app: AppHandle,
 ) -> Result<(), String> {
     let total = {
-        let state = tracker
-            .state
-            .lock()
-            .unwrap_or_else(|poisoned| poisoned.into_inner());
+        let state = tracker.state.lock().unwrap_or_else(|poisoned| poisoned.into_inner());
         state.total_files
     };
 
     // Calculate metrics
-    let (files_per_second, estimated_time_remaining) =
-        tracker.calculate_metrics(current, total);
+    let (files_per_second, estimated_time_remaining) = tracker.calculate_metrics(current, total);
 
     // Update state
     let state = tracker.update_state(|s| {
@@ -231,10 +216,7 @@ pub async fn complete_progress(
         .map_err(|e| format!("Failed to emit progress: {}", e))?;
 
     // Reset start time
-    *tracker
-        .start_time
-        .lock()
-        .unwrap_or_else(|poisoned| poisoned.into_inner()) = None;
+    *tracker.start_time.lock().unwrap_or_else(|poisoned| poisoned.into_inner()) = None;
 
     Ok(())
 }
@@ -253,10 +235,7 @@ pub async fn reset_progress(
     tracker: State<'_, ProgressTracker>,
     app: AppHandle,
 ) -> Result<(), String> {
-    *tracker
-        .start_time
-        .lock()
-        .unwrap_or_else(|poisoned| poisoned.into_inner()) = None;
+    *tracker.start_time.lock().unwrap_or_else(|poisoned| poisoned.into_inner()) = None;
 
     let state = tracker.update_state(|s| {
         *s = ProgressState::default();

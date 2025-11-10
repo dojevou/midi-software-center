@@ -1,25 +1,25 @@
-   /// UI rendering metrics and optimization
-   ///
-   /// Provides frame timing, FPS tracking, and virtual scrolling metrics
-   /// for optimizing DAW UI rendering performance.
-   ///
-   /// # Architecture
-   ///
-   /// This is a **Trusty Module** - pure metric calculation with no I/O:
-   /// - Frame timing and FPS calculation
-   /// - Virtual scrolling viewport tracking
-   /// - DOM update batching metrics
-   /// - Debounce timing analysis
-   ///
-   /// # Components
-   ///
-   /// - [`RenderMetrics`]: Frame timing and FPS tracking
-   /// - [`VirtualScrollMetrics`]: Virtual scrolling statistics
-   /// - [`DomUpdateMetrics`]: DOM update batching tracking
 
+use serde::{Deserialize, Serialize};
+/// UI rendering metrics and optimization
+///
+/// Provides frame timing, FPS tracking, and virtual scrolling metrics
+/// for optimizing DAW UI rendering performance.
+///
+/// # Architecture
+///
+/// This is a **Trusty Module** - pure metric calculation with no I/O:
+/// - Frame timing and FPS calculation
+/// - Virtual scrolling viewport tracking
+/// - DOM update batching metrics
+/// - Debounce timing analysis
+///
+/// # Components
+///
+/// - [`RenderMetrics`]: Frame timing and FPS tracking
+/// - [`VirtualScrollMetrics`]: Virtual scrolling statistics
+/// - [`DomUpdateMetrics`]: DOM update batching tracking
 use std::collections::VecDeque;
 use std::time::Instant;
-use serde::{Deserialize, Serialize};
 
 /// Target FPS for smooth rendering
 const TARGET_FPS: f64 = 60.0;
@@ -348,14 +348,28 @@ impl RenderMetrics {
         report.push_str("Render Metrics Report\n");
         report.push_str("====================\n");
         report.push_str(&format!("FPS: {:.1}\n", self.fps()));
-        report.push_str(&format!("Average Frame Time: {:.2} ms\n", self.average_frame_time()));
-        report.push_str(&format!("Min Frame Time: {:.2} ms\n", self.min_frame_time()));
-        report.push_str(&format!("Max Frame Time: {:.2} ms\n", self.max_frame_time()));
+        report.push_str(&format!(
+            "Average Frame Time: {:.2} ms\n",
+            self.average_frame_time()
+        ));
+        report.push_str(&format!(
+            "Min Frame Time: {:.2} ms\n",
+            self.min_frame_time()
+        ));
+        report.push_str(&format!(
+            "Max Frame Time: {:.2} ms\n",
+            self.max_frame_time()
+        ));
         report.push_str(&format!("Total Frames: {}\n", self.total_frames));
-        report.push_str(&format!("Dropped Frames: {} ({:.1}%)\n",
+        report.push_str(&format!(
+            "Dropped Frames: {} ({:.1}%)\n",
             self.dropped_frames,
-            self.dropped_frame_rate() * 100.0));
-        report.push_str(&format!("Smooth: {}\n", if self.is_smooth() { "Yes" } else { "No" }));
+            self.dropped_frame_rate() * 100.0
+        ));
+        report.push_str(&format!(
+            "Smooth: {}\n",
+            if self.is_smooth() { "Yes" } else { "No" }
+        ));
         report
     }
 }
@@ -551,8 +565,14 @@ impl VirtualScrollMetrics {
         report.push_str("======================\n");
         report.push_str(&format!("Total Items: {}\n", self.total_items));
         report.push_str(&format!("Visible Items: {}\n", self.visible_items()));
-        report.push_str(&format!("Viewport: {} - {}\n", self.viewport_start, self.viewport_end));
-        report.push_str(&format!("Memory Savings: {:.1}%\n", self.memory_savings() * 100.0));
+        report.push_str(&format!(
+            "Viewport: {} - {}\n",
+            self.viewport_start, self.viewport_end
+        ));
+        report.push_str(&format!(
+            "Memory Savings: {:.1}%\n",
+            self.memory_savings() * 100.0
+        ));
         report.push_str(&format!("Viewport Updates: {}\n", self.viewport_updates));
         report
     }
@@ -761,8 +781,14 @@ impl DomUpdateMetrics {
         report.push_str("==================\n");
         report.push_str(&format!("Total Batches: {}\n", self.total_batches));
         report.push_str(&format!("Total Updates: {}\n", self.total_updates));
-        report.push_str(&format!("Average Batch Size: {:.1}\n", self.average_batch_size()));
-        report.push_str(&format!("Average Batch Time: {:.2} ms\n", self.average_batch_time()));
+        report.push_str(&format!(
+            "Average Batch Size: {:.1}\n",
+            self.average_batch_size()
+        ));
+        report.push_str(&format!(
+            "Average Batch Time: {:.2} ms\n",
+            self.average_batch_time()
+        ));
         report
     }
 }

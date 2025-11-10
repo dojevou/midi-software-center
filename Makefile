@@ -167,7 +167,12 @@ check: format lint test
 #=============================================================================
 
 db-migrate:
-	@echo "Running database migrations..."
+	@echo "Running database migrations with sqlx..."
+	@cd database && sqlx migrate run --database-url postgresql://midiuser:145278963@localhost:5433/midi_library
+	@echo "✅ Database migrations complete"
+
+db-migrate-manual:
+	@echo "Running database migrations manually (legacy method)..."
 	docker-compose exec postgres psql -U midiuser -d midi_library -f /docker-entrypoint-initdb.d/001_schema.sql
 
 db-reset:

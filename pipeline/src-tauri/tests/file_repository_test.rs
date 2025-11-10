@@ -1,30 +1,30 @@
-   /// Comprehensive tests for FileRepository
-   ///
-   /// **Target Coverage:** 90%+ (Trusty Module requirement: 80%+)
-   /// **Total Tests:** 91 (78 original + 13 error path tests)
-   ///
-   /// This test suite covers all 8 public methods of FileRepository with comprehensive
-   /// edge case testing, constraint violation handling, and performance verification.
-   ///
-   /// **Test Categories:**
-   /// 1. Insert Operations (15 tests) - Basic, all fields, edge cases, constraints
-   /// 2. Find Operations (12 tests) - By ID, hash, path, not found
-   /// 3. Duplicate Detection (8 tests) - Duplicate hashes, paths, uniqueness
-   /// 4. Update Operations (15 tests) - Mark analyzed, metadata updates
-   /// 5. Delete Operations (10 tests) - Single, bulk, nonexistent, idempotent
-   /// 6. Count Operations (8 tests) - With filters, empty results
-   /// 7. List Operations (8 tests) - Pagination, sorting, filtering
-   /// 8. Edge Cases (10 tests) - Not found, large data, boundary values
-   /// 9. Error Path Tests (12 tests) - Constraint violations, value overflow
-   /// 10. Performance Tests (3 tests) - Batch operations, large datasets
-   ///
-   /// **Special Considerations:**
-   /// - Unique constraint on content_hash (no duplicates allowed)
-   /// - File size validation (≥ 0 bytes)
-   /// - MIDI format validation (0, 1, or 2 only)
-   /// - Track count validation (0-128 tracks)
-   /// - Filepath/filename length limits (VARCHAR(500) and VARCHAR(255))
-
+#[allow(dead_code, unused_imports, unused_variables)]
+/// Comprehensive tests for FileRepository
+///
+/// **Target Coverage:** 90%+ (Trusty Module requirement: 80%+)
+/// **Total Tests:** 91 (78 original + 13 error path tests)
+///
+/// This test suite covers all 8 public methods of FileRepository with comprehensive
+/// edge case testing, constraint violation handling, and performance verification.
+///
+/// **Test Categories:**
+/// 1. Insert Operations (15 tests) - Basic, all fields, edge cases, constraints
+/// 2. Find Operations (12 tests) - By ID, hash, path, not found
+/// 3. Duplicate Detection (8 tests) - Duplicate hashes, paths, uniqueness
+/// 4. Update Operations (15 tests) - Mark analyzed, metadata updates
+/// 5. Delete Operations (10 tests) - Single, bulk, nonexistent, idempotent
+/// 6. Count Operations (8 tests) - With filters, empty results
+/// 7. List Operations (8 tests) - Pagination, sorting, filtering
+/// 8. Edge Cases (10 tests) - Not found, large data, boundary values
+/// 9. Error Path Tests (12 tests) - Constraint violations, value overflow
+/// 10. Performance Tests (3 tests) - Batch operations, large datasets
+///
+/// **Special Considerations:**
+/// - Unique constraint on content_hash (no duplicates allowed)
+/// - File size validation (≥ 0 bytes)
+/// - MIDI format validation (0, 1, or 2 only)
+/// - Track count validation (0-128 tracks)
+/// - Filepath/filename length limits (VARCHAR(500) and VARCHAR(255))
 mod common;
 use midi_pipeline::db::models::{File, NewFile};
 use midi_pipeline::db::repositories::FileRepository;
@@ -33,13 +33,13 @@ use sqlx::PgPool;
 // Import test infrastructure
 mod fixtures;
 mod helpers;
+use common::assertions::{
+    assert_bpm_set, assert_file_has_tag, assert_file_not_exists as assert_file_path_not_exists,
+    assert_metadata_exists,
+};
 use fixtures::*;
 use helpers::db::*;
 use helpers::macros::*;
-use common::assertions::{
-    assert_metadata_exists, assert_file_has_tag, assert_bpm_set,
-    assert_file_not_exists as assert_file_path_not_exists,
-};
 
 // ============================================================================
 // SECTION 1: Insert Operations (12 tests)
@@ -56,9 +56,7 @@ async fn test_insert_basic_file() {
         .content_hash(random_hash())
         .build();
 
-    let file_id = FileRepository::insert(&pool, new_file)
-        .await
-        .expect("Insert failed");
+    let file_id = FileRepository::insert(&pool, new_file).await.expect("Insert failed");
 
     assert!(file_id > 0, "File ID should be positive");
     assert_file_exists(&pool, file_id).await;
@@ -89,9 +87,7 @@ async fn test_insert_with_all_fields() {
         .import_batch_id(uuid::Uuid::new_v4())
         .build();
 
-    let file_id = FileRepository::insert(&pool, new_file)
-        .await
-        .expect("Insert failed");
+    let file_id = FileRepository::insert(&pool, new_file).await.expect("Insert failed");
 
     let file = FileRepository::find_by_id(&pool, file_id)
         .await
@@ -102,7 +98,10 @@ async fn test_insert_with_all_fields() {
     assert_eq!(file.num_tracks, 4);
     assert_eq!(file.manufacturer, Some("Roland".to_string()));
     assert_eq!(file.collection_name, Some("Test Collection".to_string()));
-    assert_eq!(file.folder_tags, Some(vec!["drums".to_string(), "loops".to_string()]));
+    assert_eq!(
+        file.folder_tags,
+        Some(vec!["drums".to_string(), "loops".to_string()])
+    );
 
     cleanup_database(&pool).await.expect("Cleanup failed");
 }
@@ -113,9 +112,7 @@ async fn test_insert_drum_loop_preset() {
     cleanup_database(&pool).await.expect("Cleanup failed");
 
     let drum_loop = Fixtures::drum_loop();
-    let file_id = FileRepository::insert(&pool, drum_loop)
-        .await
-        .expect("Insert failed");
+    let file_id = FileRepository::insert(&pool, drum_loop).await.expect("Insert failed");
 
     let file = FileRepository::find_by_id(&pool, file_id)
         .await
@@ -135,9 +132,7 @@ async fn test_insert_piano_chord_preset() {
     cleanup_database(&pool).await.expect("Cleanup failed");
 
     let piano_chord = Fixtures::piano_chords();
-    let file_id = FileRepository::insert(&pool, piano_chord)
-        .await
-        .expect("Insert failed");
+    let file_id = FileRepository::insert(&pool, piano_chord).await.expect("Insert failed");
 
     let file = FileRepository::find_by_id(&pool, file_id)
         .await
@@ -156,9 +151,7 @@ async fn test_insert_bass_line_preset() {
     cleanup_database(&pool).await.expect("Cleanup failed");
 
     let bass_line = Fixtures::bass_line();
-    let file_id = FileRepository::insert(&pool, bass_line)
-        .await
-        .expect("Insert failed");
+    let file_id = FileRepository::insert(&pool, bass_line).await.expect("Insert failed");
 
     assert!(file_id > 0);
     assert_file_exists(&pool, file_id).await;
@@ -171,16 +164,10 @@ async fn test_insert_multiple_files() {
     let pool = setup_test_pool().await;
     cleanup_database(&pool).await.expect("Cleanup failed");
 
-    let files = vec![
-        Fixtures::drum_loop(),
-        Fixtures::piano_chords(),
-        Fixtures::bass_line(),
-    ];
+    let files = vec![Fixtures::drum_loop(), Fixtures::piano_chords(), Fixtures::bass_line()];
 
     for file in files {
-        FileRepository::insert(&pool, file)
-            .await
-            .expect("Insert failed");
+        FileRepository::insert(&pool, file).await.expect("Insert failed");
     }
 
     assert_file_count(&pool, 3).await;
@@ -202,9 +189,7 @@ async fn test_insert_with_empty_optional_fields() {
         // No folder tags
         .build();
 
-    let file_id = FileRepository::insert(&pool, new_file)
-        .await
-        .expect("Insert failed");
+    let file_id = FileRepository::insert(&pool, new_file).await.expect("Insert failed");
 
     let file = FileRepository::find_by_id(&pool, file_id)
         .await
@@ -231,9 +216,7 @@ async fn test_insert_with_long_filename() {
         .content_hash(random_hash())
         .build();
 
-    let file_id = FileRepository::insert(&pool, new_file)
-        .await
-        .expect("Insert failed");
+    let file_id = FileRepository::insert(&pool, new_file).await.expect("Insert failed");
 
     let file = FileRepository::find_by_id(&pool, file_id)
         .await
@@ -257,9 +240,7 @@ async fn test_insert_with_unicode_filename() {
         .content_hash(random_hash())
         .build();
 
-    let file_id = FileRepository::insert(&pool, new_file)
-        .await
-        .expect("Insert failed");
+    let file_id = FileRepository::insert(&pool, new_file).await.expect("Insert failed");
 
     let file = FileRepository::find_by_id(&pool, file_id)
         .await
@@ -283,9 +264,7 @@ async fn test_insert_with_special_characters() {
         .content_hash(random_hash())
         .build();
 
-    let file_id = FileRepository::insert(&pool, new_file)
-        .await
-        .expect("Insert failed");
+    let file_id = FileRepository::insert(&pool, new_file).await.expect("Insert failed");
 
     let file = FileRepository::find_by_id(&pool, file_id)
         .await
@@ -342,7 +321,10 @@ async fn test_insert_sets_timestamps() {
 
     assert!(file.created_at.timestamp() > 0, "created_at should be set");
     assert!(file.updated_at.timestamp() > 0, "updated_at should be set");
-    assert_eq!(file.analyzed_at, None, "analyzed_at should be NULL initially");
+    assert_eq!(
+        file.analyzed_at, None,
+        "analyzed_at should be NULL initially"
+    );
 
     cleanup_database(&pool).await.expect("Cleanup failed");
 }
@@ -359,9 +341,7 @@ async fn test_find_by_id_existing() {
     let new_file = Fixtures::drum_loop();
     let file_id = FileRepository::insert(&pool, new_file).await.expect("Insert failed");
 
-    let found = FileRepository::find_by_id(&pool, file_id)
-        .await
-        .expect("Find failed");
+    let found = FileRepository::find_by_id(&pool, file_id).await.expect("Find failed");
 
     assert!(found.is_some(), "File should be found");
     let file = found.unwrap();
@@ -375,9 +355,7 @@ async fn test_find_by_id_not_found() {
     let pool = setup_test_pool().await;
     cleanup_database(&pool).await.expect("Cleanup failed");
 
-    let found = FileRepository::find_by_id(&pool, 99999)
-        .await
-        .expect("Query should succeed");
+    let found = FileRepository::find_by_id(&pool, 99999).await.expect("Query should succeed");
 
     assert!(found.is_none(), "Non-existent file should return None");
 
@@ -389,9 +367,7 @@ async fn test_find_by_id_negative() {
     let pool = setup_test_pool().await;
     cleanup_database(&pool).await.expect("Cleanup failed");
 
-    let found = FileRepository::find_by_id(&pool, -1)
-        .await
-        .expect("Query should succeed");
+    let found = FileRepository::find_by_id(&pool, -1).await.expect("Query should succeed");
 
     assert!(found.is_none(), "Negative ID should return None");
 
@@ -403,9 +379,7 @@ async fn test_find_by_id_zero() {
     let pool = setup_test_pool().await;
     cleanup_database(&pool).await.expect("Cleanup failed");
 
-    let found = FileRepository::find_by_id(&pool, 0)
-        .await
-        .expect("Query should succeed");
+    let found = FileRepository::find_by_id(&pool, 0).await.expect("Query should succeed");
 
     assert!(found.is_none(), "Zero ID should return None");
 
@@ -426,9 +400,7 @@ async fn test_find_by_hash_existing() {
 
     FileRepository::insert(&pool, new_file).await.expect("Insert failed");
 
-    let found = FileRepository::find_by_hash(&pool, &hash)
-        .await
-        .expect("Find failed");
+    let found = FileRepository::find_by_hash(&pool, &hash).await.expect("Find failed");
 
     assert!(found.is_some(), "File should be found by hash");
     let file = found.unwrap();
@@ -481,9 +453,7 @@ async fn test_find_by_path_existing() {
 
     FileRepository::insert(&pool, new_file).await.expect("Insert failed");
 
-    let found = FileRepository::find_by_path(&pool, filepath)
-        .await
-        .expect("Find failed");
+    let found = FileRepository::find_by_path(&pool, filepath).await.expect("Find failed");
 
     assert!(found.is_some(), "File should be found by path");
     let file = found.unwrap();
@@ -521,9 +491,7 @@ async fn test_find_by_path_case_sensitive() {
     FileRepository::insert(&pool, new_file).await.expect("Insert failed");
 
     // PostgreSQL is case-sensitive for text comparison
-    let found_exact = FileRepository::find_by_path(&pool, filepath)
-        .await
-        .expect("Find failed");
+    let found_exact = FileRepository::find_by_path(&pool, filepath).await.expect("Find failed");
     assert!(found_exact.is_some(), "Exact case should match");
 
     let found_different = FileRepository::find_by_path(&pool, "/test/casesensitive.mid")
@@ -548,9 +516,7 @@ async fn test_find_by_path_with_spaces() {
 
     FileRepository::insert(&pool, new_file).await.expect("Insert failed");
 
-    let found = FileRepository::find_by_path(&pool, filepath)
-        .await
-        .expect("Find failed");
+    let found = FileRepository::find_by_path(&pool, filepath).await.expect("Find failed");
 
     assert!(found.is_some(), "Path with spaces should be found");
 
@@ -571,9 +537,7 @@ async fn test_find_by_path_with_unicode() {
 
     FileRepository::insert(&pool, new_file).await.expect("Insert failed");
 
-    let found = FileRepository::find_by_path(&pool, filepath)
-        .await
-        .expect("Find failed");
+    let found = FileRepository::find_by_path(&pool, filepath).await.expect("Find failed");
 
     assert!(found.is_some(), "Unicode path should be found");
 
@@ -633,9 +597,7 @@ async fn test_find_by_hash_with_limit_one() {
 
     FileRepository::insert(&pool, new_file).await.expect("Insert failed");
 
-    let found = FileRepository::find_by_hash(&pool, &hash)
-        .await
-        .expect("Find failed");
+    let found = FileRepository::find_by_hash(&pool, &hash).await.expect("Find failed");
 
     assert!(found.is_some(), "Should find exactly one file");
 
@@ -652,9 +614,7 @@ async fn test_check_duplicate_not_exists() {
     cleanup_database(&pool).await.expect("Cleanup failed");
 
     let hash = random_hash();
-    let is_duplicate = FileRepository::check_duplicate(&pool, &hash)
-        .await
-        .expect("Check failed");
+    let is_duplicate = FileRepository::check_duplicate(&pool, &hash).await.expect("Check failed");
 
     assert!(!is_duplicate, "New hash should not be duplicate");
 
@@ -675,9 +635,7 @@ async fn test_check_duplicate_exists() {
 
     FileRepository::insert(&pool, new_file).await.expect("Insert failed");
 
-    let is_duplicate = FileRepository::check_duplicate(&pool, &hash)
-        .await
-        .expect("Check failed");
+    let is_duplicate = FileRepository::check_duplicate(&pool, &hash).await.expect("Check failed");
 
     assert!(is_duplicate, "Existing hash should be duplicate");
 
@@ -767,7 +725,10 @@ async fn test_check_duplicate_performance() {
     let _ = FileRepository::check_duplicate(&pool, &test_hash).await.expect("Check failed");
     let duration = start.elapsed();
 
-    assert!(duration.as_millis() < 100, "Duplicate check should be fast (<100ms)");
+    assert!(
+        duration.as_millis() < 100,
+        "Duplicate check should be fast (<100ms)"
+    );
 
     cleanup_database(&pool).await.expect("Cleanup failed");
 }
@@ -817,9 +778,7 @@ async fn test_check_duplicate_with_32_byte_hash() {
 
     FileRepository::insert(&pool, new_file).await.expect("Insert failed");
 
-    let is_duplicate = FileRepository::check_duplicate(&pool, &hash)
-        .await
-        .expect("Check failed");
+    let is_duplicate = FileRepository::check_duplicate(&pool, &hash).await.expect("Check failed");
 
     assert!(is_duplicate, "32-byte hash should be found");
 
@@ -887,7 +846,10 @@ async fn test_mark_analyzed_updates_timestamp() {
         .expect("File not found");
     let updated_at_after = after.updated_at;
 
-    assert!(updated_at_after > updated_at_before, "updated_at should be updated");
+    assert!(
+        updated_at_after > updated_at_before,
+        "updated_at should be updated"
+    );
 
     cleanup_database(&pool).await.expect("Cleanup failed");
 }
@@ -931,7 +893,10 @@ async fn test_mark_analyzed_multiple_times() {
     let second_analyzed = second.analyzed_at.expect("analyzed_at should be set");
 
     // Second timestamp should be later
-    assert!(second_analyzed > first_analyzed, "analyzed_at should be updated on re-analysis");
+    assert!(
+        second_analyzed > first_analyzed,
+        "analyzed_at should be updated on re-analysis"
+    );
 
     cleanup_database(&pool).await.expect("Cleanup failed");
 }
@@ -964,7 +929,10 @@ async fn test_update_metadata_fields_all() {
     assert_eq!(file.format, Some(1));
     assert_eq!(file.num_tracks, 8);
     assert_eq!(file.ticks_per_quarter_note, Some(480));
-    assert_eq!(file.duration_seconds, Some(sqlx::types::BigDecimal::from(180)));
+    assert_eq!(
+        file.duration_seconds,
+        Some(sqlx::types::BigDecimal::from(180))
+    );
     assert_eq!(file.duration_ticks, Some(86400));
 
     cleanup_database(&pool).await.expect("Cleanup failed");
@@ -979,17 +947,9 @@ async fn test_update_metadata_fields_partial() {
     let file_id = FileRepository::insert(&pool, new_file).await.expect("Insert failed");
 
     // Update only num_tracks
-    FileRepository::update_metadata_fields(
-        &pool,
-        file_id,
-        None,
-        16,
-        None,
-        None,
-        None,
-    )
-    .await
-    .expect("Update failed");
+    FileRepository::update_metadata_fields(&pool, file_id, None, 16, None, None, None)
+        .await
+        .expect("Update failed");
 
     let file = FileRepository::find_by_id(&pool, file_id)
         .await
@@ -1017,17 +977,9 @@ async fn test_update_metadata_fields_format0_to_format1() {
     let file_id = FileRepository::insert(&pool, new_file).await.expect("Insert failed");
 
     // Update to format 1
-    FileRepository::update_metadata_fields(
-        &pool,
-        file_id,
-        Some(1),
-        4,
-        480,
-        None,
-        None,
-    )
-    .await
-    .expect("Update failed");
+    FileRepository::update_metadata_fields(&pool, file_id, Some(1), 4, 480, None, None)
+        .await
+        .expect("Update failed");
 
     let file = FileRepository::find_by_id(&pool, file_id)
         .await
@@ -1056,17 +1008,9 @@ async fn test_update_metadata_fields_updates_timestamp() {
 
     tokio::time::sleep(tokio::time::Duration::from_secs(1)).await;
 
-    FileRepository::update_metadata_fields(
-        &pool,
-        file_id,
-        Some(1),
-        2,
-        960,
-        None,
-        None,
-    )
-    .await
-    .expect("Update failed");
+    FileRepository::update_metadata_fields(&pool, file_id, Some(1), 2, 960, None, None)
+        .await
+        .expect("Update failed");
 
     let after = FileRepository::find_by_id(&pool, file_id)
         .await
@@ -1074,7 +1018,10 @@ async fn test_update_metadata_fields_updates_timestamp() {
         .expect("File not found");
     let updated_at_after = after.updated_at;
 
-    assert!(updated_at_after > updated_at_before, "updated_at should be updated");
+    assert!(
+        updated_at_after > updated_at_before,
+        "updated_at should be updated"
+    );
 
     cleanup_database(&pool).await.expect("Cleanup failed");
 }
@@ -1084,18 +1031,13 @@ async fn test_update_metadata_fields_nonexistent_file() {
     let pool = setup_test_pool().await;
     cleanup_database(&pool).await.expect("Cleanup failed");
 
-    let result = FileRepository::update_metadata_fields(
-        &pool,
-        99999,
-        Some(1),
-        1,
-        480,
-        None,
-        None,
-    )
-    .await;
+    let result =
+        FileRepository::update_metadata_fields(&pool, 99999, Some(1), 1, 480, None, None).await;
 
-    assert!(result.is_ok(), "Updating non-existent file should not error");
+    assert!(
+        result.is_ok(),
+        "Updating non-existent file should not error"
+    );
 
     cleanup_database(&pool).await.expect("Cleanup failed");
 }
@@ -1143,17 +1085,9 @@ async fn test_update_metadata_fields_zero_tracks() {
     let file_id = FileRepository::insert(&pool, new_file).await.expect("Insert failed");
 
     // Edge case: 0 tracks (invalid MIDI but should be storable)
-    FileRepository::update_metadata_fields(
-        &pool,
-        file_id,
-        Some(0),
-        0,
-        0,
-        None,
-        None,
-    )
-    .await
-    .expect("Update failed");
+    FileRepository::update_metadata_fields(&pool, file_id, Some(0), 0, 0, None, None)
+        .await
+        .expect("Update failed");
 
     let file = FileRepository::find_by_id(&pool, file_id)
         .await
@@ -1177,11 +1111,11 @@ async fn test_update_metadata_fields_large_values() {
     FileRepository::update_metadata_fields(
         &pool,
         file_id,
-        Some(2), // MIDI format 2
-        128,     // Max MIDI tracks
-        Some(960), // High resolution
+        Some(2),                                   // MIDI format 2
+        128,                                       // Max MIDI tracks
+        Some(960),                                 // High resolution
         Some(sqlx::types::BigDecimal::from(3600)), // 1 hour
-        Some(3456000), // 1 hour at 960 ticks
+        Some(3456000),                             // 1 hour at 960 ticks
     )
     .await
     .expect("Update failed");
@@ -1213,9 +1147,7 @@ async fn test_delete_existing_file() {
 
     FileRepository::delete(&pool, file_id).await.expect("Delete failed");
 
-    let found = FileRepository::find_by_id(&pool, file_id)
-        .await
-        .expect("Find failed");
+    let found = FileRepository::find_by_id(&pool, file_id).await.expect("Find failed");
     assert!(found.is_none(), "Deleted file should not be found");
 
     cleanup_database(&pool).await.expect("Cleanup failed");
@@ -1227,7 +1159,10 @@ async fn test_delete_nonexistent_file() {
     cleanup_database(&pool).await.expect("Cleanup failed");
 
     let result = FileRepository::delete(&pool, 99999).await;
-    assert!(result.is_ok(), "Deleting non-existent file should not error");
+    assert!(
+        result.is_ok(),
+        "Deleting non-existent file should not error"
+    );
 
     cleanup_database(&pool).await.expect("Cleanup failed");
 }
@@ -1237,11 +1172,7 @@ async fn test_delete_multiple_files() {
     let pool = setup_test_pool().await;
     cleanup_database(&pool).await.expect("Cleanup failed");
 
-    let files = vec![
-        Fixtures::drum_loop(),
-        Fixtures::piano_chords(),
-        Fixtures::bass_line(),
-    ];
+    let files = vec![Fixtures::drum_loop(), Fixtures::piano_chords(), Fixtures::bass_line()];
 
     let mut ids = Vec::new();
     for file in files {
@@ -1298,12 +1229,12 @@ async fn test_delete_updates_count() {
     let file_id = FileRepository::insert(&pool, new_file).await.expect("Insert failed");
 
     let count_before = FileRepository::count(&pool).await.expect("Count failed");
-    assert_eq!(count_before, 1, "Expected {1}, found {count_before}");
+    assert_eq!(count_before, 1, "Expected 1, found {count_before}");
 
     FileRepository::delete(&pool, file_id).await.expect("Delete failed");
 
     let count_after = FileRepository::count(&pool).await.expect("Count failed");
-    assert_eq!(count_after, 0, "Expected {0}, found {count_after}");
+    assert_eq!(count_after, 0, "Expected 0, found {count_after}");
 
     cleanup_database(&pool).await.expect("Cleanup failed");
 }
@@ -1343,7 +1274,7 @@ async fn test_count_single_file() {
     FileRepository::insert(&pool, new_file).await.expect("Insert failed");
 
     let count = FileRepository::count(&pool).await.expect("Count failed");
-    assert_eq!(count, 1, "Expected {1}, found {count}");
+    assert_eq!(count, 1, "Expected 1, found {count}");
 
     cleanup_database(&pool).await.expect("Cleanup failed");
 }
@@ -1363,7 +1294,7 @@ async fn test_count_multiple_files() {
     }
 
     let count = FileRepository::count(&pool).await.expect("Count failed");
-    assert_eq!(count, 10, "Expected {10}, found {count}");
+    assert_eq!(count, 10, "Expected 10, found {count}");
 
     cleanup_database(&pool).await.expect("Cleanup failed");
 }
@@ -1412,7 +1343,7 @@ async fn test_count_large_dataset() {
     }
 
     let count = FileRepository::count(&pool).await.expect("Count failed");
-    assert_eq!(count, 100, "Expected {100}, found {count}");
+    assert_eq!(count, 100, "Expected 100, found {count}");
 
     cleanup_database(&pool).await.expect("Cleanup failed");
 }
@@ -1426,9 +1357,7 @@ async fn test_list_empty_database() {
     let pool = setup_test_pool().await;
     cleanup_database(&pool).await.expect("Cleanup failed");
 
-    let files = FileRepository::list(&pool, 10, 0)
-        .await
-        .expect("List failed");
+    let files = FileRepository::list(&pool, 10, 0).await.expect("List failed");
 
     assert_eq!(files.len(), 0, "Empty database should return empty list");
 
@@ -1450,9 +1379,7 @@ async fn test_list_with_limit() {
         FileRepository::insert(&pool, new_file).await.expect("Insert failed");
     }
 
-    let files = FileRepository::list(&pool, 10, 0)
-        .await
-        .expect("List failed");
+    let files = FileRepository::list(&pool, 10, 0).await.expect("List failed");
 
     assert_eq!(files.len(), 10, "Should return only 10 files");
 
@@ -1474,11 +1401,13 @@ async fn test_list_with_offset() {
         FileRepository::insert(&pool, new_file).await.expect("Insert failed");
     }
 
-    let files = FileRepository::list(&pool, 10, 5)
-        .await
-        .expect("List failed");
+    let files = FileRepository::list(&pool, 10, 5).await.expect("List failed");
 
-    assert_eq!(files.len(), 10, "Should return 10 files starting from offset 5");
+    assert_eq!(
+        files.len(),
+        10,
+        "Should return 10 files starting from offset 5"
+    );
 
     cleanup_database(&pool).await.expect("Cleanup failed");
 }
@@ -1599,7 +1528,11 @@ async fn test_list_by_manufacturer_not_found() {
         .await
         .expect("List failed");
 
-    assert_eq!(files.len(), 0, "Should return empty list for non-existent manufacturer");
+    assert_eq!(
+        files.len(),
+        0,
+        "Should return empty list for non-existent manufacturer"
+    );
 
     cleanup_database(&pool).await.expect("Cleanup failed");
 }
@@ -1708,7 +1641,11 @@ async fn test_list_by_collection_not_found() {
         .await
         .expect("List failed");
 
-    assert_eq!(files.len(), 0, "Should return empty list for non-existent collection");
+    assert_eq!(
+        files.len(),
+        0,
+        "Should return empty list for non-existent collection"
+    );
 
     cleanup_database(&pool).await.expect("Cleanup failed");
 }
@@ -1851,7 +1788,11 @@ async fn test_list_offset_beyond_count() {
 
     // Offset 100 when only 5 files exist
     let files = FileRepository::list(&pool, 10, 100).await.expect("List failed");
-    assert_eq!(files.len(), 0, "Offset beyond count should return empty list");
+    assert_eq!(
+        files.len(),
+        0,
+        "Offset beyond count should return empty list"
+    );
 
     cleanup_database(&pool).await.expect("Cleanup failed");
 }
@@ -1935,7 +1876,11 @@ async fn test_empty_folder_tags_array() {
         .expect("Find failed")
         .expect("File not found");
 
-    assert_eq!(file.folder_tags, Some(vec![]), "Empty array should be preserved");
+    assert_eq!(
+        file.folder_tags,
+        Some(vec![]),
+        "Empty array should be preserved"
+    );
 
     cleanup_database(&pool).await.expect("Cleanup failed");
 }
@@ -1966,476 +1911,506 @@ async fn test_many_folder_tags() {
     cleanup_database(&pool).await.expect("Cleanup failed");
 }
 
-    // ============================================================================
-    // ============================================================================
-    // SECTION 9: Error Path Tests - Constraint Violations (12 tests)
-    // ============================================================================
-    // ============================================================================
+// ============================================================================
+// ============================================================================
+// SECTION 9: Error Path Tests - Constraint Violations (12 tests)
+// ============================================================================
+// ============================================================================
 
-    #[tokio::test]
-    async fn test_duplicate_content_hash_fails() {
-        // Description: Inserting two files with same content_hash should fail (unique constraint)
-        let pool = setup_test_pool().await;
-        cleanup_database(&pool).await.expect("Cleanup failed");
+#[tokio::test]
+async fn test_duplicate_content_hash_fails() {
+    // Description: Inserting two files with same content_hash should fail (unique constraint)
+    let pool = setup_test_pool().await;
+    cleanup_database(&pool).await.expect("Cleanup failed");
 
-        let hash = random_hash();
+    let hash = random_hash();
 
-        let file1 = NewFileBuilder::new()
-            .filename("file1.mid")
-            .filepath("/test/file1.mid")
-            .content_hash(hash.clone())
-            .build();
+    let file1 = NewFileBuilder::new()
+        .filename("file1.mid")
+        .filepath("/test/file1.mid")
+        .content_hash(hash.clone())
+        .build();
 
-        let file2 = NewFileBuilder::new()
+    let file2 = NewFileBuilder::new()
             .filename("file2.mid")
             .filepath("/test/file2.mid")
             .content_hash(hash) // Same hash as file1
             .build();
 
-        // First insert should succeed
-        FileRepository::insert(&pool, file1).await.expect("First insert failed");
+    // First insert should succeed
+    FileRepository::insert(&pool, file1).await.expect("First insert failed");
 
-        // Second insert with duplicate hash should fail
-        let result = FileRepository::insert(&pool, file2).await;
-        assert!(result.is_err(), "Duplicate content_hash should fail unique constraint");
+    // Second insert with duplicate hash should fail
+    let result = FileRepository::insert(&pool, file2).await;
+    assert!(
+        result.is_err(),
+        "Duplicate content_hash should fail unique constraint"
+    );
 
-        cleanup_database(&pool).await.expect("Cleanup failed");
-    }
+    cleanup_database(&pool).await.expect("Cleanup failed");
+}
 
-    #[tokio::test]
-    async fn test_filepath_exceeds_varchar_limit() {
-        // Description: Filepath exceeding VARCHAR(500) limit should fail
-        let pool = setup_test_pool().await;
-        cleanup_database(&pool).await.expect("Cleanup failed");
+#[tokio::test]
+async fn test_filepath_exceeds_varchar_limit() {
+    // Description: Filepath exceeding VARCHAR(500) limit should fail
+    let pool = setup_test_pool().await;
+    cleanup_database(&pool).await.expect("Cleanup failed");
 
-        let long_path = "/test/".to_string() + &"x".repeat(1000);
+    let long_path = "/test/".to_string() + &"x".repeat(1000);
 
-        let file = NewFileBuilder::new()
+    let file = NewFileBuilder::new()
             .filename("test.mid")
             .filepath(&long_path) // > 500 chars
             .content_hash(random_hash())
             .build();
 
-        let result = FileRepository::insert(&pool, file).await;
-        assert!(result.is_err(), "Filepath > 500 chars should fail");
+    let result = FileRepository::insert(&pool, file).await;
+    assert!(result.is_err(), "Filepath > 500 chars should fail");
 
-        cleanup_database(&pool).await.expect("Cleanup failed");
-    }
+    cleanup_database(&pool).await.expect("Cleanup failed");
+}
 
-    #[tokio::test]
-    async fn test_filename_exceeds_varchar_limit() {
-        // Description: Filename exceeding VARCHAR(255) limit should fail
-        let pool = setup_test_pool().await;
-        cleanup_database(&pool).await.expect("Cleanup failed");
+#[tokio::test]
+async fn test_filename_exceeds_varchar_limit() {
+    // Description: Filename exceeding VARCHAR(255) limit should fail
+    let pool = setup_test_pool().await;
+    cleanup_database(&pool).await.expect("Cleanup failed");
 
-        let long_filename = "x".repeat(300) + ".mid";
+    let long_filename = "x".repeat(300) + ".mid";
 
-        let file = NewFileBuilder::new()
+    let file = NewFileBuilder::new()
             .filename(&long_filename) // > 255 chars
             .filepath("/test/file.mid")
             .content_hash(random_hash())
             .build();
 
-        let result = FileRepository::insert(&pool, file).await;
-        assert!(result.is_err(), "Filename > 255 chars should fail");
+    let result = FileRepository::insert(&pool, file).await;
+    assert!(result.is_err(), "Filename > 255 chars should fail");
 
-        cleanup_database(&pool).await.expect("Cleanup failed");
-    }
+    cleanup_database(&pool).await.expect("Cleanup failed");
+}
 
-    #[tokio::test]
-    async fn test_negative_file_size_rejected() {
-        // Description: Negative file size should fail
-        let pool = setup_test_pool().await;
-        cleanup_database(&pool).await.expect("Cleanup failed");
+#[tokio::test]
+async fn test_negative_file_size_rejected() {
+    // Description: Negative file size should fail
+    let pool = setup_test_pool().await;
+    cleanup_database(&pool).await.expect("Cleanup failed");
 
-        let file = NewFileBuilder::new()
-            .filename("test.mid")
-            .filepath("/test/test.mid")
-            .content_hash(random_hash())
-            .file_size_bytes(-1000)
-            .build();
+    let file = NewFileBuilder::new()
+        .filename("test.mid")
+        .filepath("/test/test.mid")
+        .content_hash(random_hash())
+        .file_size_bytes(-1000)
+        .build();
 
-        let result = FileRepository::insert(&pool, file).await;
-        assert!(result.is_err(), "Negative file_size_bytes should fail check constraint");
+    let result = FileRepository::insert(&pool, file).await;
+    assert!(
+        result.is_err(),
+        "Negative file_size_bytes should fail check constraint"
+    );
 
-        cleanup_database(&pool).await.expect("Cleanup failed");
-    }
+    cleanup_database(&pool).await.expect("Cleanup failed");
+}
 
-    #[tokio::test]
-    async fn test_invalid_midi_format_too_high() {
-        // Description: MIDI format > 2 should fail (valid: 0, 1, 2)
-        let pool = setup_test_pool().await;
-        cleanup_database(&pool).await.expect("Cleanup failed");
+#[tokio::test]
+async fn test_invalid_midi_format_too_high() {
+    // Description: MIDI format > 2 should fail (valid: 0, 1, 2)
+    let pool = setup_test_pool().await;
+    cleanup_database(&pool).await.expect("Cleanup failed");
 
-        let file = NewFileBuilder::new()
+    let file = NewFileBuilder::new()
             .filename("test.mid")
             .filepath("/test/test.mid")
             .content_hash(random_hash())
             .midi_format(3) // > 2
             .build();
 
-        let result = FileRepository::insert(&pool, file).await;
-        assert!(result.is_err(), "MIDI format > 2 should fail check constraint");
+    let result = FileRepository::insert(&pool, file).await;
+    assert!(
+        result.is_err(),
+        "MIDI format > 2 should fail check constraint"
+    );
 
-        cleanup_database(&pool).await.expect("Cleanup failed");
-    }
+    cleanup_database(&pool).await.expect("Cleanup failed");
+}
 
-    #[tokio::test]
-    async fn test_invalid_midi_format_negative() {
-        // Description: Negative MIDI format should fail
-        let pool = setup_test_pool().await;
-        cleanup_database(&pool).await.expect("Cleanup failed");
+#[tokio::test]
+async fn test_invalid_midi_format_negative() {
+    // Description: Negative MIDI format should fail
+    let pool = setup_test_pool().await;
+    cleanup_database(&pool).await.expect("Cleanup failed");
 
-        let file = NewFileBuilder::new()
-            .filename("test.mid")
-            .filepath("/test/test.mid")
-            .content_hash(random_hash())
-            .midi_format(-1)
-            .build();
+    let file = NewFileBuilder::new()
+        .filename("test.mid")
+        .filepath("/test/test.mid")
+        .content_hash(random_hash())
+        .midi_format(-1)
+        .build();
 
-        let result = FileRepository::insert(&pool, file).await;
-        assert!(result.is_err(), "Negative MIDI format should fail check constraint");
+    let result = FileRepository::insert(&pool, file).await;
+    assert!(
+        result.is_err(),
+        "Negative MIDI format should fail check constraint"
+    );
 
-        cleanup_database(&pool).await.expect("Cleanup failed");
-    }
+    cleanup_database(&pool).await.expect("Cleanup failed");
+}
 
-    #[tokio::test]
-    async fn test_negative_num_tracks_rejected() {
-        // Description: Negative num_tracks should fail
-        let pool = setup_test_pool().await;
-        cleanup_database(&pool).await.expect("Cleanup failed");
+#[tokio::test]
+async fn test_negative_num_tracks_rejected() {
+    // Description: Negative num_tracks should fail
+    let pool = setup_test_pool().await;
+    cleanup_database(&pool).await.expect("Cleanup failed");
 
-        let file = NewFileBuilder::new()
-            .filename("test.mid")
-            .filepath("/test/test.mid")
-            .content_hash(random_hash())
-            .num_tracks(-5)
-            .build();
+    let file = NewFileBuilder::new()
+        .filename("test.mid")
+        .filepath("/test/test.mid")
+        .content_hash(random_hash())
+        .num_tracks(-5)
+        .build();
 
-        let result = FileRepository::insert(&pool, file).await;
-        assert!(result.is_err(), "Negative num_tracks should fail check constraint");
+    let result = FileRepository::insert(&pool, file).await;
+    assert!(
+        result.is_err(),
+        "Negative num_tracks should fail check constraint"
+    );
 
-        cleanup_database(&pool).await.expect("Cleanup failed");
-    }
+    cleanup_database(&pool).await.expect("Cleanup failed");
+}
 
-    #[tokio::test]
-    async fn test_num_tracks_exceeds_max() {
-        // Description: num_tracks > 65535 (max i16) should fail
-        let pool = setup_test_pool().await;
-        cleanup_database(&pool).await.expect("Cleanup failed");
+#[tokio::test]
+async fn test_num_tracks_exceeds_max() {
+    // Description: num_tracks > 65535 (max i16) should fail
+    let pool = setup_test_pool().await;
+    cleanup_database(&pool).await.expect("Cleanup failed");
 
-        let file = NewFileBuilder::new()
+    let file = NewFileBuilder::new()
             .filename("test.mid")
             .filepath("/test/test.mid")
             .content_hash(random_hash())
             .num_tracks(65536) // > i16 max
             .build();
 
-        let result = FileRepository::insert(&pool, file).await;
-        assert!(result.is_err(), "num_tracks > 65535 should fail");
+    let result = FileRepository::insert(&pool, file).await;
+    assert!(result.is_err(), "num_tracks > 65535 should fail");
 
-        cleanup_database(&pool).await.expect("Cleanup failed");
-    }
+    cleanup_database(&pool).await.expect("Cleanup failed");
+}
 
-    #[tokio::test]
-    async fn test_find_nonexistent_file_returns_none() {
-        // Description: Finding non-existent file returns None (not error)
-        let pool = setup_test_pool().await;
-        cleanup_database(&pool).await.expect("Cleanup failed");
+#[tokio::test]
+async fn test_find_nonexistent_file_returns_none() {
+    // Description: Finding non-existent file returns None (not error)
+    let pool = setup_test_pool().await;
+    cleanup_database(&pool).await.expect("Cleanup failed");
 
-        let result = FileRepository::find_by_id(&pool, 999999).await;
-        assert!(result.is_ok(), "Find should not error");
-        assert!(result.unwrap().is_none(), "Should return None for non-existent file");
+    let result = FileRepository::find_by_id(&pool, 999999).await;
+    assert!(result.is_ok(), "Find should not error");
+    assert!(
+        result.unwrap().is_none(),
+        "Should return None for non-existent file"
+    );
 
-        cleanup_database(&pool).await.expect("Cleanup failed");
-    }
+    cleanup_database(&pool).await.expect("Cleanup failed");
+}
 
-    #[tokio::test]
-    async fn test_delete_nonexistent_file_idempotent() {
-        // Description: Deleting non-existent file is idempotent
-        let pool = setup_test_pool().await;
-        cleanup_database(&pool).await.expect("Cleanup failed");
+#[tokio::test]
+async fn test_delete_nonexistent_file_idempotent() {
+    // Description: Deleting non-existent file is idempotent
+    let pool = setup_test_pool().await;
+    cleanup_database(&pool).await.expect("Cleanup failed");
 
-        let result = FileRepository::delete(&pool, 999999).await;
-        assert!(result.is_ok(), "Delete non-existent should not error (idempotent)");
+    let result = FileRepository::delete(&pool, 999999).await;
+    assert!(
+        result.is_ok(),
+        "Delete non-existent should not error (idempotent)"
+    );
 
-        cleanup_database(&pool).await.expect("Cleanup failed");
-    }
+    cleanup_database(&pool).await.expect("Cleanup failed");
+}
 
-    #[tokio::test]
-    async fn test_update_nonexistent_file_fails() {
-        // Description: Updating non-existent file should fail
-        let pool = setup_test_pool().await;
-        cleanup_database(&pool).await.expect("Cleanup failed");
+#[tokio::test]
+async fn test_update_nonexistent_file_fails() {
+    // Description: Updating non-existent file should fail
+    let pool = setup_test_pool().await;
+    cleanup_database(&pool).await.expect("Cleanup failed");
 
-        let result = FileRepository::update_filename(&pool, 999999, "new.mid").await;
-        assert!(result.is_err(), "Update non-existent should fail");
+    let result = FileRepository::update_filename(&pool, 999999, "new.mid").await;
+    assert!(result.is_err(), "Update non-existent should fail");
 
-        cleanup_database(&pool).await.expect("Cleanup failed");
-    }
+    cleanup_database(&pool).await.expect("Cleanup failed");
+}
 
-    #[tokio::test]
-    async fn test_empty_filename_rejected() {
-        // Description: Empty filename should be rejected
-        let pool = setup_test_pool().await;
-        cleanup_database(&pool).await.expect("Cleanup failed");
+#[tokio::test]
+async fn test_empty_filename_rejected() {
+    // Description: Empty filename should be rejected
+    let pool = setup_test_pool().await;
+    cleanup_database(&pool).await.expect("Cleanup failed");
 
-        let file = NewFileBuilder::new()
+    let file = NewFileBuilder::new()
             .filename("") // Empty
             .filepath("/test/file.mid")
             .content_hash(random_hash())
             .build();
 
-        let result = FileRepository::insert(&pool, file).await;
-        assert!(result.is_err(), "Empty filename should fail");
+    let result = FileRepository::insert(&pool, file).await;
+    assert!(result.is_err(), "Empty filename should fail");
 
-        cleanup_database(&pool).await.expect("Cleanup failed");
-    }
+    cleanup_database(&pool).await.expect("Cleanup failed");
+}
 
-    #[tokio::test]
-    async fn test_empty_filepath_rejected() {
-        // Description: Empty filepath should be rejected
-        let pool = setup_test_pool().await;
-        cleanup_database(&pool).await.expect("Cleanup failed");
+#[tokio::test]
+async fn test_empty_filepath_rejected() {
+    // Description: Empty filepath should be rejected
+    let pool = setup_test_pool().await;
+    cleanup_database(&pool).await.expect("Cleanup failed");
 
-        let file = NewFileBuilder::new()
+    let file = NewFileBuilder::new()
             .filename("test.mid")
             .filepath("") // Empty
             .content_hash(random_hash())
             .build();
 
-        let result = FileRepository::insert(&pool, file).await;
-        assert!(result.is_err(), "Empty filepath should fail");
+    let result = FileRepository::insert(&pool, file).await;
+    assert!(result.is_err(), "Empty filepath should fail");
 
-        cleanup_database(&pool).await.expect("Cleanup failed");
-    }
+    cleanup_database(&pool).await.expect("Cleanup failed");
+}
 
-    // ===== SECTION 5: ERROR PATH TESTING (12 constraint violation tests) =====
+// ===== SECTION 5: ERROR PATH TESTING (12 constraint violation tests) =====
 
-    #[tokio::test]
-    async fn test_file_error_duplicate_hash() {
-        let pool = setup_test_pool().await;
-        cleanup_database(&pool).await.expect("Cleanup failed");
+#[tokio::test]
+async fn test_file_error_duplicate_hash() {
+    let pool = setup_test_pool().await;
+    cleanup_database(&pool).await.expect("Cleanup failed");
 
-        let hash = random_hash();
-        let file1 = NewFileBuilder::new()
-            .filename("file1.mid")
-            .filepath("/test/file1.mid")
-            .content_hash(hash.clone())
-            .build();
+    let hash = random_hash();
+    let file1 = NewFileBuilder::new()
+        .filename("file1.mid")
+        .filepath("/test/file1.mid")
+        .content_hash(hash.clone())
+        .build();
 
-        let result1 = FileRepository::insert(&pool, file1).await;
-        assert!(result1.is_ok(), "First insert should succeed");
+    let result1 = FileRepository::insert(&pool, file1).await;
+    assert!(result1.is_ok(), "First insert should succeed");
 
-        let file2 = NewFileBuilder::new()
-            .filename("file2.mid")
-            .filepath("/test/file2.mid")
-            .content_hash(hash.clone())
-            .build();
+    let file2 = NewFileBuilder::new()
+        .filename("file2.mid")
+        .filepath("/test/file2.mid")
+        .content_hash(hash.clone())
+        .build();
 
-        let result2 = FileRepository::insert(&pool, file2).await;
-        assert!(result2.is_err(), "Duplicate hash should fail");
+    let result2 = FileRepository::insert(&pool, file2).await;
+    assert!(result2.is_err(), "Duplicate hash should fail");
 
-        cleanup_database(&pool).await.expect("Cleanup failed");
-    }
+    cleanup_database(&pool).await.expect("Cleanup failed");
+}
 
-    #[tokio::test]
-    async fn test_file_error_pagination_negative_offset() {
-        let pool = setup_test_pool().await;
-        cleanup_database(&pool).await.expect("Cleanup failed");
+#[tokio::test]
+async fn test_file_error_pagination_negative_offset() {
+    let pool = setup_test_pool().await;
+    cleanup_database(&pool).await.expect("Cleanup failed");
 
-        for i in 0..10 {
-            let file = NewFileBuilder::new()
-                .filename(&format!("file{}.mid", i))
-                .filepath(&format!("/test/file{}.mid", i))
-                .content_hash(random_hash())
-                .build();
-            FileRepository::insert(&pool, file).await.expect("Insert failed");
-        }
-
-        let result = FileRepository::list(&pool, Some(-1), Some(10)).await;
-        let files = result.unwrap_or_default();
-        assert!(files.is_empty(), "Negative offset should return empty or handle gracefully");
-
-        cleanup_database(&pool).await.expect("Cleanup failed");
-    }
-
-    #[tokio::test]
-    async fn test_file_error_pagination_zero_limit() {
-        let pool = setup_test_pool().await;
-        cleanup_database(&pool).await.expect("Cleanup failed");
-
-        for i in 0..10 {
-            let file = NewFileBuilder::new()
-                .filename(&format!("file{}.mid", i))
-                .filepath(&format!("/test/file{}.mid", i))
-                .content_hash(random_hash())
-                .build();
-            FileRepository::insert(&pool, file).await.expect("Insert failed");
-        }
-
-        let result = FileRepository::list(&pool, Some(0), Some(0)).await;
-        let files = result.unwrap_or_default();
-        assert!(files.is_empty(), "Zero limit should return empty");
-
-        cleanup_database(&pool).await.expect("Cleanup failed");
-    }
-
-    #[tokio::test]
-    async fn test_file_error_pagination_large_offset() {
-        let pool = setup_test_pool().await;
-        cleanup_database(&pool).await.expect("Cleanup failed");
-
-        for i in 0..10 {
-            let file = NewFileBuilder::new()
-                .filename(&format!("file{}.mid", i))
-                .filepath(&format!("/test/file{}.mid", i))
-                .content_hash(random_hash())
-                .build();
-            FileRepository::insert(&pool, file).await.expect("Insert failed");
-        }
-
-        let result = FileRepository::list(&pool, Some(1000), Some(10)).await;
-        let files = result.unwrap_or_default();
-        assert!(files.is_empty(), "Large offset should return empty");
-
-        cleanup_database(&pool).await.expect("Cleanup failed");
-    }
-
-    #[tokio::test]
-    async fn test_file_error_pagination_consistency() {
-        let pool = setup_test_pool().await;
-        cleanup_database(&pool).await.expect("Cleanup failed");
-
-        for i in 0..20 {
-            let file = NewFileBuilder::new()
-                .filename(&format!("file{:02}.mid", i))
-                .filepath(&format!("/test/file{:02}.mid", i))
-                .content_hash(random_hash())
-                .build();
-            FileRepository::insert(&pool, file).await.expect("Insert failed");
-        }
-
-        let page1 = FileRepository::list(&pool, Some(0), Some(10)).await.expect("Page 1 failed");
-        let page2 = FileRepository::list(&pool, Some(10), Some(10)).await.expect("Page 2 failed");
-
-        assert_eq!(page1.len(), 10, "Page 1 should have 10 files");
-        assert_eq!(page2.len(), 10, "Page 2 should have 10 files");
-
-        let ids1: Vec<_> = page1.iter().map(|f| f.id).collect();
-        let ids2: Vec<_> = page2.iter().map(|f| f.id).collect();
-
-        for id in ids1 {
-            assert!(!ids2.contains(&id), "Pages should not overlap");
-        }
-
-        cleanup_database(&pool).await.expect("Cleanup failed");
-    }
-
-    #[tokio::test]
-    async fn test_file_error_concurrent_inserts() {
-        let pool = std::sync::Arc::new(setup_test_pool().await);
-        cleanup_database(&pool).await.expect("Cleanup failed");
-
-        let mut handles = Vec::new();
-        for i in 0..5 {
-            let pool_clone = std::sync::Arc::clone(&pool);
-            let handle = tokio::spawn(async move {
-                let file = NewFileBuilder::new()
-                    .filename(&format!("file{}.mid", i))
-                    .filepath(&format!("/test/file{}.mid", i))
-                    .content_hash(random_hash())
-                    .build();
-                FileRepository::insert(&pool_clone, file).await
-            });
-            handles.push(handle);
-        }
-
-        let results: Vec<_> = futures::future::join_all(handles).await;
-        let success_count = results.iter().filter(|r| r.is_ok() && r.as_ref().unwrap().is_ok()).count();
-        assert_eq!(success_count, 5, "All concurrent inserts should succeed");
-
-        cleanup_database(&pool).await.expect("Cleanup failed");
-    }
-
-    #[tokio::test]
-    async fn test_file_error_negative_file_size() {
-        let pool = setup_test_pool().await;
-        cleanup_database(&pool).await.expect("Cleanup failed");
-
+    for i in 0..10 {
         let file = NewFileBuilder::new()
-            .filename("test.mid")
-            .filepath("/test/test.mid")
+            .filename(&format!("file{}.mid", i))
+            .filepath(&format!("/test/file{}.mid", i))
             .content_hash(random_hash())
             .build();
-
-        let result = FileRepository::insert(&pool, file).await;
-        assert!(result.is_ok() || result.is_err(), "Should handle any file size gracefully");
-
-        cleanup_database(&pool).await.expect("Cleanup failed");
+        FileRepository::insert(&pool, file).await.expect("Insert failed");
     }
 
-    #[tokio::test]
-    async fn test_file_error_update_nonexistent() {
-        let pool = setup_test_pool().await;
-        cleanup_database(&pool).await.expect("Cleanup failed");
+    let result = FileRepository::list(&pool, Some(-1), Some(10)).await;
+    let files = result.unwrap_or_default();
+    assert!(
+        files.is_empty(),
+        "Negative offset should return empty or handle gracefully"
+    );
 
-        let result = sqlx::query("UPDATE files SET filename = $1 WHERE file_id = $2")
-            .bind("newname.mid")
-            .bind(999999i64)
-            .execute(&pool)
-            .await;
+    cleanup_database(&pool).await.expect("Cleanup failed");
+}
 
-        assert!(result.is_ok(), "Update nonexistent should not panic");
+#[tokio::test]
+async fn test_file_error_pagination_zero_limit() {
+    let pool = setup_test_pool().await;
+    cleanup_database(&pool).await.expect("Cleanup failed");
 
-        cleanup_database(&pool).await.expect("Cleanup failed");
-    }
-
-    #[tokio::test]
-    async fn test_file_error_delete_nonexistent() {
-        let pool = setup_test_pool().await;
-        cleanup_database(&pool).await.expect("Cleanup failed");
-
-        let result = FileRepository::delete_by_id(&pool, 999999).await;
-        assert!(result.is_ok(), "Delete nonexistent should succeed silently");
-
-        cleanup_database(&pool).await.expect("Cleanup failed");
-    }
-
-    #[tokio::test]
-    async fn test_file_error_special_characters_filename() {
-        let pool = setup_test_pool().await;
-        cleanup_database(&pool).await.expect("Cleanup failed");
-
+    for i in 0..10 {
         let file = NewFileBuilder::new()
-            .filename("test'\"<>.mid")
-            .filepath("/test/test.mid")
+            .filename(&format!("file{}.mid", i))
+            .filepath(&format!("/test/file{}.mid", i))
             .content_hash(random_hash())
             .build();
-
-        let result = FileRepository::insert(&pool, file).await;
-        assert!(result.is_ok(), "Special characters should be escaped safely");
-
-        cleanup_database(&pool).await.expect("Cleanup failed");
+        FileRepository::insert(&pool, file).await.expect("Insert failed");
     }
 
-    #[tokio::test]
-    async fn test_file_error_max_limit_boundary() {
-        let pool = setup_test_pool().await;
-        cleanup_database(&pool).await.expect("Cleanup failed");
+    let result = FileRepository::list(&pool, Some(0), Some(0)).await;
+    let files = result.unwrap_or_default();
+    assert!(files.is_empty(), "Zero limit should return empty");
 
-        for i in 0..50 {
+    cleanup_database(&pool).await.expect("Cleanup failed");
+}
+
+#[tokio::test]
+async fn test_file_error_pagination_large_offset() {
+    let pool = setup_test_pool().await;
+    cleanup_database(&pool).await.expect("Cleanup failed");
+
+    for i in 0..10 {
+        let file = NewFileBuilder::new()
+            .filename(&format!("file{}.mid", i))
+            .filepath(&format!("/test/file{}.mid", i))
+            .content_hash(random_hash())
+            .build();
+        FileRepository::insert(&pool, file).await.expect("Insert failed");
+    }
+
+    let result = FileRepository::list(&pool, Some(1000), Some(10)).await;
+    let files = result.unwrap_or_default();
+    assert!(files.is_empty(), "Large offset should return empty");
+
+    cleanup_database(&pool).await.expect("Cleanup failed");
+}
+
+#[tokio::test]
+async fn test_file_error_pagination_consistency() {
+    let pool = setup_test_pool().await;
+    cleanup_database(&pool).await.expect("Cleanup failed");
+
+    for i in 0..20 {
+        let file = NewFileBuilder::new()
+            .filename(&format!("file{:02}.mid", i))
+            .filepath(&format!("/test/file{:02}.mid", i))
+            .content_hash(random_hash())
+            .build();
+        FileRepository::insert(&pool, file).await.expect("Insert failed");
+    }
+
+    let page1 = FileRepository::list(&pool, Some(0), Some(10)).await.expect("Page 1 failed");
+    let page2 = FileRepository::list(&pool, Some(10), Some(10)).await.expect("Page 2 failed");
+
+    assert_eq!(page1.len(), 10, "Page 1 should have 10 files");
+    assert_eq!(page2.len(), 10, "Page 2 should have 10 files");
+
+    let ids1: Vec<_> = page1.iter().map(|f| f.id).collect();
+    let ids2: Vec<_> = page2.iter().map(|f| f.id).collect();
+
+    for id in ids1 {
+        assert!(!ids2.contains(&id), "Pages should not overlap");
+    }
+
+    cleanup_database(&pool).await.expect("Cleanup failed");
+}
+
+#[tokio::test]
+async fn test_file_error_concurrent_inserts() {
+    let pool = std::sync::Arc::new(setup_test_pool().await);
+    cleanup_database(&pool).await.expect("Cleanup failed");
+
+    let mut handles = Vec::new();
+    for i in 0..5 {
+        let pool_clone = std::sync::Arc::clone(&pool);
+        let handle = tokio::spawn(async move {
             let file = NewFileBuilder::new()
-                .filename(&format!("file{:03}.mid", i))
-                .filepath(&format!("/test/file{:03}.mid", i))
+                .filename(&format!("file{}.mid", i))
+                .filepath(&format!("/test/file{}.mid", i))
                 .content_hash(random_hash())
                 .build();
-            FileRepository::insert(&pool, file).await.expect("Insert failed");
-        }
-
-        let result = FileRepository::list(&pool, Some(0), Some(10000)).await;
-        let files = result.unwrap_or_default();
-        assert_eq!(files.len(), 50, "Limit should not exceed available files");
-
-        cleanup_database(&pool).await.expect("Cleanup failed");
+            FileRepository::insert(&pool_clone, file).await
+        });
+        handles.push(handle);
     }
+
+    let results: Vec<_> = futures::future::join_all(handles).await;
+    let success_count = results.iter().filter(|r| r.is_ok() && r.as_ref().unwrap().is_ok()).count();
+    assert_eq!(success_count, 5, "All concurrent inserts should succeed");
+
+    cleanup_database(&pool).await.expect("Cleanup failed");
+}
+
+#[tokio::test]
+async fn test_file_error_negative_file_size() {
+    let pool = setup_test_pool().await;
+    cleanup_database(&pool).await.expect("Cleanup failed");
+
+    let file = NewFileBuilder::new()
+        .filename("test.mid")
+        .filepath("/test/test.mid")
+        .content_hash(random_hash())
+        .build();
+
+    let result = FileRepository::insert(&pool, file).await;
+    assert!(
+        result.is_ok() || result.is_err(),
+        "Should handle any file size gracefully"
+    );
+
+    cleanup_database(&pool).await.expect("Cleanup failed");
+}
+
+#[tokio::test]
+async fn test_file_error_update_nonexistent() {
+    let pool = setup_test_pool().await;
+    cleanup_database(&pool).await.expect("Cleanup failed");
+
+    let result = sqlx::query("UPDATE files SET filename = $1 WHERE file_id = $2")
+        .bind("newname.mid")
+        .bind(999999i64)
+        .execute(&pool)
+        .await;
+
+    assert!(result.is_ok(), "Update nonexistent should not panic");
+
+    cleanup_database(&pool).await.expect("Cleanup failed");
+}
+
+#[tokio::test]
+async fn test_file_error_delete_nonexistent() {
+    let pool = setup_test_pool().await;
+    cleanup_database(&pool).await.expect("Cleanup failed");
+
+    let result = FileRepository::delete_by_id(&pool, 999999).await;
+    assert!(result.is_ok(), "Delete nonexistent should succeed silently");
+
+    cleanup_database(&pool).await.expect("Cleanup failed");
+}
+
+#[tokio::test]
+async fn test_file_error_special_characters_filename() {
+    let pool = setup_test_pool().await;
+    cleanup_database(&pool).await.expect("Cleanup failed");
+
+    let file = NewFileBuilder::new()
+        .filename("test'\"<>.mid")
+        .filepath("/test/test.mid")
+        .content_hash(random_hash())
+        .build();
+
+    let result = FileRepository::insert(&pool, file).await;
+    assert!(
+        result.is_ok(),
+        "Special characters should be escaped safely"
+    );
+
+    cleanup_database(&pool).await.expect("Cleanup failed");
+}
+
+#[tokio::test]
+async fn test_file_error_max_limit_boundary() {
+    let pool = setup_test_pool().await;
+    cleanup_database(&pool).await.expect("Cleanup failed");
+
+    for i in 0..50 {
+        let file = NewFileBuilder::new()
+            .filename(&format!("file{:03}.mid", i))
+            .filepath(&format!("/test/file{:03}.mid", i))
+            .content_hash(random_hash())
+            .build();
+        FileRepository::insert(&pool, file).await.expect("Insert failed");
+    }
+
+    let result = FileRepository::list(&pool, Some(0), Some(10000)).await;
+    let files = result.unwrap_or_default();
+    assert_eq!(files.len(), 50, "Limit should not exceed available files");
+
+    cleanup_database(&pool).await.expect("Cleanup failed");
+}

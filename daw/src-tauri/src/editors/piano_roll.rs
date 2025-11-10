@@ -44,14 +44,14 @@ impl GridSnap {
     pub fn tick_divisor(&self) -> i32 {
         match self {
             GridSnap::None => 1,
-            GridSnap::Whole => 1920,      // 4 beats
-            GridSnap::Half => 960,        // 2 beats
-            GridSnap::Quarter => 480,     // 1 beat
-            GridSnap::Eighth => 240,      // 1/2 beat
-            GridSnap::Sixteenth => 120,   // 1/4 beat
-            GridSnap::ThirtySecond => 60, // 1/8 beat
-            GridSnap::QuarterTriplet => 320, // 1/3 beat
-            GridSnap::EighthTriplet => 160,  // 1/6 beat
+            GridSnap::Whole => 1920,          // 4 beats
+            GridSnap::Half => 960,            // 2 beats
+            GridSnap::Quarter => 480,         // 1 beat
+            GridSnap::Eighth => 240,          // 1/2 beat
+            GridSnap::Sixteenth => 120,       // 1/4 beat
+            GridSnap::ThirtySecond => 60,     // 1/8 beat
+            GridSnap::QuarterTriplet => 320,  // 1/3 beat
+            GridSnap::EighthTriplet => 160,   // 1/6 beat
             GridSnap::SixteenthTriplet => 80, // 1/12 beat
         }
     }
@@ -97,14 +97,7 @@ impl MidiNote {
             return Err(PianoRollError::InvalidDuration(duration));
         }
 
-        Ok(Self {
-            id,
-            pitch,
-            velocity,
-            start_tick,
-            duration,
-            channel: 0,
-        })
+        Ok(Self { id, pitch, velocity, start_tick, duration, channel: 0 })
     }
 
     pub fn end_tick(&self) -> i32 {
@@ -119,9 +112,7 @@ pub struct NoteSelection {
 
 impl NoteSelection {
     pub fn new() -> Self {
-        Self {
-            selected_notes: HashSet::new(),
-        }
+        Self { selected_notes: HashSet::new() }
     }
 
     pub fn select(&mut self, note_id: i32, extend: bool) {
@@ -195,9 +186,7 @@ impl PianoRollState {
     }
 
     pub fn delete_note_impl(&mut self, note_id: i32) -> Result<MidiNote, PianoRollError> {
-        self.notes
-            .remove(&note_id)
-            .ok_or(PianoRollError::NoteNotFound(note_id))
+        self.notes.remove(&note_id).ok_or(PianoRollError::NoteNotFound(note_id))
     }
 
     pub fn move_note_impl(&mut self, note_id: i32, new_tick: i32) -> Result<(), PianoRollError> {
@@ -205,10 +194,7 @@ impl PianoRollState {
             return Err(PianoRollError::InvalidTick(new_tick));
         }
 
-        let note = self
-            .notes
-            .get_mut(&note_id)
-            .ok_or(PianoRollError::NoteNotFound(note_id))?;
+        let note = self.notes.get_mut(&note_id).ok_or(PianoRollError::NoteNotFound(note_id))?;
 
         let quantized_tick = if self.quantize_enabled {
             self.grid_snap.quantize_tick(new_tick)
@@ -243,9 +229,7 @@ impl PianoRollState {
     pub fn get_notes_in_range(&self, start_tick: i32, end_tick: i32) -> Vec<&MidiNote> {
         self.notes
             .values()
-            .filter(|note| {
-                note.start_tick < end_tick && note.end_tick() > start_tick
-            })
+            .filter(|note| note.start_tick < end_tick && note.end_tick() > start_tick)
             .collect()
     }
 }
@@ -257,8 +241,8 @@ impl Default for PianoRollState {
 }
 
 // Tauri Command Handlers (Task-O-Matic)
-use tauri::State;
 use std::sync::Mutex;
+use tauri::State;
 
 #[tauri::command]
 pub async fn select_note(

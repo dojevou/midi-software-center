@@ -1,11 +1,11 @@
-   /// TestDatabase - Thread-safe test database wrapper with automatic cleanup
-   ///
-   /// Provides:
-   /// - Automatic database connection pooling
-   /// - Pre-populated test datasets (files, tags, metadata)
-   /// - Automatic cleanup on Drop
-   /// - Transaction support for test isolation
 
+/// TestDatabase - Thread-safe test database wrapper with automatic cleanup
+///
+/// Provides:
+/// - Automatic database connection pooling
+/// - Pre-populated test datasets (files, tags, metadata)
+/// - Automatic cleanup on Drop
+/// - Transaction support for test isolation
 use sqlx::{PgPool, Postgres, Transaction};
 use std::sync::Arc;
 use tokio::sync::Mutex;
@@ -19,8 +19,9 @@ pub struct TestDatabase {
 impl TestDatabase {
     /// Create a new test database connection
     pub async fn new() -> Self {
-        let database_url = std::env::var("TEST_DATABASE_URL")
-            .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string());
+        let database_url = std::env::var("TEST_DATABASE_URL").unwrap_or_else(|_| {
+            "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()
+        });
 
         let pool = PgPool::connect(&database_url)
             .await
@@ -32,10 +33,7 @@ impl TestDatabase {
             .await
             .expect("Failed to verify database connection");
 
-        Self {
-            pool,
-            cleanup_queries: Arc::new(Mutex::new(Vec::new())),
-        }
+        Self { pool, cleanup_queries: Arc::new(Mutex::new(Vec::new())) }
     }
 
     /// Create with pre-populated test files
@@ -70,7 +68,7 @@ impl TestDatabase {
             let _ = sqlx::query(
                 "INSERT INTO files (filepath, filename, content_hash, file_size_bytes, num_tracks)
                  VALUES ($1, $2, $3, $4, $5)
-                 ON CONFLICT DO NOTHING"
+                 ON CONFLICT DO NOTHING",
             )
             .bind(format!("/test/file_{}.mid", i))
             .bind(format!("file_{}.mid", i))
@@ -81,9 +79,10 @@ impl TestDatabase {
             .await;
         }
 
-        self.cleanup_queries.lock().await.push(
-            "DELETE FROM files WHERE filepath LIKE '/test/%'".to_string()
-        );
+        self.cleanup_queries
+            .lock()
+            .await
+            .push("DELETE FROM files WHERE filepath LIKE '/test/%'".to_string());
     }
 
     /// Seed test tags
@@ -91,7 +90,7 @@ impl TestDatabase {
         for i in 0..count {
             let _ = sqlx::query(
                 "INSERT INTO tags (tag_name, tag_category) VALUES ($1, $2)
-                 ON CONFLICT DO NOTHING"
+                 ON CONFLICT DO NOTHING",
             )
             .bind(format!("tag_{}", i))
             .bind(Some("test_category"))
@@ -99,20 +98,20 @@ impl TestDatabase {
             .await;
         }
 
-        self.cleanup_queries.lock().await.push(
-            "DELETE FROM tags WHERE tag_name LIKE 'tag_%'".to_string()
-        );
+        self.cleanup_queries
+            .lock()
+            .await
+            .push("DELETE FROM tags WHERE tag_name LIKE 'tag_%'".to_string());
     }
 
     /// Seed test metadata
     async fn seed_metadata(&self, count: i64) {
-        let file_ids: Vec<i64> = sqlx::query_scalar(
-            "SELECT id FROM files WHERE filepath LIKE '/test/%' LIMIT $1"
-        )
-        .bind(count)
-        .fetch_all(&self.pool)
-        .await
-        .unwrap_or_default();
+        let file_ids: Vec<i64> =
+            sqlx::query_scalar("SELECT id FROM files WHERE filepath LIKE '/test/%' LIMIT $1")
+                .bind(count)
+                .fetch_all(&self.pool)
+                .await
+                .unwrap_or_default();
 
         for (i, file_id) in file_ids.iter().enumerate() {
             let bpm = 100.0 + (i as f64 * 5.0);
@@ -151,7 +150,8 @@ impl TestDatabase {
         self.cleanup_queries.lock().await.push(
             "DELETE FROM musical_metadata WHERE file_id IN (
                 SELECT id FROM files WHERE filepath LIKE '/test/%'
-            )".to_string()
+            )"
+            .to_string(),
         );
     }
 
@@ -159,9 +159,7 @@ impl TestDatabase {
     pub async fn cleanup(&self) {
         let queries = self.cleanup_queries.lock().await;
         for query in queries.iter().rev() {
-            let _ = sqlx::query(query)
-                .execute(&self.pool)
-                .await;
+            let _ = sqlx::query(query).execute(&self.pool).await;
         }
     }
 }
@@ -177,9 +175,7 @@ impl Drop for TestDatabase {
             if let Ok(rt) = rt {
                 rt.block_on(async {
                     for query in queries.lock().await.iter().rev() {
-                        let _ = sqlx::query(query)
-                            .execute(&pool)
-                            .await;
+                        let _ = sqlx::query(query).execute(&pool).await;
                     }
                 });
             }

@@ -1,34 +1,34 @@
-   /// BLAKE3 hashing module for file content deduplication and integrity verification.
-   ///
-   /// This is a **Trusty Module** with pure hashing logic.
-   ///
-   /// # Architecture Pattern
-   ///
-   /// Core functions are pure (no I/O):
-   /// - `calculate_content_hash()` - Pure hash calculation
-   /// - `hash_to_hex()` - Pure conversion
-   ///
-   /// Convenience wrapper (does I/O):
-   /// - `calculate_file_hash()` - Reads file and calculates hash
-   ///
-   /// # Performance
-   ///
-   /// BLAKE3 provides significant performance improvements over SHA-256:
-   /// - **Single-threaded**: ~3,000 MB/s (vs SHA-256 ~400 MB/s)
-   /// - **Multi-threaded**: ~10,000 MB/s with parallel tree hashing
-   /// - **7x faster** than SHA-256 for typical file sizes
-   ///
-   /// # Examples
-   ///
-   /// ```rust
-   /// use pipeline::core::hash::blake3::{calculate_content_hash, hash_to_hex};
-   ///
-   /// let data = b"Hello, MIDI Library System!";
-   /// let hash = calculate_content_hash(data);
-   /// let hex_string = hash_to_hex(&hash);
-   /// println!("Hash: {}", hex_string);
-   /// ```
 
+/// BLAKE3 hashing module for file content deduplication and integrity verification.
+///
+/// This is a **Trusty Module** with pure hashing logic.
+///
+/// # Architecture Pattern
+///
+/// Core functions are pure (no I/O):
+/// - `calculate_content_hash()` - Pure hash calculation
+/// - `hash_to_hex()` - Pure conversion
+///
+/// Convenience wrapper (does I/O):
+/// - `calculate_file_hash()` - Reads file and calculates hash
+///
+/// # Performance
+///
+/// BLAKE3 provides significant performance improvements over SHA-256:
+/// - **Single-threaded**: ~3,000 MB/s (vs SHA-256 ~400 MB/s)
+/// - **Multi-threaded**: ~10,000 MB/s with parallel tree hashing
+/// - **7x faster** than SHA-256 for typical file sizes
+///
+/// # Examples
+///
+/// ```rust
+/// use pipeline::core::hash::blake3::{calculate_content_hash, hash_to_hex};
+///
+/// let data = b"Hello, MIDI Library System!";
+/// let hash = calculate_content_hash(data);
+/// let hex_string = hash_to_hex(&hash);
+/// println!("Hash: {}", hex_string);
+/// ```
 use std::fs::File;
 use std::io::{self, Read};
 use std::path::Path;
@@ -117,15 +117,17 @@ pub fn calculate_content_hash(data: &[u8]) -> [u8; 32] {
 pub fn calculate_file_hash(path: &Path) -> Result<[u8; 32]> {
     // Validate path
     if !path.exists() {
-        return Err(HashError::InvalidPath(
-            format!("File does not exist: {}", path.display())
-        ));
+        return Err(HashError::InvalidPath(format!(
+            "File does not exist: {}",
+            path.display()
+        )));
     }
 
     if !path.is_file() {
-        return Err(HashError::InvalidPath(
-            format!("Path is not a file: {}", path.display())
-        ));
+        return Err(HashError::InvalidPath(format!(
+            "Path is not a file: {}",
+            path.display()
+        )));
     }
 
     // Open file
@@ -200,18 +202,18 @@ pub fn hash_to_hex(hash: &[u8; 32]) -> String {
 /// ```
 pub fn hex_to_hash(hex: &str) -> Result<[u8; 32]> {
     if hex.len() != 64 {
-        return Err(HashError::InvalidPath(
-            format!("Hex string must be exactly 64 characters, got {}", hex.len())
-        ));
+        return Err(HashError::InvalidPath(format!(
+            "Hex string must be exactly 64 characters, got {}",
+            hex.len()
+        )));
     }
 
     let mut hash = [0u8; 32];
     for i in 0..32 {
         let byte_str = &hex[i * 2..i * 2 + 2];
-        hash[i] = u8::from_str_radix(byte_str, 16)
-            .map_err(|_| HashError::InvalidPath(
-                format!("Invalid hex character in string: {}", byte_str)
-            ))?;
+        hash[i] = u8::from_str_radix(byte_str, 16).map_err(|_| {
+            HashError::InvalidPath(format!("Invalid hex character in string: {}", byte_str))
+        })?;
     }
 
     Ok(hash)
@@ -228,7 +230,9 @@ mod tests {
         let hash = calculate_content_hash(data);
 
         // BLAKE3 hash of empty string (known value)
-        let expected = hex_to_hash("af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262").unwrap();
+        let expected =
+            hex_to_hash("af1349b9f5f9a1a6a0404dea36dcc9499bcb25c9adc112b7cc9a93cae41f3262")
+                .unwrap();
         assert_eq!(hash, expected);
     }
 
@@ -238,7 +242,9 @@ mod tests {
         let hash = calculate_content_hash(data);
 
         // BLAKE3 hash of "Hello, World!" (verified with blake3 crate)
-        let expected = hex_to_hash("288a86a79f20a3d6dccdca7713beaed178798296bdfa7913fa2a62d9727bf8f8").unwrap();
+        let expected =
+            hex_to_hash("288a86a79f20a3d6dccdca7713beaed178798296bdfa7913fa2a62d9727bf8f8")
+                .unwrap();
         assert_eq!(hash, expected);
     }
 
@@ -293,10 +299,9 @@ mod tests {
     #[test]
     fn test_hash_to_hex_mixed_values() {
         let hash = [
-            0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF,
-            0xFE, 0xDC, 0xBA, 0x98, 0x76, 0x54, 0x32, 0x10,
-            0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF,
-            0xFE, 0xDC, 0xBA, 0x98, 0x76, 0x54, 0x32, 0x10,
+            0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF, 0xFE, 0xDC, 0xBA, 0x98, 0x76, 0x54,
+            0x32, 0x10, 0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF, 0xFE, 0xDC, 0xBA, 0x98,
+            0x76, 0x54, 0x32, 0x10,
         ];
         let hex = hash_to_hex(&hash);
 
@@ -317,10 +322,9 @@ mod tests {
         let hash = hex_to_hash(hex).unwrap();
 
         let expected = [
-            0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF,
-            0xFE, 0xDC, 0xBA, 0x98, 0x76, 0x54, 0x32, 0x10,
-            0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF,
-            0xFE, 0xDC, 0xBA, 0x98, 0x76, 0x54, 0x32, 0x10,
+            0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF, 0xFE, 0xDC, 0xBA, 0x98, 0x76, 0x54,
+            0x32, 0x10, 0x01, 0x23, 0x45, 0x67, 0x89, 0xAB, 0xCD, 0xEF, 0xFE, 0xDC, 0xBA, 0x98,
+            0x76, 0x54, 0x32, 0x10,
         ];
         assert_eq!(hash, expected);
     }
@@ -451,10 +455,7 @@ mod tests {
         assert_ne!(hash1, hash2);
 
         // Count number of different bytes (should be high due to avalanche effect)
-        let differences = hash1.iter()
-            .zip(hash2.iter())
-            .filter(|(a, b)| a != b)
-            .count();
+        let differences = hash1.iter().zip(hash2.iter()).filter(|(a, b)| a != b).count();
 
         // Expect at least 50% of bytes to be different (avalanche effect)
         assert!(differences > 16, "Only {} bytes different", differences);

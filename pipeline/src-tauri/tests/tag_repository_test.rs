@@ -1,50 +1,50 @@
-   /// Comprehensive tests for TagRepository
-   ///
-   /// **Target Coverage:** 90%+ (Trusty Module requirement: 80%+)
-   /// **Total Tests:** 80 (69 original + 11 error path tests)
-   ///
-   /// This test suite covers all 9 public methods of TagRepository with comprehensive
-   /// edge case testing, constraint violation handling, and performance verification.
-   ///
-   /// **Test Categories:**
-   /// 1. Tag CRUD Operations (8 tests) - Insert, find, update, delete
-   /// 2. Batch Tag Operations (9 tests) - Bulk upsert, batch insert
-   /// 3. File-Tag Associations (10 tests) - Add, remove, many-to-many
-   /// 4. Tag Queries and Filtering (9 tests) - Search, fuzzy, pattern matching
-   /// 5. Popular Tags and Usage Counts (7 tests) - Top tags, usage metrics
-   /// 6. Tag Category Operations (5 tests) - Category grouping, filtering
-   /// 7. File Filtering by Tags (6 tests) - Multi-tag queries, aggregation
-   /// 8. Update File Tags (Replace All) (6 tests) - Batch replace, transaction safety
-   /// 9. Edge Cases and Boundary Conditions (6 tests) - Empty, large datasets, null
-   /// 10. Error Path Tests (12 tests) - Constraint violations, FK, uniqueness
-   /// 11. Performance and Optimization (2 tests) - Bulk operations, indexing
-   ///
-   /// **Special Considerations:**
-   /// - Unique constraint on (file_id, tag_id) pairs
-   /// - Tag name length limit (VARCHAR(100))
-   /// - Category length limit (VARCHAR(50))
-   /// - Foreign key constraint (file_id must exist)
-   /// - Idempotent operations (remove non-existent tag)
-   ///
-   /// Total: 74 tests
-
+#[allow(dead_code, unused_imports, unused_variables)]
+/// Comprehensive tests for TagRepository
+///
+/// **Target Coverage:** 90%+ (Trusty Module requirement: 80%+)
+/// **Total Tests:** 80 (69 original + 11 error path tests)
+///
+/// This test suite covers all 9 public methods of TagRepository with comprehensive
+/// edge case testing, constraint violation handling, and performance verification.
+///
+/// **Test Categories:**
+/// 1. Tag CRUD Operations (8 tests) - Insert, find, update, delete
+/// 2. Batch Tag Operations (9 tests) - Bulk upsert, batch insert
+/// 3. File-Tag Associations (10 tests) - Add, remove, many-to-many
+/// 4. Tag Queries and Filtering (9 tests) - Search, fuzzy, pattern matching
+/// 5. Popular Tags and Usage Counts (7 tests) - Top tags, usage metrics
+/// 6. Tag Category Operations (5 tests) - Category grouping, filtering
+/// 7. File Filtering by Tags (6 tests) - Multi-tag queries, aggregation
+/// 8. Update File Tags (Replace All) (6 tests) - Batch replace, transaction safety
+/// 9. Edge Cases and Boundary Conditions (6 tests) - Empty, large datasets, null
+/// 10. Error Path Tests (12 tests) - Constraint violations, FK, uniqueness
+/// 11. Performance and Optimization (2 tests) - Bulk operations, indexing
+///
+/// **Special Considerations:**
+/// - Unique constraint on (file_id, tag_id) pairs
+/// - Tag name length limit (VARCHAR(100))
+/// - Category length limit (VARCHAR(50))
+/// - Foreign key constraint (file_id must exist)
+/// - Idempotent operations (remove non-existent tag)
+///
+/// Total: 74 tests
 mod common;
+use midi_pipeline::db::models::NewFile;
 use midi_pipeline::db::repositories::tag_repository::{TagRepository, TagRepositoryError};
 use midi_pipeline::db::repositories::FileRepository;
-use midi_pipeline::db::models::NewFile;
 use sqlx::PgPool;
 
 mod fixtures;
 mod helpers;
-use fixtures::{NewFileBuilder, NewTagBuilder, Fixtures, random_hash};
-use helpers::db::*;
 use common::{
     assertions::{
-        assert_metadata_exists, assert_file_has_tag, assert_bpm_set,
-        assert_file_not_exists as assert_file_path_not_exists,
+        assert_bpm_set, assert_file_has_tag, assert_file_not_exists as assert_file_path_not_exists,
+        assert_metadata_exists,
     },
     create_test_file, insert_metadata,
 };
+use fixtures::{random_hash, Fixtures, NewFileBuilder, NewTagBuilder};
+use helpers::db::*;
 
 // ============================================================================
 // SECTION 1: Tag CRUD Operations (8 tests)
@@ -56,7 +56,8 @@ async fn test_get_or_create_tag_new_tag() {
     cleanup_database(&pool).await.expect("Cleanup failed");
 
     let repo = TagRepository::new(pool.clone());
-    let tag_id = repo.get_or_create_tag("drums", Some("instrument"))
+    let tag_id = repo
+        .get_or_create_tag("drums", Some("instrument"))
         .await
         .expect("Failed to create tag");
 
@@ -73,10 +74,12 @@ async fn test_get_or_create_tag_existing_tag() {
 
     let repo = TagRepository::new(pool.clone());
 
-    let tag_id1 = repo.get_or_create_tag("drums", Some("instrument"))
+    let tag_id1 = repo
+        .get_or_create_tag("drums", Some("instrument"))
         .await
         .expect("Failed to create tag");
-    let tag_id2 = repo.get_or_create_tag("drums", Some("instrument"))
+    let tag_id2 = repo
+        .get_or_create_tag("drums", Some("instrument"))
         .await
         .expect("Failed to get existing tag");
 
@@ -94,7 +97,8 @@ async fn test_get_or_create_tag_without_category() {
     cleanup_database(&pool).await.expect("Cleanup failed");
 
     let repo = TagRepository::new(pool.clone());
-    let tag_id = repo.get_or_create_tag("drums", None)
+    let tag_id = repo
+        .get_or_create_tag("drums", None)
         .await
         .expect("Failed to create tag without category");
 
@@ -113,7 +117,8 @@ async fn test_get_or_create_tag_with_category() {
     cleanup_database(&pool).await.expect("Cleanup failed");
 
     let repo = TagRepository::new(pool.clone());
-    let tag_id = repo.get_or_create_tag("house", Some("genre"))
+    let tag_id = repo
+        .get_or_create_tag("house", Some("genre"))
         .await
         .expect("Failed to create tag with category");
 
@@ -131,14 +136,19 @@ async fn test_get_or_create_tag_case_sensitive() {
 
     let repo = TagRepository::new(pool.clone());
 
-    let tag_id1 = repo.get_or_create_tag("House", Some("genre"))
+    let tag_id1 = repo
+        .get_or_create_tag("House", Some("genre"))
         .await
         .expect("Failed to create tag");
-    let tag_id2 = repo.get_or_create_tag("house", Some("genre"))
+    let tag_id2 = repo
+        .get_or_create_tag("house", Some("genre"))
         .await
         .expect("Failed to create tag");
 
-    assert_ne!(tag_id1, tag_id2, "Should create separate tags for different cases");
+    assert_ne!(
+        tag_id1, tag_id2,
+        "Should create separate tags for different cases"
+    );
 
     let count = count_tags(&pool).await.expect("Failed to count tags");
     assert_eq!(count, 2, "Should have 2 tags with different cases");
@@ -221,9 +231,7 @@ async fn test_get_or_create_tags_batch_new_tags() {
         ("fx".to_string(), Some("type".to_string())),
     ];
 
-    let tag_ids = repo.get_or_create_tags_batch(&tags)
-        .await
-        .expect("Failed to create batch tags");
+    let tag_ids = repo.get_or_create_tags_batch(&tags).await.expect("Failed to create batch tags");
 
     assert_eq!(tag_ids.len(), 5);
     assert!(tag_ids.iter().all(|&id| id > 0));
@@ -282,7 +290,10 @@ async fn test_get_or_create_tags_batch_all_existing() {
     let first_ids = repo.get_or_create_tags_batch(&tags_to_create).await.expect("Failed");
     let second_ids = repo.get_or_create_tags_batch(&tags_to_create).await.expect("Failed");
 
-    assert_eq!(first_ids, second_ids, "Should return same IDs for existing tags");
+    assert_eq!(
+        first_ids, second_ids,
+        "Should return same IDs for existing tags"
+    );
 
     let count = count_tags(&pool).await.expect("Failed to count");
     assert_eq!(count, 3, "Should only have 3 tags");
@@ -339,9 +350,8 @@ async fn test_get_or_create_tags_batch_large_batch() {
     let repo = TagRepository::new(pool.clone());
 
     // Create 100 tags
-    let tags: Vec<(String, Option<String>)> = (0..100)
-        .map(|i| (format!("tag_{}", i), Some("test".to_string())))
-        .collect();
+    let tags: Vec<(String, Option<String>)> =
+        (0..100).map(|i| (format!("tag_{}", i), Some("test".to_string()))).collect();
 
     let tag_ids = repo.get_or_create_tags_batch(&tags).await.expect("Failed");
 
@@ -349,7 +359,7 @@ async fn test_get_or_create_tags_batch_large_batch() {
     assert!(tag_ids.iter().all(|&id| id > 0));
 
     let count = count_tags(&pool).await.expect("Failed");
-    assert_eq!(count, 100, "Expected 100, found {}");
+    assert_eq!(count, 100, "Expected 100, found {count}");
 
     cleanup_database(&pool).await.expect("Cleanup failed");
 }
@@ -455,13 +465,16 @@ async fn test_add_tags_to_file_multiple_tags() {
     let repo = TagRepository::new(pool.clone());
     let file_id = create_test_file(&pool, "test.mid").await;
 
-    let tag_ids = repo.get_or_create_tags_batch(&vec![
-        ("drums".to_string(), Some("instrument".to_string())),
-        ("bass".to_string(), Some("instrument".to_string())),
-        ("house".to_string(), Some("genre".to_string())),
-        ("loop".to_string(), Some("type".to_string())),
-        ("120bpm".to_string(), Some("tempo".to_string())),
-    ]).await.expect("Failed");
+    let tag_ids = repo
+        .get_or_create_tags_batch(&vec![
+            ("drums".to_string(), Some("instrument".to_string())),
+            ("bass".to_string(), Some("instrument".to_string())),
+            ("house".to_string(), Some("genre".to_string())),
+            ("loop".to_string(), Some("type".to_string())),
+            ("120bpm".to_string(), Some("tempo".to_string())),
+        ])
+        .await
+        .expect("Failed");
 
     repo.add_tags_to_file(file_id, &tag_ids).await.expect("Failed");
 
@@ -542,11 +555,14 @@ async fn test_remove_tag_from_file_existing() {
     let repo = TagRepository::new(pool.clone());
     let file_id = create_test_file(&pool, "test.mid").await;
 
-    let tag_ids = repo.get_or_create_tags_batch(&vec![
-        ("tag1".to_string(), None),
-        ("tag2".to_string(), None),
-        ("tag3".to_string(), None),
-    ]).await.expect("Failed");
+    let tag_ids = repo
+        .get_or_create_tags_batch(&vec![
+            ("tag1".to_string(), None),
+            ("tag2".to_string(), None),
+            ("tag3".to_string(), None),
+        ])
+        .await
+        .expect("Failed");
 
     repo.add_tags_to_file(file_id, &tag_ids).await.expect("Failed");
 
@@ -583,11 +599,14 @@ async fn test_get_file_tags_single_file() {
     let repo = TagRepository::new(pool.clone());
     let file_id = create_test_file(&pool, "test.mid").await;
 
-    let tag_ids = repo.get_or_create_tags_batch(&vec![
-        ("aaa".to_string(), Some("cat1".to_string())),
-        ("bbb".to_string(), Some("cat1".to_string())),
-        ("ccc".to_string(), Some("cat2".to_string())),
-    ]).await.expect("Failed");
+    let tag_ids = repo
+        .get_or_create_tags_batch(&vec![
+            ("aaa".to_string(), Some("cat1".to_string())),
+            ("bbb".to_string(), Some("cat1".to_string())),
+            ("ccc".to_string(), Some("cat2".to_string())),
+        ])
+        .await
+        .expect("Failed");
 
     repo.add_tags_to_file(file_id, &tag_ids).await.expect("Failed");
 
@@ -752,7 +771,11 @@ async fn test_get_tags_by_category_null_category() {
     repo.get_or_create_tag("tag2", None).await.expect("Failed");
 
     let results = repo.get_tags_by_category("instrument").await.expect("Failed");
-    assert_eq!(results.len(), 0, "NULL category tags should not be returned");
+    assert_eq!(
+        results.len(),
+        0,
+        "NULL category tags should not be returned"
+    );
 
     cleanup_database(&pool).await.expect("Cleanup failed");
 }
@@ -789,14 +812,23 @@ async fn test_get_popular_tags_basic() {
 
     // Create tags with usage counts directly in database
     sqlx::query("INSERT INTO tags (name, usage_count) VALUES ($1, $2)")
-        .bind("tag_high").bind(20)
-        .execute(&pool).await.expect("Failed");
+        .bind("tag_high")
+        .bind(20)
+        .execute(&pool)
+        .await
+        .expect("Failed");
     sqlx::query("INSERT INTO tags (name, usage_count) VALUES ($1, $2)")
-        .bind("tag_medium").bind(10)
-        .execute(&pool).await.expect("Failed");
+        .bind("tag_medium")
+        .bind(10)
+        .execute(&pool)
+        .await
+        .expect("Failed");
     sqlx::query("INSERT INTO tags (name, usage_count) VALUES ($1, $2)")
-        .bind("tag_low").bind(5)
-        .execute(&pool).await.expect("Failed");
+        .bind("tag_low")
+        .bind(5)
+        .execute(&pool)
+        .await
+        .expect("Failed");
 
     let results = repo.get_popular_tags(10).await.expect("Failed");
 
@@ -816,11 +848,17 @@ async fn test_get_popular_tags_filters_zero_usage() {
     let repo = TagRepository::new(pool.clone());
 
     sqlx::query("INSERT INTO tags (name, usage_count) VALUES ($1, $2)")
-        .bind("tag_used").bind(10)
-        .execute(&pool).await.expect("Failed");
+        .bind("tag_used")
+        .bind(10)
+        .execute(&pool)
+        .await
+        .expect("Failed");
     sqlx::query("INSERT INTO tags (name, usage_count) VALUES ($1, $2)")
-        .bind("tag_unused").bind(0)
-        .execute(&pool).await.expect("Failed");
+        .bind("tag_unused")
+        .bind(0)
+        .execute(&pool)
+        .await
+        .expect("Failed");
 
     let results = repo.get_popular_tags(10).await.expect("Failed");
 
@@ -842,7 +880,9 @@ async fn test_get_popular_tags_limit() {
         sqlx::query("INSERT INTO tags (name, usage_count) VALUES ($1, $2)")
             .bind(format!("tag_{}", i))
             .bind(10 - i)
-            .execute(&pool).await.expect("Failed");
+            .execute(&pool)
+            .await
+            .expect("Failed");
     }
 
     let results = repo.get_popular_tags(3).await.expect("Failed");
@@ -875,7 +915,9 @@ async fn test_get_popular_tags_all_zero_usage() {
         sqlx::query("INSERT INTO tags (name, usage_count) VALUES ($1, $2)")
             .bind(format!("tag_{}", i))
             .bind(0)
-            .execute(&pool).await.expect("Failed");
+            .execute(&pool)
+            .await
+            .expect("Failed");
     }
 
     let results = repo.get_popular_tags(10).await.expect("Failed");
@@ -899,7 +941,7 @@ async fn test_get_tag_file_count_existing_tag() {
     }
 
     let count = repo.get_tag_file_count(tag_id).await.expect("Failed");
-    assert_eq!(count, 5, "Expected 5, found {}");
+    assert_eq!(count, 5, "Expected 5, found {count}");
 
     cleanup_database(&pool).await.expect("Cleanup failed");
 }
@@ -913,7 +955,7 @@ async fn test_get_tag_file_count_no_files() {
     let tag_id = repo.get_or_create_tag("drums", None).await.expect("Failed");
 
     let count = repo.get_tag_file_count(tag_id).await.expect("Failed");
-    assert_eq!(count, 0, "Expected 0, found {}");
+    assert_eq!(count, 0, "Expected 0, found {count}");
 
     cleanup_database(&pool).await.expect("Cleanup failed");
 }
@@ -964,8 +1006,10 @@ async fn test_get_files_by_tags_or_logic_multiple_tags() {
     repo.add_tags_to_file(file2, &[bass_id]).await.expect("Failed");
     repo.add_tags_to_file(file3, &[drums_id, bass_id]).await.expect("Failed");
 
-    let results = repo.get_files_by_tags(&["drums".to_string(), "bass".to_string()], false)
-        .await.expect("Failed");
+    let results = repo
+        .get_files_by_tags(&["drums".to_string(), "bass".to_string()], false)
+        .await
+        .expect("Failed");
 
     assert_eq!(results.len(), 3);
     assert!(results.contains(&file1));
@@ -992,8 +1036,10 @@ async fn test_get_files_by_tags_and_logic_requires_all() {
     repo.add_tags_to_file(file2, &[bass_id]).await.expect("Failed");
     repo.add_tags_to_file(file3, &[drums_id, bass_id]).await.expect("Failed");
 
-    let results = repo.get_files_by_tags(&["drums".to_string(), "bass".to_string()], true)
-        .await.expect("Failed");
+    let results = repo
+        .get_files_by_tags(&["drums".to_string(), "bass".to_string()], true)
+        .await
+        .expect("Failed");
 
     assert_eq!(results.len(), 1);
     assert_eq!(results[0], file3);
@@ -1016,8 +1062,10 @@ async fn test_get_files_by_tags_and_logic_no_matches() {
     repo.add_tags_to_file(file1, &[drums_id]).await.expect("Failed");
     repo.add_tags_to_file(file2, &[bass_id]).await.expect("Failed");
 
-    let results = repo.get_files_by_tags(&["drums".to_string(), "bass".to_string()], true)
-        .await.expect("Failed");
+    let results = repo
+        .get_files_by_tags(&["drums".to_string(), "bass".to_string()], true)
+        .await
+        .expect("Failed");
 
     assert_eq!(results.len(), 0);
 
@@ -1045,7 +1093,10 @@ async fn test_get_files_by_tags_nonexistent_tag() {
     let repo = TagRepository::new(pool.clone());
     let _file1 = create_test_file(&pool, "file1.mid").await;
 
-    let results = repo.get_files_by_tags(&["nonexistent".to_string()], false).await.expect("Failed");
+    let results = repo
+        .get_files_by_tags(&["nonexistent".to_string()], false)
+        .await
+        .expect("Failed");
     assert_eq!(results.len(), 0);
 
     cleanup_database(&pool).await.expect("Cleanup failed");
@@ -1063,17 +1114,23 @@ async fn test_update_file_tags_replace_all() {
     let repo = TagRepository::new(pool.clone());
     let file_id = create_test_file(&pool, "test.mid").await;
 
-    let old_tags = repo.get_or_create_tags_batch(&vec![
-        ("tag1".to_string(), None),
-        ("tag2".to_string(), None),
-        ("tag3".to_string(), None),
-    ]).await.expect("Failed");
+    let old_tags = repo
+        .get_or_create_tags_batch(&vec![
+            ("tag1".to_string(), None),
+            ("tag2".to_string(), None),
+            ("tag3".to_string(), None),
+        ])
+        .await
+        .expect("Failed");
 
-    let new_tags = repo.get_or_create_tags_batch(&vec![
-        ("tag4".to_string(), None),
-        ("tag5".to_string(), None),
-        ("tag6".to_string(), None),
-    ]).await.expect("Failed");
+    let new_tags = repo
+        .get_or_create_tags_batch(&vec![
+            ("tag4".to_string(), None),
+            ("tag5".to_string(), None),
+            ("tag6".to_string(), None),
+        ])
+        .await
+        .expect("Failed");
 
     repo.add_tags_to_file(file_id, &old_tags).await.expect("Failed");
     repo.update_file_tags(file_id, &new_tags).await.expect("Failed");
@@ -1094,12 +1151,15 @@ async fn test_update_file_tags_partial_overlap() {
     let repo = TagRepository::new(pool.clone());
     let file_id = create_test_file(&pool, "test.mid").await;
 
-    let tag_ids = repo.get_or_create_tags_batch(&vec![
-        ("tag1".to_string(), None),
-        ("tag2".to_string(), None),
-        ("tag3".to_string(), None),
-        ("tag4".to_string(), None),
-    ]).await.expect("Failed");
+    let tag_ids = repo
+        .get_or_create_tags_batch(&vec![
+            ("tag1".to_string(), None),
+            ("tag2".to_string(), None),
+            ("tag3".to_string(), None),
+            ("tag4".to_string(), None),
+        ])
+        .await
+        .expect("Failed");
 
     // Initially: tag1, tag2, tag3
     repo.add_tags_to_file(file_id, &tag_ids[0..3]).await.expect("Failed");
@@ -1127,10 +1187,13 @@ async fn test_update_file_tags_clear_all() {
     let repo = TagRepository::new(pool.clone());
     let file_id = create_test_file(&pool, "test.mid").await;
 
-    let tag_ids = repo.get_or_create_tags_batch(&vec![
-        ("tag1".to_string(), None),
-        ("tag2".to_string(), None),
-    ]).await.expect("Failed");
+    let tag_ids = repo
+        .get_or_create_tags_batch(&vec![
+            ("tag1".to_string(), None),
+            ("tag2".to_string(), None),
+        ])
+        .await
+        .expect("Failed");
 
     repo.add_tags_to_file(file_id, &tag_ids).await.expect("Failed");
     repo.update_file_tags(file_id, &[]).await.expect("Failed");
@@ -1149,10 +1212,13 @@ async fn test_update_file_tags_no_change() {
     let repo = TagRepository::new(pool.clone());
     let file_id = create_test_file(&pool, "test.mid").await;
 
-    let tag_ids = repo.get_or_create_tags_batch(&vec![
-        ("tag1".to_string(), None),
-        ("tag2".to_string(), None),
-    ]).await.expect("Failed");
+    let tag_ids = repo
+        .get_or_create_tags_batch(&vec![
+            ("tag1".to_string(), None),
+            ("tag2".to_string(), None),
+        ])
+        .await
+        .expect("Failed");
 
     repo.add_tags_to_file(file_id, &tag_ids).await.expect("Failed");
     repo.update_file_tags(file_id, &tag_ids).await.expect("Failed");
@@ -1171,17 +1237,21 @@ async fn test_update_file_tags_transaction_atomicity() {
     let repo = TagRepository::new(pool.clone());
     let file_id = create_test_file(&pool, "test.mid").await;
 
-    let initial_tags = repo.get_or_create_tags_batch(&vec![
-        ("tag1".to_string(), None),
-        ("tag2".to_string(), None),
-    ]).await.expect("Failed");
+    let initial_tags = repo
+        .get_or_create_tags_batch(&vec![
+            ("tag1".to_string(), None),
+            ("tag2".to_string(), None),
+        ])
+        .await
+        .expect("Failed");
 
     repo.add_tags_to_file(file_id, &initial_tags).await.expect("Failed");
 
     // Normal update (should succeed)
-    let new_tags = repo.get_or_create_tags_batch(&vec![
-        ("tag3".to_string(), None),
-    ]).await.expect("Failed");
+    let new_tags = repo
+        .get_or_create_tags_batch(&vec![("tag3".to_string(), None)])
+        .await
+        .expect("Failed");
 
     repo.update_file_tags(file_id, &new_tags).await.expect("Failed");
 
@@ -1200,21 +1270,21 @@ async fn test_update_file_tags_added_by_user() {
     let repo = TagRepository::new(pool.clone());
     let file_id = create_test_file(&pool, "test.mid").await;
 
-    let tag_ids = repo.get_or_create_tags_batch(&vec![
-        ("tag1".to_string(), None),
-    ]).await.expect("Failed");
+    let tag_ids = repo
+        .get_or_create_tags_batch(&vec![("tag1".to_string(), None)])
+        .await
+        .expect("Failed");
 
     repo.update_file_tags(file_id, &tag_ids).await.expect("Failed");
 
     // Query file_tags directly to check added_by
-    let added_by: String = sqlx::query_scalar(
-        "SELECT added_by FROM file_tags WHERE file_id = $1 AND tag_id = $2"
-    )
-    .bind(file_id)
-    .bind(tag_ids[0])
-    .fetch_one(&pool)
-    .await
-    .expect("Failed to query added_by");
+    let added_by: String =
+        sqlx::query_scalar("SELECT added_by FROM file_tags WHERE file_id = $1 AND tag_id = $2")
+            .bind(file_id)
+            .bind(tag_ids[0])
+            .fetch_one(&pool)
+            .await
+            .expect("Failed to query added_by");
 
     assert_eq!(added_by, "user");
 
@@ -1246,7 +1316,10 @@ async fn test_tag_name_very_long() {
     let repo = TagRepository::new(pool.clone());
     let long_name = "a".repeat(1000);
 
-    let tag_id = repo.get_or_create_tag(&long_name, None).await.expect("Long name should be allowed");
+    let tag_id = repo
+        .get_or_create_tag(&long_name, None)
+        .await
+        .expect("Long name should be allowed");
 
     let tag = get_tag_by_id(&pool, tag_id).await.expect("Failed");
     assert_eq!(tag.name.len(), 1000);
@@ -1298,7 +1371,10 @@ async fn test_tag_category_very_long() {
     let repo = TagRepository::new(pool.clone());
     let long_category = "category_".repeat(100);
 
-    let tag_id = repo.get_or_create_tag("test", Some(&long_category)).await.expect("Long category should work");
+    let tag_id = repo
+        .get_or_create_tag("test", Some(&long_category))
+        .await
+        .expect("Long category should work");
 
     let tag = get_tag_by_id(&pool, tag_id).await.expect("Failed");
     assert_eq!(tag.category, Some(long_category));
@@ -1315,9 +1391,8 @@ async fn test_large_tag_association_array() {
     let file_id = create_test_file(&pool, "test.mid").await;
 
     // Create 500 tags
-    let tags: Vec<(String, Option<String>)> = (0..500)
-        .map(|i| (format!("tag_{}", i), None))
-        .collect();
+    let tags: Vec<(String, Option<String>)> =
+        (0..500).map(|i| (format!("tag_{}", i), None)).collect();
 
     let tag_ids = repo.get_or_create_tags_batch(&tags).await.expect("Failed");
 
@@ -1342,12 +1417,15 @@ async fn test_duplicate_tag_name_upsert() {
     let repo = TagRepository::new(pool.clone());
 
     let tag_id1 = repo.get_or_create_tag("drums", Some("instrument")).await.expect("Failed");
-    let tag_id2 = repo.get_or_create_tag("drums", Some("different_category")).await.expect("Failed");
+    let tag_id2 = repo
+        .get_or_create_tag("drums", Some("different_category"))
+        .await
+        .expect("Failed");
 
     assert_eq!(tag_id1, tag_id2, "ON CONFLICT should return same ID");
 
     let count = count_tags(&pool).await.expect("Failed");
-    assert_eq!(count, 1, "Expected {1}, found {count}");
+    assert_eq!(count, 1, "Expected 1, found {count}");
 
     cleanup_database(&pool).await.expect("Cleanup failed");
 }
@@ -1389,16 +1467,17 @@ async fn test_transaction_rollback_verification() {
     let repo = TagRepository::new(pool.clone());
 
     // Batch operation should be atomic
-    let tags = vec![
-        ("tag1".to_string(), None),
-        ("tag2".to_string(), None),
-    ];
+    let tags = vec![("tag1".to_string(), None), ("tag2".to_string(), None)];
 
     let result = repo.get_or_create_tags_batch(&tags).await;
-    assert!(result.is_ok(), "result should succeed, got error: {:?}", result.err());
+    assert!(
+        result.is_ok(),
+        "result should succeed, got error: {:?}",
+        result.err()
+    );
 
     let count = count_tags(&pool).await.expect("Failed");
-    assert_eq!(count, 2, "Expected {2}, found {count}");
+    assert_eq!(count, 2, "Expected 2, found {count}");
 
     cleanup_database(&pool).await.expect("Cleanup failed");
 }
@@ -1414,16 +1493,23 @@ async fn test_batch_tag_creation_performance() {
 
     let repo = TagRepository::new(pool.clone());
 
-    let tags: Vec<(String, Option<String>)> = (0..1000)
-        .map(|i| (format!("tag_{}", i), Some("test".to_string())))
-        .collect();
+    let tags: Vec<(String, Option<String>)> =
+        (0..1000).map(|i| (format!("tag_{}", i), Some("test".to_string()))).collect();
 
     let start = std::time::Instant::now();
     let result = repo.get_or_create_tags_batch(&tags).await;
     let elapsed = start.elapsed();
 
-    assert!(result.is_ok(), "result should succeed, got error: {:?}", result.err());
-    assert!(elapsed.as_millis() < 1000, "Should complete in <1000ms, took {}ms", elapsed.as_millis());
+    assert!(
+        result.is_ok(),
+        "result should succeed, got error: {:?}",
+        result.err()
+    );
+    assert!(
+        elapsed.as_millis() < 1000,
+        "Should complete in <1000ms, took {}ms",
+        elapsed.as_millis()
+    );
 
     cleanup_database(&pool).await.expect("Cleanup failed");
 }
@@ -1437,9 +1523,8 @@ async fn test_get_file_tags_query_performance() {
     let file_id = create_test_file(&pool, "test.mid").await;
 
     // Create 100 tags and associate with file
-    let tags: Vec<(String, Option<String>)> = (0..100)
-        .map(|i| (format!("tag_{}", i), None))
-        .collect();
+    let tags: Vec<(String, Option<String>)> =
+        (0..100).map(|i| (format!("tag_{}", i), None)).collect();
 
     let tag_ids = repo.get_or_create_tags_batch(&tags).await.expect("Failed");
     repo.add_tags_to_file(file_id, &tag_ids).await.expect("Failed");
@@ -1448,9 +1533,17 @@ async fn test_get_file_tags_query_performance() {
     let result = repo.get_file_tags(file_id).await;
     let elapsed = start.elapsed();
 
-    assert!(result.is_ok(), "result should succeed, got error: {:?}", result.err());
+    assert!(
+        result.is_ok(),
+        "result should succeed, got error: {:?}",
+        result.err()
+    );
     assert_eq!(result.unwrap().len(), 100);
-    assert!(elapsed.as_millis() < 100, "Should complete in <100ms, took {}ms", elapsed.as_millis());
+    assert!(
+        elapsed.as_millis() < 100,
+        "Should complete in <100ms, took {}ms",
+        elapsed.as_millis()
+    );
 
     cleanup_database(&pool).await.expect("Cleanup failed");
 }
@@ -1463,9 +1556,8 @@ async fn test_search_tags_query_performance() {
     let repo = TagRepository::new(pool.clone());
 
     // Create 10,000 tags
-    let tags: Vec<(String, Option<String>)> = (0..10000)
-        .map(|i| (format!("tag_{}", i), None))
-        .collect();
+    let tags: Vec<(String, Option<String>)> =
+        (0..10000).map(|i| (format!("tag_{}", i), None)).collect();
 
     repo.get_or_create_tags_batch(&tags).await.expect("Failed");
 
@@ -1473,8 +1565,16 @@ async fn test_search_tags_query_performance() {
     let result = repo.search_tags("tag_1", 20).await;
     let elapsed = start.elapsed();
 
-    assert!(result.is_ok(), "result should succeed, got error: {:?}", result.err());
-    assert!(elapsed.as_millis() < 200, "Should complete in <200ms, took {}ms", elapsed.as_millis());
+    assert!(
+        result.is_ok(),
+        "result should succeed, got error: {:?}",
+        result.err()
+    );
+    assert!(
+        elapsed.as_millis() < 200,
+        "Should complete in <200ms, took {}ms",
+        elapsed.as_millis()
+    );
 
     cleanup_database(&pool).await.expect("Cleanup failed");
 }
@@ -1486,10 +1586,13 @@ async fn test_get_files_by_tags_and_performance() {
 
     let repo = TagRepository::new(pool.clone());
 
-    let tag_ids = repo.get_or_create_tags_batch(&vec![
-        ("tag1".to_string(), None),
-        ("tag2".to_string(), None),
-    ]).await.expect("Failed");
+    let tag_ids = repo
+        .get_or_create_tags_batch(&vec![
+            ("tag1".to_string(), None),
+            ("tag2".to_string(), None),
+        ])
+        .await
+        .expect("Failed");
 
     // Create 1000 files with various tag combinations
     for i in 0..1000 {
@@ -1507,185 +1610,210 @@ async fn test_get_files_by_tags_and_performance() {
     let result = repo.get_files_by_tags(&["tag1".to_string(), "tag2".to_string()], true).await;
     let elapsed = start.elapsed();
 
-    assert!(result.is_ok(), "result should succeed, got error: {:?}", result.err());
-    assert!(elapsed.as_millis() < 500, "Should complete in <500ms, took {}ms", elapsed.as_millis());
+    assert!(
+        result.is_ok(),
+        "result should succeed, got error: {:?}",
+        result.err()
+    );
+    assert!(
+        elapsed.as_millis() < 500,
+        "Should complete in <500ms, took {}ms",
+        elapsed.as_millis()
+    );
 
     cleanup_database(&pool).await.expect("Cleanup failed");
 }
 
-    // ============================================================================
-    // ============================================================================
-    // SECTION 8: Error Path Tests - Constraint Violations (12 tests)
-    // ============================================================================
-    // ============================================================================
+// ============================================================================
+// ============================================================================
+// SECTION 8: Error Path Tests - Constraint Violations (12 tests)
+// ============================================================================
+// ============================================================================
 
-    #[tokio::test]
-    async fn test_add_same_tag_to_file_twice_fails() {
-        // Description: Adding same tag to file twice should fail (unique constraint on file_id, tag_id)
-        let pool = setup_test_pool().await;
-        cleanup_database(&pool).await.expect("Cleanup failed");
+#[tokio::test]
+async fn test_add_same_tag_to_file_twice_fails() {
+    // Description: Adding same tag to file twice should fail (unique constraint on file_id, tag_id)
+    let pool = setup_test_pool().await;
+    cleanup_database(&pool).await.expect("Cleanup failed");
 
-        let file_id = create_test_file(&pool, "file.mid").await;
-        let repo = TagRepository::new(pool.clone());
+    let file_id = create_test_file(&pool, "file.mid").await;
+    let repo = TagRepository::new(pool.clone());
 
-        repo.add_tag_to_file(file_id, "test_tag", None).await.expect("First add failed");
+    repo.add_tag_to_file(file_id, "test_tag", None).await.expect("First add failed");
 
-        // Second add of same tag should fail
-        let result = repo.add_tag_to_file(file_id, "test_tag", None).await;
-        assert!(result.is_err(), "Duplicate tag assignment should fail unique constraint");
+    // Second add of same tag should fail
+    let result = repo.add_tag_to_file(file_id, "test_tag", None).await;
+    assert!(
+        result.is_err(),
+        "Duplicate tag assignment should fail unique constraint"
+    );
 
-        cleanup_database(&pool).await.expect("Cleanup failed");
-    }
+    cleanup_database(&pool).await.expect("Cleanup failed");
+}
 
-    #[tokio::test]
-    async fn test_tag_name_exceeds_varchar_limit() {
-        // Description: Tag name exceeding VARCHAR(100) limit should fail
-        let pool = setup_test_pool().await;
-        cleanup_database(&pool).await.expect("Cleanup failed");
+#[tokio::test]
+async fn test_tag_name_exceeds_varchar_limit() {
+    // Description: Tag name exceeding VARCHAR(100) limit should fail
+    let pool = setup_test_pool().await;
+    cleanup_database(&pool).await.expect("Cleanup failed");
 
-        let file_id = create_test_file(&pool, "file.mid").await;
-        let long_tag = "t".repeat(150); // > 100 chars
-        let repo = TagRepository::new(pool.clone());
+    let file_id = create_test_file(&pool, "file.mid").await;
+    let long_tag = "t".repeat(150); // > 100 chars
+    let repo = TagRepository::new(pool.clone());
 
-        let result = repo.add_tag_to_file(file_id, &long_tag, None).await;
-        assert!(result.is_err(), "Tag name > 100 chars should fail");
+    let result = repo.add_tag_to_file(file_id, &long_tag, None).await;
+    assert!(result.is_err(), "Tag name > 100 chars should fail");
 
-        cleanup_database(&pool).await.expect("Cleanup failed");
-    }
+    cleanup_database(&pool).await.expect("Cleanup failed");
+}
 
-    #[tokio::test]
-    async fn test_category_exceeds_varchar_limit() {
-        // Description: Category exceeding VARCHAR(50) limit should fail
-        let pool = setup_test_pool().await;
-        cleanup_database(&pool).await.expect("Cleanup failed");
+#[tokio::test]
+async fn test_category_exceeds_varchar_limit() {
+    // Description: Category exceeding VARCHAR(50) limit should fail
+    let pool = setup_test_pool().await;
+    cleanup_database(&pool).await.expect("Cleanup failed");
 
-        let long_category = "c".repeat(60); // > 50 chars
-        let repo = TagRepository::new(pool.clone());
+    let long_category = "c".repeat(60); // > 50 chars
+    let repo = TagRepository::new(pool.clone());
 
-        let result = repo.insert("test", Some(&long_category)).await;
-        assert!(result.is_err(), "Category > 50 chars should fail");
+    let result = repo.insert("test", Some(&long_category)).await;
+    assert!(result.is_err(), "Category > 50 chars should fail");
 
-        cleanup_database(&pool).await.expect("Cleanup failed");
-    }
+    cleanup_database(&pool).await.expect("Cleanup failed");
+}
 
-    #[tokio::test]
-    async fn test_add_tag_to_nonexistent_file_fails() {
-        // Description: Adding tag to non-existent file should fail (FK constraint)
-        let pool = setup_test_pool().await;
-        cleanup_database(&pool).await.expect("Cleanup failed");
+#[tokio::test]
+async fn test_add_tag_to_nonexistent_file_fails() {
+    // Description: Adding tag to non-existent file should fail (FK constraint)
+    let pool = setup_test_pool().await;
+    cleanup_database(&pool).await.expect("Cleanup failed");
 
-        let repo = TagRepository::new(pool.clone());
-        let result = repo.add_tag_to_file(999999, "test_tag", None).await;
-        assert!(result.is_err(), "Adding tag to non-existent file should fail FK constraint");
+    let repo = TagRepository::new(pool.clone());
+    let result = repo.add_tag_to_file(999999, "test_tag", None).await;
+    assert!(
+        result.is_err(),
+        "Adding tag to non-existent file should fail FK constraint"
+    );
 
-        cleanup_database(&pool).await.expect("Cleanup failed");
-    }
+    cleanup_database(&pool).await.expect("Cleanup failed");
+}
 
-    #[tokio::test]
-    async fn test_remove_nonexistent_tag_from_file_idempotent() {
-        // Description: Removing non-existent tag from file is idempotent
-        let pool = setup_test_pool().await;
-        cleanup_database(&pool).await.expect("Cleanup failed");
+#[tokio::test]
+async fn test_remove_nonexistent_tag_from_file_idempotent() {
+    // Description: Removing non-existent tag from file is idempotent
+    let pool = setup_test_pool().await;
+    cleanup_database(&pool).await.expect("Cleanup failed");
 
-        let file_id = create_test_file(&pool, "file.mid").await;
-        let repo = TagRepository::new(pool.clone());
+    let file_id = create_test_file(&pool, "file.mid").await;
+    let repo = TagRepository::new(pool.clone());
 
-        // Remove tag that was never added - should not error
-        // Using tag_id 999999 (non-existent)
-        let result = repo.remove_tag_from_file(file_id, 999999).await;
-        assert!(result.is_ok(), "Removing non-existent tag should be idempotent");
+    // Remove tag that was never added - should not error
+    // Using tag_id 999999 (non-existent)
+    let result = repo.remove_tag_from_file(file_id, 999999).await;
+    assert!(
+        result.is_ok(),
+        "Removing non-existent tag should be idempotent"
+    );
 
-        cleanup_database(&pool).await.expect("Cleanup failed");
-    }
+    cleanup_database(&pool).await.expect("Cleanup failed");
+}
 
-    #[tokio::test]
-    async fn test_delete_nonexistent_tag_idempotent() {
-        // Description: Deleting non-existent tag is idempotent
-        let pool = setup_test_pool().await;
-        cleanup_database(&pool).await.expect("Cleanup failed");
+#[tokio::test]
+async fn test_delete_nonexistent_tag_idempotent() {
+    // Description: Deleting non-existent tag is idempotent
+    let pool = setup_test_pool().await;
+    cleanup_database(&pool).await.expect("Cleanup failed");
 
-        let repo = TagRepository::new(pool.clone());
-        let result = repo.delete("nonexistent_tag").await;
-        assert!(result.is_ok(), "Delete non-existent should be idempotent");
+    let repo = TagRepository::new(pool.clone());
+    let result = repo.delete("nonexistent_tag").await;
+    assert!(result.is_ok(), "Delete non-existent should be idempotent");
 
-        cleanup_database(&pool).await.expect("Cleanup failed");
-    }
+    cleanup_database(&pool).await.expect("Cleanup failed");
+}
 
-    #[tokio::test]
-    async fn test_find_tags_for_nonexistent_file_returns_empty() {
-        // Description: Finding tags for non-existent file returns empty list
-        let pool = setup_test_pool().await;
-        cleanup_database(&pool).await.expect("Cleanup failed");
+#[tokio::test]
+async fn test_find_tags_for_nonexistent_file_returns_empty() {
+    // Description: Finding tags for non-existent file returns empty list
+    let pool = setup_test_pool().await;
+    cleanup_database(&pool).await.expect("Cleanup failed");
 
-        let repo = TagRepository::new(pool.clone());
-        let result = repo.get_tags_for_file(999999).await;
-        assert!(result.is_ok(), "Should not error");
-        assert_eq!(result.unwrap().len(), 0, "Should return empty list");
+    let repo = TagRepository::new(pool.clone());
+    let result = repo.get_tags_for_file(999999).await;
+    assert!(result.is_ok(), "Should not error");
+    assert_eq!(result.unwrap().len(), 0, "Should return empty list");
 
-        cleanup_database(&pool).await.expect("Cleanup failed");
-    }
+    cleanup_database(&pool).await.expect("Cleanup failed");
+}
 
-    #[tokio::test]
-    async fn test_empty_tag_name_rejected() {
-        // Description: Empty tag name should be rejected
-        let pool = setup_test_pool().await;
-        cleanup_database(&pool).await.expect("Cleanup failed");
+#[tokio::test]
+async fn test_empty_tag_name_rejected() {
+    // Description: Empty tag name should be rejected
+    let pool = setup_test_pool().await;
+    cleanup_database(&pool).await.expect("Cleanup failed");
 
-        let file_id = create_test_file(&pool, "file.mid").await;
-        let repo = TagRepository::new(pool.clone());
+    let file_id = create_test_file(&pool, "file.mid").await;
+    let repo = TagRepository::new(pool.clone());
 
-        let result = repo.add_tag_to_file(file_id, "", None).await;
-        assert!(result.is_err(), "Empty tag name should fail");
+    let result = repo.add_tag_to_file(file_id, "", None).await;
+    assert!(result.is_err(), "Empty tag name should fail");
 
-        cleanup_database(&pool).await.expect("Cleanup failed");
-    }
+    cleanup_database(&pool).await.expect("Cleanup failed");
+}
 
-    #[tokio::test]
-    async fn test_bulk_upsert_with_invalid_tags() {
-        // Description: Bulk upsert handles invalid tag gracefully
-        let pool = setup_test_pool().await;
-        cleanup_database(&pool).await.expect("Cleanup failed");
+#[tokio::test]
+async fn test_bulk_upsert_with_invalid_tags() {
+    // Description: Bulk upsert handles invalid tag gracefully
+    let pool = setup_test_pool().await;
+    cleanup_database(&pool).await.expect("Cleanup failed");
 
-        let file_id = create_test_file(&pool, "file.mid").await;
-        let repo = TagRepository::new(pool.clone());
+    let file_id = create_test_file(&pool, "file.mid").await;
+    let repo = TagRepository::new(pool.clone());
 
-        let tags = vec![
-            "valid_tag".to_string(),
-            "".to_string(), // Empty tag - should fail
-        ];
+    let tags = vec![
+        "valid_tag".to_string(),
+        "".to_string(), // Empty tag - should fail
+    ];
 
-        let result = repo.upsert_tags_for_file(file_id, &tags).await;
-        assert!(result.is_err(), "Bulk upsert with empty tag should fail");
+    let result = repo.upsert_tags_for_file(file_id, &tags).await;
+    assert!(result.is_err(), "Bulk upsert with empty tag should fail");
 
-        cleanup_database(&pool).await.expect("Cleanup failed");
-    }
+    cleanup_database(&pool).await.expect("Cleanup failed");
+}
 
-    #[tokio::test]
-    async fn test_get_popular_tags_with_negative_limit() {
-        // Description: Negative limit should fail
-        let pool = setup_test_pool().await;
-        cleanup_database(&pool).await.expect("Cleanup failed");
+#[tokio::test]
+async fn test_get_popular_tags_with_negative_limit() {
+    // Description: Negative limit should fail
+    let pool = setup_test_pool().await;
+    cleanup_database(&pool).await.expect("Cleanup failed");
 
-        let repo = TagRepository::new(pool.clone());
-        let result = repo.get_popular_tags(-10).await;
-        assert!(result.is_err(), "Negative limit should fail");
+    let repo = TagRepository::new(pool.clone());
+    let result = repo.get_popular_tags(-10).await;
+    assert!(result.is_err(), "Negative limit should fail");
 
-        cleanup_database(&pool).await.expect("Cleanup failed");
-    }
+    cleanup_database(&pool).await.expect("Cleanup failed");
+}
 
-    #[tokio::test]
-    async fn test_search_tags_with_empty_query_returns_all() {
-        // Description: Empty search query returns all tags
-        let pool = setup_test_pool().await;
-        cleanup_database(&pool).await.expect("Cleanup failed");
+#[tokio::test]
+async fn test_search_tags_with_empty_query_returns_all() {
+    // Description: Empty search query returns all tags
+    let pool = setup_test_pool().await;
+    cleanup_database(&pool).await.expect("Cleanup failed");
 
-        let repo = TagRepository::new(pool.clone());
-        repo.insert("test1", None).await.expect("Insert failed");
-        repo.insert("test2", None).await.expect("Insert failed");
+    let repo = TagRepository::new(pool.clone());
+    repo.insert("test1", None).await.expect("Insert failed");
+    repo.insert("test2", None).await.expect("Insert failed");
 
-        let result = repo.search("", 100).await;
-        assert!(result.is_ok(), "result should succeed, got error: {:?}", result.err());
-        assert_eq!(result.unwrap().len(), 2, "Empty query should return all tags");
+    let result = repo.search("", 100).await;
+    assert!(
+        result.is_ok(),
+        "result should succeed, got error: {:?}",
+        result.err()
+    );
+    assert_eq!(
+        result.unwrap().len(),
+        2,
+        "Empty query should return all tags"
+    );
 
-        cleanup_database(&pool).await.expect("Cleanup failed");
-    }
+    cleanup_database(&pool).await.expect("Cleanup failed");
+}

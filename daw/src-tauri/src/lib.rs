@@ -1,7 +1,6 @@
-   /// MIDI Library DAW Interface
-   ///
-   /// Core library for DAW functionality including MIDI playback, sequencing, and search.
-
+/// MIDI Library DAW Interface
+///
+/// Core library for DAW functionality including MIDI playback, sequencing, and search.
 pub mod automation;
 pub mod browsers;
 pub mod command_palette;
@@ -17,14 +16,14 @@ pub mod undo_redo;
 pub mod windows;
 
 // Re-export commonly used types
-pub use models::{MidiFile, FileDetails, AppError, AppResult};
+pub use models::{AppError, AppResult, FileDetails, MidiFile};
 
 // Re-export command palette types
-pub use command_palette::{CommandEntry, CommandCategory, CommandPalette, SearchResult};
+pub use command_palette::{CommandCategory, CommandEntry, CommandPalette, SearchResult};
 
 // Re-export settings types
 pub use settings::{
-    AppSettings, AdvancedSettings, AudioSettings, DisplaySettings, GeneralSettings,
+    AdvancedSettings, AppSettings, AudioSettings, DisplaySettings, GeneralSettings,
     ImportExportSettings, KeyboardSettings, LibrarySettings, MidiSettings, MixerSettings,
     PerformanceSettings, PlaybackSettings, PrivacySettings, RecordingSettings, SyncSettings,
     TrackSettings,

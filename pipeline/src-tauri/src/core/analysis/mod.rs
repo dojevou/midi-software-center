@@ -1,23 +1,28 @@
-   /// Analysis modules for MIDI file processing
 
+/// Analysis modules for MIDI file processing
 pub mod auto_tagger;
 pub mod bpm_detector;
+pub mod drum_analyzer;
+pub mod filename_metadata;
 pub mod key_detector;
 pub mod key_profiles;
-pub mod drum_analyzer;
 
 // Re-export main types
 pub use auto_tagger::{AutoTagger, Tag};
 pub use bpm_detector::{detect_bpm, BpmDetectionMethod, BpmDetectionResult, BpmMetadata};
-pub use key_detector::{detect_key, KeyDetectionResult, ScaleType};
 pub use drum_analyzer::{
-    analyze_drum_midi, has_drum_channel, extract_drum_notes, note_to_drum_type,
-    detect_cymbal_types, extract_time_signature_from_meta, detect_techniques,
-    extract_time_signature_from_path, extract_bpm_from_filename, extract_pattern_type,
-    extract_rhythmic_feel, extract_song_structure, generate_drum_tags,
-    DrumAnalysis, DrumNote, PatternType, RhythmicFeel, DrumTechnique,
-    TimeSignature, CymbalType, SongStructure,
+    analyze_drum_midi, detect_cymbal_types, detect_techniques, extract_drum_notes,
+    extract_time_signature_from_meta, extract_time_signature_from_path, generate_drum_tags,
+    has_drum_channel, note_to_drum_type, CymbalType, DrumAnalysis, DrumNote, DrumTechnique,
+    PatternType, RhythmicFeel, SongStructure, TimeSignature,
 };
+pub use filename_metadata::{
+    classify_leading_number, extract_genres_from_filename, extract_key_from_filename,
+    extract_leading_number, extract_structure_tags, normalize_key_signature, validate_bpm,
+    validate_bpm_for_genre, validate_key_signature, FilenameMetadata, KeyValidationResult,
+    NumberType,
+};
+pub use key_detector::{detect_key, KeyDetectionResult, ScaleType};
 
 // Test modules
 #[cfg(test)]

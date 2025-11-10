@@ -1,19 +1,14 @@
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub enum LogLevel {
     Error,
     Warn,
+    #[default]
     Info,
     Debug,
     Trace,
-}
-
-impl Default for LogLevel {
-    fn default() -> Self {
-        LogLevel::Info
-    }
 }
 
 impl LogLevel {
@@ -115,7 +110,7 @@ impl AdvancedSettings {
     }
 
     pub fn set_virtual_memory_pool(&mut self, size_mb: u32) -> Result<(), String> {
-        if size_mb < 128 || size_mb > 4096 {
+        if !(128..=4096).contains(&size_mb) {
             return Err("Virtual memory pool must be between 128 MB and 4096 MB".to_string());
         }
         self.virtual_memory_pool_mb = size_mb;
@@ -123,7 +118,7 @@ impl AdvancedSettings {
     }
 
     pub fn set_network_timeout(&mut self, seconds: u32) -> Result<(), String> {
-        if seconds < 5 || seconds > 300 {
+        if !(5..=300).contains(&seconds) {
             return Err("Network timeout must be between 5 and 300 seconds".to_string());
         }
         self.network_timeout_seconds = seconds;
@@ -184,9 +179,8 @@ mod tests {
 
     #[test]
     fn test_builder_pattern() {
-        let settings = AdvancedSettings::new()
-            .with_debug_logging(true)
-            .with_log_level(LogLevel::Debug);
+        let settings =
+            AdvancedSettings::new().with_debug_logging(true).with_log_level(LogLevel::Debug);
 
         assert!(settings.debug_logging_enabled);
         assert_eq!(settings.log_level, LogLevel::Debug);

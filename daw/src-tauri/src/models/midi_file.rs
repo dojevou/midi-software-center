@@ -1,8 +1,7 @@
-   /// MIDI file database models
-   ///
-   /// Trusty Module: Pure data structures for MIDI file records.
-   /// Updated to match actual database schema with proper JOINs.
-
+/// MIDI file database models
+///
+/// Trusty Module: Pure data structures for MIDI file records.
+/// Updated to match actual database schema with proper JOINs.
 use serde::{Deserialize, Serialize};
 use sqlx::FromRow;
 
@@ -34,15 +33,15 @@ pub struct MidiFile {
     pub parent_folder: Option<String>,
 
     // Musical metadata (from musical_metadata table via JOIN)
-    pub bpm: Option<f64>,  // numeric(6,2) in DB
+    pub bpm: Option<f64>, // numeric(6,2) in DB
     pub key_signature: Option<String>,
 
     // Time signature (formatted as "4/4" from numerator/denominator)
     pub time_signature: Option<String>,
 
     // Duration and notes
-    pub duration_seconds: Option<f64>,  // numeric(10,3) in DB, can be NULL
-    pub total_notes: i32,  // note_count in musical_metadata, defaulted to 0 if NULL
+    pub duration_seconds: Option<f64>, // numeric(10,3) in DB, can be NULL
+    pub total_notes: i32,              // note_count in musical_metadata, defaulted to 0 if NULL
 
     // Track count from files table
     pub num_tracks: i16,
@@ -96,7 +95,10 @@ pub struct FileDetails {
 
 impl MidiFile {
     /// Helper to format time signature from numerator and denominator
-    pub fn format_time_signature(numerator: Option<i16>, denominator: Option<i16>) -> Option<String> {
+    pub fn format_time_signature(
+        numerator: Option<i16>,
+        denominator: Option<i16>,
+    ) -> Option<String> {
         match (numerator, denominator) {
             (Some(num), Some(den)) => Some(format!("{}/{}", num, den)),
             _ => None,

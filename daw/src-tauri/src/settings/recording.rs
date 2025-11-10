@@ -1,17 +1,14 @@
 use serde::{Deserialize, Serialize};
 
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Default)]
 pub enum RecordingFormat {
+    #[default]
     Wav,
     Mp3,
     Flac,
 }
 
-impl Default for RecordingFormat {
-    fn default() -> Self {
-        RecordingFormat::Wav
-    }
-}
 
 impl RecordingFormat {
     pub fn extension(&self) -> &'static str {
@@ -76,11 +73,10 @@ impl RecordingSettings {
             return Err("Punch out bar must be greater than 0".to_string());
         }
 
-        if self.auto_punch_in_enabled && self.auto_punch_out_enabled {
-            if self.punch_out_bar <= self.punch_in_bar {
+        if self.auto_punch_in_enabled && self.auto_punch_out_enabled
+            && self.punch_out_bar <= self.punch_in_bar {
                 return Err("Punch out bar must be after punch in bar".to_string());
             }
-        }
 
         Ok(())
     }
@@ -94,7 +90,7 @@ impl RecordingSettings {
     }
 
     pub fn set_latency_compensation(&mut self, ms: f32) -> Result<(), String> {
-        if ms < 0.0 || ms > 1000.0 {
+        if !(0.0..=1000.0).contains(&ms) {
             return Err("Latency compensation must be between 0.0 and 1000.0 ms".to_string());
         }
         self.latency_compensation_ms = ms;

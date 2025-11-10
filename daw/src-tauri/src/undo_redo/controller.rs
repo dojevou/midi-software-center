@@ -1,7 +1,8 @@
-   /// Controller Editor Undo/Redo Commands - Trusty Module
-   ///
-   /// Commands for controller (CC) editor operations: add/delete/move points, smooth curves.
+#![allow(dead_code)]
 
+/// Controller Editor Undo/Redo Commands - Trusty Module
+///
+/// Commands for controller (CC) editor operations: add/delete/move points, smooth curves.
 use super::core::{Command, UndoRedoError, UndoRedoResult};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
@@ -16,11 +17,7 @@ pub struct CCPoint {
 
 impl CCPoint {
     pub fn new(tick: i32, value: u8, cc_number: u8) -> Self {
-        Self {
-            tick,
-            value,
-            cc_number,
-        }
+        Self { tick, value, cc_number }
     }
 }
 
@@ -34,11 +31,7 @@ pub struct AddCCPointCommand {
 
 impl AddCCPointCommand {
     pub fn new(tick: i32, value: u8, cc_number: u8) -> Self {
-        Self {
-            point: CCPoint::new(tick, value, cc_number),
-            point_id: None,
-            executed: false,
-        }
+        Self { point: CCPoint::new(tick, value, cc_number), point_id: None, executed: false }
     }
 }
 
@@ -81,11 +74,7 @@ pub struct DeleteCCPointCommand {
 
 impl DeleteCCPointCommand {
     pub fn new(point_id: i32) -> Self {
-        Self {
-            point_id,
-            deleted_point: None,
-            executed: false,
-        }
+        Self { point_id, deleted_point: None, executed: false }
     }
 }
 
@@ -120,6 +109,7 @@ impl Command for DeleteCCPointCommand {
 
 /// Move a CC point to new position/value
 #[derive(Debug)]
+#[allow(dead_code)]
 pub struct MoveCCPointCommand {
     point_id: i32,
     new_tick: i32,
@@ -131,14 +121,7 @@ pub struct MoveCCPointCommand {
 
 impl MoveCCPointCommand {
     pub fn new(point_id: i32, new_tick: i32, new_value: u8) -> Self {
-        Self {
-            point_id,
-            new_tick,
-            new_value,
-            old_tick: None,
-            old_value: None,
-            executed: false,
-        }
+        Self { point_id, new_tick, new_value, old_tick: None, old_value: None, executed: false }
     }
 }
 
@@ -183,11 +166,7 @@ pub struct SmoothCurveCommand {
 
 impl SmoothCurveCommand {
     pub fn new(point_ids: Vec<i32>) -> Self {
-        Self {
-            point_ids,
-            old_values: HashMap::new(),
-            executed: false,
-        }
+        Self { point_ids, old_values: HashMap::new(), executed: false }
     }
 }
 

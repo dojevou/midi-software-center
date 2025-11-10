@@ -1,42 +1,45 @@
-   /// Comprehensive tests for pipeline/src-tauri/src/commands/file_import.rs
-   /// Commands: import_single_file, import_directory
-   ///
-   /// **Target Coverage:** 90%+ (Trusty Module requirement: 80%+)
-   /// **Total Tests:** 62 (42 original + 20 advanced error path tests)
-   ///
-   /// This test suite validates the high-performance parallel import system that processes
-   /// MIDI files with batch database operations, concurrent workers, and robust error handling.
-   ///
-   /// **Test Categories:**
-   /// 1. SECTION 1: import_single_file_impl() Tests (12 tests) - Single file import workflow
-   /// 2. SECTION 2: import_directory_impl() Tests (18 tests) - Batch import with concurrency
-   /// 3. SECTION 3: Additional Edge Cases & Performance (20 tests) - Batch boundaries, Unicode, large files
-   /// 4. SECTION 4: Advanced Error Scenarios (12-15 tests) - Database errors, race conditions, security
-   ///
-   /// **Performance Characteristics:**
-   /// - Batch database inserts (100-file batches for optimal throughput)
-   /// - Parallel processing with Arc<Semaphore> concurrency limiting
-   /// - Arc<AtomicUsize> thread-safe counters for progress tracking
-   /// - Arc<Mutex<Vec<String>>> for error collection across threads
-   /// - Progress event emission throttling (every 10 files)
-   /// - Achieves 100+ files/sec for batch imports, 200+ files/sec for 10K+ datasets
-   ///
-   /// **Special Considerations:**
-   /// - BLAKE3 content hashing for duplicate detection (64-char hex)
-   /// - Metadata extraction: BPM detection, key signature, duration analysis
-   /// - Auto-tagging pipeline with category assignment
-   /// - Recursive directory traversal with configurable depth
-   /// - Database constraint validation (unique content_hash)
-   /// - Transaction rollback on partial failures
-   /// - File size overflow handling (> 2GB edge case)
-   /// - Unicode filename normalization and path sanitization
-
-use midi_pipeline::commands::file_import::{import_single_file_impl, import_directory_impl, import_single_file, import_directory, ImportProgress, ImportSummary, FileMetadata};
+#[allow(dead_code, unused_imports, unused_variables)]
+/// Comprehensive tests for pipeline/src-tauri/src/commands/file_import.rs
+/// Commands: import_single_file, import_directory
+///
+/// **Target Coverage:** 90%+ (Trusty Module requirement: 80%+)
+/// **Total Tests:** 62 (42 original + 20 advanced error path tests)
+///
+/// This test suite validates the high-performance parallel import system that processes
+/// MIDI files with batch database operations, concurrent workers, and robust error handling.
+///
+/// **Test Categories:**
+/// 1. SECTION 1: import_single_file_impl() Tests (12 tests) - Single file import workflow
+/// 2. SECTION 2: import_directory_impl() Tests (18 tests) - Batch import with concurrency
+/// 3. SECTION 3: Additional Edge Cases & Performance (20 tests) - Batch boundaries, Unicode, large files
+/// 4. SECTION 4: Advanced Error Scenarios (12-15 tests) - Database errors, race conditions, security
+///
+/// **Performance Characteristics:**
+/// - Batch database inserts (100-file batches for optimal throughput)
+/// - Parallel processing with Arc<Semaphore> concurrency limiting
+/// - Arc<AtomicUsize> thread-safe counters for progress tracking
+/// - Arc<Mutex<Vec<String>>> for error collection across threads
+/// - Progress event emission throttling (every 10 files)
+/// - Achieves 100+ files/sec for batch imports, 200+ files/sec for 10K+ datasets
+///
+/// **Special Considerations:**
+/// - BLAKE3 content hashing for duplicate detection (64-char hex)
+/// - Metadata extraction: BPM detection, key signature, duration analysis
+/// - Auto-tagging pipeline with category assignment
+/// - Recursive directory traversal with configurable depth
+/// - Database constraint validation (unique content_hash)
+/// - Transaction rollback on partial failures
+/// - File size overflow handling (> 2GB edge case)
+/// - Unicode filename normalization and path sanitization
+use midi_pipeline::commands::file_import::{
+    import_directory_impl, import_single_file_impl,
+    ImportProgress,
+};
 use midi_pipeline::{AppState, Database};
 use std::path::PathBuf;
 use std::sync::Arc;
-use tokio::sync::Mutex;
 use tauri::Emitter;
+use tokio::sync::Mutex;
 
 // Test Database Helper
 struct TestDatabase {
@@ -46,8 +49,9 @@ struct TestDatabase {
 impl TestDatabase {
     async fn new() -> Self {
         Self {
-            url: std::env::var("TEST_DATABASE_URL")
-                .unwrap_or_else(|_| "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()),
+            url: std::env::var("TEST_DATABASE_URL").unwrap_or_else(|_| {
+                "postgresql://midiuser:145278963@localhost:5433/midi_library".to_string()
+            }),
         }
     }
 
@@ -134,11 +138,11 @@ fn create_midi_with_bpm(bpm: u16) -> Vec<u8> {
 
     // Find and replace tempo bytes (at offset 22-24 in our template)
     // Tempo event: 00 FF 51 03 [3 bytes of tempo]
-    for i in 0..bytes.len()-6 {
-        if bytes[i..i+4] == [0x00, 0xFF, 0x51, 0x03] {
-            bytes[i+4] = tempo_bytes[1];
-            bytes[i+5] = tempo_bytes[2];
-            bytes[i+6] = tempo_bytes[3];
+    for i in 0..bytes.len() - 6 {
+        if bytes[i..i + 4] == [0x00, 0xFF, 0x51, 0x03] {
+            bytes[i + 4] = tempo_bytes[1];
+            bytes[i + 5] = tempo_bytes[2];
+            bytes[i + 6] = tempo_bytes[3];
             break;
         }
     }
@@ -152,10 +156,10 @@ fn create_midi_with_key(sharps_flats: i8, is_major: bool) -> Vec<u8> {
 
     // Find and replace key signature bytes
     // Key event: 00 FF 59 02 [sharps/flats] [major/minor]
-    for i in 0..bytes.len()-5 {
-        if bytes[i..i+4] == [0x00, 0xFF, 0x59, 0x02] {
-            bytes[i+4] = sharps_flats as u8;
-            bytes[i+5] = if is_major { 0x00 } else { 0x01 };
+    for i in 0..bytes.len() - 5 {
+        if bytes[i..i + 4] == [0x00, 0xFF, 0x59, 0x02] {
+            bytes[i + 4] = sharps_flats as u8;
+            bytes[i + 5] = if is_major { 0x00 } else { 0x01 };
             break;
         }
     }
@@ -170,9 +174,7 @@ struct MidiFixtures {
 
 impl MidiFixtures {
     async fn new() -> Self {
-        Self {
-            temp_dir: tempfile::tempdir().expect("Failed to create temp dir"),
-        }
+        Self { temp_dir: tempfile::tempdir().expect("Failed to create temp dir") }
     }
 
     fn path(&self) -> &std::path::Path {
@@ -209,9 +211,7 @@ impl MidiFixtures {
     /// Create empty file
     async fn create_empty_file(&self, name: &str) -> PathBuf {
         let path = self.temp_dir.path().join(name);
-        tokio::fs::write(&path, &[])
-            .await
-            .expect("Failed to write empty file");
+        tokio::fs::write(&path, &[]).await.expect("Failed to write empty file");
         path
     }
 
@@ -288,9 +288,7 @@ struct MockEvent {
 
 impl MockWindow {
     fn new() -> Self {
-        Self {
-            events: Arc::new(Mutex::new(Vec::new())),
-        }
+        Self { events: Arc::new(Mutex::new(Vec::new())) }
     }
 
     async fn get_events(&self, event_name: &str) -> Vec<String> {
@@ -309,23 +307,28 @@ impl MockWindow {
 
 impl Emitter for MockWindow {
     fn emit<S: serde::Serialize + Clone>(&self, event: &str, payload: S) -> tauri::Result<()> {
-        let payload_json = serde_json::to_string(&payload)
-            .map_err(|e| tauri::Error::Emit(e.to_string()))?;
+        let payload_json =
+            serde_json::to_string(&payload).map_err(|e| tauri::Error::Emit(e.to_string()))?;
 
         let events_clone = Arc::clone(&self.events);
         let event_name = event.to_string();
 
         tokio::spawn(async move {
-            events_clone.lock().await.push(MockEvent {
-                name: event_name,
-                payload: payload_json,
-            });
+            events_clone
+                .lock()
+                .await
+                .push(MockEvent { name: event_name, payload: payload_json });
         });
 
         Ok(())
     }
 
-    fn emit_to<S: serde::Serialize + Clone>(&self, _target: &str, event: &str, payload: S) -> tauri::Result<()> {
+    fn emit_to<S: serde::Serialize + Clone>(
+        &self,
+        _target: &str,
+        event: &str,
+        payload: S,
+    ) -> tauri::Result<()> {
         self.emit(event, payload)
     }
 
@@ -351,13 +354,11 @@ async fn test_import_single_file_success() {
     let file_path = fixtures.create_simple_midi("test.mid").await;
 
     let state = AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     };
 
-    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state)
-    .await;
+    let result =
+        import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state).await;
 
     assert!(result.is_ok(), "Import should succeed: {:?}", result);
 
@@ -382,20 +383,18 @@ async fn test_import_single_file_duplicate_detection() {
     let file_path = fixtures.create_simple_midi("duplicate.mid").await;
 
     let state = AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     };
 
     // First import
-    let result1 = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state)
-    .await;
+    let result1 =
+        import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state).await;
 
     assert!(result1.is_ok(), "First import should succeed");
 
     // Second import (same file, same hash)
-    let result2 = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state)
-    .await;
+    let result2 =
+        import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state).await;
 
     assert!(result2.is_err(), "Duplicate import should fail");
     let err = result2.unwrap_err();
@@ -414,13 +413,11 @@ async fn test_import_single_file_metadata_extraction() {
     let file_path = fixtures.create_midi_with_metadata("metadata_test.mid", 128).await;
 
     let state = AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     };
 
-    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state)
-    .await;
+    let result =
+        import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state).await;
 
     assert!(result.is_ok(), "Import should succeed");
 
@@ -428,11 +425,18 @@ async fn test_import_single_file_metadata_extraction() {
 
     // Check BPM was extracted (should be close to 128)
     if let Some(bpm) = file_meta.bpm {
-        assert!((bpm - 128.0).abs() < 5.0, "BPM should be around 128, got {}", bpm);
+        assert!(
+            (bpm - 128.0).abs() < 5.0,
+            "BPM should be around 128, got {}",
+            bpm
+        );
     }
 
     // Check key signature was extracted
-    assert!(file_meta.key_signature.is_some(), "Key signature should be extracted");
+    assert!(
+        file_meta.key_signature.is_some(),
+        "Key signature should be extracted"
+    );
 
     db.cleanup().await;
 }
@@ -447,12 +451,14 @@ async fn test_import_single_file_tag_auto_extraction() {
     let file_path = fixtures.create_simple_midi("house_kick_128.mid").await;
 
     let state = AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     };
 
-    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), Some("drum".to_string()), &state)
+    let result = import_single_file_impl(
+        file_path.to_str().unwrap().to_string(),
+        Some("drum".to_string()),
+        &state,
+    )
     .await;
 
     assert!(result.is_ok(), "Import should succeed");
@@ -461,13 +467,11 @@ async fn test_import_single_file_tag_auto_extraction() {
 
     // Verify tags were created in database
     let pool = state.database.pool().await;
-    let tag_count: i64 = sqlx::query_scalar(
-        "SELECT COUNT(*) FROM file_tags WHERE file_id = $1"
-    )
-    .bind(file_meta.id)
-    .fetch_one(&pool)
-    .await
-    .expect("Failed to count tags");
+    let tag_count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM file_tags WHERE file_id = $1")
+        .bind(file_meta.id)
+        .fetch_one(&pool)
+        .await
+        .expect("Failed to count tags");
 
     assert!(tag_count > 0, "Auto-generated tags should exist");
 
@@ -480,13 +484,11 @@ async fn test_import_single_file_not_found() {
     let window = MockWindow::new();
 
     let state = AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     };
 
-    let result = import_single_file_impl("/nonexistent/path/to/file.mid".to_string(), None, &state)
-    .await;
+    let result =
+        import_single_file_impl("/nonexistent/path/to/file.mid".to_string(), None, &state).await;
 
     assert!(result.is_err(), "Import should fail for nonexistent file");
     let err = result.unwrap_err();
@@ -504,17 +506,17 @@ async fn test_import_single_file_invalid_midi_format() {
     let file_path = fixtures.create_invalid_midi("invalid.mid").await;
 
     let state = AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     };
 
-    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state)
-    .await;
+    let result =
+        import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state).await;
 
     assert!(result.is_err(), "Import should fail for invalid MIDI");
     let err = result.unwrap_err();
-    assert!(err.contains("process") || err.contains("parse") || result.unwrap_err().contains("Failed"));
+    assert!(
+        err.contains("process") || err.contains("parse") || result.unwrap_err().contains("Failed")
+    );
 
     db.cleanup().await;
 }
@@ -528,20 +530,18 @@ async fn test_import_single_file_database_constraint_violation() {
     let file_path = fixtures.create_simple_midi("constraint_test.mid").await;
 
     let state = AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     };
 
     // Import once
-    let result1 = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state)
-    .await;
+    let result1 =
+        import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state).await;
 
     assert!(result1.is_ok());
 
     // Try again - should trigger constraint violation
-    let result2 = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state)
-    .await;
+    let result2 =
+        import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state).await;
 
     assert!(result2.is_err(), "Should fail on duplicate hash constraint");
 
@@ -557,13 +557,11 @@ async fn test_import_single_file_edge_case_zero_byte() {
     let file_path = fixtures.create_empty_file("empty.mid").await;
 
     let state = AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     };
 
-    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state)
-    .await;
+    let result =
+        import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state).await;
 
     assert!(result.is_err(), "Empty file should be rejected");
 
@@ -590,19 +588,24 @@ async fn test_import_single_file_edge_case_large_file() {
         .expect("Failed to write large file");
 
     let state = AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     };
 
-    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state)
-    .await;
+    let result =
+        import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state).await;
 
     // Large files should still import successfully
-    assert!(result.is_ok(), "Large file import should succeed: {:?}", result);
+    assert!(
+        result.is_ok(),
+        "Large file import should succeed: {:?}",
+        result
+    );
 
     let file_meta = result.unwrap();
-    assert!(file_meta.file_size_bytes > 5000, "File size should be > 5KB");
+    assert!(
+        file_meta.file_size_bytes > 5000,
+        "File size should be > 5KB"
+    );
 
     db.cleanup().await;
 }
@@ -617,13 +620,11 @@ async fn test_import_single_file_edge_case_special_chars() {
     let file_path = fixtures.create_simple_midi("test-file_123 (copy).mid").await;
 
     let state = AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     };
 
-    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state)
-    .await;
+    let result =
+        import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state).await;
 
     assert!(result.is_ok(), "Special characters should be handled");
 
@@ -639,9 +640,7 @@ async fn test_import_single_file_concurrent_access() {
     let fixtures = MidiFixtures::new().await;
 
     let state = Arc::new(AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     });
 
     // Create 5 different files
@@ -653,12 +652,8 @@ async fn test_import_single_file_concurrent_access() {
         let window = MockWindow::new();
 
         let handle = tokio::spawn(async move {
-            import_single_file_impl(
-        file_path.to_str().unwrap().to_string(),
-        None,
-        &state_clone,
-    )
-            .await
+            import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state_clone)
+                .await
         });
 
         handles.push(handle);
@@ -682,12 +677,14 @@ async fn test_import_single_file_with_category() {
     let file_path = fixtures.create_simple_midi("category_test.mid").await;
 
     let state = AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     };
 
-    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), Some("drums".to_string()), &state)
+    let result = import_single_file_impl(
+        file_path.to_str().unwrap().to_string(),
+        Some("drums".to_string()),
+        &state,
+    )
     .await;
 
     assert!(result.is_ok(), "Import with category should succeed");
@@ -701,7 +698,7 @@ async fn test_import_single_file_with_category() {
             SELECT 1 FROM file_categories fc
             JOIN categories c ON fc.category_id = c.id
             WHERE fc.id = $1 AND c.name = $2
-        )"
+        )",
     )
     .bind(file_meta.id)
     .bind("drums")
@@ -727,9 +724,7 @@ async fn test_import_directory_single_file() {
     fixtures.create_simple_midi("single.mid").await;
 
     let state = AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     };
 
     let result = import_directory_impl(
@@ -760,9 +755,7 @@ async fn test_import_directory_multiple_files_10() {
     fixtures.create_midi_files(10).await;
 
     let state = AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     };
 
     let result = import_directory_impl(
@@ -794,9 +787,7 @@ async fn test_import_directory_batch_100() {
     fixtures.create_midi_files(100).await;
 
     let state = AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     };
 
     let start = std::time::Instant::now();
@@ -816,7 +807,11 @@ async fn test_import_directory_batch_100() {
     let summary = result.unwrap();
     assert_eq!(summary.total_files, 100);
     assert_eq!(summary.imported, 100);
-    assert!(duration.as_secs() < 30, "Should complete in < 30s, took {:?}", duration);
+    assert!(
+        duration.as_secs() < 30,
+        "Should complete in < 30s, took {:?}",
+        duration
+    );
 
     db.cleanup().await;
 }
@@ -830,9 +825,7 @@ async fn test_import_directory_batch_1000() {
     fixtures.create_midi_files(1000).await;
 
     let state = AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     };
 
     let start = std::time::Instant::now();
@@ -852,8 +845,16 @@ async fn test_import_directory_batch_1000() {
     let summary = result.unwrap();
     assert_eq!(summary.total_files, 1000);
     assert_eq!(summary.imported, 1000);
-    assert!(summary.rate > 100.0, "Should achieve > 100 files/sec, got {:.2}", summary.rate);
-    println!("✓ 1000 files imported in {:.2}s ({:.2} files/sec)", duration.as_secs_f64(), summary.rate);
+    assert!(
+        summary.rate > 100.0,
+        "Should achieve > 100 files/sec, got {:.2}",
+        summary.rate
+    );
+    println!(
+        "✓ 1000 files imported in {:.2}s ({:.2} files/sec)",
+        duration.as_secs_f64(),
+        summary.rate
+    );
 
     db.cleanup().await;
 }
@@ -867,18 +868,11 @@ async fn test_import_directory_ignore_non_midi_files() {
     let dir = fixtures.create_mixed_directory().await;
 
     let state = AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     };
 
-    let result = import_directory_impl(
-        dir.to_str().unwrap().to_string(),
-        false,
-        None,
-        &state,
-    )
-    .await;
+    let result =
+        import_directory_impl(dir.to_str().unwrap().to_string(), false, None, &state).await;
 
     assert!(result.is_ok(), "Mixed directory import should succeed");
 
@@ -899,9 +893,7 @@ async fn test_import_directory_concurrency_semaphore_limit() {
     fixtures.create_midi_files(50).await;
 
     let state = AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     };
 
     let result = import_directory_impl(
@@ -932,9 +924,7 @@ async fn test_import_directory_arc_atomic_counter_accuracy() {
     fixtures.create_midi_files(file_count).await;
 
     let state = AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     };
 
     let result = import_directory_impl(
@@ -949,7 +939,10 @@ async fn test_import_directory_arc_atomic_counter_accuracy() {
 
     let summary = result.unwrap();
     // Arc<AtomicUsize> counter should accurately track all files
-    assert_eq!(summary.imported, file_count, "Counter should match file count exactly");
+    assert_eq!(
+        summary.imported, file_count,
+        "Counter should match file count exactly"
+    );
     assert_eq!(summary.total_files, file_count);
 
     db.cleanup().await;
@@ -965,9 +958,7 @@ async fn test_import_directory_progress_events_emitted() {
     fixtures.create_midi_files(30).await;
 
     let state = AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     };
 
     let result = import_directory_impl(
@@ -984,7 +975,11 @@ async fn test_import_directory_progress_events_emitted() {
     tokio::time::sleep(tokio::time::Duration::from_millis(200)).await;
 
     let event_count = window.event_count("import-progress").await;
-    assert!(event_count >= 3, "Should emit progress events (got {})", event_count);
+    assert!(
+        event_count >= 3,
+        "Should emit progress events (got {})",
+        event_count
+    );
 
     db.cleanup().await;
 }
@@ -998,9 +993,7 @@ async fn test_import_directory_progress_event_data() {
     fixtures.create_midi_files(15).await;
 
     let state = AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     };
 
     let result = import_directory_impl(
@@ -1019,8 +1012,8 @@ async fn test_import_directory_progress_event_data() {
 
     if !events.is_empty() {
         // Parse first event
-        let progress: ImportProgress = serde_json::from_str(&events[0])
-            .expect("Should parse progress event");
+        let progress: ImportProgress =
+            serde_json::from_str(&events[0]).expect("Should parse progress event");
 
         assert!(progress.current > 0);
         assert_eq!(progress.total, 15);
@@ -1041,9 +1034,7 @@ async fn test_import_directory_duplicate_detection_50_percent() {
     fixtures.create_midi_files(20).await;
 
     let state = AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     };
 
     // First import
@@ -1082,7 +1073,10 @@ async fn test_import_directory_duplicate_detection_50_percent() {
 
     // Should import only the 10 new files
     // Duplicates handled by Arc<Mutex<Vec>> error collection
-    assert!(summary.imported >= 10, "Should import at least 10 new files");
+    assert!(
+        summary.imported >= 10,
+        "Should import at least 10 new files"
+    );
 
     db.cleanup().await;
 }
@@ -1102,9 +1096,7 @@ async fn test_import_directory_error_collection_continues() {
     }
 
     let state = AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     };
 
     let result = import_directory_impl(
@@ -1121,7 +1113,11 @@ async fn test_import_directory_error_collection_continues() {
     assert_eq!(summary.total_files, 8);
     assert_eq!(summary.imported, 5, "Valid files should be imported");
     assert_eq!(summary.skipped, 3, "Invalid files should be skipped");
-    assert_eq!(summary.errors.len(), 3, "Errors should be collected in Arc<Mutex<Vec>>");
+    assert_eq!(
+        summary.errors.len(),
+        3,
+        "Errors should be collected in Arc<Mutex<Vec>>"
+    );
 
     db.cleanup().await;
 }
@@ -1138,9 +1134,7 @@ async fn test_import_directory_file_errors_dont_stop_import() {
     fixtures.create_invalid_midi("bad2.mid").await;
 
     let state = AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     };
 
     let result = import_directory_impl(
@@ -1170,9 +1164,7 @@ async fn test_import_directory_database_errors_collected() {
     fixtures.create_midi_files(5).await;
 
     let state = AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     };
 
     // First import
@@ -1195,7 +1187,10 @@ async fn test_import_directory_database_errors_collected() {
     )
     .await;
 
-    assert!(result2.is_ok(), "Should complete despite all files being duplicates");
+    assert!(
+        result2.is_ok(),
+        "Should complete despite all files being duplicates"
+    );
 
     let summary = result2.unwrap();
     // All files should be skipped due to duplicate hashes
@@ -1215,9 +1210,7 @@ async fn test_import_directory_edge_case_10k_files() {
     fixtures.create_midi_files(10_000).await;
 
     let state = AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     };
 
     let start = std::time::Instant::now();
@@ -1238,11 +1231,17 @@ async fn test_import_directory_edge_case_10k_files() {
     assert_eq!(summary.total_files, 10_000);
     assert_eq!(summary.imported, 10_000);
 
-    println!("✓ 10,000 files imported in {:.2}s ({:.2} files/sec)",
-        duration.as_secs_f64(), summary.rate);
+    println!(
+        "✓ 10,000 files imported in {:.2}s ({:.2} files/sec)",
+        duration.as_secs_f64(),
+        summary.rate
+    );
 
     // Should achieve > 200 files/sec with optimizations
-    assert!(summary.rate > 200.0, "Should achieve > 200 files/sec with batch inserts");
+    assert!(
+        summary.rate > 200.0,
+        "Should achieve > 200 files/sec with batch inserts"
+    );
 
     db.cleanup().await;
 }
@@ -1256,9 +1255,7 @@ async fn test_import_directory_edge_case_nested_subdirectories() {
     let root_dir = fixtures.create_nested_structure().await;
 
     let state = AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     };
 
     // Test recursive import
@@ -1285,19 +1282,11 @@ async fn test_import_directory_edge_case_permission_denied() {
     let window = MockWindow::new();
 
     let state = AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     };
 
     // Try to import from root (likely permission denied)
-    let result = import_directory_impl(
-        "/root/nonexistent".to_string(),
-        false,
-        None,
-        &state,
-    )
-    .await;
+    let result = import_directory_impl("/root/nonexistent".to_string(), false, None, &state).await;
 
     // Should fail gracefully
     assert!(result.is_err() || result.unwrap().total_files == 0);
@@ -1312,9 +1301,7 @@ async fn test_import_directory_empty_directory() {
     let window = MockWindow::new();
 
     let state = AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     };
 
     let result = import_directory_impl(
@@ -1345,9 +1332,7 @@ async fn test_import_directory_nonrecursive_ignores_subdirs() {
     let root_dir = fixtures.create_nested_structure().await;
 
     let state = AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     };
 
     // Test non-recursive import
@@ -1382,9 +1367,7 @@ async fn test_import_directory_batch_insert_boundary() {
     fixtures.create_midi_files(100).await;
 
     let state = AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     };
 
     let result = import_directory_impl(
@@ -1414,9 +1397,7 @@ async fn test_import_directory_batch_insert_overflow() {
     fixtures.create_midi_files(101).await;
 
     let state = AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     };
 
     let result = import_directory_impl(
@@ -1445,13 +1426,11 @@ async fn test_import_single_file_unicode_filename() {
     let file_path = fixtures.create_simple_midi("音楽ファイル.mid").await;
 
     let state = AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     };
 
-    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state)
-    .await;
+    let result =
+        import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state).await;
 
     assert!(result.is_ok(), "Unicode filename should be handled");
 
@@ -1470,9 +1449,7 @@ async fn test_import_directory_rate_calculation() {
     fixtures.create_midi_files(50).await;
 
     let state = AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     };
 
     let result = import_directory_impl(
@@ -1488,7 +1465,11 @@ async fn test_import_directory_rate_calculation() {
     let summary = result.unwrap();
     assert!(summary.rate > 0.0, "Rate should be calculated");
     assert!(summary.duration_secs > 0.0, "Duration should be measured");
-    assert_eq!(summary.rate, summary.imported as f64 / summary.duration_secs, "Rate calculation should be accurate");
+    assert_eq!(
+        summary.rate,
+        summary.imported as f64 / summary.duration_secs,
+        "Rate calculation should be accurate"
+    );
 
     db.cleanup().await;
 }
@@ -1503,9 +1484,7 @@ async fn test_import_directory_progress_throttling() {
     fixtures.create_midi_files(25).await;
 
     let state = AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     };
 
     let result = import_directory_impl(
@@ -1523,7 +1502,11 @@ async fn test_import_directory_progress_throttling() {
     let event_count = window.event_count("import-progress").await;
 
     // Should emit ~3 events (every 10 files + final)
-    assert!(event_count >= 2 && event_count <= 5, "Progress should be throttled (got {})", event_count);
+    assert!(
+        event_count >= 2 && event_count <= 5,
+        "Progress should be throttled (got {})",
+        event_count
+    );
 
     db.cleanup().await;
 }
@@ -1537,13 +1520,11 @@ async fn test_import_single_file_filepath_stored_correctly() {
     let file_path = fixtures.create_simple_midi("path_test.mid").await;
 
     let state = AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     };
 
-    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state)
-    .await;
+    let result =
+        import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state).await;
 
     assert!(result.is_ok());
 
@@ -1563,9 +1544,7 @@ async fn test_import_directory_with_category() {
     fixtures.create_midi_files(5).await;
 
     let state = AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     };
 
     let result = import_directory_impl(
@@ -1583,13 +1562,12 @@ async fn test_import_directory_with_category() {
 
     // Verify category was created
     let pool = state.database.pool().await;
-    let category_exists: bool = sqlx::query_scalar(
-        "SELECT EXISTS(SELECT 1 FROM categories WHERE name = $1)"
-    )
-    .bind("test_category")
-    .fetch_one(&pool)
-    .await
-    .expect("Failed to check category");
+    let category_exists: bool =
+        sqlx::query_scalar("SELECT EXISTS(SELECT 1 FROM categories WHERE name = $1)")
+            .bind("test_category")
+            .fetch_one(&pool)
+            .await
+            .expect("Failed to check category");
 
     assert!(category_exists, "Category should be created");
 
@@ -1606,22 +1584,23 @@ async fn test_import_single_file_hash_uniqueness() {
     let file_path2 = fixtures.create_simple_midi("hash2.mid").await;
 
     let state = AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     };
 
-    let result1 = import_single_file_impl(file_path1.to_str().unwrap().to_string(), None, &state)
-    .await;
+    let result1 =
+        import_single_file_impl(file_path1.to_str().unwrap().to_string(), None, &state).await;
 
     assert!(result1.is_ok());
     let hash1 = result1.unwrap().content_hash;
 
     // Same content = same hash = should be rejected
-    let result2 = import_single_file_impl(file_path2.to_str().unwrap().to_string(), None, &state)
-    .await;
+    let result2 =
+        import_single_file_impl(file_path2.to_str().unwrap().to_string(), None, &state).await;
 
-    assert!(result2.is_err(), "Identical content should trigger duplicate detection");
+    assert!(
+        result2.is_err(),
+        "Identical content should trigger duplicate detection"
+    );
 
     db.cleanup().await;
 }
@@ -1639,9 +1618,7 @@ async fn test_import_directory_summary_accuracy() {
     fixtures.create_invalid_midi("bad3.mid").await;
 
     let state = AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     };
 
     let result = import_directory_impl(
@@ -1673,21 +1650,26 @@ async fn test_import_single_file_content_hash_format() {
     let file_path = fixtures.create_simple_midi("hash_format.mid").await;
 
     let state = AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     };
 
-    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state)
-    .await;
+    let result =
+        import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state).await;
 
     assert!(result.is_ok());
 
     let file_meta = result.unwrap();
 
     // BLAKE3 hash should be 64 hex characters
-    assert_eq!(file_meta.content_hash.len(), 64, "BLAKE3 hash should be 64 hex chars");
-    assert!(file_meta.content_hash.chars().all(|c| c.is_ascii_hexdigit()), "Hash should be hex");
+    assert_eq!(
+        file_meta.content_hash.len(),
+        64,
+        "BLAKE3 hash should be 64 hex chars"
+    );
+    assert!(
+        file_meta.content_hash.chars().all(|c| c.is_ascii_hexdigit()),
+        "Hash should be hex"
+    );
 
     db.cleanup().await;
 }
@@ -1698,9 +1680,7 @@ async fn test_import_directory_not_found() {
     let window = MockWindow::new();
 
     let state = AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     };
 
     let result = import_directory_impl(
@@ -1727,13 +1707,11 @@ async fn test_import_single_file_original_filename_preserved() {
     let file_path = fixtures.create_simple_midi("original_name_test.mid").await;
 
     let state = AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     };
 
-    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state)
-    .await;
+    let result =
+        import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state).await;
 
     assert!(result.is_ok());
 
@@ -1759,7 +1737,10 @@ async fn test_import_single_file_database_connection_timeout() {
     // Use invalid database URL to simulate connection failure
     let result = Database::new("postgresql://invalid:invalid@localhost:9999/nonexistent").await;
 
-    assert!(result.is_err(), "Database connection to invalid host should fail");
+    assert!(
+        result.is_err(),
+        "Database connection to invalid host should fail"
+    );
 
     // Cleanup
     drop(fixtures);
@@ -1773,9 +1754,7 @@ async fn test_import_single_file_disk_space_exhaustion() {
     let window = MockWindow::new();
 
     let state = AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     };
 
     // Create a very large file to simulate disk space issues
@@ -1791,9 +1770,11 @@ async fn test_import_single_file_disk_space_exhaustion() {
     let write_result = tokio::fs::write(&large_path, large_data).await;
 
     if write_result.is_err() {
-        assert!(write_result.unwrap_err().to_string().contains("No space") ||
-                write_result.unwrap_err().to_string().contains("space"),
-                "Should detect disk space issues");
+        assert!(
+            write_result.unwrap_err().to_string().contains("No space")
+                || write_result.unwrap_err().to_string().contains("space"),
+            "Should detect disk space issues"
+        );
     }
 
     db.cleanup().await;
@@ -1809,23 +1790,23 @@ async fn test_import_single_file_race_condition_deleted() {
     let file_path = fixtures.create_simple_midi("race_test.mid").await;
 
     let state = AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     };
 
     // Delete file after path is obtained but before import
-    tokio::fs::remove_file(&file_path)
-        .await
-        .expect("Failed to delete file");
+    tokio::fs::remove_file(&file_path).await.expect("Failed to delete file");
 
-    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state)
-    .await;
+    let result =
+        import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state).await;
 
-    assert!(result.is_err(), "Should fail when file is deleted during import");
-    assert!(result.unwrap_err().contains("not found") ||
-            result.unwrap_err().contains("No such file"),
-            "Error should indicate file not found");
+    assert!(
+        result.is_err(),
+        "Should fail when file is deleted during import"
+    );
+    assert!(
+        result.unwrap_err().contains("not found") || result.unwrap_err().contains("No such file"),
+        "Error should indicate file not found"
+    );
 
     db.cleanup().await;
 }
@@ -1858,19 +1839,19 @@ async fn test_import_single_file_malformed_track_data() {
         .expect("Failed to write corrupt file");
 
     let state = AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     };
 
-    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state)
-    .await;
+    let result =
+        import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state).await;
 
     assert!(result.is_err(), "Should fail with corrupted track data");
-    assert!(result.unwrap_err().contains("process") ||
-            result.unwrap_err().contains("parse") ||
-            result.unwrap_err().contains("Failed"),
-            "Error should indicate processing failure");
+    assert!(
+        result.unwrap_err().contains("process")
+            || result.unwrap_err().contains("parse")
+            || result.unwrap_err().contains("Failed"),
+        "Error should indicate processing failure"
+    );
 
     db.cleanup().await;
 }
@@ -1887,20 +1868,25 @@ async fn test_import_single_file_tag_extraction_crash() {
     let file_path = fixtures.create_simple_midi(&pathological_name).await;
 
     let state = AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     };
 
-    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), Some("test".to_string()), &state)
+    let result = import_single_file_impl(
+        file_path.to_str().unwrap().to_string(),
+        Some("test".to_string()),
+        &state,
+    )
     .await;
 
     // Should handle long filenames gracefully
     // May succeed with truncation or fail with clear error
     if result.is_err() {
         let err = result.unwrap_err();
-        assert!(err.contains("name") || err.contains("length") || err.contains("path"),
-                "Error should relate to filename handling: {}", err);
+        assert!(
+            err.contains("name") || err.contains("length") || err.contains("path"),
+            "Error should relate to filename handling: {}",
+            err
+        );
     }
 
     db.cleanup().await;
@@ -1913,9 +1899,7 @@ async fn test_import_single_file_path_traversal_attack() {
     let window = MockWindow::new();
 
     let state = AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     };
 
     // Attempt path traversal
@@ -1927,10 +1911,13 @@ async fn test_import_single_file_path_traversal_attack() {
     ];
 
     for path in malicious_paths {
-        let result = import_single_file_impl(path.to_string(), None, &state)
-        .await;
+        let result = import_single_file_impl(path.to_string(), None, &state).await;
 
-        assert!(result.is_err(), "Path traversal should be rejected: {}", path);
+        assert!(
+            result.is_err(),
+            "Path traversal should be rejected: {}",
+            path
+        );
         // Should fail with "not found" or security error
     }
 
@@ -1951,21 +1938,20 @@ async fn test_import_single_file_invalid_chars_db_insertion() {
     let file_path = fixtures.create_simple_midi("test_null_substitute.mid").await;
 
     let state = AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     };
 
     // Try to import with artificially created path containing problematic chars
     // This tests the DB layer's handling of edge case characters
-    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state)
-    .await;
+    let result =
+        import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state).await;
 
     // Should either succeed with sanitization or fail gracefully
     if result.is_err() {
-        assert!(result.unwrap_err().contains("character") ||
-                result.unwrap_err().contains("invalid"),
-                "Should indicate character handling issue");
+        assert!(
+            result.unwrap_err().contains("character") || result.unwrap_err().contains("invalid"),
+            "Should indicate character handling issue"
+        );
     }
 
     db.cleanup().await;
@@ -1979,9 +1965,7 @@ async fn test_import_single_file_size_overflow_2gb() {
     let window = MockWindow::new();
 
     let state = AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     };
 
     // Create marker file (can't actually create 2GB+ file in tests)
@@ -1996,11 +1980,14 @@ async fn test_import_single_file_size_overflow_2gb() {
 
     // In production, files > 2GB should be handled
     // This test verifies the code path exists
-    let result = import_single_file_impl(large_file.to_str().unwrap().to_string(), None, &state)
-    .await;
+    let result =
+        import_single_file_impl(large_file.to_str().unwrap().to_string(), None, &state).await;
 
     // Normal file should succeed
-    assert!(result.is_ok(), "Normal size file should import successfully");
+    assert!(
+        result.is_ok(),
+        "Normal size file should import successfully"
+    );
 
     db.cleanup().await;
 }
@@ -2014,9 +2001,7 @@ async fn test_import_directory_concurrent_same_file_race() {
     let file_path = fixtures.create_simple_midi("race_duplicate.mid").await;
 
     let state = Arc::new(AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     });
 
     // Launch 5 concurrent imports of the SAME file
@@ -2028,12 +2013,8 @@ async fn test_import_directory_concurrent_same_file_race() {
         let window = MockWindow::new();
 
         let handle = tokio::spawn(async move {
-            import_single_file_impl(
-        path_clone.to_str().unwrap().to_string(),
-        None,
-        &state_clone,
-    )
-            .await
+            import_single_file_impl(path_clone.to_str().unwrap().to_string(), None, &state_clone)
+                .await
         });
 
         handles.push(handle);
@@ -2042,18 +2023,20 @@ async fn test_import_directory_concurrent_same_file_race() {
     let results: Vec<_> = futures::future::join_all(handles).await;
 
     // Only ONE should succeed, rest should fail with duplicate error
-    let success_count = results.iter()
-        .filter(|r| r.is_ok() && r.as_ref().unwrap().is_ok())
-        .count();
+    let success_count = results.iter().filter(|r| r.is_ok() && r.as_ref().unwrap().is_ok()).count();
 
     assert!(success_count >= 1, "At least one import should succeed");
-    assert!(success_count <= 2, "At most two imports should succeed (race window)");
+    assert!(
+        success_count <= 2,
+        "At most two imports should succeed (race window)"
+    );
 
-    let error_count = results.iter()
-        .filter(|r| r.is_ok() && r.as_ref().unwrap().is_err())
-        .count();
+    let error_count = results.iter().filter(|r| r.is_ok() && r.as_ref().unwrap().is_err()).count();
 
-    assert!(error_count >= 3, "At least 3 should fail with duplicate detection");
+    assert!(
+        error_count >= 3,
+        "At least 3 should fail with duplicate detection"
+    );
 
     db.cleanup().await;
 }
@@ -2082,20 +2065,19 @@ async fn test_import_single_file_invalid_permissions() {
     }
 
     let state = AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     };
 
-    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state)
-    .await;
+    let result =
+        import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state).await;
 
     #[cfg(unix)]
     {
         assert!(result.is_err(), "Should fail with permission denied");
-        assert!(result.unwrap_err().contains("permission") ||
-                result.unwrap_err().contains("denied"),
-                "Error should indicate permission issue");
+        assert!(
+            result.unwrap_err().contains("permission") || result.unwrap_err().contains("denied"),
+            "Error should indicate permission issue"
+        );
     }
 
     db.cleanup().await;
@@ -2109,9 +2091,7 @@ async fn test_import_single_file_symlink_broken() {
     let window = MockWindow::new();
 
     let state = AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     };
 
     #[cfg(unix)]
@@ -2120,16 +2100,17 @@ async fn test_import_single_file_symlink_broken() {
         let target_path = fixtures.temp_dir.path().join("nonexistent_target.mid");
 
         // Create symlink to non-existent file
-        std::os::unix::fs::symlink(&target_path, &symlink_path)
-            .expect("Failed to create symlink");
+        std::os::unix::fs::symlink(&target_path, &symlink_path).expect("Failed to create symlink");
 
-        let result = import_single_file_impl(symlink_path.to_str().unwrap().to_string(), None, &state)
-        .await;
+        let result =
+            import_single_file_impl(symlink_path.to_str().unwrap().to_string(), None, &state).await;
 
         assert!(result.is_err(), "Broken symlink should fail");
-        assert!(result.unwrap_err().contains("not found") ||
-                result.unwrap_err().contains("No such file"),
-                "Should indicate target not found");
+        assert!(
+            result.unwrap_err().contains("not found")
+                || result.unwrap_err().contains("No such file"),
+            "Should indicate target not found"
+        );
     }
 
     db.cleanup().await;
@@ -2146,9 +2127,7 @@ async fn test_import_directory_database_pool_exhaustion() {
     fixtures.create_midi_files(200).await;
 
     let state = AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     };
 
     // Launch concurrent directory imports to stress pool
@@ -2176,11 +2155,13 @@ async fn test_import_directory_database_pool_exhaustion() {
 
     // Most should succeed (pool manages connections)
     // Some may fail if pool is genuinely exhausted
-    let success_count = results.iter()
-        .filter(|r| r.is_ok() && r.as_ref().unwrap().is_ok())
-        .count();
+    let success_count = results.iter().filter(|r| r.is_ok() && r.as_ref().unwrap().is_ok()).count();
 
-    assert!(success_count >= 5, "Most imports should succeed despite pool pressure (got {})", success_count);
+    assert!(
+        success_count >= 5,
+        "Most imports should succeed despite pool pressure (got {})",
+        success_count
+    );
 
     db.cleanup().await;
 }
@@ -2195,14 +2176,12 @@ async fn test_import_single_file_database_transaction_rollback() {
     let file_path = fixtures.create_simple_midi("transaction_test.mid").await;
 
     let state = AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     };
 
     // First import should succeed
-    let result1 = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state)
-    .await;
+    let result1 =
+        import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state).await;
 
     assert!(result1.is_ok(), "First import should succeed");
     let file_id = result1.unwrap().id;
@@ -2215,11 +2194,14 @@ async fn test_import_single_file_database_transaction_rollback() {
         .await
         .expect("Failed to check existence");
 
-    assert!(exists, "File should exist in database after successful import");
+    assert!(
+        exists,
+        "File should exist in database after successful import"
+    );
 
     // Second import should fail (duplicate) and NOT leave partial data
-    let result2 = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state)
-    .await;
+    let result2 =
+        import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state).await;
 
     assert!(result2.is_err(), "Duplicate import should fail");
 
@@ -2232,7 +2214,10 @@ async fn test_import_single_file_database_transaction_rollback() {
     .await
     .expect("Failed to count files");
 
-    assert_eq!(count, 1, "Should have exactly one file record (transaction rollback prevented duplicates)");
+    assert_eq!(
+        count, 1,
+        "Should have exactly one file record (transaction rollback prevented duplicates)"
+    );
 
     db.cleanup().await;
 }
@@ -2266,9 +2251,7 @@ async fn test_import_directory_metadata_extraction_partial_failure() {
         .expect("Failed to write minimal MIDI");
 
     let state = AppState {
-        database: Database::new(&db.database_url())
-            .await
-            .expect("Failed to connect to database"),
+        database: Database::new(&db.database_url()).await.expect("Failed to connect to database"),
     };
 
     let result = import_directory_impl(
@@ -2279,11 +2262,17 @@ async fn test_import_directory_metadata_extraction_partial_failure() {
     )
     .await;
 
-    assert!(result.is_ok(), "Import should succeed despite metadata extraction issues");
+    assert!(
+        result.is_ok(),
+        "Import should succeed despite metadata extraction issues"
+    );
 
     let summary = result.unwrap();
     assert_eq!(summary.total_files, 3, "Should find all 3 MIDI files");
-    assert!(summary.imported >= 2, "At least files with good metadata should import");
+    assert!(
+        summary.imported >= 2,
+        "At least files with good metadata should import"
+    );
 
     db.cleanup().await;
 }
@@ -2296,10 +2285,9 @@ async fn test_import_directory_metadata_extraction_partial_failure() {
 async fn test_error_file_not_found() {
     let db = TestDatabase::new().await;
     let window = MockWindow::new();
-    let state = AppState {
-        database: Database::new(&db.database_url()).await.expect("DB"),
-    };
-    let result = import_single_file_impl("/nonexistent/path/file.mid".to_string(), None, &state).await;
+    let state = AppState { database: Database::new(&db.database_url()).await.expect("DB") };
+    let result =
+        import_single_file_impl("/nonexistent/path/file.mid".to_string(), None, &state).await;
     assert!(result.is_err());
     db.cleanup().await;
 }
@@ -2325,7 +2313,8 @@ async fn test_error_corrupted_midi() {
     let file_path = fixtures.temp_dir.path().join("corrupt.mid");
     tokio::fs::write(&file_path, corrupt_bytes).await.expect("Write");
     let state = AppState { database: Database::new(&db.database_url()).await.expect("DB") };
-    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state).await;
+    let result =
+        import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state).await;
     assert!(result.is_err());
     db.cleanup().await;
 }
@@ -2338,7 +2327,8 @@ async fn test_error_truncated_file() {
     let file_path = fixtures.temp_dir.path().join("truncated.mid");
     tokio::fs::write(&file_path, truncated).await.expect("Write");
     let state = AppState { database: Database::new(&db.database_url()).await.expect("DB") };
-    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state).await;
+    let result =
+        import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state).await;
     assert!(result.is_err());
     db.cleanup().await;
 }
@@ -2348,7 +2338,8 @@ async fn test_error_concurrent_race() {
     let db = TestDatabase::new().await;
     let fixtures = MidiFixtures::new().await;
     let file_path = fixtures.create_simple_midi("race.mid").await;
-    let state = Arc::new(AppState { database: Database::new(&db.database_url()).await.expect("DB") });
+    let state =
+        Arc::new(AppState { database: Database::new(&db.database_url()).await.expect("DB") });
     let mut handles = Vec::new();
     for _ in 0..5 {
         let path = file_path.clone();
@@ -2368,11 +2359,15 @@ async fn test_error_concurrent_race() {
 async fn test_error_metadata_graceful() {
     let db = TestDatabase::new().await;
     let fixtures = MidiFixtures::new().await;
-    let minimal = vec![0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x01, 0x00, 0x60, 0x4D, 0x54, 0x72, 0x6B, 0x00, 0x00, 0x00, 0x04, 0x00, 0xFF, 0x2F, 0x00];
+    let minimal = vec![
+        0x4D, 0x54, 0x68, 0x64, 0x00, 0x00, 0x00, 0x06, 0x00, 0x00, 0x00, 0x01, 0x00, 0x60, 0x4D,
+        0x54, 0x72, 0x6B, 0x00, 0x00, 0x00, 0x04, 0x00, 0xFF, 0x2F, 0x00,
+    ];
     let file_path = fixtures.temp_dir.path().join("minimal.mid");
     tokio::fs::write(&file_path, minimal).await.expect("Write");
     let state = AppState { database: Database::new(&db.database_url()).await.expect("DB") };
-    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state).await;
+    let result =
+        import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state).await;
     assert!(result.is_ok() || result.is_err());
     db.cleanup().await;
 }
@@ -2383,7 +2378,8 @@ async fn test_error_unicode_filename() {
     let fixtures = MidiFixtures::new().await;
     let file_path = fixtures.create_simple_midi("音楽_файл_🎵.mid").await;
     let state = AppState { database: Database::new(&db.database_url()).await.expect("DB") };
-    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state).await;
+    let result =
+        import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state).await;
     assert!(result.is_ok());
     db.cleanup().await;
 }
@@ -2404,10 +2400,20 @@ async fn test_error_path_traversal() {
 async fn test_error_batch_partial_failure() {
     let db = TestDatabase::new().await;
     let fixtures = MidiFixtures::new().await;
-    for i in 0..8 { fixtures.create_simple_midi(&format!("v_{}.mid", i)).await; }
-    for i in 0..4 { fixtures.create_invalid_midi(&format!("inv_{}.mid", i)).await; }
+    for i in 0..8 {
+        fixtures.create_simple_midi(&format!("v_{}.mid", i)).await;
+    }
+    for i in 0..4 {
+        fixtures.create_invalid_midi(&format!("inv_{}.mid", i)).await;
+    }
     let state = AppState { database: Database::new(&db.database_url()).await.expect("DB") };
-    let result = import_directory_impl(fixtures.path().to_str().unwrap().to_string(), false, None, &state).await;
+    let result = import_directory_impl(
+        fixtures.path().to_str().unwrap().to_string(),
+        false,
+        None,
+        &state,
+    )
+    .await;
     assert!(result.is_ok());
     let summary = result.unwrap();
     assert_eq!(summary.total_files, 12);
@@ -2424,7 +2430,8 @@ async fn test_error_file_size_limits() {
     let state = AppState { database: Database::new(&db.database_url()).await.expect("DB") };
     let meta = tokio::fs::metadata(&file_path).await.expect("Meta");
     assert!(meta.len() < 2_147_483_648);
-    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state).await;
+    let result =
+        import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state).await;
     assert!(result.is_ok());
     db.cleanup().await;
 }
@@ -2436,7 +2443,13 @@ async fn test_error_progress_events() {
     fixtures.create_midi_files(50).await;
     let window = MockWindow::new();
     let state = AppState { database: Database::new(&db.database_url()).await.expect("DB") };
-    let result = import_directory_impl(fixtures.path().to_str().unwrap().to_string(), false, None, &state).await;
+    let result = import_directory_impl(
+        fixtures.path().to_str().unwrap().to_string(),
+        false,
+        None,
+        &state,
+    )
+    .await;
     assert!(result.is_ok());
     assert!(window.event_count("import-progress").await >= 2);
     db.cleanup().await;
@@ -2447,11 +2460,14 @@ async fn test_error_large_file() {
     let db = TestDatabase::new().await;
     let fixtures = MidiFixtures::new().await;
     let mut large = create_valid_midi_bytes();
-    for i in 0..10000 { large.extend_from_slice(format!("{:04}", i).as_bytes()); }
+    for i in 0..10000 {
+        large.extend_from_slice(format!("{:04}", i).as_bytes());
+    }
     let file_path = fixtures.temp_dir.path().join("large.mid");
     tokio::fs::write(&file_path, large).await.expect("Write");
     let state = AppState { database: Database::new(&db.database_url()).await.expect("DB") };
-    let result = import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state).await;
+    let result =
+        import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state).await;
     assert!(result.is_ok());
     db.cleanup().await;
 }

@@ -1,7 +1,7 @@
-   /// Tauri Command Handlers - Task-O-Matic
-   ///
-   /// Entry points for undo/redo operations exposed to frontend.
 
+/// Tauri Command Handlers - Task-O-Matic
+///
+/// Entry points for undo/redo operations exposed to frontend.
 use super::core::CommandHistory;
 use std::sync::Mutex;
 use tauri::State;
@@ -13,15 +13,11 @@ pub struct UndoRedoState {
 
 impl UndoRedoState {
     pub fn new() -> Self {
-        Self {
-            history: Mutex::new(CommandHistory::new()),
-        }
+        Self { history: Mutex::new(CommandHistory::new()) }
     }
 
     pub fn with_max_depth(max_depth: usize) -> Self {
-        Self {
-            history: Mutex::new(CommandHistory::with_max_depth(max_depth)),
-        }
+        Self { history: Mutex::new(CommandHistory::with_max_depth(max_depth)) }
     }
 }
 
@@ -34,10 +30,7 @@ impl Default for UndoRedoState {
 /// Undo the last command
 #[tauri::command]
 pub async fn undo(state: State<'_, UndoRedoState>) -> Result<String, String> {
-    let mut history = state
-        .history
-        .lock()
-        .map_err(|e| format!("Lock error: {}", e))?;
+    let mut history = state.history.lock().map_err(|e| format!("Lock error: {}", e))?;
 
     history.undo().map_err(|e| e.to_string())
 }
@@ -45,10 +38,7 @@ pub async fn undo(state: State<'_, UndoRedoState>) -> Result<String, String> {
 /// Redo the last undone command
 #[tauri::command]
 pub async fn redo(state: State<'_, UndoRedoState>) -> Result<String, String> {
-    let mut history = state
-        .history
-        .lock()
-        .map_err(|e| format!("Lock error: {}", e))?;
+    let mut history = state.history.lock().map_err(|e| format!("Lock error: {}", e))?;
 
     history.redo().map_err(|e| e.to_string())
 }
@@ -56,10 +46,7 @@ pub async fn redo(state: State<'_, UndoRedoState>) -> Result<String, String> {
 /// Check if undo is available
 #[tauri::command]
 pub async fn can_undo(state: State<'_, UndoRedoState>) -> Result<bool, String> {
-    let history = state
-        .history
-        .lock()
-        .map_err(|e| format!("Lock error: {}", e))?;
+    let history = state.history.lock().map_err(|e| format!("Lock error: {}", e))?;
 
     Ok(history.can_undo())
 }
@@ -67,10 +54,7 @@ pub async fn can_undo(state: State<'_, UndoRedoState>) -> Result<bool, String> {
 /// Check if redo is available
 #[tauri::command]
 pub async fn can_redo(state: State<'_, UndoRedoState>) -> Result<bool, String> {
-    let history = state
-        .history
-        .lock()
-        .map_err(|e| format!("Lock error: {}", e))?;
+    let history = state.history.lock().map_err(|e| format!("Lock error: {}", e))?;
 
     Ok(history.can_redo())
 }
@@ -78,10 +62,7 @@ pub async fn can_redo(state: State<'_, UndoRedoState>) -> Result<bool, String> {
 /// Get description of next command to undo
 #[tauri::command]
 pub async fn undo_description(state: State<'_, UndoRedoState>) -> Result<Option<String>, String> {
-    let history = state
-        .history
-        .lock()
-        .map_err(|e| format!("Lock error: {}", e))?;
+    let history = state.history.lock().map_err(|e| format!("Lock error: {}", e))?;
 
     Ok(history.undo_description())
 }
@@ -89,10 +70,7 @@ pub async fn undo_description(state: State<'_, UndoRedoState>) -> Result<Option<
 /// Get description of next command to redo
 #[tauri::command]
 pub async fn redo_description(state: State<'_, UndoRedoState>) -> Result<Option<String>, String> {
-    let history = state
-        .history
-        .lock()
-        .map_err(|e| format!("Lock error: {}", e))?;
+    let history = state.history.lock().map_err(|e| format!("Lock error: {}", e))?;
 
     Ok(history.redo_description())
 }
@@ -100,10 +78,7 @@ pub async fn redo_description(state: State<'_, UndoRedoState>) -> Result<Option<
 /// Clear all undo/redo history
 #[tauri::command]
 pub async fn clear_history(state: State<'_, UndoRedoState>) -> Result<(), String> {
-    let mut history = state
-        .history
-        .lock()
-        .map_err(|e| format!("Lock error: {}", e))?;
+    let mut history = state.history.lock().map_err(|e| format!("Lock error: {}", e))?;
 
     history.clear();
     Ok(())
@@ -112,10 +87,7 @@ pub async fn clear_history(state: State<'_, UndoRedoState>) -> Result<(), String
 /// Get number of commands in undo stack
 #[tauri::command]
 pub async fn undo_count(state: State<'_, UndoRedoState>) -> Result<usize, String> {
-    let history = state
-        .history
-        .lock()
-        .map_err(|e| format!("Lock error: {}", e))?;
+    let history = state.history.lock().map_err(|e| format!("Lock error: {}", e))?;
 
     Ok(history.undo_count())
 }
@@ -123,10 +95,7 @@ pub async fn undo_count(state: State<'_, UndoRedoState>) -> Result<usize, String
 /// Get number of commands in redo stack
 #[tauri::command]
 pub async fn redo_count(state: State<'_, UndoRedoState>) -> Result<usize, String> {
-    let history = state
-        .history
-        .lock()
-        .map_err(|e| format!("Lock error: {}", e))?;
+    let history = state.history.lock().map_err(|e| format!("Lock error: {}", e))?;
 
     Ok(history.redo_count())
 }
@@ -134,10 +103,7 @@ pub async fn redo_count(state: State<'_, UndoRedoState>) -> Result<usize, String
 /// Get all undo descriptions
 #[tauri::command]
 pub async fn undo_descriptions(state: State<'_, UndoRedoState>) -> Result<Vec<String>, String> {
-    let history = state
-        .history
-        .lock()
-        .map_err(|e| format!("Lock error: {}", e))?;
+    let history = state.history.lock().map_err(|e| format!("Lock error: {}", e))?;
 
     Ok(history.undo_descriptions())
 }
@@ -145,10 +111,7 @@ pub async fn undo_descriptions(state: State<'_, UndoRedoState>) -> Result<Vec<St
 /// Get all redo descriptions
 #[tauri::command]
 pub async fn redo_descriptions(state: State<'_, UndoRedoState>) -> Result<Vec<String>, String> {
-    let history = state
-        .history
-        .lock()
-        .map_err(|e| format!("Lock error: {}", e))?;
+    let history = state.history.lock().map_err(|e| format!("Lock error: {}", e))?;
 
     Ok(history.redo_descriptions())
 }
@@ -156,10 +119,7 @@ pub async fn redo_descriptions(state: State<'_, UndoRedoState>) -> Result<Vec<St
 /// Get current memory usage
 #[tauri::command]
 pub async fn memory_usage(state: State<'_, UndoRedoState>) -> Result<usize, String> {
-    let history = state
-        .history
-        .lock()
-        .map_err(|e| format!("Lock error: {}", e))?;
+    let history = state.history.lock().map_err(|e| format!("Lock error: {}", e))?;
 
     Ok(history.memory_usage())
 }
@@ -170,10 +130,7 @@ pub async fn set_max_depth(
     state: State<'_, UndoRedoState>,
     max_depth: usize,
 ) -> Result<(), String> {
-    let mut history = state
-        .history
-        .lock()
-        .map_err(|e| format!("Lock error: {}", e))?;
+    let mut history = state.history.lock().map_err(|e| format!("Lock error: {}", e))?;
 
     history.set_max_depth(max_depth);
     Ok(())
@@ -185,10 +142,7 @@ pub async fn set_max_memory(
     state: State<'_, UndoRedoState>,
     max_memory: usize,
 ) -> Result<(), String> {
-    let mut history = state
-        .history
-        .lock()
-        .map_err(|e| format!("Lock error: {}", e))?;
+    let mut history = state.history.lock().map_err(|e| format!("Lock error: {}", e))?;
 
     history.set_max_memory(max_memory);
     Ok(())
@@ -196,14 +150,8 @@ pub async fn set_max_memory(
 
 /// Enable or disable command compression
 #[tauri::command]
-pub async fn set_compression(
-    state: State<'_, UndoRedoState>,
-    enabled: bool,
-) -> Result<(), String> {
-    let mut history = state
-        .history
-        .lock()
-        .map_err(|e| format!("Lock error: {}", e))?;
+pub async fn set_compression(state: State<'_, UndoRedoState>, enabled: bool) -> Result<(), String> {
+    let mut history = state.history.lock().map_err(|e| format!("Lock error: {}", e))?;
 
     history.set_compression(enabled);
     Ok(())

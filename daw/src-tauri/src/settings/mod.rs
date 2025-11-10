@@ -32,7 +32,7 @@ pub use playback::{ClickSound, PlaybackSettings};
 pub use privacy::{DataRetentionPolicy, PrivacySettings};
 pub use recording::{RecordingFormat, RecordingSettings};
 pub use sync::{SyncInterval, SyncSettings};
-pub use track::{TrackSettings, TrackColor};
+pub use track::{TrackColor, TrackSettings};
 
 use serde::{Deserialize, Serialize};
 use std::fs;
@@ -40,6 +40,7 @@ use std::path::PathBuf;
 
 /// Master settings container
 #[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Default)]
 pub struct AppSettings {
     pub general: GeneralSettings,
     pub audio: AudioSettings,
@@ -58,27 +59,6 @@ pub struct AppSettings {
     pub advanced: AdvancedSettings,
 }
 
-impl Default for AppSettings {
-    fn default() -> Self {
-        Self {
-            general: GeneralSettings::default(),
-            audio: AudioSettings::default(),
-            display: DisplaySettings::default(),
-            keyboard: KeyboardSettings::default(),
-            midi: MidiSettings::default(),
-            mixer: MixerSettings::default(),
-            track: TrackSettings::default(),
-            import_export: ImportExportSettings::default(),
-            performance: PerformanceSettings::default(),
-            library: LibrarySettings::default(),
-            playback: PlaybackSettings::default(),
-            recording: RecordingSettings::default(),
-            sync: SyncSettings::default(),
-            privacy: PrivacySettings::default(),
-            advanced: AdvancedSettings::default(),
-        }
-    }
-}
 
 impl AppSettings {
     /// Get the path to the config file
@@ -97,8 +77,8 @@ impl AppSettings {
             return Ok(Self::default());
         }
 
-        let contents = fs::read_to_string(&path)
-            .map_err(|e| format!("Failed to read config file: {}", e))?;
+        let contents =
+            fs::read_to_string(&path).map_err(|e| format!("Failed to read config file: {}", e))?;
 
         let settings: Self = serde_json::from_str(&contents)
             .map_err(|e| format!("Failed to parse config file: {}", e))?;
@@ -119,8 +99,7 @@ impl AppSettings {
         let json = serde_json::to_string_pretty(self)
             .map_err(|e| format!("Failed to serialize settings: {}", e))?;
 
-        fs::write(&path, json)
-            .map_err(|e| format!("Failed to write config file: {}", e))?;
+        fs::write(&path, json).map_err(|e| format!("Failed to write config file: {}", e))?;
 
         Ok(())
     }

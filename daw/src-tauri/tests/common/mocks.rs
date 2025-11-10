@@ -1,9 +1,9 @@
-   /// Tauri and MIDI mocking framework for testing IPC commands
-   /// Captures event emissions and provides MIDI device simulation
 
+use serde::Serialize;
+/// Tauri and MIDI mocking framework for testing IPC commands
+/// Captures event emissions and provides MIDI device simulation
 use std::sync::Arc;
 use tokio::sync::{Mutex, RwLock};
-use serde::Serialize;
 
 /// Events emitted during command execution
 #[derive(Debug, Clone, PartialEq)]
@@ -20,9 +20,7 @@ pub struct MockWindow {
 
 impl MockWindow {
     pub fn new() -> Self {
-        Self {
-            emitted_events: Arc::new(Mutex::new(Vec::new())),
-        }
+        Self { emitted_events: Arc::new(Mutex::new(Vec::new())) }
     }
 
     /// Mock emit method (matches Tauri signature)
@@ -30,10 +28,10 @@ impl MockWindow {
         let payload_json = serde_json::to_string(&payload)
             .map_err(|e| format!("Failed to serialize payload: {}", e))?;
 
-        self.emitted_events.lock().await.push(EmittedEvent {
-            event_name: event.to_string(),
-            payload: payload_json,
-        });
+        self.emitted_events
+            .lock()
+            .await
+            .push(EmittedEvent { event_name: event.to_string(), payload: payload_json });
 
         Ok(())
     }
@@ -84,9 +82,7 @@ pub struct MockAppHandle {
 
 impl MockAppHandle {
     pub fn new() -> Self {
-        Self {
-            window: MockWindow::new(),
-        }
+        Self { window: MockWindow::new() }
     }
 }
 
@@ -160,10 +156,10 @@ impl MockMidiDevice {
 
     pub async fn send_note_off(&self, channel: u8, note: u8) {
         if *self.connected.read().await {
-            self.sent_messages.lock().await.push(MidiMessage {
-                channel,
-                message_type: MidiMessageType::NoteOff { note },
-            });
+            self.sent_messages
+                .lock()
+                .await
+                .push(MidiMessage { channel, message_type: MidiMessageType::NoteOff { note } });
         }
     }
 
@@ -178,10 +174,10 @@ impl MockMidiDevice {
 
     pub async fn send_pitch_bend(&self, channel: u8, value: u16) {
         if *self.connected.read().await {
-            self.sent_messages.lock().await.push(MidiMessage {
-                channel,
-                message_type: MidiMessageType::PitchBend { value },
-            });
+            self.sent_messages
+                .lock()
+                .await
+                .push(MidiMessage { channel, message_type: MidiMessageType::PitchBend { value } });
         }
     }
 

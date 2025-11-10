@@ -1,5 +1,5 @@
-   /// Intelligent filename generation
 
+/// Intelligent filename generation
 pub mod generator;
 pub mod sanitizer;
 pub mod templates;

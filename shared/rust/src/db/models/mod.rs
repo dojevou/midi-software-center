@@ -1,16 +1,16 @@
-   /// Database model types
 
-pub mod midi_file;
-pub mod midi;
-pub mod sequencer;
 pub mod analysis;
-pub mod search;
 pub mod error;
+pub mod midi;
+/// Database model types
+pub mod midi_file;
+pub mod search;
+pub mod sequencer;
 
 // Re-export main types
-pub use midi_file::File;
-pub use midi::MidiMetadata;
-pub use sequencer::SequencerTrack;
 pub use analysis::AnalysisResult;
-pub use search::SearchFilters;
 pub use error::DbError;
+pub use midi::MidiMetadata;
+pub use midi_file::File;
+pub use search::SearchFilters;
+pub use sequencer::SequencerTrack;

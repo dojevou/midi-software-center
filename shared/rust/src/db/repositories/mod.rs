@@ -1,5 +1,5 @@
-   /// Database repository layer
 
+/// Database repository layer
 pub mod file_repository;
 pub mod metadata_repository;
 pub mod search_repository;

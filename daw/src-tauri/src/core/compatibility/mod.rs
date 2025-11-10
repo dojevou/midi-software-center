@@ -1,8 +1,7 @@
-   /// Compatibility module - Musical matching algorithms
-   ///
-   /// Trusty Module: Pure functions for calculating compatibility between MIDI files.
-   /// NO I/O operations - all functions are deterministic and testable.
-
+/// Compatibility module - Musical matching algorithms
+///
+/// Trusty Module: Pure functions for calculating compatibility between MIDI files.
+/// NO I/O operations - all functions are deterministic and testable.
 pub mod music;
 pub mod scoring;
 pub mod types;

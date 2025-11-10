@@ -1,16 +1,16 @@
-   /// Archive Collection Import Command
-   ///
-   /// Processes entire collections of nested archives, extracting and importing
-   /// all MIDI files with automatic tagging.
-   ///
-   /// # Archetype: Grown-up Script (Tauri Command Wrapper)
-   /// - Thin wrapper around core functionality
-   /// - Coordinates decompressor + file import modules
-   /// - Provides progress feedback to UI
 
-use crate::AppState;
-use crate::io::decompressor::extractor::{extract_archive, ExtractionConfig};
 use crate::commands::file_import::import_directory;
+use crate::io::decompressor::extractor::{extract_archive, ExtractionConfig};
+/// Archive Collection Import Command
+///
+/// Processes entire collections of nested archives, extracting and importing
+/// all MIDI files with automatic tagging.
+///
+/// # Archetype: Grown-up Script (Tauri Command Wrapper)
+/// - Thin wrapper around core functionality
+/// - Coordinates decompressor + file import modules
+/// - Provides progress feedback to UI
+use crate::AppState;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 use tauri::{Emitter, State, Window};
@@ -59,14 +59,20 @@ pub async fn import_archive_collection(
     let collection_dir = Path::new(&collection_path);
 
     if !collection_dir.exists() {
-        return Err(format!("Collection directory not found: {}", collection_path));
+        return Err(format!(
+            "Collection directory not found: {}",
+            collection_path
+        ));
     }
 
     if !collection_dir.is_dir() {
         return Err(format!("Path is not a directory: {}", collection_path));
     }
 
-    println!("\n🚀 Starting archive collection import from: {}", collection_path);
+    println!(
+        "\n🚀 Starting archive collection import from: {}",
+        collection_path
+    );
     println!("📦 Scanning for zip archives...\n");
 
     // Scan for zip files
@@ -74,7 +80,9 @@ pub async fn import_archive_collection(
         .map_err(|e| format!("Failed to read directory: {}", e))?
         .filter_map(|entry| entry.ok())
         .filter(|entry| {
-            entry.path().extension()
+            entry
+                .path()
+                .extension()
                 .and_then(|ext| ext.to_str())
                 .map(|ext| ext.eq_ignore_ascii_case("zip"))
                 .unwrap_or(false)
@@ -99,34 +107,42 @@ pub async fn import_archive_collection(
             .to_string();
 
         println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-        println!("📦 [{}/{}] Processing: {}", index + 1, total_archives, archive_name);
+        println!(
+            "📦 [{}/{}] Processing: {}",
+            index + 1,
+            total_archives,
+            archive_name
+        );
         println!("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
 
         // Emit progress event
-        let _ = window.emit("archive-progress", serde_json::json!({
-            "current": index + 1,
-            "total": total_archives,
-            "archive_name": archive_name
-        }));
+        let _ = window.emit(
+            "archive-progress",
+            serde_json::json!({
+                "current": index + 1,
+                "total": total_archives,
+                "archive_name": archive_name
+            }),
+        );
 
         // Process this archive
-        let status = process_single_archive(
-            &archive_path,
-            &archive_name,
-            state.clone(),
-            window.clone(),
-        ).await;
+        let status =
+            process_single_archive(&archive_path, &archive_name, state.clone(), window.clone())
+                .await;
 
         match &status {
             Ok(s) => {
                 total_files_imported += s.files_imported;
                 total_files_skipped += s.midi_files_found.saturating_sub(s.files_imported);
-                println!("✅ Success: {} MIDIs found, {} imported\n", s.midi_files_found, s.files_imported);
-            }
+                println!(
+                    "✅ Success: {} MIDIs found, {} imported\n",
+                    s.midi_files_found, s.files_imported
+                );
+            },
             Err(e) => {
                 total_errors += 1;
                 println!("❌ Error: {}\n", e);
-            }
+            },
         }
 
         archive_statuses.push(status.unwrap_or_else(|e| ArchiveStatus {
@@ -149,7 +165,10 @@ pub async fn import_archive_collection(
     println!("║ Files Skipped:      {:>28} ║", total_files_skipped);
     println!("║ Errors:             {:>28} ║", total_errors);
     println!("║ Duration:           {:>25.1}s ║", duration_secs);
-    println!("║ Rate:               {:>23.0} f/s ║", total_files_imported as f64 / duration_secs);
+    println!(
+        "║ Rate:               {:>23.0} f/s ║",
+        total_files_imported as f64 / duration_secs
+    );
     println!("╚══════════════════════════════════════════════╝\n");
 
     Ok(ArchiveImportSummary {
@@ -199,27 +218,24 @@ async fn process_single_archive(
     println!("   💾 Importing to database with auto-tagging...");
     let import_result = import_directory(
         temp_dir.to_string_lossy().to_string(),
-        true, // recursive
+        true,                                                    // recursive
         Some(archive_name.trim_end_matches(".zip").to_string()), // category from archive name
         state.clone(),
         window.clone(),
-    ).await;
+    )
+    .await;
 
     // Cleanup temp directory
     let _ = std::fs::remove_dir_all(&temp_dir);
 
     match import_result {
-        Ok(summary) => {
-            Ok(ArchiveStatus {
-                archive_name: archive_name.to_string(),
-                midi_files_found: midi_count,
-                files_imported: summary.imported,
-                success: true,
-                error_message: None,
-            })
-        }
-        Err(e) => {
-            Err(format!("Import failed: {}", e))
-        }
+        Ok(summary) => Ok(ArchiveStatus {
+            archive_name: archive_name.to_string(),
+            midi_files_found: midi_count,
+            files_imported: summary.imported,
+            success: true,
+            error_message: None,
+        }),
+        Err(e) => Err(format!("Import failed: {}", e)),
     }
 }

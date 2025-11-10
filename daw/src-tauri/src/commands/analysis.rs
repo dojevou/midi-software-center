@@ -1,8 +1,7 @@
-   /// Analysis Tauri commands
-   ///
-   /// Grown-up Script: I/O wrapper for musical analysis and compatibility matching.
-   /// Updated to use proper JOINs with actual database schema.
-
+/// Analysis Tauri commands
+///
+/// Grown-up Script: I/O wrapper for musical analysis and compatibility matching.
+/// Updated to use proper JOINs with actual database schema.
 use crate::commands::AppState;
 use crate::core::compatibility;
 use crate::models::analysis::CompatibleFile;
@@ -133,24 +132,33 @@ pub async fn find_compatible_files(
             let score = compatibility::calculate_compatibility(&ref_file, candidate);
 
             // Calculate BPM-based time stretch suggestion
-            let suggested_bpm_multiplier = if let (Some(ref_bpm), Some(cand_bpm)) = (ref_file.bpm, candidate.bpm) {
-                let ratio = cand_bpm / ref_bpm;
-                // Suggest multiplier if it's a simple ratio
-                if (ratio - 0.5).abs() < 0.05 { Some(0.5) }
-                else if (ratio - 2.0).abs() < 0.1 { Some(2.0) }
-                else if (ratio - 1.5).abs() < 0.1 { Some(1.5) }
-                else if (ratio - 0.75).abs() < 0.05 { Some(0.75) }
-                else { None }
-            } else {
-                None
-            };
+            let suggested_bpm_multiplier =
+                if let (Some(ref_bpm), Some(cand_bpm)) = (ref_file.bpm, candidate.bpm) {
+                    let ratio = cand_bpm / ref_bpm;
+                    // Suggest multiplier if it's a simple ratio
+                    if (ratio - 0.5).abs() < 0.05 {
+                        Some(0.5)
+                    } else if (ratio - 2.0).abs() < 0.1 {
+                        Some(2.0)
+                    } else if (ratio - 1.5).abs() < 0.1 {
+                        Some(1.5)
+                    } else if (ratio - 0.75).abs() < 0.05 {
+                        Some(0.75)
+                    } else {
+                        None
+                    }
+                } else {
+                    None
+                };
 
             CompatibleFile {
                 id: candidate.id as i32,
                 file_name: candidate.filename.clone(),
                 compatibility_score: score.total_score as i32, // Convert f32 to i32
                 key_match: ref_file.key_signature == candidate.key_signature,
-                bpm_difference: if let (Some(ref_bpm), Some(cand_bpm)) = (ref_file.bpm, candidate.bpm) {
+                bpm_difference: if let (Some(ref_bpm), Some(cand_bpm)) =
+                    (ref_file.bpm, candidate.bpm)
+                {
                     Some((ref_bpm - cand_bpm).abs() as f32)
                 } else {
                     None
@@ -179,10 +187,7 @@ pub async fn find_compatible_files(
 
 /// Add file to favorites
 #[tauri::command]
-pub async fn add_favorite(
-    file_id: i32,
-    state: State<'_, AppState>,
-) -> Result<(), String> {
+pub async fn add_favorite(file_id: i32, state: State<'_, AppState>) -> Result<(), String> {
     debug!("Adding file {} to favorites", file_id);
 
     // Insert into favorites table (ON CONFLICT DO NOTHING to handle duplicates)
@@ -203,22 +208,16 @@ pub async fn add_favorite(
 
 /// Remove file from favorites
 #[tauri::command]
-pub async fn remove_favorite(
-    file_id: i32,
-    state: State<'_, AppState>,
-) -> Result<(), String> {
+pub async fn remove_favorite(file_id: i32, state: State<'_, AppState>) -> Result<(), String> {
     debug!("Removing file {} from favorites", file_id);
 
-    sqlx::query!(
-        "DELETE FROM favorites WHERE file_id = $1",
-        file_id as i64
-    )
-    .execute(state.db_pool.as_ref().ok_or_else(|| "Database not initialized".to_string())?)
-    .await
-    .map_err(|e| {
-        error!("Failed to remove favorite: {}", e);
-        format!("Failed to remove favorite: {}", e)
-    })?;
+    sqlx::query!("DELETE FROM favorites WHERE file_id = $1", file_id as i64)
+        .execute(state.db_pool.as_ref().ok_or_else(|| "Database not initialized".to_string())?)
+        .await
+        .map_err(|e| {
+            error!("Failed to remove favorite: {}", e);
+            format!("Failed to remove favorite: {}", e)
+        })?;
 
     debug!("Successfully removed file {} from favorites", file_id);
     Ok(())
@@ -226,10 +225,7 @@ pub async fn remove_favorite(
 
 /// Check if a file is favorited
 #[tauri::command]
-pub async fn is_favorite(
-    file_id: i32,
-    state: State<'_, AppState>,
-) -> Result<bool, String> {
+pub async fn is_favorite(file_id: i32, state: State<'_, AppState>) -> Result<bool, String> {
     let result = sqlx::query!(
         "SELECT EXISTS(SELECT 1 FROM favorites WHERE file_id = $1) as is_fav",
         file_id as i64
@@ -296,9 +292,7 @@ pub async fn get_favorites(
 
 /// Get usage statistics
 #[tauri::command]
-pub async fn get_usage_stats(
-    state: State<'_, AppState>,
-) -> Result<String, String> {
+pub async fn get_usage_stats(state: State<'_, AppState>) -> Result<String, String> {
     debug!("Getting usage statistics");
 
     // Gather various statistics using proper table and column names
@@ -308,25 +302,27 @@ pub async fn get_usage_stats(
         .map_err(|e| format!("Failed to count files: {}", e))?;
 
     let total_duration: Option<f64> = sqlx::query_scalar(
-        "SELECT SUM(duration_seconds) FROM files WHERE duration_seconds IS NOT NULL"
+        "SELECT SUM(duration_seconds) FROM files WHERE duration_seconds IS NOT NULL",
     )
     .fetch_one(state.db_pool.as_ref().ok_or_else(|| "Database not initialized".to_string())?)
     .await
     .map_err(|e| format!("Failed to sum duration: {}", e))?;
 
-    let total_notes: Option<i64> = sqlx::query_scalar(
-        "SELECT SUM(total_notes) FROM musical_metadata"
-    )
-    .fetch_one(state.db_pool.as_ref().ok_or_else(|| "Database not initialized".to_string())?)
-    .await
-    .map_err(|e| format!("Failed to sum notes: {}", e))?;
+    let total_notes: Option<i64> =
+        sqlx::query_scalar("SELECT SUM(total_notes) FROM musical_metadata")
+            .fetch_one(
+                state.db_pool.as_ref().ok_or_else(|| "Database not initialized".to_string())?,
+            )
+            .await
+            .map_err(|e| format!("Failed to sum notes: {}", e))?;
 
-    let avg_bpm: Option<f64> = sqlx::query_scalar(
-        "SELECT AVG(bpm) FROM musical_metadata WHERE bpm IS NOT NULL"
-    )
-    .fetch_one(state.db_pool.as_ref().ok_or_else(|| "Database not initialized".to_string())?)
-    .await
-    .map_err(|e| format!("Failed to calculate average BPM: {}", e))?;
+    let avg_bpm: Option<f64> =
+        sqlx::query_scalar("SELECT AVG(bpm) FROM musical_metadata WHERE bpm IS NOT NULL")
+            .fetch_one(
+                state.db_pool.as_ref().ok_or_else(|| "Database not initialized".to_string())?,
+            )
+            .await
+            .map_err(|e| format!("Failed to calculate average BPM: {}", e))?;
 
     // Most common key
     let most_common_key: Option<(String,)> = sqlx::query_as(
@@ -335,7 +331,7 @@ pub async fn get_usage_stats(
          WHERE key_signature IS NOT NULL
          GROUP BY key_signature
          ORDER BY COUNT(*) DESC
-         LIMIT 1"
+         LIMIT 1",
     )
     .fetch_optional(state.db_pool.as_ref().ok_or_else(|| "Database not initialized".to_string())?)
     .await
@@ -349,7 +345,7 @@ pub async fn get_usage_stats(
            AND time_signature_denominator IS NOT NULL
          GROUP BY time_signature_numerator, time_signature_denominator
          ORDER BY COUNT(*) DESC
-         LIMIT 1"
+         LIMIT 1",
     )
     .fetch_optional(state.db_pool.as_ref().ok_or_else(|| "Database not initialized".to_string())?)
     .await

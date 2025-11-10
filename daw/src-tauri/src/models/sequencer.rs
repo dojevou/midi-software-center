@@ -1,9 +1,8 @@
-   /// Sequencer models
-   ///
-   /// Trusty Module: Pure data structures for sequencer state and tracks.
-
-use serde::{Deserialize, Serialize};
 use super::midi::MidiEvent;
+/// Sequencer models
+///
+/// Trusty Module: Pure data structures for sequencer state and tracks.
+use serde::{Deserialize, Serialize};
 
 /**
  * Sequencer track
@@ -18,9 +17,9 @@ pub struct Track {
     pub channel: u8,
     pub muted: bool,
     pub solo: bool,
-    pub volume: u8,      // 0-127
-    pub pan: u8,         // 0-127 (64 = center)
-    pub color: String,   // Hex color
+    pub volume: u8,    // 0-127
+    pub pan: u8,       // 0-127 (64 = center)
+    pub color: String, // Hex color
 
     // Internal data (not serialized to frontend)
     #[serde(skip)]

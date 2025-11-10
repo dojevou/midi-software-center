@@ -1,5 +1,4 @@
-   /// Import binary - standalone executable for batch importing MIDI files
-
+/// Import binary - standalone executable for batch importing MIDI files
 use anyhow::{Context, Result};
 use clap::Parser;
 use sqlx::PgPool;
@@ -34,7 +33,7 @@ async fn main() -> Result<()> {
     println!("Workers: {}", args.workers);
 
     // Connect to database
-    let pool = PgPool::connect(&args.database_url)
+    let _pool = PgPool::connect(&args.database_url)
         .await
         .context("Failed to connect to database")?;
 
