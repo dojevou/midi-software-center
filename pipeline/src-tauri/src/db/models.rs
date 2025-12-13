@@ -1,21 +1,89 @@
-
 /// Database models aligned with actual schema
 ///
 /// These models match the database schema from 001_initial_schema.sql
 /// Database: midi_library on port 5433
 use chrono::{DateTime, Utc};
-use serde::Deserialize;
+use serde::{Deserialize, Serialize};
 use sqlx::types::BigDecimal;
 use sqlx::FromRow;
 use uuid::Uuid;
+
+// =============================================================================
+// CUSTOM SERDE MODULES
+// =============================================================================
+
+/// Custom serde module for Vec<u8> to serialize as hex string
+mod hex_bytes {
+    use serde::{self, Serializer};
+
+    pub fn serialize<S>(value: &[u8], serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(&hex::encode(value))
+    }
+}
+
+/// Custom serde module for BigDecimal to serialize as string
+#[allow(dead_code)]
+mod bigdecimal_serde {
+    use serde::{self, Deserialize, Deserializer, Serializer};
+    use sqlx::types::BigDecimal;
+    use std::str::FromStr;
+
+    pub fn serialize<S>(value: &BigDecimal, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        serializer.serialize_str(&value.to_string())
+    }
+
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<BigDecimal, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let s = String::deserialize(deserializer)?;
+        BigDecimal::from_str(&s).map_err(serde::de::Error::custom)
+    }
+}
+
+/// Custom serde module for Option<BigDecimal>
+mod option_bigdecimal_serde {
+    use serde::{self, Deserialize, Deserializer, Serializer};
+    use sqlx::types::BigDecimal;
+    use std::str::FromStr;
+
+    pub fn serialize<S>(value: &Option<BigDecimal>, serializer: S) -> Result<S::Ok, S::Error>
+    where
+        S: Serializer,
+    {
+        match value {
+            Some(bd) => serializer.serialize_some(&bd.to_string()),
+            None => serializer.serialize_none(),
+        }
+    }
+
+    #[allow(dead_code)]
+    pub fn deserialize<'de, D>(deserializer: D) -> Result<Option<BigDecimal>, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        let opt: Option<String> = Option::deserialize(deserializer)?;
+        match opt {
+            Some(s) => BigDecimal::from_str(&s)
+                .map(Some)
+                .map_err(serde::de::Error::custom),
+            None => Ok(None),
+        }
+    }
+}
 
 // =============================================================================
 // FILES TABLE
 // =============================================================================
 
 /// File record from database (aligned with schema)
-// TODO: Fix BigDecimal serde support - temporarily disabled
-#[derive(Debug, Clone, FromRow)]
+#[derive(Debug, Clone, FromRow, Serialize)]
 pub struct File {
     pub id: i64,
 
@@ -23,6 +91,7 @@ pub struct File {
     pub filename: String,
     pub filepath: String,
     pub original_filename: String,
+    #[serde(with = "hex_bytes")]
     pub content_hash: Vec<u8>,
     pub file_size_bytes: i64,
 
@@ -32,6 +101,7 @@ pub struct File {
     pub ticks_per_quarter_note: Option<i32>,
 
     // Duration
+    #[serde(with = "option_bigdecimal_serde")]
     pub duration_seconds: Option<BigDecimal>,
     pub duration_ticks: Option<i64>,
 
@@ -53,6 +123,23 @@ pub struct File {
 
     // Processing
     pub import_batch_id: Option<Uuid>,
+
+    // File organization (migration 002)
+    pub parent_folder: Option<String>,
+
+    // Filename metadata (migration 008)
+    pub filename_bpm: Option<f32>,
+    pub filename_key: Option<String>,
+    pub filename_genres: Option<Vec<String>>,
+    pub structure_tags: Option<Vec<String>>,
+    pub metadata_source: Option<String>,
+
+    // Text metadata (migration 009)
+    pub track_names: Option<Vec<String>>,
+    pub copyright: Option<String>,
+    pub instrument_names_text: Option<Vec<String>>,
+    pub markers: Option<Vec<String>>,
+    pub lyrics: Option<Vec<String>>,
 }
 
 /// New file for insertion
@@ -72,6 +159,23 @@ pub struct NewFile {
     pub collection_name: Option<String>,
     pub folder_tags: Option<Vec<String>>,
     pub import_batch_id: Option<Uuid>,
+
+    // File organization (migration 002)
+    pub parent_folder: Option<String>,
+
+    // Filename metadata (migration 008)
+    pub filename_bpm: Option<f32>,
+    pub filename_key: Option<String>,
+    pub filename_genres: Option<Vec<String>>,
+    pub structure_tags: Option<Vec<String>>,
+    pub metadata_source: Option<String>,
+
+    // Text metadata (migration 009)
+    pub track_names: Option<Vec<String>>,
+    pub copyright: Option<String>,
+    pub instrument_names_text: Option<Vec<String>>,
+    pub markers: Option<Vec<String>>,
+    pub lyrics: Option<Vec<String>>,
 }
 
 // =============================================================================
@@ -79,12 +183,12 @@ pub struct NewFile {
 // =============================================================================
 
 /// Musical metadata from database (aligned with schema)
-// TODO: Fix BigDecimal serde support - temporarily disabled
-#[derive(Debug, Clone, FromRow)]
+#[derive(Debug, Clone, FromRow, Serialize)]
 pub struct MusicalMetadata {
     pub file_id: i64,
 
     // Tempo
+    #[serde(with = "option_bigdecimal_serde")]
     pub bpm: Option<BigDecimal>,
     pub bpm_confidence: Option<f32>,
     pub has_tempo_changes: Option<bool>,
@@ -107,11 +211,14 @@ pub struct MusicalMetadata {
     pub unique_pitches: Option<i32>,
     pub pitch_range_min: Option<i16>,
     pub pitch_range_max: Option<i16>,
+    #[serde(with = "option_bigdecimal_serde")]
     pub avg_velocity: Option<BigDecimal>,
 
     // Density metrics
+    #[serde(with = "option_bigdecimal_serde")]
     pub note_density: Option<BigDecimal>,
     pub polyphony_max: Option<i16>,
+    #[serde(with = "option_bigdecimal_serde")]
     pub polyphony_avg: Option<BigDecimal>,
 
     // Musical characteristics
@@ -128,6 +235,16 @@ pub struct MusicalMetadata {
     pub melodic_range: Option<i16>,
 
     pub created_at: DateTime<Utc>,
+
+    // Harmonic analysis (migration 010)
+    pub chord_progression: Option<serde_json::Value>,
+    pub chord_types: Option<Vec<String>>,
+    pub has_seventh_chords: Option<bool>,
+    pub has_extended_chords: Option<bool>,
+    #[serde(with = "option_bigdecimal_serde")]
+    pub chord_change_rate: Option<BigDecimal>,
+    #[serde(with = "option_bigdecimal_serde")]
+    pub chord_complexity_score: Option<BigDecimal>,
 }
 
 /// New musical metadata for insertion
@@ -149,6 +266,14 @@ pub struct NewMusicalMetadata {
     pub polyphony_max: Option<i16>,
     pub polyphony_avg: Option<BigDecimal>,
     pub is_percussive: Option<bool>,
+
+    // Harmonic analysis (migration 010)
+    pub chord_progression: Option<serde_json::Value>,
+    pub chord_types: Option<Vec<String>>,
+    pub has_seventh_chords: Option<bool>,
+    pub has_extended_chords: Option<bool>,
+    pub chord_change_rate: Option<BigDecimal>,
+    pub chord_complexity_score: Option<BigDecimal>,
 }
 
 // =============================================================================
@@ -167,8 +292,7 @@ pub struct SearchFilters {
 }
 
 /// Search result combining file and metadata
-// TODO: Fix BigDecimal serde support - temporarily disabled
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct FileSearchResult {
     pub id: i64,
     pub filename: String,
@@ -181,8 +305,7 @@ pub struct FileSearchResult {
 }
 
 /// Paginated search results
-// TODO: Fix BigDecimal serde support - temporarily disabled
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct SearchResults {
     pub files: Vec<FileSearchResult>,
     pub total_count: i64,
@@ -192,8 +315,7 @@ pub struct SearchResults {
 }
 
 /// Detailed file view with metadata
-// TODO: Fix BigDecimal serde support - temporarily disabled
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Serialize)]
 pub struct FileWithMetadata {
     pub file: File,
     pub metadata: Option<MusicalMetadata>,

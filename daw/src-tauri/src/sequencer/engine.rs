@@ -39,7 +39,7 @@ pub struct SequencerEngine {
     ticks_per_quarter: u16,
     beats_per_bar: u8,
 
-#[allow(dead_code)]
+    #[allow(dead_code)]
     // Playback control
     loop_enabled: Arc<RwLock<bool>>,
     loop_start: Arc<RwLock<u64>>,
@@ -106,23 +106,26 @@ impl SequencerEngine {
     }
 
     /// Stop playback and reset position
+    ///
+    /// Always resets position to 0, regardless of current state.
+    /// Only sends panic message if actually stopping playback.
     pub async fn stop(&self) {
         let mut state = self.state.write().await;
+        let was_playing = *state != PlaybackState::Stopped;
 
-        if *state == PlaybackState::Stopped {
-            return;
+        if was_playing {
+            info!("Stopping sequencer playback");
+            *state = PlaybackState::Stopped;
+
+            // Send all notes off to prevent stuck notes
+            if let Err(e) = self.send_panic().await {
+                warn!("Failed to send panic message: {}", e);
+            }
         }
 
-        info!("Stopping sequencer playback");
-
-        *state = PlaybackState::Stopped;
+        // Always reset position to 0 when stop is called
         let mut current_tick = self.current_tick.write().await;
         *current_tick = 0;
-
-        // Send all notes off to prevent stuck notes
-        if let Err(e) = self.send_panic().await {
-            warn!("Failed to send panic message: {}", e);
-        }
     }
 
     /// Pause playback (maintains position)
@@ -197,11 +200,141 @@ impl SequencerEngine {
         PlaybackPosition { current_tick: tick, current_bar: bar, current_beat: beat }
     }
 
+    /// Get current playback position in seconds
+    ///
+    /// Returns the current position converted to real time in seconds.
+    pub async fn get_position_seconds(&self) -> f64 {
+        let tick = *self.current_tick.read().await;
+        let bpm = *self.bpm.read().await;
+        timing::ticks_to_seconds(tick, bpm, self.ticks_per_quarter)
+    }
+
+    /// Get detailed bar position (bar, beat, tick within beat)
+    ///
+    /// Returns a BarPosition struct with full musical position information.
+    pub async fn get_bar_position(&self) -> timing::BarPosition {
+        let tick = *self.current_tick.read().await;
+        timing::calculate_bar_position(tick, self.ticks_per_quarter, self.beats_per_bar, 4)
+    }
+
+    /// Convert tick position to seconds for display
+    ///
+    /// Useful for showing position in time-based views.
+    pub fn tick_to_seconds(&self, tick: u64, bpm: f32) -> f64 {
+        timing::ticks_to_seconds(tick, bpm, self.ticks_per_quarter)
+    }
+
+    /// Convert seconds to tick position for seeking
+    ///
+    /// Useful for seeking to time-based positions.
+    pub fn seconds_to_tick(&self, seconds: f64, bpm: f32) -> u64 {
+        timing::seconds_to_ticks(seconds, bpm, self.ticks_per_quarter)
+    }
+
     /// Seek to a specific tick position
     pub async fn seek(&self, tick: u64) {
         let mut current_tick = self.current_tick.write().await;
         *current_tick = tick;
         debug!("Seeked to tick {}", tick);
+    }
+
+    /// Schedule a single MIDI event
+    ///
+    /// Useful for real-time note input or automation.
+    pub async fn schedule_event(
+        &self,
+        message: crate::core::midi::types::MidiMessage,
+        tick: u64,
+        track_id: i32,
+    ) {
+        self.scheduler.schedule(message, tick, track_id).await;
+    }
+
+    /// Get the next scheduled event at or before current tick
+    ///
+    /// Returns None if no events are ready.
+    pub async fn pop_next_event(&self) -> Option<ScheduledEvent> {
+        let current_tick = *self.current_tick.read().await;
+        self.scheduler.pop_next(current_tick).await
+    }
+
+    /// Peek at the next event's tick without removing it
+    ///
+    /// Useful for lookahead timing calculations.
+    pub async fn peek_next_tick(&self) -> Option<u64> {
+        self.scheduler.peek_next().await
+    }
+
+    /// Check if the scheduler has any pending events
+    pub async fn has_pending_events(&self) -> bool {
+        !self.scheduler.is_empty().await
+    }
+
+    /// Get the number of scheduled events
+    pub async fn scheduled_event_count(&self) -> usize {
+        self.scheduler.len().await
+    }
+
+    /// Convert tick position to microseconds for precise timing
+    ///
+    /// Useful for hardware timing and precise scheduling.
+    pub fn tick_to_microseconds(&self, tick: u64, bpm: f32) -> u64 {
+        timing::ticks_to_microseconds(tick, self.ticks_per_quarter, bpm)
+    }
+
+    /// Convert microseconds to tick position
+    ///
+    /// Useful for converting hardware timing to MIDI ticks.
+    pub fn microseconds_to_tick(&self, micros: u64, bpm: f32) -> u64 {
+        timing::microseconds_to_ticks(micros, self.ticks_per_quarter, bpm)
+    }
+
+    /// Get ticks per bar for current time signature
+    ///
+    /// Returns the number of ticks in one bar based on time signature.
+    pub fn get_ticks_per_bar(&self) -> u64 {
+        timing::ticks_per_bar(self.ticks_per_quarter, self.beats_per_bar, 4)
+    }
+
+    /// Get ticks per quarter note (PPQ/resolution)
+    pub fn get_ticks_per_quarter(&self) -> u16 {
+        self.ticks_per_quarter
+    }
+
+    /// Get beats per bar (time signature numerator)
+    pub fn get_beats_per_bar(&self) -> u8 {
+        self.beats_per_bar
+    }
+
+    /// Send a control change message via MIDI manager
+    ///
+    /// Directly sends CC without scheduling.
+    pub async fn send_control_change(
+        &self,
+        channel: u8,
+        controller: u8,
+        value: u8,
+    ) -> Result<(), String> {
+        self.midi_manager
+            .send_control_change(channel, controller, value)
+            .await
+    }
+
+    /// Send a program change message via MIDI manager
+    ///
+    /// Directly sends program change without scheduling.
+    pub async fn send_program_change(&self, channel: u8, program: u8) -> Result<(), String> {
+        self.midi_manager.send_program_change(channel, program).await
+    }
+
+    /// Get a specific track by ID
+    pub async fn get_track(&self, track_id: i32) -> Option<crate::models::sequencer::Track> {
+        self.track_manager.get_track(track_id).await
+    }
+
+    /// Check if any tracks are soloed
+    pub async fn has_soloed_tracks(&self) -> bool {
+        self.track_manager.has_solo().await
     }
 
     /// Load tracks into the scheduler
@@ -412,7 +545,6 @@ mod tests {
     }
 
     #[tokio::test]
-    #[ignore] // TODO: Fix in Phase 1 - position not resetting to 0 on stop
     async fn test_stop_from_playing() {
         let midi_manager = Arc::new(MidiManager::new());
         let engine = SequencerEngine::new(midi_manager, 120.0, 480);

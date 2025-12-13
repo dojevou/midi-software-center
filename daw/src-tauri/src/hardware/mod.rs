@@ -1,22 +1,41 @@
-// Hardware module for MIDI device management
-// Provides real-time device detection, routing, and monitoring
+//! Hardware module for MIDI device management
+//! Provides real-time device detection, routing, and monitoring
+//!
+//! Performance Backends (by latency):
+//! - JACK: ~3ms (Linux/macOS, lock-free ringbuffers)
+//! - ALSA Raw: ~5ms (Linux, direct kernel access)
+//! - CoreMIDI: ~5ms (macOS, native framework)
+//! - midir: ~10-15ms (cross-platform fallback)
+//!
+//! Note: Much of this infrastructure is reserved for future features.
+#![allow(dead_code)]
 
 pub mod device_manager;
+pub mod midi_backend;
 pub mod midi_monitor;
 pub mod midi_router;
 
+#[allow(unused_imports)]
 pub use device_manager::{
     connect_device, disconnect_device, get_device_info, list_devices, set_device_mapping,
     MidiDevice, MidiDeviceState,
 };
 
+#[allow(unused_imports)]
 pub use midi_monitor::{
     clear_events, get_events, start_monitoring, stop_monitoring, MidiEvent, MidiMonitorState,
 };
 
+#[allow(unused_imports)]
 pub use midi_router::{
-    create_route, delete_route, disable_route, enable_route, get_all_routes, test_route,
-    MidiRoute, MidiRouterState,
+    create_route, delete_route, disable_route, enable_route, get_all_routes, test_route, MidiRoute,
+    MidiRouterState,
+};
+
+#[allow(unused_imports)]
+pub use midi_backend::{
+    MidiBackend, MidiBackendType, MidiManager, MidiPerformanceMetrics, MidiPort, PrecisionTimer,
+    TimestampedMidiEvent,
 };
 
 use anyhow::Result;
@@ -29,6 +48,7 @@ use tokio::sync::RwLock;
 pub struct HardwareState {
     pub device_state: Arc<RwLock<MidiDeviceState>>,
     pub monitor_state: Arc<RwLock<MidiMonitorState>>,
+    #[allow(dead_code)] // Reserved for future MIDI routing functionality
     pub router_state: Arc<RwLock<MidiRouterState>>,
 }
 
@@ -87,13 +107,13 @@ impl std::fmt::Display for HardwareError {
             HardwareError::DeviceNotFound(id) => write!(f, "Device not found: {}", id),
             HardwareError::DeviceAlreadyConnected(id) => {
                 write!(f, "Device already connected: {}", id)
-            }
+            },
             HardwareError::ConnectionFailed(msg) => write!(f, "Connection failed: {}", msg),
             HardwareError::MonitoringError(msg) => write!(f, "Monitoring error: {}", msg),
             HardwareError::RoutingError(msg) => write!(f, "Routing error: {}", msg),
             HardwareError::InvalidConfiguration(msg) => {
                 write!(f, "Invalid configuration: {}", msg)
-            }
+            },
         }
     }
 }
