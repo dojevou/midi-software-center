@@ -1,18 +1,9 @@
+//! Tag Commands - Tauri commands for tag CRUD operations and file ratings
+
 use crate::db::repositories::tag_repository::{DbTag, TagRepository, TagWithCount};
-/// Tag Commands - Tauri commands for tag operations
-///
-/// This module provides frontend-facing commands for:
-/// - Retrieving tags for files
-/// - Getting popular tags (for tag cloud)
-/// - Searching tags (for autocomplete)
-/// - Updating file tags
 use crate::AppState;
 use serde::{Deserialize, Serialize};
 use tauri::State;
-
-// =============================================================================
-// TYPE DEFINITIONS
-// =============================================================================
 
 /// Tag for JSON serialization (frontend-friendly)
 #[derive(Clone, Debug, Deserialize, PartialEq, Serialize)]
@@ -51,10 +42,6 @@ impl PartialEq<&str> for TagResponse {
         self.name == *other
     }
 }
-
-// =============================================================================
-// TAURI COMMANDS
-// =============================================================================
 
 /// Get all tags for a specific file (implementation for tests and reuse)
 pub async fn get_file_tags_impl(
@@ -99,10 +86,7 @@ pub async fn get_popular_tags_impl(
     Ok(tags.into_iter().map(TagResponse::from).collect())
 }
 
-/// Get popular tags with usage counts (for tag cloud)
-///
-/// # Arguments
-/// * `limit` - Maximum number of tags to return (default: 50)
+/// Get popular tags with usage counts (for tag cloud).
 #[tauri::command]
 pub async fn get_popular_tags(
     limit: Option<i32>,
@@ -130,11 +114,7 @@ pub async fn search_tags_impl(
     Ok(tags.into_iter().map(TagResponse::from).collect())
 }
 
-/// Search tags by name prefix (for autocomplete)
-///
-/// # Arguments
-/// * `query` - Search query (prefix match)
-/// * `limit` - Maximum number of results (default: 10)
+/// Search tags by name prefix (for autocomplete).
 #[tauri::command]
 pub async fn search_tags(
     query: String,
@@ -175,11 +155,7 @@ pub async fn get_tags_by_category(
     Ok(tags.into_iter().map(TagResponse::from).collect())
 }
 
-/// Update tags for a file (replace all existing tags)
-///
-/// # Arguments
-/// * `file_id` - File ID
-/// * `tag_names` - Array of tag names to set
+/// Update tags for a file (replace all existing tags).
 #[tauri::command]
 pub async fn update_file_tags(
     file_id: i64,
@@ -261,11 +237,7 @@ pub async fn remove_tag_from_file(
     Ok(())
 }
 
-/// Get files by tags (for filtering)
-///
-/// # Arguments
-/// * `tag_names` - Array of tag names to filter by
-/// * `match_all` - If true, file must have ALL tags (AND logic). If false, file must have at least one tag (OR logic)
+/// Get files by tags (match_all=true for AND, false for OR logic).
 #[tauri::command]
 pub async fn get_files_by_tags(
     tag_names: Vec<String>,
@@ -297,15 +269,7 @@ pub async fn get_tag_stats(tag_id: i32, state: State<'_, AppState>) -> Result<i6
     Ok(count)
 }
 
-// =============================================================================
-// RATING COMMANDS
-// =============================================================================
-
-/// Set the rating for a file (1-5 stars, or None to clear)
-///
-/// # Arguments
-/// * `file_id` - File ID
-/// * `rating` - Rating value 1-5, or None to clear the rating
+/// Set the rating for a file (1-5 stars, or None to clear).
 #[tauri::command]
 pub async fn set_file_rating(
     file_id: i64,
@@ -331,13 +295,7 @@ pub async fn set_file_rating(
     Ok(())
 }
 
-/// Get the rating for a file
-///
-/// # Arguments
-/// * `file_id` - File ID
-///
-/// # Returns
-/// The rating (1-5) or None if unrated
+/// Get the rating for a file (1-5 or None if unrated).
 #[tauri::command]
 pub async fn get_file_rating(
     file_id: i64,
@@ -354,12 +312,7 @@ pub async fn get_file_rating(
     Ok(result.and_then(|(r,)| r))
 }
 
-/// Get files by rating
-///
-/// # Arguments
-/// * `rating` - Rating to filter by (1-5)
-/// * `limit` - Maximum number of results (default: 100)
-/// * `offset` - Offset for pagination (default: 0)
+/// Get files by rating (1-5) with pagination.
 #[tauri::command]
 pub async fn get_files_by_rating(
     rating: i16,
