@@ -1,19 +1,10 @@
+//! Track Splitting Commands - Split multi-track MIDI files into individual tracks
+//!
+//! Handles database queries, file I/O, and transaction management.
+//! Actual splitting logic delegated to track_splitter module.
+
 use crate::core::analysis::bpm_detector::detect_bpm;
 use crate::core::analysis::key_detector::detect_key;
-/// Track Splitting Commands - GROWN-UP SCRIPT
-///
-/// Architecture: Grown-up Script
-/// Purpose: I/O wrapper around track_splitter Trusty Module
-///
-/// This module provides Tauri commands for splitting multi-track MIDI files
-/// into individual single-track files. It handles:
-/// - Database queries (fetch file info)
-/// - File I/O (read original, write splits)
-/// - Database transactions (insert splits, create relationships)
-/// - Error handling and user-friendly messages
-///
-/// The actual splitting logic is delegated to the track_splitter Trusty Module,
-/// which operates on byte arrays with no I/O.
 use crate::core::hash::calculate_file_hash;
 use crate::core::naming::generator::generate_production_layer_filename;
 use crate::core::splitting::{split_tracks_with_repair, RepairResult, SplitError, SplitTrack};
@@ -22,9 +13,8 @@ use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
 use thiserror::Error;
 
-//=============================================================================
-// ERROR TYPES
-//=============================================================================
+/// Minimum confidence threshold for BPM/key detection results
+const CONFIDENCE_THRESHOLD: f64 = 0.5;
 
 /// Errors that can occur during split and import operations
 #[derive(Error, Debug)]
@@ -58,10 +48,6 @@ impl From<SplitCommandError> for String {
     }
 }
 
-//=============================================================================
-// TYPE DEFINITIONS
-//=============================================================================
-
 /// Result of a successful split operation
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct SplitResult {
@@ -75,64 +61,10 @@ pub struct SplitResult {
     pub output_dir: PathBuf,
 }
 
-//=============================================================================
-// PUBLIC API (Grown-up Script Pattern)
-//=============================================================================
-
 /// Split a multi-track MIDI file and import each track as a separate file.
 ///
-/// This is the main entry point for track splitting operations. It:
-/// 1. Queries the database for the original file's info
-/// 2. Reads the original MIDI file from disk
-/// 3. Calls the track_splitter Trusty Module to split tracks
-/// 4. Creates output directory
-/// 5. For each split track:
-///    - Generates filename based on track metadata
-///    - Writes MIDI bytes to disk
-///    - Imports to database with full metadata
-///    - Creates relationship in track_splits table
-/// 6. Returns list of created file IDs
-///
-/// # Arguments
-///
-/// * `file_id` - Database ID of the parent file to split
-/// * `output_dir` - Directory where split files will be written
-/// * `pool` - Database connection pool
-///
-/// # Returns
-///
-/// `SplitResult` containing IDs of created files and statistics
-///
-/// # Errors
-///
-/// Returns error if:
-/// - File not found in database
-/// - File not found on disk
-/// - Failed to read/parse MIDI file
-/// - Failed to split tracks (e.g., only tempo track)
-/// - Failed to create output directory
-/// - Database transaction fails
-///
-/// # Examples
-///
-/// ```no_run
-/// use pipeline::commands::split_file::split_and_import;
-/// use std::path::PathBuf;
-///
-/// # async fn example(pool: sqlx::PgPool) -> Result<(), Box<dyn std::error::Error>> {
-/// let result = split_and_import(
-///     42,
-///     PathBuf::from("/output/splits"),
-///     &pool
-/// ).await?;
-///
-/// println!("Split {} tracks into {} files",
-///     result.tracks_split,
-///     result.split_file_ids.len()
-/// );
-/// # Ok(())
-/// # }
-/// ```
+/// Queries DB for file info, reads MIDI, splits tracks, writes outputs,
+/// imports to DB with metadata, and creates parent-child relationships.
 pub async fn split_and_import(
     file_id: i64,
     output_dir: PathBuf,
@@ -279,26 +211,10 @@ pub async fn split_and_import(
     Ok(SplitResult { split_file_ids, tracks_split: split_tracks.len(), output_dir })
 }
 
-//=============================================================================
-// TAURI COMMAND WRAPPERS (Task-O-Matic Pattern)
-//=============================================================================
-
 use crate::AppState;
 use tauri::State;
 
-/// Tauri command: Split a single multi-track MIDI file into individual tracks.
-///
-/// Wraps split_and_import for Tauri IPC.
-///
-/// # Arguments
-///
-/// * `state` - Tauri managed state containing database pool
-/// * `file_id` - Database ID of the file to split
-/// * `output_dir` - Directory where split files will be written
-///
-/// # Returns
-///
-/// `SplitResult` with IDs of created files and statistics
+/// Tauri command: Split a multi-track MIDI file into individual tracks.
 #[tauri::command]
 pub async fn split_file(
     state: State<'_, AppState>,
@@ -311,19 +227,7 @@ pub async fn split_file(
     split_and_import(file_id, output_path, &pool).await.map_err(|e| e.to_string())
 }
 
-/// Tauri command: Split multiple multi-track MIDI files into individual tracks.
-///
-/// Batch version of split_file for processing multiple files.
-///
-/// # Arguments
-///
-/// * `state` - Tauri managed state containing database pool
-/// * `file_ids` - Database IDs of files to split
-/// * `output_dir` - Directory where split files will be written
-///
-/// # Returns
-///
-/// Vector of `SplitResult` for each file (or error string)
+/// Tauri command: Split multiple MIDI files into individual tracks (batch).
 #[tauri::command]
 pub async fn split_file_batch(
     state: State<'_, AppState>,
@@ -345,32 +249,7 @@ pub async fn split_file_batch(
     Ok(results)
 }
 
-//=============================================================================
-// HELPER FUNCTIONS (Grown-up Script - I/O Operations)
-//=============================================================================
-
-/// Import a split track file to the database with full metadata.
-///
-/// Performs a complete import operation including:
-/// - Hash calculation for deduplication
-/// - MIDI parsing for metadata extraction
-/// - BPM and key detection
-/// - Transaction-safe insertion to files and musical_metadata tables
-///
-/// # Arguments
-///
-/// * `filepath` - Path to the split MIDI file on disk
-/// * `filename` - Filename to store in database
-/// * `file_data` - MIDI file bytes (already in memory)
-/// * `pool` - Database connection pool
-///
-/// # Returns
-///
-/// Database ID of the newly inserted file
-///
-/// # Errors
-///
-/// Returns error if database insertion fails or file already exists (duplicate hash)
+/// Import a split track to the database with hash, metadata, BPM, and key detection.
 async fn import_split_track(
     filepath: &Path,
     filename: &str,
@@ -384,21 +263,12 @@ async fn import_split_track(
     // Parse MIDI for metadata
     let midi_data = parse_midi_file(file_data)?;
 
-    // Detect BPM
     let bpm_result = detect_bpm(&midi_data);
-    let bpm = if bpm_result.confidence > 0.5 {
-        Some(bpm_result.bpm)
-    } else {
-        None
-    };
+    let bpm = (bpm_result.confidence > CONFIDENCE_THRESHOLD).then_some(bpm_result.bpm);
 
-    // Detect key signature
     let key_result = detect_key(&midi_data);
-    let key_signature = if key_result.confidence > 0.5 {
-        Some(key_result.key.clone())
-    } else {
-        None
-    };
+    let key_signature =
+        (key_result.confidence > CONFIDENCE_THRESHOLD).then(|| key_result.key.clone());
 
     // Get file size
     let file_size_bytes = file_data.len() as i64;
@@ -461,21 +331,7 @@ async fn import_split_track(
     Ok(file_id)
 }
 
-/// Insert relationship between parent file and split track into track_splits table.
-///
-/// Creates a record linking the parent multi-track file to the split single-track file
-/// with metadata about the track (number, name, instrument, note count).
-///
-/// # Arguments
-///
-/// * `parent_file_id` - Database ID of the parent file
-/// * `split_file_id` - Database ID of the split file
-/// * `split_track` - Metadata about the split track
-/// * `pool` - Database connection pool
-///
-/// # Errors
-///
-/// Returns error if insertion fails or relationship already exists
+/// Insert parent-child relationship into track_splits table.
 async fn insert_track_split_relationship(
     parent_file_id: i64,
     split_file_id: i64,
@@ -507,46 +363,7 @@ async fn insert_track_split_relationship(
     Ok(())
 }
 
-//=============================================================================
-// UTILITY FUNCTIONS (Pure - Could be Trusty Module)
-//=============================================================================
-
-/// Generate a filename for a split track based on metadata.
-///
-/// Format: `{base}_track_{num:02}_{instrument}.mid`
-///
-/// If instrument is not available, uses track name. If neither available,
-/// uses just track number.
-///
-/// Sanitizes all components to ensure valid filenames.
-///
-/// # Arguments
-///
-/// * `base_filename` - Base filename from the parent file (without extension)
-/// * `split_track` - Metadata about the split track
-///
-/// # Returns
-///
-/// Sanitized filename with .mid extension
-///
-/// # Examples
-///
-/// ```
-/// use pipeline::commands::split_file::generate_split_filename;
-/// use pipeline::core::splitting::track_splitter::SplitTrack;
-///
-/// let track = SplitTrack {
-///     track_number: 1,
-///     track_name: Some("Piano".to_string()),
-///     channel: Some(0),
-///     instrument: Some("Acoustic Grand Piano".to_string()),
-///     note_count: 100,
-///     midi_bytes: vec![],
-/// };
-///
-/// let filename = generate_split_filename("my_song", &track);
-/// assert_eq!(filename, "my_song_track_01_Acoustic_Grand_Piano.mid");
-/// ```
+/// Generate filename for a split track: `{base}_track_{num:02}_{instrument}.mid`
 pub fn generate_split_filename(base_filename: &str, split_track: &SplitTrack) -> String {
     let base = sanitize_filename(base_filename);
     let track_num = format!("{:02}", split_track.track_number);
@@ -567,33 +384,7 @@ pub fn generate_split_filename(base_filename: &str, split_track: &SplitTrack) ->
     }
 }
 
-/// Sanitize a string to be used as a filename component.
-///
-/// Removes or replaces problematic characters:
-/// - Replaces spaces with underscores
-/// - Removes: / \ : * ? " < > | (filesystem-unsafe characters)
-/// - Removes: control characters, non-ASCII if problematic
-/// - Collapses multiple underscores to single underscore
-/// - Trims underscores from start and end
-///
-/// # Arguments
-///
-/// * `name` - String to sanitize
-///
-/// # Returns
-///
-/// Sanitized string safe for use in filenames
-///
-/// # Examples
-///
-/// ```
-/// use pipeline::commands::split_file::sanitize_filename;
-///
-/// assert_eq!(sanitize_filename("Piano Track"), "Piano_Track");
-/// assert_eq!(sanitize_filename("Track: 1 (Lead)"), "Track_1_Lead");
-/// assert_eq!(sanitize_filename("Bass/Guitar"), "BassGuitar");
-/// assert_eq!(sanitize_filename("  Piano  "), "Piano");
-/// ```
+/// Sanitize string for use in filenames (replaces unsafe chars, collapses underscores).
 pub fn sanitize_filename(name: &str) -> String {
     name.chars()
         .map(|c| match c {
@@ -614,8 +405,7 @@ pub fn sanitize_filename(name: &str) -> String {
         .join("_")
 }
 
-/// Extract time signature from MIDI file events
-/// Returns format like "4-4" for 4/4 time, or None if not found
+/// Extract time signature from MIDI events (e.g., "4-4" for 4/4 time).
 fn extract_time_signature_from_midi(
     midi: &midi_library_shared::core::midi::types::MidiFile,
 ) -> Option<String> {
@@ -632,12 +422,8 @@ fn extract_time_signature_from_midi(
         }
     }
 
-    None // No time signature found
+    None
 }
-
-//=============================================================================
-// TESTS
-//=============================================================================
 
 #[cfg(test)]
 mod tests {
