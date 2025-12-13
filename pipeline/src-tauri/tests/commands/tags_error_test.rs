@@ -70,7 +70,7 @@ async fn test_add_tags_duplicate_tags() {
 
     // Should handle duplicates (either deduplicate or error)
     // Most likely: UPSERT should handle this gracefully
-    if let Ok(_) = result {
+    if result.is_ok() {
         // Success - duplicates were handled
     }
 }

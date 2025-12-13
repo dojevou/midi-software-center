@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 use serde::Serialize;
 /// Tauri and MIDI mocking framework for testing IPC commands
 /// Captures event emissions and provides MIDI device simulation

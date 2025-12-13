@@ -21,7 +21,7 @@ async fn test_category_stats_empty_database() {
 
     // Empty database should return a HashMap (possibly empty)
     // The HashMap maps category names to counts
-    for (_category, count) in &stats {
+    for count in stats.values() {
         assert!(*count >= 0, "Category count should be non-negative");
     }
 }

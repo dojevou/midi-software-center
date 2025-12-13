@@ -1,5 +1,7 @@
+#![allow(dead_code)]
+//! Custom assertions for DAW command tests
+
 use sqlx::types::BigDecimal;
-/// Custom assertions for DAW command tests
 use sqlx::PgPool;
 use std::str::FromStr;
 

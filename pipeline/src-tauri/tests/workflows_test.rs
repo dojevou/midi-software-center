@@ -13,7 +13,7 @@
 //! All tests use real database operations, actual MIDI files, and complete
 //! end-to-end workflow validation with performance assertions.
 use midi_pipeline::commands::analyze::start_analysis;
-use midi_pipeline::commands::file_import::import_directory_impl;
+use midi_pipeline::commands::file_import::{import_directory_impl, import_single_file_impl};
 use midi_pipeline::commands::files::{get_file_count_impl, get_file_details_impl, list_files_impl};
 use midi_pipeline::commands::search::{get_all_tags_impl, search_files_impl, SearchFilters};
 use midi_pipeline::commands::tags::{add_tags_to_file_impl, get_file_tags_impl};
@@ -24,7 +24,7 @@ use tempfile::TempDir;
 use tokio::fs;
 
 mod common;
-use common::setup_test_state;
+use common::{import_and_analyze_file, setup_test_state};
 
 // ============================================================================
 // TEST FIXTURES & HELPERS
@@ -650,7 +650,7 @@ async fn test_workflow_tempo_matching() {
     let temp_dir = TempDir::new().unwrap();
 
     // Step 1: Import files at different tempos
-    let tempos = vec![100, 110, 120, 130, 140];
+    let tempos = [100, 110, 120, 130, 140];
     let target_tempo = 128;
 
     for (i, tempo) in tempos.iter().enumerate() {
@@ -771,7 +771,7 @@ async fn test_workflow_backup_and_restore() {
     // Step 4: Verify backup files exist
     let mut backup_files = 0;
     let mut entries = fs::read_dir(&backup_dir).await.unwrap();
-    while let Some(_) = entries.next_entry().await.unwrap() {
+    while entries.next_entry().await.unwrap().is_some() {
         backup_files += 1;
     }
     assert!(backup_files >= 3);
@@ -880,7 +880,7 @@ async fn test_workflow_session_sharing() {
     // Step 3: Verify shared files
     let mut shared_count = 0;
     let mut entries = fs::read_dir(&shared_dir).await.unwrap();
-    while let Some(_) = entries.next_entry().await.unwrap() {
+    while entries.next_entry().await.unwrap().is_some() {
         shared_count += 1;
     }
     assert_eq!(shared_count, 3);

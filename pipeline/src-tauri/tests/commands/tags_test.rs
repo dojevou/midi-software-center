@@ -1,7 +1,6 @@
-#[allow(dead_code, unused_imports, unused_variables)]
-
-/// Tests for pipeline/src-tauri/src/commands/tags.rs
-/// Commands: get_file_tags, get_popular_tags, search_tags, update_file_tags, etc.
+#![allow(dead_code, unused_imports, unused_variables)]
+//! Tests for pipeline/src-tauri/src/commands/tags.rs
+//! Commands: get_file_tags, get_popular_tags, search_tags, update_file_tags, etc.
 use crate::common::*;
 use midi_pipeline::commands::tags::{
     add_tags_to_file_impl, get_file_tags_impl, get_popular_tags_impl, search_tags_impl,
@@ -170,7 +169,7 @@ async fn test_update_file_tags() {
     repo.add_tags_to_file(file_id, &tag_ids).await.expect("Failed to add tags");
 
     // Update tags (replace all)
-    let new_tags = vec!["new_tag1".to_string(), "new_tag2".to_string()];
+    let new_tags = ["new_tag1".to_string(), "new_tag2".to_string()];
     let new_tag_data: Vec<_> = new_tags.iter().map(|n| (n.clone(), None)).collect();
     let new_tag_ids = repo
         .get_or_create_tags_batch(&new_tag_data)
@@ -297,7 +296,7 @@ async fn test_get_files_by_tags() {
 
     // Test OR logic (at least one tag)
     let files_or = repo
-        .get_files_by_tags(&vec!["tag_a".to_string(), "tag_b".to_string()], false)
+        .get_files_by_tags(&["tag_a".to_string(), "tag_b".to_string()], false)
         .await
         .expect("Failed to get files");
     assert!(
@@ -307,7 +306,7 @@ async fn test_get_files_by_tags() {
 
     // Test AND logic (all tags)
     let files_and = repo
-        .get_files_by_tags(&vec!["tag_a".to_string(), "tag_b".to_string()], true)
+        .get_files_by_tags(&["tag_a".to_string(), "tag_b".to_string()], true)
         .await
         .expect("Failed to get files");
     assert!(

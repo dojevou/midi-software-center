@@ -110,7 +110,7 @@ pub struct TrackInstrument {
 }
 
 /// Note statistics from MIDI analysis
-#[derive(Debug, Clone)]
+#[derive(Debug, Clone, Default)]
 pub struct NoteStats {
     pub note_count: i32,
     pub unique_pitches: Option<i32>,
@@ -128,23 +128,3 @@ pub struct NoteStats {
     pub is_percussive: bool,
 }
 
-impl Default for NoteStats {
-    fn default() -> Self {
-        Self {
-            note_count: 0,
-            unique_pitches: None,
-            pitch_range_low: None,
-            pitch_range_high: None,
-            pitch_range_semitones: None,
-            avg_velocity: None,
-            velocity_range_low: None,
-            velocity_range_high: None,
-            note_density: None,
-            polyphony_max: None,
-            polyphony_avg: None,
-            is_monophonic: false,
-            is_polyphonic: false,
-            is_percussive: false,
-        }
-    }
-}

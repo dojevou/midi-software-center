@@ -799,7 +799,7 @@ async fn test_bpm_round_trip_preserves_precision() {
     let pool = setup_test_pool().await;
     cleanup_database(&pool).await.expect("Cleanup failed");
 
-    let test_bpms = vec!["60.00", "120.50", "128.75", "180.25", "200.99"];
+    let test_bpms = ["60.00", "120.50", "128.75", "180.25", "200.99"];
 
     for (i, bpm_str) in test_bpms.iter().enumerate() {
         let file_id = create_metadata_test_file(&pool, &format!("roundtrip_{}.mid", i)).await;
@@ -970,7 +970,7 @@ async fn test_enharmonic_keys() {
     cleanup_database(&pool).await.expect("Cleanup failed");
 
     // Test enharmonic equivalents (C#/Db, F#/Gb, etc.)
-    let enharmonics = vec![("C#", "Db"), ("F#", "Gb"), ("G#", "Ab")];
+    let enharmonics = [("C#", "Db"), ("F#", "Gb"), ("G#", "Ab")];
 
     for (i, (key1, key2)) in enharmonics.iter().enumerate() {
         let file_id = create_metadata_test_file(&pool, &format!("enharmonic_{}.mid", i)).await;
@@ -1309,7 +1309,7 @@ async fn test_batch_file_and_metadata_insertion() {
         let file_id = create_metadata_test_file(&pool, &format!("batch_{}.mid", i)).await;
         let metadata = MetadataBuilder::new(file_id)
             .bpm_str(&format!("{}.0", 120 + i * 10))
-            .total_notes((100 + i * 50) as i32)
+            .total_notes(100 + i * 50)
             .build();
         MetadataRepository::insert(&pool, metadata).await.expect("Insert failed");
     }

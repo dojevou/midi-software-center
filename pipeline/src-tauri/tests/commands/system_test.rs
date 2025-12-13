@@ -1,7 +1,6 @@
-#[allow(dead_code, unused_imports, unused_variables)]
-
-/// Tests for pipeline/src-tauri/src/commands/system.rs
-/// Commands: get_system_info, initialize_database
+#![allow(dead_code, unused_imports, unused_variables)]
+//! Tests for pipeline/src-tauri/src/commands/system.rs
+//! Commands: get_system_info, initialize_database
 use crate::common::*;
 use midi_pipeline::commands::system::get_system_info;
 

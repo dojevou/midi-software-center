@@ -29,6 +29,7 @@
 //!
 //! Total: 74 tests
 mod common;
+use common::create_test_file;
 use midi_pipeline::db::repositories::tag_repository::TagRepository;
 
 mod fixtures;
@@ -455,7 +456,7 @@ async fn test_add_tags_to_file_multiple_tags() {
     let file_id = create_test_file(&pool, "test.mid").await;
 
     let tag_ids = repo
-        .get_or_create_tags_batch(&vec![
+        .get_or_create_tags_batch(&[
             ("drums".to_string(), Some("instrument".to_string())),
             ("bass".to_string(), Some("instrument".to_string())),
             ("house".to_string(), Some("genre".to_string())),
@@ -545,7 +546,7 @@ async fn test_remove_tag_from_file_existing() {
     let file_id = create_test_file(&pool, "test.mid").await;
 
     let tag_ids = repo
-        .get_or_create_tags_batch(&vec![
+        .get_or_create_tags_batch(&[
             ("tag1".to_string(), None),
             ("tag2".to_string(), None),
             ("tag3".to_string(), None),
@@ -589,7 +590,7 @@ async fn test_get_file_tags_single_file() {
     let file_id = create_test_file(&pool, "test.mid").await;
 
     let tag_ids = repo
-        .get_or_create_tags_batch(&vec![
+        .get_or_create_tags_batch(&[
             ("aaa".to_string(), Some("cat1".to_string())),
             ("bbb".to_string(), Some("cat1".to_string())),
             ("ccc".to_string(), Some("cat2".to_string())),
@@ -1104,7 +1105,7 @@ async fn test_update_file_tags_replace_all() {
     let file_id = create_test_file(&pool, "test.mid").await;
 
     let old_tags = repo
-        .get_or_create_tags_batch(&vec![
+        .get_or_create_tags_batch(&[
             ("tag1".to_string(), None),
             ("tag2".to_string(), None),
             ("tag3".to_string(), None),
@@ -1113,7 +1114,7 @@ async fn test_update_file_tags_replace_all() {
         .expect("Failed");
 
     let new_tags = repo
-        .get_or_create_tags_batch(&vec![
+        .get_or_create_tags_batch(&[
             ("tag4".to_string(), None),
             ("tag5".to_string(), None),
             ("tag6".to_string(), None),
@@ -1141,7 +1142,7 @@ async fn test_update_file_tags_partial_overlap() {
     let file_id = create_test_file(&pool, "test.mid").await;
 
     let tag_ids = repo
-        .get_or_create_tags_batch(&vec![
+        .get_or_create_tags_batch(&[
             ("tag1".to_string(), None),
             ("tag2".to_string(), None),
             ("tag3".to_string(), None),
@@ -1177,7 +1178,7 @@ async fn test_update_file_tags_clear_all() {
     let file_id = create_test_file(&pool, "test.mid").await;
 
     let tag_ids = repo
-        .get_or_create_tags_batch(&vec![
+        .get_or_create_tags_batch(&[
             ("tag1".to_string(), None),
             ("tag2".to_string(), None),
         ])
@@ -1202,7 +1203,7 @@ async fn test_update_file_tags_no_change() {
     let file_id = create_test_file(&pool, "test.mid").await;
 
     let tag_ids = repo
-        .get_or_create_tags_batch(&vec![
+        .get_or_create_tags_batch(&[
             ("tag1".to_string(), None),
             ("tag2".to_string(), None),
         ])
@@ -1227,7 +1228,7 @@ async fn test_update_file_tags_transaction_atomicity() {
     let file_id = create_test_file(&pool, "test.mid").await;
 
     let initial_tags = repo
-        .get_or_create_tags_batch(&vec![
+        .get_or_create_tags_batch(&[
             ("tag1".to_string(), None),
             ("tag2".to_string(), None),
         ])
@@ -1238,7 +1239,7 @@ async fn test_update_file_tags_transaction_atomicity() {
 
     // Normal update (should succeed)
     let new_tags = repo
-        .get_or_create_tags_batch(&vec![("tag3".to_string(), None)])
+        .get_or_create_tags_batch(&[("tag3".to_string(), None)])
         .await
         .expect("Failed");
 
@@ -1260,7 +1261,7 @@ async fn test_update_file_tags_added_by_user() {
     let file_id = create_test_file(&pool, "test.mid").await;
 
     let tag_ids = repo
-        .get_or_create_tags_batch(&vec![("tag1".to_string(), None)])
+        .get_or_create_tags_batch(&[("tag1".to_string(), None)])
         .await
         .expect("Failed");
 
@@ -1576,7 +1577,7 @@ async fn test_get_files_by_tags_and_performance() {
     let repo = TagRepository::new(pool.clone());
 
     let tag_ids = repo
-        .get_or_create_tags_batch(&vec![
+        .get_or_create_tags_batch(&[
             ("tag1".to_string(), None),
             ("tag2".to_string(), None),
         ])

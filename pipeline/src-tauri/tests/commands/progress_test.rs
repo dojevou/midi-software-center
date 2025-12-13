@@ -1,8 +1,9 @@
-/// Tests for pipeline/src-tauri/src/commands/progress.rs
-/// Commands: start_progress_tracking, update_progress, complete_progress, get_current_progress, etc.
-///
-/// Note: These tests use the public ProgressTracker API via get_state()
-/// The internal state fields are tested indirectly through state changes
+#![allow(dead_code, unused_imports, unused_variables, clippy::field_reassign_with_default)]
+//! Tests for pipeline/src-tauri/src/commands/progress.rs
+//! Commands: start_progress_tracking, update_progress, complete_progress, get_current_progress, etc.
+//!
+//! Note: These tests use the public ProgressTracker API via get_state()
+//! The internal state fields are tested indirectly through state changes
 use midi_pipeline::commands::progress::{ProgressState, ProgressTracker};
 
 /// Mock AppHandle for testing (minimal implementation)

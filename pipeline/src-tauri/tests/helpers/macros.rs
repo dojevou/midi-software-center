@@ -423,7 +423,7 @@ mod tests {
 
     #[test]
     fn test_assert_row_count() {
-        let rows = vec![1, 2, 3, 4, 5];
+        let rows = [1, 2, 3, 4, 5];
         assert_row_count!(rows, 5);
     }
 }

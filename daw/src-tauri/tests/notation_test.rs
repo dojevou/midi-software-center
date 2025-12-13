@@ -7,9 +7,8 @@ use midi_software_center_daw::notation::{
 
 #[test]
 fn test_renderer_creation() {
-    let renderer = ScoreRenderer::new(480);
+    let _renderer = ScoreRenderer::new(480);
     // Just verify it creates without panic
-    assert!(true);
 }
 
 #[test]

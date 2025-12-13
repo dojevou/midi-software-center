@@ -224,9 +224,11 @@ impl MidirBackend {
         // Lock-free channel for MIDI events (10,000 capacity)
         let (tx, rx) = bounded(10_000);
 
-        let mut metrics = MidiPerformanceMetrics::default();
-        metrics.backend = "midir".to_string();
-        metrics.min_latency_us = u64::MAX;
+        let metrics = MidiPerformanceMetrics {
+            backend: "midir".to_string(),
+            min_latency_us: u64::MAX,
+            ..Default::default()
+        };
 
         Ok(Self {
             event_sender: tx,

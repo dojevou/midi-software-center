@@ -229,18 +229,18 @@ impl MidiRecorder {
 
     /// Set tempo (BPM)
     pub fn set_tempo(&self, bpm: f64) {
-        *self.tempo_bpm.write() = bpm.max(20.0).min(300.0);
+        *self.tempo_bpm.write() = bpm.clamp(20.0, 300.0);
         debug!("Recording tempo set to {} BPM", bpm);
     }
 
     /// Set PPQ (pulses per quarter note)
     pub fn set_ppq(&self, ppq: u32) {
-        *self.ppq.write() = ppq.max(24).min(960);
+        *self.ppq.write() = ppq.clamp(24, 960);
     }
 
     /// Set time signature (beats per bar)
     pub fn set_time_signature(&self, beats_per_bar: u32) {
-        *self.beats_per_bar.write() = beats_per_bar.max(1).min(16);
+        *self.beats_per_bar.write() = beats_per_bar.clamp(1, 16);
     }
 
     /// Set quantize value

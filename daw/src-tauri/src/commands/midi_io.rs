@@ -195,6 +195,7 @@ pub async fn midi_io_register_port(
 }
 
 /// Update port settings
+#[allow(clippy::too_many_arguments)]
 #[command]
 pub async fn midi_io_update_port(
     state: State<'_, MidiIOState>,
@@ -405,6 +406,7 @@ pub async fn midi_io_create_route(
 }
 
 /// Update a MIDI route
+#[allow(clippy::too_many_arguments)]
 #[command]
 pub async fn midi_io_update_route(
     state: State<'_, MidiIOState>,

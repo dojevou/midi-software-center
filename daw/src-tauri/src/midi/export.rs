@@ -728,6 +728,7 @@ pub async fn reset_export_options() -> Result<(), String> {
 // =============================================================================
 
 #[cfg(test)]
+#[allow(clippy::field_reassign_with_default)]
 mod tests {
     use super::*;
 

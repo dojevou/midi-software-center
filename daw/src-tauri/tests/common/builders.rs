@@ -1,3 +1,4 @@
+#![allow(dead_code)]
 /// Test data builders for fluent test construction
 use midi_software_center_daw::models::{MidiEvent, MidiEventType};
 

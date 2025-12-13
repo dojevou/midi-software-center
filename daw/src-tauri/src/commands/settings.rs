@@ -253,7 +253,7 @@ fn ensure_profiles_dir(profiles_dir: &PathBuf) -> Result<(), SettingsError> {
     Ok(())
 }
 
-fn profile_path(profiles_dir: &PathBuf, profile_id: &str) -> PathBuf {
+fn profile_path(profiles_dir: &std::path::Path, profile_id: &str) -> PathBuf {
     profiles_dir.join(format!("{}.json", profile_id))
 }
 

@@ -113,11 +113,7 @@ fn bench_timer_jitter(c: &mut Criterion) {
                         let start = Instant::now();
                         timer.sleep(Duration::from_micros(us));
                         let elapsed = start.elapsed();
-                        let jitter = if elapsed > target {
-                            elapsed - target
-                        } else {
-                            target - elapsed
-                        };
+                        let jitter = elapsed.abs_diff(target);
                         total_jitter += jitter;
                     }
                     total_jitter

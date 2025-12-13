@@ -8,7 +8,8 @@ pub mod fixtures;
 pub mod mocks;
 
 pub use builders::{
-    create_test_file, insert_metadata, setup_test_state, MetadataBuilder, MidiFileBuilder,
+    create_test_file, import_and_analyze_file, insert_metadata, setup_test_state, MetadataBuilder,
+    MidiFileBuilder,
 };
 pub use database::TestDatabase;
 pub use fixtures::FileFixtures;

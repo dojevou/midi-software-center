@@ -473,6 +473,7 @@ pub async fn mixer_presets_create(
 }
 
 /// Update a mixer preset
+#[allow(clippy::too_many_arguments)]
 #[command]
 pub async fn mixer_presets_update(
     state: State<'_, PresetsState>,
@@ -600,6 +601,7 @@ pub async fn track_templates_search(
 }
 
 /// Create a track template
+#[allow(clippy::too_many_arguments)]
 #[command]
 pub async fn track_templates_create(
     state: State<'_, PresetsState>,
@@ -759,6 +761,7 @@ pub async fn project_templates_search(
 }
 
 /// Create a project template
+#[allow(clippy::too_many_arguments)]
 #[command]
 pub async fn project_templates_create(
     state: State<'_, PresetsState>,
@@ -798,6 +801,7 @@ pub async fn project_templates_create(
 }
 
 /// Update a project template
+#[allow(clippy::too_many_arguments)]
 #[command]
 pub async fn project_templates_update(
     state: State<'_, PresetsState>,
@@ -1085,6 +1089,7 @@ impl PresetsState {
     }
 
     /// Create a track template
+    #[allow(clippy::too_many_arguments)]
     pub fn create_track_template(
         &self,
         name: String,
@@ -1178,6 +1183,7 @@ impl PresetsState {
     }
 
     /// Create a project template
+    #[allow(clippy::too_many_arguments)]
     pub fn create_project_template(
         &self,
         name: String,
@@ -1263,6 +1269,7 @@ impl PresetsState {
 // =============================================================================
 
 #[cfg(test)]
+#[allow(clippy::field_reassign_with_default)]
 mod tests {
     use super::*;
 

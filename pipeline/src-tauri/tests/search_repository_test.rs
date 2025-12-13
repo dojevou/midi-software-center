@@ -405,7 +405,7 @@ async fn test_search_whitespace_only_query() {
 
     // Whitespace-only should be treated as empty query
     assert!(
-        results.len() > 0,
+        !results.is_empty(),
         "Whitespace query should return results (treated as empty)"
     );
     cleanup_database(&pool).await.expect("Cleanup failed");
@@ -570,7 +570,7 @@ async fn test_filter_by_bpm_range() {
             if let Some(bpm) = meta.bpm {
                 let bpm_f64 = bpm.to_string().parse::<f64>().unwrap();
                 assert!(
-                    bpm_f64 >= 120.0 && bpm_f64 <= 130.0,
+                    (120.0..=130.0).contains(&bpm_f64),
                     "BPM {} should be in range 120-130",
                     bpm_f64
                 );

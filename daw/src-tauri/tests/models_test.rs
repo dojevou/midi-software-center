@@ -17,7 +17,6 @@
 /// Coverage target: 90%+ error path testing across all models
 /// Test count: 73 → 94 tests (baseline + error paths)
 use midi_software_center_daw::models::*;
-use serde_json;
 use std::str::FromStr;
 
 // ============================================================================
@@ -324,7 +323,7 @@ fn test_app_result_type_alias() {
     let success: AppResult<i32> = Ok(42);
     let failure: AppResult<i32> = Err(AppError::InvalidInput("test".to_string()));
 
-    assert_eq!(success.unwrap(), 42);
+    assert!(success.is_ok());
     assert!(failure.is_err());
 }
 
@@ -771,7 +770,7 @@ fn test_midi_device_clone() {
 
 #[test]
 fn test_midi_event_type_variants() {
-    let types = vec![
+    let types = [
         MidiEventType::NoteOn,
         MidiEventType::NoteOff,
         MidiEventType::ControlChange,
@@ -954,7 +953,7 @@ fn test_midi_pattern_struct() {
 
 #[test]
 fn test_connection_status_variants() {
-    let statuses = vec![
+    let statuses = [
         ConnectionStatus::Disconnected,
         ConnectionStatus::Connecting,
         ConnectionStatus::Connected,
@@ -1839,7 +1838,7 @@ fn test_search_filter_invalid_bpm_range() {
 #[test]
 fn test_connection_status_all_variants() {
     // Verify all connection statuses exist
-    let statuses = vec![
+    let statuses = [
         ConnectionStatus::Connected,
         ConnectionStatus::Connecting,
         ConnectionStatus::Disconnected,
