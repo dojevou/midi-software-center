@@ -43,8 +43,9 @@ pub async fn split_file_batch(
     let mut results = Vec::with_capacity(file_ids.len());
 
     for file_id in file_ids {
-        let result =
-            split_and_import(file_id, output_path.clone(), &pool).await.map_err(|e| e.to_string());
+        let result = split_and_import(file_id, output_path.clone(), &pool)
+            .await
+            .map_err(|e| e.to_string());
         results.push(result);
     }
 

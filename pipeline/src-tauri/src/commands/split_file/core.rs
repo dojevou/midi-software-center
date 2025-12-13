@@ -38,7 +38,9 @@ pub async fn split_and_import(
     // 2. Read original file from disk
     let file_path = Path::new(&parent_file.filepath);
     if !file_path.exists() {
-        return Err(SplitCommandError::FileNotFoundOnDisk(parent_file.filepath.clone()));
+        return Err(SplitCommandError::FileNotFoundOnDisk(
+            parent_file.filepath.clone(),
+        ));
     }
 
     let original_bytes = tokio::fs::read(file_path).await?;
@@ -59,13 +61,16 @@ pub async fn split_and_import(
     match &repair_result {
         RepairResult::Valid => {
             // File was valid, no repair needed
-        }
+        },
         RepairResult::Repaired { fix_description, .. } => {
-            eprintln!("🔧 REPAIRED: {} - {}", parent_file.filename, fix_description);
-        }
+            eprintln!(
+                "🔧 REPAIRED: {} - {}",
+                parent_file.filename, fix_description
+            );
+        },
         RepairResult::Corrupt { reason } => {
             eprintln!("❌ CORRUPT: {} - {}", parent_file.filename, reason);
-        }
+        },
     }
 
     if split_tracks.is_empty() {
@@ -87,8 +92,7 @@ pub async fn split_and_import(
     // query_scalar with fetch_optional returns Result<Option<Option<String>>>
     // We unwrap the Result, then flatten the nested Options to get Option<String>,
     // then unwrap_or to get the final String value
-    let category =
-        sqlx::query_scalar::<_, Option<String>>(
+    let category = sqlx::query_scalar::<_, Option<String>>(
             "SELECT category FROM musical_metadata WHERE file_id = $1",
         )
         .bind(parent_file.id)
@@ -140,9 +144,10 @@ pub async fn split_and_import(
         tokio::fs::write(&split_path, &split_track.midi_bytes).await?;
 
         // Import split file to database with full metadata
-        let split_file_id = import_split_track(&split_path, &filename, &split_track.midi_bytes, pool)
-            .await
-            .map_err(|e| SplitCommandError::DatabaseError(e.to_string()))?;
+        let split_file_id =
+            import_split_track(&split_path, &filename, &split_track.midi_bytes, pool)
+                .await
+                .map_err(|e| SplitCommandError::DatabaseError(e.to_string()))?;
 
         // Create relationship in track_splits table
         insert_track_split_relationship(file_id, split_file_id, split_track, pool)

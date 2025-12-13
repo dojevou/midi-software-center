@@ -25,12 +25,7 @@ impl From<DbTag> for TagResponse {
 
 impl From<TagWithCount> for TagResponse {
     fn from(tag: TagWithCount) -> Self {
-        Self {
-            id: tag.id,
-            name: tag.name,
-            category: tag.category,
-            usage_count: tag.usage_count,
-        }
+        Self { id: tag.id, name: tag.name, category: tag.category, usage_count: tag.usage_count }
     }
 }
 

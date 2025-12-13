@@ -129,10 +129,8 @@ pub async fn update_file_tags(
     let pool = state.database.pool().await;
     let repo = TagRepository::new(pool);
 
-    let tag_data: Vec<(String, Option<String>)> = tag_names
-        .into_iter()
-        .map(|name| (name, None))
-        .collect();
+    let tag_data: Vec<(String, Option<String>)> =
+        tag_names.into_iter().map(|name| (name, None)).collect();
 
     let tag_ids = repo
         .get_or_create_tags_batch(&tag_data)
