@@ -285,7 +285,6 @@ pub async fn delete_file(file_id: i64, state: State<'_, AppState>) -> Result<(),
 mod tests {
     use super::*;
 
-    /// Test that MidiFile struct has all required fields
     #[test]
     fn test_midi_file_struct() {
         let now = Utc::now();
@@ -309,12 +308,4 @@ mod tests {
         assert_eq!(file.bpm, Some(120.0));
         assert_eq!(file.key_signature, Some("Cm".to_string()));
     }
-
-    // NOTE: Advanced search functionality is in commands/search.rs
-
-    // Integration tests require database connection and Tauri runtime
-    // These tests should be run as part of E2E testing, not unit tests
-    // For manual testing:
-    // 1. Start database: docker-compose up -d
-    // 2. Run the Tauri app and test commands from the frontend
 }
