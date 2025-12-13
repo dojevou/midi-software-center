@@ -40,15 +40,15 @@ pub fn extract_instrument_names(midi_file: &MidiFile) -> Vec<String> {
                     {
                         instruments.push(text.clone());
                     }
-                }
+                },
                 Event::ProgramChange { program, .. } => {
                     if let Some(instrument_name) = program_to_instrument_name(*program) {
                         if !instruments.contains(&instrument_name) {
                             instruments.push(instrument_name);
                         }
                     }
-                }
-                _ => {}
+                },
+                _ => {},
             }
         }
     }

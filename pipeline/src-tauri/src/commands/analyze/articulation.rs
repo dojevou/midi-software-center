@@ -44,7 +44,7 @@ pub fn analyze_articulation(midi_file: &MidiFile, tempo_us_per_qn: u32) -> Optio
                     timing_deviations.push(normalized_deviation * ms_per_tick);
 
                     total_notes += 1;
-                }
+                },
                 Event::NoteOff { channel, note, .. }
                 | Event::NoteOn { channel, note, velocity: 0 } => {
                     if let Some((start_tick, _)) = note_events.remove(&(*channel, *note)) {
@@ -57,8 +57,8 @@ pub fn analyze_articulation(midi_file: &MidiFile, tempo_us_per_qn: u32) -> Optio
                         }
                     }
                     active_notes.remove(&(*channel, *note));
-                }
-                _ => {}
+                },
+                _ => {},
             }
         }
     }
@@ -69,8 +69,7 @@ pub fn analyze_articulation(midi_file: &MidiFile, tempo_us_per_qn: u32) -> Optio
 
     let legato_percentage = (legato_count as f64 / total_notes as f64) * 100.0;
     let staccato_percentage = (staccato_count as f64 / total_notes as f64) * 100.0;
-    let avg_note_duration =
-        note_durations.iter().sum::<f64>() / note_durations.len().max(1) as f64;
+    let avg_note_duration = note_durations.iter().sum::<f64>() / note_durations.len().max(1) as f64;
     let avg_timing_deviation =
         timing_deviations.iter().sum::<f64>() / timing_deviations.len().max(1) as f64;
 
@@ -78,8 +77,8 @@ pub fn analyze_articulation(midi_file: &MidiFile, tempo_us_per_qn: u32) -> Optio
     let max_velocity = *note_velocities.iter().max().unwrap_or(&127);
     let dynamic_range = max_velocity.saturating_sub(min_velocity);
 
-    let avg_velocity =
-        note_velocities.iter().map(|&v| v as f64).sum::<f64>() / note_velocities.len().max(1) as f64;
+    let avg_velocity = note_velocities.iter().map(|&v| v as f64).sum::<f64>()
+        / note_velocities.len().max(1) as f64;
     let velocity_variance = note_velocities
         .iter()
         .map(|&v| {

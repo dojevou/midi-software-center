@@ -41,11 +41,11 @@ pub fn analyze_notes(midi_file: &MidiFile) -> NoteStats {
 
                     active_notes.insert(*note);
                     active_notes_per_tick.insert(current_tick, active_notes.len());
-                }
+                },
                 Event::NoteOff { note, .. } | Event::NoteOn { note, velocity: 0, .. } => {
                     active_notes.remove(note);
-                }
-                _ => {}
+                },
+                _ => {},
             }
         }
     }

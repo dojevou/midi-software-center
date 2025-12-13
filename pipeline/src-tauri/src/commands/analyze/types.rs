@@ -127,4 +127,3 @@ pub struct NoteStats {
     pub is_polyphonic: bool,
     pub is_percussive: bool,
 }
-

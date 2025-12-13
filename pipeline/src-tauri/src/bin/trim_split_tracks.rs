@@ -111,7 +111,9 @@ fn find_first_note_on(smf: &Smf) -> Option<u32> {
             current_tick = current_tick.saturating_add(event.delta.as_int());
 
             // Check if this is a note-on event
-            if let TrackEventKind::Midi { message: MidiMessage::NoteOn { vel, .. }, .. } = &event.kind {
+            if let TrackEventKind::Midi { message: MidiMessage::NoteOn { vel, .. }, .. } =
+                &event.kind
+            {
                 // Only consider actual note-on (velocity > 0)
                 if vel.as_int() > 0 {
                     match first_note_tick {

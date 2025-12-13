@@ -1178,10 +1178,7 @@ async fn test_update_file_tags_clear_all() {
     let file_id = create_test_file(&pool, "test.mid").await;
 
     let tag_ids = repo
-        .get_or_create_tags_batch(&[
-            ("tag1".to_string(), None),
-            ("tag2".to_string(), None),
-        ])
+        .get_or_create_tags_batch(&[("tag1".to_string(), None), ("tag2".to_string(), None)])
         .await
         .expect("Failed");
 
@@ -1203,10 +1200,7 @@ async fn test_update_file_tags_no_change() {
     let file_id = create_test_file(&pool, "test.mid").await;
 
     let tag_ids = repo
-        .get_or_create_tags_batch(&[
-            ("tag1".to_string(), None),
-            ("tag2".to_string(), None),
-        ])
+        .get_or_create_tags_batch(&[("tag1".to_string(), None), ("tag2".to_string(), None)])
         .await
         .expect("Failed");
 
@@ -1228,10 +1222,7 @@ async fn test_update_file_tags_transaction_atomicity() {
     let file_id = create_test_file(&pool, "test.mid").await;
 
     let initial_tags = repo
-        .get_or_create_tags_batch(&[
-            ("tag1".to_string(), None),
-            ("tag2".to_string(), None),
-        ])
+        .get_or_create_tags_batch(&[("tag1".to_string(), None), ("tag2".to_string(), None)])
         .await
         .expect("Failed");
 
@@ -1577,10 +1568,7 @@ async fn test_get_files_by_tags_and_performance() {
     let repo = TagRepository::new(pool.clone());
 
     let tag_ids = repo
-        .get_or_create_tags_batch(&[
-            ("tag1".to_string(), None),
-            ("tag2".to_string(), None),
-        ])
+        .get_or_create_tags_batch(&[("tag1".to_string(), None), ("tag2".to_string(), None)])
         .await
         .expect("Failed");
 

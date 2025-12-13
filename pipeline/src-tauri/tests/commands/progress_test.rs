@@ -1,4 +1,9 @@
-#![allow(dead_code, unused_imports, unused_variables, clippy::field_reassign_with_default)]
+#![allow(
+    dead_code,
+    unused_imports,
+    unused_variables,
+    clippy::field_reassign_with_default
+)]
 //! Tests for pipeline/src-tauri/src/commands/progress.rs
 //! Commands: start_progress_tracking, update_progress, complete_progress, get_current_progress, etc.
 //!

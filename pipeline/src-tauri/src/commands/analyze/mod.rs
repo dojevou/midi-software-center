@@ -111,7 +111,10 @@ pub async fn start_analysis(
         }
 
         let batch_len = files.len();
-        println!("📦 Processing batch: {} files (offset: {})", batch_len, offset);
+        println!(
+            "📦 Processing batch: {} files (offset: {})",
+            batch_len, offset
+        );
 
         stream::iter(files)
             .map(|file_record| {
@@ -134,16 +137,24 @@ pub async fn start_analysis(
                             errors.lock().await.push(error_msg);
                             skipped.fetch_add(1, Ordering::SeqCst);
                             return;
-                        }
+                        },
                     };
 
                     let current = current_index.fetch_add(1, Ordering::SeqCst) + 1;
 
                     if current.is_multiple_of(10) || current == total_usize {
                         let elapsed = start_time.elapsed().as_secs_f64();
-                        let rate = if elapsed > 0.0 { current as f64 / elapsed } else { 0.0 };
+                        let rate = if elapsed > 0.0 {
+                            current as f64 / elapsed
+                        } else {
+                            0.0
+                        };
                         let remaining = total_usize - current;
-                        let eta_seconds = if rate > 0.0 { remaining as f64 / rate } else { 0.0 };
+                        let eta_seconds = if rate > 0.0 {
+                            remaining as f64 / rate
+                        } else {
+                            0.0
+                        };
 
                         if let Err(e) = window.emit(
                             "analysis-progress",
@@ -190,12 +201,12 @@ pub async fn start_analysis(
                                     skipped.fetch_add(batch.len(), Ordering::SeqCst);
                                 }
                             }
-                        }
+                        },
                         Err(e) => {
                             let error_msg = format!("{}: {}", file_record.filepath, e);
                             errors.lock().await.push(error_msg);
                             skipped.fetch_add(1, Ordering::SeqCst);
-                        }
+                        },
                     }
                 }
             })
@@ -219,7 +230,11 @@ pub async fn start_analysis(
 
     let duration = start_time.elapsed().as_secs_f64();
     let analyzed_count = analyzed.load(Ordering::SeqCst);
-    let rate = if duration > 0.0 { analyzed_count as f64 / duration } else { 0.0 };
+    let rate = if duration > 0.0 {
+        analyzed_count as f64 / duration
+    } else {
+        0.0
+    };
 
     println!("\n✅ Analysis complete!");
     println!("  Total files: {}", total_usize);
@@ -291,7 +306,11 @@ pub async fn analyze_single_file(
     // Melody detection
     let has_melody = note_stats.is_monophonic
         || (note_stats.polyphony_avg.is_some_and(|p| p < 2.0) && note_stats.note_count > 10);
-    let melodic_range = if has_melody { note_stats.pitch_range_semitones } else { None };
+    let melodic_range = if has_melody {
+        note_stats.pitch_range_semitones
+    } else {
+        None
+    };
 
     // Extract variation timelines
     let tempo_changes = extract_tempo_changes(&midi_file);

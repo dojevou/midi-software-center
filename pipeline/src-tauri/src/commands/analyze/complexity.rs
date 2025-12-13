@@ -35,8 +35,10 @@ pub fn calculate_complexity_score(note_stats: &NoteStats, midi_file: &MidiFile) 
     score += (track_count * 2.0).min(15.0);
 
     // Factor 5: Velocity variation
-    if let (Some(low), Some(high)) = (note_stats.velocity_range_low, note_stats.velocity_range_high)
-    {
+    if let (Some(low), Some(high)) = (
+        note_stats.velocity_range_low,
+        note_stats.velocity_range_high,
+    ) {
         let velocity_range = (high - low) as f64;
         score += (velocity_range / 10.0).min(10.0);
     }

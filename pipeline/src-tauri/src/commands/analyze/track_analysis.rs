@@ -16,7 +16,7 @@ pub fn analyze_tracks(midi_file: &MidiFile) -> Vec<TrackInstrument> {
             match &timed_event.event {
                 Event::ProgramChange { channel, program } => {
                     current_programs.insert(*channel, *program);
-                }
+                },
                 Event::NoteOn { channel, note, velocity } if *velocity > 0 => {
                     let program = current_programs.get(channel).copied().unwrap_or(0);
 
@@ -51,8 +51,8 @@ pub fn analyze_tracks(midi_file: &MidiFile) -> Vec<TrackInstrument> {
                     } else {
                         entry.avg_velocity = Some(*velocity as f64);
                     }
-                }
-                _ => {}
+                },
+                _ => {},
             }
         }
     }
