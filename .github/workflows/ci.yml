@@ -78,7 +78,7 @@ jobs:
 
       - name: Install frontend dependencies
         run: |
-          cd app && pnpm install --frozen-lockfile
+          cd app && pnpm install
 
       - name: Run Rust tests
         env:
