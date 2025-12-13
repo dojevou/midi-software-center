@@ -33,13 +33,13 @@ pub use filename_metadata::{
     NumberType,
 };
 pub use key_detector::{detect_key, KeyDetectionResult, ScaleType};
-pub use simd_bpm::{
-    batch_detect_onsets_simd, detect_bpm_from_onsets, detect_onsets_simd_vectorized,
-    extract_onsets_simd, Onset, OnsetBpmResult,
-};
 pub use ml_features::{
     HeuristicClassifier, MidiFeatures, MlClassification, MlTagger, GENRE_LABELS, MODEL_INPUT_SIZE,
     MOOD_LABELS,
+};
+pub use simd_bpm::{
+    batch_detect_onsets_simd, detect_bpm_from_onsets, detect_onsets_simd_vectorized,
+    extract_onsets_simd, Onset, OnsetBpmResult,
 };
 
 // Test modules

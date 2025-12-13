@@ -7,8 +7,8 @@
 
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::sync::Arc;
 use std::thread;
 use tokio::sync::{broadcast, oneshot};
 use tracing::info;
@@ -100,17 +100,17 @@ impl MidiInputHandle {
             })
             .expect("Failed to spawn MIDI input thread");
 
-        (Self {
-            command_tx,
-            message_rx: message_tx,
-            running,
-        }, message_rx)
+        (
+            Self { command_tx, message_rx: message_tx, running },
+            message_rx,
+        )
     }
 
     /// List available MIDI input devices
     pub fn list_devices(&self) -> Result<Vec<MidiInputDevice>, String> {
         let (tx, rx) = oneshot::channel();
-        self.command_tx.send(InputCommand::ListDevices(tx))
+        self.command_tx
+            .send(InputCommand::ListDevices(tx))
             .map_err(|_| "MIDI thread not running".to_string())?;
         rx.blocking_recv().map_err(|_| "MIDI thread died".to_string())?
     }
@@ -118,7 +118,8 @@ impl MidiInputHandle {
     /// Open a MIDI input device
     pub fn open_device(&self, device_id: &str) -> Result<(), String> {
         let (tx, rx) = oneshot::channel();
-        self.command_tx.send(InputCommand::OpenDevice(device_id.to_string(), tx))
+        self.command_tx
+            .send(InputCommand::OpenDevice(device_id.to_string(), tx))
             .map_err(|_| "MIDI thread not running".to_string())?;
         rx.blocking_recv().map_err(|_| "MIDI thread died".to_string())?
     }
@@ -126,7 +127,8 @@ impl MidiInputHandle {
     /// Close a MIDI input device
     pub fn close_device(&self, device_id: &str) -> Result<(), String> {
         let (tx, rx) = oneshot::channel();
-        self.command_tx.send(InputCommand::CloseDevice(device_id.to_string(), tx))
+        self.command_tx
+            .send(InputCommand::CloseDevice(device_id.to_string(), tx))
             .map_err(|_| "MIDI thread not running".to_string())?;
         rx.blocking_recv().map_err(|_| "MIDI thread died".to_string())?
     }
@@ -191,15 +193,12 @@ fn run_input_thread(
                 InputCommand::ListDevices(response) => {
                     let result = list_devices_internal(&connections);
                     let _ = response.send(result);
-                }
+                },
                 InputCommand::OpenDevice(device_id, response) => {
-                    let result = open_device_internal(
-                        &device_id,
-                        &mut connections,
-                        message_tx.clone(),
-                    );
+                    let result =
+                        open_device_internal(&device_id, &mut connections, message_tx.clone());
                     let _ = response.send(result);
-                }
+                },
                 InputCommand::CloseDevice(device_id, response) => {
                     let result = if connections.remove(&device_id).is_some() {
                         info!("Closed MIDI input: {}", device_id);
@@ -208,47 +207,54 @@ fn run_input_thread(
                         Err(format!("Device not open: {}", device_id))
                     };
                     let _ = response.send(result);
-                }
+                },
                 InputCommand::GetStatus(device_id, response) => {
-                    let status = connections.get(&device_id).map(|info| {
-                        InputDeviceStatus {
-                            device_id: device_id.clone(),
-                            device_name: info.device_name.clone(),
-                            is_open: true,
-                            messages_received: info.messages_received.load(Ordering::Relaxed),
-                            last_message_time: {
-                                let t = info.last_message_time.load(Ordering::Relaxed);
-                                if t > 0 { Some(t) } else { None }
-                            },
-                        }
+                    let status = connections.get(&device_id).map(|info| InputDeviceStatus {
+                        device_id: device_id.clone(),
+                        device_name: info.device_name.clone(),
+                        is_open: true,
+                        messages_received: info.messages_received.load(Ordering::Relaxed),
+                        last_message_time: {
+                            let t = info.last_message_time.load(Ordering::Relaxed);
+                            if t > 0 {
+                                Some(t)
+                            } else {
+                                None
+                            }
+                        },
                     });
                     let _ = response.send(status);
-                }
+                },
                 InputCommand::GetAllStatuses(response) => {
-                    let statuses: Vec<_> = connections.iter().map(|(id, info)| {
-                        InputDeviceStatus {
+                    let statuses: Vec<_> = connections
+                        .iter()
+                        .map(|(id, info)| InputDeviceStatus {
                             device_id: id.clone(),
                             device_name: info.device_name.clone(),
                             is_open: true,
                             messages_received: info.messages_received.load(Ordering::Relaxed),
                             last_message_time: {
                                 let t = info.last_message_time.load(Ordering::Relaxed);
-                                if t > 0 { Some(t) } else { None }
+                                if t > 0 {
+                                    Some(t)
+                                } else {
+                                    None
+                                }
                             },
-                        }
-                    }).collect();
+                        })
+                        .collect();
                     let _ = response.send(statuses);
-                }
+                },
                 InputCommand::CloseAll(response) => {
                     let count = connections.len();
                     connections.clear();
                     info!("Closed {} MIDI input devices", count);
                     let _ = response.send(());
-                }
+                },
                 InputCommand::Shutdown => {
                     connections.clear();
                     break;
-                }
+                },
             },
             Err(std::sync::mpsc::RecvTimeoutError::Timeout) => continue,
             Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => break,
@@ -292,13 +298,12 @@ fn open_device_internal(
     connections: &mut HashMap<String, impl std::any::Any>,
     message_tx: broadcast::Sender<MidiInputMessage>,
 ) -> Result<(), String> {
-    use midir::{MidiInput, Ignore};
+    use midir::{Ignore, MidiInput};
 
     // This is a bit of a hack - we need to create a new HashMap entry
     // but the generic constraint makes it tricky. Let's just cast.
-    let connections: &mut HashMap<String, ConnectionInfo> = unsafe {
-        &mut *(connections as *mut _ as *mut HashMap<String, ConnectionInfo>)
-    };
+    let connections: &mut HashMap<String, ConnectionInfo> =
+        unsafe { &mut *(connections as *mut _ as *mut HashMap<String, ConnectionInfo>) };
 
     if connections.contains_key(device_id) {
         return Err(format!("Device already open: {}", device_id));
@@ -313,11 +318,10 @@ fn open_device_internal(
         .and_then(|s| s.parse().ok())
         .ok_or_else(|| format!("Invalid device ID: {}", device_id))?;
 
-    let port = ports.get(port_idx)
-        .ok_or_else(|| format!("Device not found: {}", device_id))?;
+    let port = ports.get(port_idx).ok_or_else(|| format!("Device not found: {}", device_id))?;
 
-    let device_name = midi_in.port_name(port)
-        .map_err(|e| format!("Failed to get port name: {}", e))?;
+    let device_name =
+        midi_in.port_name(port).map_err(|e| format!("Failed to get port name: {}", e))?;
 
     let device_id_clone = device_id.to_string();
     let messages_received = Arc::new(AtomicU64::new(0));
@@ -328,19 +332,21 @@ fn open_device_internal(
     let mut midi_in_configured = midi_in;
     midi_in_configured.ignore(Ignore::None);
 
-    let _connection = midi_in_configured.connect(
-        port,
-        "midi-input",
-        move |timestamp_us, message, _| {
-            msg_count.fetch_add(1, Ordering::Relaxed);
-            last_time.store(timestamp_us, Ordering::Relaxed);
+    let _connection = midi_in_configured
+        .connect(
+            port,
+            "midi-input",
+            move |timestamp_us, message, _| {
+                msg_count.fetch_add(1, Ordering::Relaxed);
+                last_time.store(timestamp_us, Ordering::Relaxed);
 
-            if let Some(input_msg) = parse_midi_input(&device_id_clone, timestamp_us, message) {
-                let _ = message_tx.send(input_msg);
-            }
-        },
-        (),
-    ).map_err(|e| format!("Failed to connect: {}", e))?;
+                if let Some(input_msg) = parse_midi_input(&device_id_clone, timestamp_us, message) {
+                    let _ = message_tx.send(input_msg);
+                }
+            },
+            (),
+        )
+        .map_err(|e| format!("Failed to connect: {}", e))?;
 
     struct ConnectionInfo {
         _connection: midir::MidiInputConnection<()>,
@@ -357,7 +363,11 @@ fn open_device_internal(
 }
 
 /// Parse incoming MIDI message
-fn parse_midi_input(device_id: &str, timestamp_us: u64, message: &[u8]) -> Option<MidiInputMessage> {
+fn parse_midi_input(
+    device_id: &str,
+    timestamp_us: u64,
+    message: &[u8],
+) -> Option<MidiInputMessage> {
     if message.is_empty() {
         return None;
     }
@@ -389,7 +399,7 @@ fn parse_midi_message(message: &[u8]) -> (u8, MidiInputMessageType) {
         0xFC => return (0, MidiInputMessageType::Stop),
         0xFE => return (0, MidiInputMessageType::ActiveSensing),
         0xF0 => return (0, MidiInputMessageType::SysEx { data: message.to_vec() }),
-        _ => {}
+        _ => {},
     }
 
     let channel = status & 0x0F;
@@ -402,26 +412,22 @@ fn parse_midi_message(message: &[u8]) -> (u8, MidiInputMessageType) {
             } else {
                 MidiInputMessageType::NoteOn { note: message[1], velocity: message[2] }
             }
-        }
+        },
         0x80 if message.len() >= 3 => {
             MidiInputMessageType::NoteOff { note: message[1], velocity: message[2] }
-        }
+        },
         0xB0 if message.len() >= 3 => {
             MidiInputMessageType::ControlChange { controller: message[1], value: message[2] }
-        }
-        0xC0 if message.len() >= 2 => {
-            MidiInputMessageType::ProgramChange { program: message[1] }
-        }
+        },
+        0xC0 if message.len() >= 2 => MidiInputMessageType::ProgramChange { program: message[1] },
         0xE0 if message.len() >= 3 => {
             let value = ((message[2] as i16) << 7) | (message[1] as i16);
             MidiInputMessageType::PitchBend { value: value - 8192 }
-        }
-        0xD0 if message.len() >= 2 => {
-            MidiInputMessageType::Aftertouch { pressure: message[1] }
-        }
+        },
+        0xD0 if message.len() >= 2 => MidiInputMessageType::Aftertouch { pressure: message[1] },
         0xA0 if message.len() >= 3 => {
             MidiInputMessageType::PolyAftertouch { note: message[1], pressure: message[2] }
-        }
+        },
         _ => MidiInputMessageType::Unknown { status },
     };
 
@@ -432,21 +438,37 @@ fn parse_midi_message(message: &[u8]) -> (u8, MidiInputMessageType) {
 fn parse_manufacturer(name: &str) -> Option<String> {
     let lower = name.to_lowercase();
 
-    if lower.contains("akai") { Some("Akai".into()) }
-    else if lower.contains("steinberg") { Some("Steinberg".into()) }
-    else if lower.contains("roland") { Some("Roland".into()) }
-    else if lower.contains("yamaha") { Some("Yamaha".into()) }
-    else if lower.contains("korg") { Some("Korg".into()) }
-    else if lower.contains("moog") { Some("Moog".into()) }
-    else if lower.contains("arturia") { Some("Arturia".into()) }
-    else if lower.contains("native instruments") { Some("Native Instruments".into()) }
-    else if lower.contains("novation") { Some("Novation".into()) }
-    else if lower.contains("m-audio") { Some("M-Audio".into()) }
-    else if lower.contains("focusrite") { Some("Focusrite".into()) }
-    else if lower.contains("behringer") { Some("Behringer".into()) }
-    else if lower.contains("elektron") { Some("Elektron".into()) }
-    else if lower.contains("emu") || lower.contains("e-mu") { Some("E-mu".into()) }
-    else { None }
+    if lower.contains("akai") {
+        Some("Akai".into())
+    } else if lower.contains("steinberg") {
+        Some("Steinberg".into())
+    } else if lower.contains("roland") {
+        Some("Roland".into())
+    } else if lower.contains("yamaha") {
+        Some("Yamaha".into())
+    } else if lower.contains("korg") {
+        Some("Korg".into())
+    } else if lower.contains("moog") {
+        Some("Moog".into())
+    } else if lower.contains("arturia") {
+        Some("Arturia".into())
+    } else if lower.contains("native instruments") {
+        Some("Native Instruments".into())
+    } else if lower.contains("novation") {
+        Some("Novation".into())
+    } else if lower.contains("m-audio") {
+        Some("M-Audio".into())
+    } else if lower.contains("focusrite") {
+        Some("Focusrite".into())
+    } else if lower.contains("behringer") {
+        Some("Behringer".into())
+    } else if lower.contains("elektron") {
+        Some("Elektron".into())
+    } else if lower.contains("emu") || lower.contains("e-mu") {
+        Some("E-mu".into())
+    } else {
+        None
+    }
 }
 
 // =============================================================================
@@ -512,10 +534,12 @@ pub async fn subscribe_midi_input(
             let event_name = match &msg.message_type {
                 MidiInputMessageType::NoteOn { .. } | MidiInputMessageType::NoteOff { .. } => {
                     "midi_input_note"
-                }
+                },
                 MidiInputMessageType::ControlChange { .. } => "midi_input_cc",
-                MidiInputMessageType::Clock | MidiInputMessageType::Start |
-                MidiInputMessageType::Continue | MidiInputMessageType::Stop => "midi_input_clock",
+                MidiInputMessageType::Clock
+                | MidiInputMessageType::Start
+                | MidiInputMessageType::Continue
+                | MidiInputMessageType::Stop => "midi_input_clock",
                 _ => "midi_input_message",
             };
 
@@ -536,7 +560,10 @@ mod tests {
     fn test_parse_note_on() {
         let (channel, msg) = parse_midi_message(&[0x90, 60, 100]);
         assert_eq!(channel, 0);
-        assert!(matches!(msg, MidiInputMessageType::NoteOn { note: 60, velocity: 100 }));
+        assert!(matches!(
+            msg,
+            MidiInputMessageType::NoteOn { note: 60, velocity: 100 }
+        ));
     }
 
     #[test]
@@ -549,6 +576,9 @@ mod tests {
     #[test]
     fn test_parse_manufacturer() {
         assert_eq!(parse_manufacturer("AKAI FORCE"), Some("Akai".into()));
-        assert_eq!(parse_manufacturer("Steinberg UR22"), Some("Steinberg".into()));
+        assert_eq!(
+            parse_manufacturer("Steinberg UR22"),
+            Some("Steinberg".into())
+        );
     }
 }

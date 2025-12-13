@@ -58,7 +58,7 @@ impl TrimStats {
         let skipped = self.files_skipped.load(Ordering::Relaxed);
         let errors = self.files_error.load(Ordering::Relaxed);
 
-        if processed % 1000 == 0 {
+        if processed.is_multiple_of(1000) {
             eprintln!(
                 "Progress: {}/{} files ({:.1}%) | Trimmed: {} | Skipped: {} | Errors: {}",
                 processed,
@@ -150,8 +150,7 @@ fn trim_midi_file(smf: &mut Smf, trim_ticks: u32) {
             let new_delta = new_tick.saturating_sub(last_output_tick);
 
             // Create new event with adjusted delta
-            let new_event =
-                TrackEvent { delta: midly::num::u28::new(new_delta), kind: event.kind.clone() };
+            let new_event = TrackEvent { delta: midly::num::u28::new(new_delta), kind: event.kind };
 
             trimmed_events.push(new_event);
             last_output_tick = new_tick;

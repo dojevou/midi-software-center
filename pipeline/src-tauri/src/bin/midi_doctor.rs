@@ -92,7 +92,7 @@ fn attempt_repair(data: &[u8]) -> Result<(Vec<u8>, String), String> {
                     if track_end <= repaired.len() {
                         // Check if track ends with End-of-Track (FF 2F 00)
                         let has_eot = if track_end >= 3 {
-                            &repaired[track_end - 3..track_end] == &[0xFF, 0x2F, 0x00]
+                            repaired[track_end - 3..track_end] == [0xFF, 0x2F, 0x00]
                         } else {
                             false
                         };
@@ -240,7 +240,7 @@ fn main() {
     }
 
     let scan_dir = &args[1];
-    let repair_dir = if args.len() > 2 && !args[2].parse::<usize>().is_ok() {
+    let repair_dir = if args.len() > 2 && args[2].parse::<usize>().is_err() {
         Some(args[2].as_str())
     } else {
         None

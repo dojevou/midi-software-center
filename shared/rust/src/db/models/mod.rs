@@ -83,9 +83,7 @@ pub use error::{DbError, DbResult, ErrorContext, OptionExt};
 // VIP3 Filtering Models - Timbre
 // ============================================================================
 
-pub use timbre::{
-    CreateTimbre, FileTimbre, Timbre, TimbreWithCount, UpdateTimbre, SYSTEM_TIMBRES,
-};
+pub use timbre::{CreateTimbre, FileTimbre, Timbre, TimbreWithCount, UpdateTimbre, SYSTEM_TIMBRES};
 
 // ============================================================================
 // VIP3 Filtering Models - Style
@@ -112,9 +110,7 @@ pub use bpm_range::{bpm_to_range_index, BpmRange, BpmRangeWithCount, SYSTEM_BPM_
 // VIP3 Filtering Models - Musical Key
 // ============================================================================
 
-pub use musical_key::{
-    parse_key_string, MusicalKey, MusicalKeyWithCount, SYSTEM_MUSICAL_KEYS,
-};
+pub use musical_key::{parse_key_string, MusicalKey, MusicalKeyWithCount, SYSTEM_MUSICAL_KEYS};
 
 // ============================================================================
 // Collection Models

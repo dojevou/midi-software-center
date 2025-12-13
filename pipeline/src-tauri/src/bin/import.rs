@@ -100,7 +100,7 @@ async fn main() -> Result<()> {
                 match import_file(&pool, &file_path).await {
                     Ok(_) => {
                         let current = progress.fetch_add(1, Ordering::SeqCst) + 1;
-                        if current % 100 == 0 || current == total {
+                        if current.is_multiple_of(100) || current == total {
                             println!("  Progress: {}/{} files", current, total);
                         }
                     },

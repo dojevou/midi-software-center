@@ -13,9 +13,9 @@ use tracing::info;
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 // Import from lib
-use midi_pipeline::{AppState, Database};
-use midi_pipeline::commands::health::HealthState;
 use midi_library_shared::health::HealthChecker;
+use midi_pipeline::commands::health::HealthState;
+use midi_pipeline::{AppState, Database};
 
 // Window management module
 mod windows;
@@ -60,8 +60,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let state = AppState { database };
 
     // Create health checker
-    let meilisearch_url = std::env::var("MEILISEARCH_URL")
-        .unwrap_or_else(|_| "http://localhost:7700".to_string());
+    let meilisearch_url =
+        std::env::var("MEILISEARCH_URL").unwrap_or_else(|_| "http://localhost:7700".to_string());
     let meilisearch_key = std::env::var("MEILISEARCH_KEY").ok();
 
     let health_checker = HealthChecker::new()

@@ -12,7 +12,7 @@ use super::messages::MidiClockMessage;
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Default, Serialize, Deserialize)]
 pub enum SyncMode {
     #[default]
-    Internal,     // We are the master
+    Internal, // We are the master
     External,     // Sync to external MIDI clock
     MidiTimecode, // Sync to MTC
 }
@@ -36,10 +36,7 @@ struct BpmDetector {
 
 impl BpmDetector {
     fn new(max_samples: usize) -> Self {
-        Self {
-            tick_times: Vec::with_capacity(max_samples),
-            max_samples,
-        }
+        Self { tick_times: Vec::with_capacity(max_samples), max_samples }
     }
 
     fn add_tick(&mut self, time: Instant) {
@@ -66,7 +63,7 @@ impl BpmDetector {
         let bpm = 60.0 / (avg_tick_interval * PPQN as f64);
 
         // Sanity check
-        if bpm >= 20.0 && bpm <= 300.0 {
+        if (20.0..=300.0).contains(&bpm) {
             Some(bpm)
         } else {
             None
@@ -145,20 +142,20 @@ impl SyncManager {
         match message {
             MidiClockMessage::TimingClock => {
                 self.handle_external_tick().await;
-            }
+            },
             MidiClockMessage::Start => {
                 info!("External clock start received");
                 self.clock.start().await;
-            }
+            },
             MidiClockMessage::Continue => {
                 info!("External clock continue received");
                 self.clock.continue_playback().await;
-            }
+            },
             MidiClockMessage::Stop => {
                 info!("External clock stop received");
                 self.clock.stop().await;
-            }
-            _ => {}
+            },
+            _ => {},
         }
     }
 
@@ -193,9 +190,7 @@ impl SyncManager {
     }
 
     /// Send MIDI clock output (when we are master)
-    pub async fn get_clock_output(
-        &self,
-    ) -> Option<tokio::sync::broadcast::Receiver<ClockTick>> {
+    pub async fn get_clock_output(&self) -> Option<tokio::sync::broadcast::Receiver<ClockTick>> {
         let mode = *self.mode.read().await;
         if mode == SyncMode::Internal {
             Some(self.clock.subscribe())
@@ -239,17 +234,17 @@ impl SyncManager {
                                 s.last_sync = Some(now);
                                 s.is_locked = bpm_diff < 1.0;
                             }
-                        }
+                        },
                         MidiClockMessage::Start => {
                             clock.start().await;
-                        }
+                        },
                         MidiClockMessage::Continue => {
                             clock.continue_playback().await;
-                        }
+                        },
                         MidiClockMessage::Stop => {
                             clock.stop().await;
-                        }
-                        _ => {}
+                        },
+                        _ => {},
                     }
                 }
             });

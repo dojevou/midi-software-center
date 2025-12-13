@@ -24,7 +24,7 @@ pub struct GearProfile {
     pub manufacturer: Option<String>,
     pub model: Option<String>,
     pub device_type: String, // "synth", "drum_machine", "sampler", "controller", "effect", "other"
-    pub midi_in_channels: u8,  // 1-16
+    pub midi_in_channels: u8, // 1-16
     pub midi_out_channels: u8, // 1-16
     pub supports_sysex: bool,
     pub supports_nrpn: bool,
@@ -81,7 +81,7 @@ pub struct GearCCMapping {
     pub min_value: u8,
     pub max_value: u8,
     pub default_value: Option<u8>,
-    pub is_continuous: bool, // vs. switch/toggle
+    pub is_continuous: bool,                       // vs. switch/toggle
     pub value_labels: Option<HashMap<u8, String>>, // For discrete values
 }
 
@@ -141,7 +141,7 @@ impl Default for GearProgram {
 // =============================================================================
 
 /// User's instance of a gear profile with custom settings
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct UserGear {
     pub id: u64,
     pub profile_id: u64,
@@ -154,24 +154,6 @@ pub struct UserGear {
     pub notes: Option<String>,
     pub last_used: Option<String>,
     pub custom_cc_overrides: Option<Vec<GearCCMapping>>,
-}
-
-impl Default for UserGear {
-    fn default() -> Self {
-        Self {
-            id: 0,
-            profile_id: 0,
-            custom_name: None,
-            midi_port_in: None,
-            midi_port_out: None,
-            midi_channel: None,
-            color: None,
-            is_favorite: false,
-            notes: None,
-            last_used: None,
-            custom_cc_overrides: None,
-        }
-    }
 }
 
 // =============================================================================
@@ -300,7 +282,10 @@ impl Default for GearState {
                 max_value: 127,
                 default_value: Some(0),
                 is_continuous: false,
-                value_labels: Some(HashMap::from([(0, "Off".to_string()), (127, "On".to_string())])),
+                value_labels: Some(HashMap::from([
+                    (0, "Off".to_string()),
+                    (127, "On".to_string()),
+                ])),
             },
             GearCCMapping {
                 id: 6,
@@ -359,11 +344,7 @@ pub async fn gear_profiles_list_by_type(
     device_type: String,
 ) -> Result<Vec<GearProfile>, String> {
     let profiles = state.profiles.lock().unwrap();
-    Ok(profiles
-        .iter()
-        .filter(|p| p.device_type == device_type)
-        .cloned()
-        .collect())
+    Ok(profiles.iter().filter(|p| p.device_type == device_type).cloned().collect())
 }
 
 /// Get a profile by ID
@@ -548,11 +529,7 @@ pub async fn gear_cc_list(
     profile_id: u64,
 ) -> Result<Vec<GearCCMapping>, String> {
     let cc_mappings = state.cc_mappings.lock().unwrap();
-    Ok(cc_mappings
-        .iter()
-        .filter(|m| m.profile_id == profile_id)
-        .cloned()
-        .collect())
+    Ok(cc_mappings.iter().filter(|m| m.profile_id == profile_id).cloned().collect())
 }
 
 /// Get a CC mapping by ID
@@ -608,10 +585,7 @@ pub async fn gear_cc_create(
         .iter()
         .any(|m| m.profile_id == profile_id && m.cc_number == cc_number)
     {
-        return Err(format!(
-            "CC {} already mapped for this profile",
-            cc_number
-        ));
+        return Err(format!("CC {} already mapped for this profile", cc_number));
     }
 
     let mapping = GearCCMapping {
@@ -691,11 +665,7 @@ pub async fn gear_programs_list(
     profile_id: u64,
 ) -> Result<Vec<GearProgram>, String> {
     let programs = state.programs.lock().unwrap();
-    Ok(programs
-        .iter()
-        .filter(|p| p.profile_id == profile_id)
-        .cloned()
-        .collect())
+    Ok(programs.iter().filter(|p| p.profile_id == profile_id).cloned().collect())
 }
 
 /// List programs by bank
@@ -834,7 +804,9 @@ pub async fn user_gear_list(state: State<'_, GearState>) -> Result<Vec<UserGear>
 
 /// List user's favorite gear
 #[command]
-pub async fn user_gear_list_favorites(state: State<'_, GearState>) -> Result<Vec<UserGear>, String> {
+pub async fn user_gear_list_favorites(
+    state: State<'_, GearState>,
+) -> Result<Vec<UserGear>, String> {
     let user_gear = state.user_gear.lock().unwrap();
     Ok(user_gear.iter().filter(|g| g.is_favorite).cloned().collect())
 }
@@ -1330,7 +1302,10 @@ mod tests {
             .collect();
 
         assert_eq!(results.len(), 1);
-        assert_eq!(results[0].manufacturer, Some("Akai Professional".to_string()));
+        assert_eq!(
+            results[0].manufacturer,
+            Some("Akai Professional".to_string())
+        );
     }
 
     // -------------------------------------------------------------------------

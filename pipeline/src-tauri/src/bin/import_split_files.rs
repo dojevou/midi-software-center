@@ -1,4 +1,3 @@
-use blake3;
 use clap::Parser;
 use dashmap::DashMap;
 use midly::{Smf, Timing};
@@ -336,7 +335,7 @@ async fn batch_insert_records(
             println!(
                 "  Batch {}/{} | Inserted: {} | Elapsed: {:.1}s",
                 batch_num + 1,
-                (records.len() + batch_size - 1) / batch_size,
+                records.len().div_ceil(batch_size),
                 stats.inserted.load(Ordering::Relaxed),
                 start.elapsed().as_secs_f64()
             );

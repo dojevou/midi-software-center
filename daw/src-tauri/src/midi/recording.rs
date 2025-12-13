@@ -67,7 +67,7 @@ impl QuantizeValue {
                 } else {
                     tick - remainder
                 }
-            }
+            },
             None => tick,
         }
     }
@@ -98,7 +98,7 @@ impl PunchPoint {
     }
 
     /// Convert to absolute tick position
-    pub fn to_ticks(&self, ppq: u32, beats_per_bar: u32) -> u64 {
+    pub fn to_ticks(self, ppq: u32, beats_per_bar: u32) -> u64 {
         let ticks_per_bar = ppq as u64 * beats_per_bar as u64;
         let ticks_per_beat = ppq as u64;
 
@@ -268,13 +268,19 @@ impl MidiRecorder {
     /// Set punch-in point
     pub fn set_punch_in(&self, point: PunchPoint) {
         *self.punch_in.write() = Some(point);
-        info!("Punch-in set to {}:{}:{}", point.bar, point.beat, point.tick);
+        info!(
+            "Punch-in set to {}:{}:{}",
+            point.bar, point.beat, point.tick
+        );
     }
 
     /// Set punch-out point
     pub fn set_punch_out(&self, point: PunchPoint) {
         *self.punch_out.write() = Some(point);
-        info!("Punch-out set to {}:{}:{}", point.bar, point.beat, point.tick);
+        info!(
+            "Punch-out set to {}:{}:{}",
+            point.bar, point.beat, point.tick
+        );
     }
 
     /// Clear punch points
@@ -358,7 +364,10 @@ impl MidiRecorder {
         *self.state.write() = RecordingState::Stopped;
 
         if was_recording {
-            info!("Recording stopped, {} events captured", self.events.read().len());
+            info!(
+                "Recording stopped, {} events captured",
+                self.events.read().len()
+            );
         }
 
         self.get_events()
@@ -556,23 +565,13 @@ pub fn get_record_mode(state: State<MidiRecordingState>) -> RecordMode {
 
 /// Set punch-in point
 #[tauri::command]
-pub fn set_punch_in(
-    state: State<MidiRecordingState>,
-    bar: u32,
-    beat: u32,
-    tick: u32,
-) {
+pub fn set_punch_in(state: State<MidiRecordingState>, bar: u32, beat: u32, tick: u32) {
     state.0.set_punch_in(PunchPoint::new(bar, beat, tick));
 }
 
 /// Set punch-out point
 #[tauri::command]
-pub fn set_punch_out(
-    state: State<MidiRecordingState>,
-    bar: u32,
-    beat: u32,
-    tick: u32,
-) {
+pub fn set_punch_out(state: State<MidiRecordingState>, bar: u32, beat: u32, tick: u32) {
     state.0.set_punch_out(PunchPoint::new(bar, beat, tick));
 }
 
@@ -775,6 +774,6 @@ mod tests {
         assert_eq!(q.quantize(0, ppq), 0);
         assert_eq!(q.quantize(160, ppq), 160);
         assert_eq!(q.quantize(80, ppq), 160); // Past midpoint
-        assert_eq!(q.quantize(79, ppq), 0);   // Before midpoint
+        assert_eq!(q.quantize(79, ppq), 0); // Before midpoint
     }
 }

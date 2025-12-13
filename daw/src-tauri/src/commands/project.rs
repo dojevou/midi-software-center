@@ -251,10 +251,7 @@ pub async fn project_create(
     state: State<'_, AppState>,
     params: CreateProjectParams,
 ) -> Result<DawProject, String> {
-    let pool = state
-        .db_pool
-        .as_ref()
-        .ok_or_else(|| "Database not initialized".to_string())?;
+    let pool = state.db_pool.as_ref().ok_or_else(|| "Database not initialized".to_string())?;
 
     let row = sqlx::query(
         r#"
@@ -290,11 +287,11 @@ pub async fn project_create(
 
 /// Load a DAW project by ID
 #[tauri::command]
-pub async fn project_load(state: State<'_, AppState>, id: i64) -> Result<Option<DawProject>, String> {
-    let pool = state
-        .db_pool
-        .as_ref()
-        .ok_or_else(|| "Database not initialized".to_string())?;
+pub async fn project_load(
+    state: State<'_, AppState>,
+    id: i64,
+) -> Result<Option<DawProject>, String> {
+    let pool = state.db_pool.as_ref().ok_or_else(|| "Database not initialized".to_string())?;
 
     // Update last_opened_at and fetch project
     let row = sqlx::query(
@@ -319,18 +316,18 @@ pub async fn project_load(state: State<'_, AppState>, id: i64) -> Result<Option<
             let project = row_to_project(&r)?;
             info!("Loaded project: {} (ID: {})", project.name, project.id);
             Ok(Some(project))
-        }
+        },
         None => Ok(None),
     }
 }
 
 /// Get a project by ID without updating last_opened_at
 #[tauri::command]
-pub async fn project_get(state: State<'_, AppState>, id: i64) -> Result<Option<DawProject>, String> {
-    let pool = state
-        .db_pool
-        .as_ref()
-        .ok_or_else(|| "Database not initialized".to_string())?;
+pub async fn project_get(
+    state: State<'_, AppState>,
+    id: i64,
+) -> Result<Option<DawProject>, String> {
+    let pool = state.db_pool.as_ref().ok_or_else(|| "Database not initialized".to_string())?;
 
     let row = sqlx::query(
         r#"
@@ -361,10 +358,7 @@ pub async fn project_update(
     id: i64,
     params: UpdateProjectParams,
 ) -> Result<DawProject, String> {
-    let pool = state
-        .db_pool
-        .as_ref()
-        .ok_or_else(|| "Database not initialized".to_string())?;
+    let pool = state.db_pool.as_ref().ok_or_else(|| "Database not initialized".to_string())?;
 
     // Build dynamic UPDATE query
     let mut set_clauses = vec!["updated_at = NOW()".to_string()];
@@ -467,10 +461,7 @@ pub async fn project_update(
 /// Delete a DAW project
 #[tauri::command]
 pub async fn project_delete(state: State<'_, AppState>, id: i64) -> Result<bool, String> {
-    let pool = state
-        .db_pool
-        .as_ref()
-        .ok_or_else(|| "Database not initialized".to_string())?;
+    let pool = state.db_pool.as_ref().ok_or_else(|| "Database not initialized".to_string())?;
 
     let result = sqlx::query("DELETE FROM daw_projects WHERE id = $1")
         .bind(id)
@@ -493,10 +484,7 @@ pub async fn project_list(
     state: State<'_, AppState>,
     filters: ProjectFilters,
 ) -> Result<ProjectListResponse, String> {
-    let pool = state
-        .db_pool
-        .as_ref()
-        .ok_or_else(|| "Database not initialized".to_string())?;
+    let pool = state.db_pool.as_ref().ok_or_else(|| "Database not initialized".to_string())?;
 
     let limit = filters.limit.unwrap_or(50);
     let offset = filters.offset.unwrap_or(0);
@@ -508,14 +496,7 @@ pub async fn project_list(
     };
 
     // Validate sort column to prevent SQL injection
-    let valid_columns = [
-        "id",
-        "name",
-        "bpm",
-        "created_at",
-        "updated_at",
-        "last_opened_at",
-    ];
+    let valid_columns = ["id", "name", "bpm", "created_at", "updated_at", "last_opened_at"];
     let sort_column = if valid_columns.contains(&sort_by) {
         sort_by
     } else {
@@ -533,7 +514,10 @@ pub async fn project_list(
     };
 
     // Count total
-    let count_query = format!("SELECT COUNT(*) as count FROM daw_projects {}", where_clause);
+    let count_query = format!(
+        "SELECT COUNT(*) as count FROM daw_projects {}",
+        where_clause
+    );
     let count_row = if let Some(ref param) = search_param {
         sqlx::query(&count_query).bind(param).fetch_one(pool).await
     } else {
@@ -541,9 +525,8 @@ pub async fn project_list(
     }
     .map_err(|e| format!("Count query failed: {}", e))?;
 
-    let total_count: i64 = count_row
-        .try_get("count")
-        .map_err(|e| format!("Failed to get count: {}", e))?;
+    let total_count: i64 =
+        count_row.try_get("count").map_err(|e| format!("Failed to get count: {}", e))?;
 
     // Fetch projects
     let select_query = format!(
@@ -570,10 +553,7 @@ pub async fn project_list(
 
     let projects: Result<Vec<DawProject>, String> = rows.iter().map(row_to_project).collect();
 
-    Ok(ProjectListResponse {
-        projects: projects?,
-        total_count,
-    })
+    Ok(ProjectListResponse { projects: projects?, total_count })
 }
 
 /// Get recent projects (last opened)
@@ -582,10 +562,7 @@ pub async fn project_get_recent(
     state: State<'_, AppState>,
     limit: Option<i64>,
 ) -> Result<Vec<DawProject>, String> {
-    let pool = state
-        .db_pool
-        .as_ref()
-        .ok_or_else(|| "Database not initialized".to_string())?;
+    let pool = state.db_pool.as_ref().ok_or_else(|| "Database not initialized".to_string())?;
 
     let limit = limit.unwrap_or(10);
 
@@ -614,16 +591,10 @@ pub async fn project_get_recent(
 /// Helper function to convert a database row to DawProject
 fn row_to_project(row: &sqlx::postgres::PgRow) -> Result<DawProject, String> {
     Ok(DawProject {
-        id: row
-            .try_get("id")
-            .map_err(|e| format!("Failed to get id: {}", e))?,
-        name: row
-            .try_get("name")
-            .map_err(|e| format!("Failed to get name: {}", e))?,
+        id: row.try_get("id").map_err(|e| format!("Failed to get id: {}", e))?,
+        name: row.try_get("name").map_err(|e| format!("Failed to get name: {}", e))?,
         description: row.try_get("description").ok(),
-        bpm: row
-            .try_get("bpm")
-            .map_err(|e| format!("Failed to get bpm: {}", e))?,
+        bpm: row.try_get("bpm").map_err(|e| format!("Failed to get bpm: {}", e))?,
         time_signature_numerator: row
             .try_get("time_signature_numerator")
             .map_err(|e| format!("Failed to get time_signature_numerator: {}", e))?,
@@ -641,9 +612,7 @@ fn row_to_project(row: &sqlx::postgres::PgRow) -> Result<DawProject, String> {
             .map_err(|e| format!("Failed to get bit_depth: {}", e))?,
         file_path: row.try_get("file_path").ok(),
         file_size_bytes: row.try_get("file_size_bytes").ok(),
-        version: row
-            .try_get("version")
-            .map_err(|e| format!("Failed to get version: {}", e))?,
+        version: row.try_get("version").map_err(|e| format!("Failed to get version: {}", e))?,
         created_at: row
             .try_get("created_at")
             .map_err(|e| format!("Failed to get created_at: {}", e))?,
@@ -707,16 +676,9 @@ pub async fn project_save_tracks(
     project_id: i64,
     tracks: Vec<ProjectTrack>,
 ) -> Result<Vec<ProjectTrack>, String> {
-    let pool = state
-        .db_pool
-        .as_ref()
-        .ok_or_else(|| "Database not initialized".to_string())?;
+    let pool = state.db_pool.as_ref().ok_or_else(|| "Database not initialized".to_string())?;
 
-    info!(
-        "Saving {} tracks for project {}",
-        tracks.len(),
-        project_id
-    );
+    info!("Saving {} tracks for project {}", tracks.len(), project_id);
 
     let mut saved_tracks = Vec::new();
 
@@ -794,9 +756,8 @@ pub async fn project_save_tracks(
             .map_err(|e| format!("Failed to insert track: {}", e))?
         };
 
-        let track_id: i64 = track_row
-            .try_get("id")
-            .map_err(|e| format!("Failed to get track id: {}", e))?;
+        let track_id: i64 =
+            track_row.try_get("id").map_err(|e| format!("Failed to get track id: {}", e))?;
 
         // Delete existing clips for this track (we'll re-insert all clips)
         sqlx::query("DELETE FROM daw_clips WHERE track_id = $1")
@@ -833,21 +794,13 @@ pub async fn project_save_tracks(
             .await
             .map_err(|e| format!("Failed to insert clip: {}", e))?;
 
-            let clip_id: i64 = clip_row
-                .try_get("id")
-                .map_err(|e| format!("Failed to get clip id: {}", e))?;
+            let clip_id: i64 =
+                clip_row.try_get("id").map_err(|e| format!("Failed to get clip id: {}", e))?;
 
-            saved_clips.push(ProjectClip {
-                id: Some(clip_id),
-                ..clip.clone()
-            });
+            saved_clips.push(ProjectClip { id: Some(clip_id), ..clip.clone() });
         }
 
-        saved_tracks.push(ProjectTrack {
-            id: Some(track_id),
-            clips: saved_clips,
-            ..track
-        });
+        saved_tracks.push(ProjectTrack { id: Some(track_id), clips: saved_clips, ..track });
     }
 
     // Update project's last saved timestamp
@@ -872,10 +825,7 @@ pub async fn project_load_tracks(
     state: State<'_, AppState>,
     project_id: i64,
 ) -> Result<Vec<ProjectTrack>, String> {
-    let pool = state
-        .db_pool
-        .as_ref()
-        .ok_or_else(|| "Database not initialized".to_string())?;
+    let pool = state.db_pool.as_ref().ok_or_else(|| "Database not initialized".to_string())?;
 
     info!("Loading tracks for project {}", project_id);
 
@@ -898,9 +848,8 @@ pub async fn project_load_tracks(
     let mut tracks = Vec::new();
 
     for track_row in track_rows {
-        let track_id: i64 = track_row
-            .try_get("id")
-            .map_err(|e| format!("Failed to get track id: {}", e))?;
+        let track_id: i64 =
+            track_row.try_get("id").map_err(|e| format!("Failed to get track id: {}", e))?;
 
         // Load clips for this track
         let clip_rows = sqlx::query(
@@ -924,9 +873,7 @@ pub async fn project_load_tracks(
                 Ok(ProjectClip {
                     id: Some(row.try_get("id").map_err(|e| e.to_string())?),
                     name: row.try_get("name").map_err(|e| e.to_string())?,
-                    color: row
-                        .try_get("color")
-                        .unwrap_or_else(|_| "#3B82F6".to_string()),
+                    color: row.try_get("color").unwrap_or_else(|_| "#3B82F6".to_string()),
                     start_tick: row.try_get("start_tick").map_err(|e| e.to_string())?,
                     duration_ticks: row.try_get("duration_ticks").map_err(|e| e.to_string())?,
                     source_file_id: row.try_get("source_file_id").ok(),
@@ -945,9 +892,7 @@ pub async fn project_load_tracks(
 
         tracks.push(ProjectTrack {
             id: Some(track_id),
-            name: track_row
-                .try_get("name")
-                .map_err(|e| format!("Failed to get name: {}", e))?,
+            name: track_row.try_get("name").map_err(|e| format!("Failed to get name: {}", e))?,
             track_number: track_row
                 .try_get("track_number")
                 .map_err(|e| format!("Failed to get track_number: {}", e))?,
@@ -958,9 +903,7 @@ pub async fn project_load_tracks(
             is_armed: track_row.try_get("is_armed").unwrap_or(false),
             volume,
             pan,
-            color: track_row
-                .try_get("color")
-                .unwrap_or_else(|_| "#3B82F6".to_string()),
+            color: track_row.try_get("color").unwrap_or_else(|_| "#3B82F6".to_string()),
             height: track_row.try_get("height").unwrap_or(100),
             collapsed: track_row.try_get("collapsed").unwrap_or(false),
             source_file_id: track_row.try_get("source_file_id").ok(),
@@ -968,11 +911,7 @@ pub async fn project_load_tracks(
         });
     }
 
-    info!(
-        "Loaded {} tracks for project {}",
-        tracks.len(),
-        project_id
-    );
+    info!("Loaded {} tracks for project {}", tracks.len(), project_id);
 
     Ok(tracks)
 }
@@ -990,11 +929,8 @@ pub async fn project_load_full(
         Some(proj) => {
             // Then load tracks
             let tracks = project_load_tracks(state, id).await?;
-            Ok(Some(FullProjectData {
-                project: proj,
-                tracks,
-            }))
-        }
+            Ok(Some(FullProjectData { project: proj, tracks }))
+        },
         None => Ok(None),
     }
 }
@@ -1006,10 +942,7 @@ pub async fn project_delete_tracks(
     project_id: i64,
     track_ids: Vec<i64>,
 ) -> Result<i64, String> {
-    let pool = state
-        .db_pool
-        .as_ref()
-        .ok_or_else(|| "Database not initialized".to_string())?;
+    let pool = state.db_pool.as_ref().ok_or_else(|| "Database not initialized".to_string())?;
 
     info!(
         "Deleting {} tracks from project {}",
@@ -1095,10 +1028,7 @@ mod tests {
 
     #[test]
     fn test_project_list_response_serialization() {
-        let response = ProjectListResponse {
-            projects: vec![],
-            total_count: 0,
-        };
+        let response = ProjectListResponse { projects: vec![], total_count: 0 };
 
         let json = serde_json::to_string(&response).expect("Should serialize");
         assert!(json.contains("\"projects\":[]"));

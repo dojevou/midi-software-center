@@ -49,7 +49,10 @@ impl SavedSearchRepository {
         .await
         .map_err(DbError::from)?;
 
-        info!("Created saved search '{}' with id {}", saved_search.name, id);
+        info!(
+            "Created saved search '{}' with id {}",
+            saved_search.name, id
+        );
         Ok(id)
     }
 
@@ -185,9 +188,10 @@ impl SavedSearchRepository {
 
     /// Duplicate a saved search.
     pub async fn duplicate(&self, id: i64, new_name: &str) -> DbResult<i64> {
-        let original = self.find_by_id(id).await?.ok_or_else(|| {
-            DbError::NotFound(format!("Saved search {} not found", id))
-        })?;
+        let original = self
+            .find_by_id(id)
+            .await?
+            .ok_or_else(|| DbError::NotFound(format!("Saved search {} not found", id)))?;
 
         let new_id = self
             .create(CreateSavedSearch {

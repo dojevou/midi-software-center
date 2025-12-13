@@ -73,7 +73,7 @@ impl RenameWorker {
                 // Rename file with metadata
                 match Self::rename_file(&mut file_record, &db_pool).await {
                     Ok(_) => {
-                        if let Err(_) = output_queue.rename_to_export.push(file_record) {
+                        if output_queue.rename_to_export.push(file_record).is_err() {
                             debug!("Rename worker {}: export queue full", worker_id);
                             sleep(Duration::from_millis(10)).await;
                         }
@@ -125,7 +125,7 @@ impl RenameWorker {
         }
 
         // Trim trailing special characters
-        result.trim_end_matches(|c| c == '_' || c == '-' || c == '.').to_string()
+        result.trim_end_matches(['_', '-', '.']).to_string()
     }
 
     /// Calculate bar length from MIDI metadata

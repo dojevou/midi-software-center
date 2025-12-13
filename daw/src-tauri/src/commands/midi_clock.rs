@@ -91,10 +91,7 @@ pub async fn clock_set_time_signature(
         return Err("Denominator must be 2, 4, 8, or 16".to_string());
     }
 
-    state
-        .clock
-        .set_time_signature(TimeSignature::new(numerator, denominator))
-        .await;
+    state.clock.set_time_signature(TimeSignature::new(numerator, denominator)).await;
     Ok(())
 }
 
@@ -126,10 +123,7 @@ pub async fn set_position_bars(
     // Assuming 4/4 time signature for simplicity
     let midi_beats = (bar.saturating_sub(1) * 16) + (beat.saturating_sub(1) * 4);
 
-    state
-        .clock
-        .set_position(SongPosition::new(midi_beats as u16))
-        .await;
+    state.clock.set_position(SongPosition::new(midi_beats as u16)).await;
     Ok(())
 }
 
@@ -174,13 +168,7 @@ pub async fn clock_set_timecode(
         Some(other) => return Err(format!("Unknown frame rate: {}", other)),
     };
 
-    let timecode = MidiTimecode {
-        hours,
-        minutes,
-        seconds,
-        frames,
-        frame_rate: rate,
-    };
+    let timecode = MidiTimecode { hours, minutes, seconds, frames, frame_rate: rate };
 
     let millis = timecode.to_millis();
     let bpm = state.clock.get_bpm().await;
@@ -218,7 +206,9 @@ pub async fn clock_get_mtc_quarter_frames(
 
 /// Get song position pointer (SPP)
 #[command]
-pub async fn clock_get_song_position(state: State<'_, MidiClockState>) -> Result<SongPosition, String> {
+pub async fn clock_get_song_position(
+    state: State<'_, MidiClockState>,
+) -> Result<SongPosition, String> {
     let (bar, _beat, _tick) = state.clock.get_position_bbt().await;
     let time_sig = TimeSignature::default(); // 4/4
 

@@ -169,11 +169,12 @@ pub fn parse_key_string(key: &str) -> Option<(String, String)> {
         || key.to_lowercase().ends_with("minor");
 
     // Extract root note
-    let root = if key.len() >= 2 && (key.chars().nth(1) == Some('#') || key.chars().nth(1) == Some('b')) {
-        key[..2].to_string()
-    } else {
-        key.chars().next()?.to_string()
-    };
+    let root =
+        if key.len() >= 2 && (key.chars().nth(1) == Some('#') || key.chars().nth(1) == Some('b')) {
+            key[..2].to_string()
+        } else {
+            key.chars().next()?.to_string()
+        };
 
     let mode = if is_minor { "Minor" } else { "Major" };
     Some((root, mode.to_string()))
@@ -250,10 +251,22 @@ mod tests {
 
     #[test]
     fn test_parse_key_string() {
-        assert_eq!(parse_key_string("C"), Some(("C".to_string(), "Major".to_string())));
-        assert_eq!(parse_key_string("Am"), Some(("A".to_string(), "Minor".to_string())));
-        assert_eq!(parse_key_string("F#m"), Some(("F#".to_string(), "Minor".to_string())));
-        assert_eq!(parse_key_string("Bb"), Some(("Bb".to_string(), "Major".to_string())));
+        assert_eq!(
+            parse_key_string("C"),
+            Some(("C".to_string(), "Major".to_string()))
+        );
+        assert_eq!(
+            parse_key_string("Am"),
+            Some(("A".to_string(), "Minor".to_string()))
+        );
+        assert_eq!(
+            parse_key_string("F#m"),
+            Some(("F#".to_string(), "Minor".to_string()))
+        );
+        assert_eq!(
+            parse_key_string("Bb"),
+            Some(("Bb".to_string(), "Major".to_string()))
+        );
         assert_eq!(parse_key_string(""), None);
     }
 

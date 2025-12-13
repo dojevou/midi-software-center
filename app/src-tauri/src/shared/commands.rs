@@ -459,7 +459,10 @@ impl TauriCommands {
     /// Get commands grouped by category for documentation/debugging.
     pub fn commands_by_category() -> Vec<(&'static str, Vec<&'static str>)> {
         vec![
-            ("App Lifecycle", vec![Self::SHUTDOWN_APPLICATION, Self::HEALTH_CHECK]),
+            (
+                "App Lifecycle",
+                vec![Self::SHUTDOWN_APPLICATION, Self::HEALTH_CHECK],
+            ),
             (
                 "Pipeline - Files",
                 vec![

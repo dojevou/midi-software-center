@@ -1,19 +1,14 @@
 use serde::{Deserialize, Serialize};
 use std::time::Duration;
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase")]
 pub enum HealthStatus {
     Healthy,
     Degraded,
     Unhealthy,
+    #[default]
     Unknown,
-}
-
-impl Default for HealthStatus {
-    fn default() -> Self {
-        Self::Unknown
-    }
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -49,7 +44,11 @@ impl ServiceHealth {
         }
     }
 
-    pub fn degraded(name: impl Into<String>, latency: Duration, warning: impl Into<String>) -> Self {
+    pub fn degraded(
+        name: impl Into<String>,
+        latency: Duration,
+        warning: impl Into<String>,
+    ) -> Self {
         Self {
             name: name.into(),
             status: HealthStatus::Degraded,
@@ -95,7 +94,7 @@ impl SystemHealth {
             match service.status {
                 HealthStatus::Unhealthy => return HealthStatus::Unhealthy,
                 HealthStatus::Degraded => has_degraded = true,
-                _ => {}
+                _ => {},
             }
         }
 

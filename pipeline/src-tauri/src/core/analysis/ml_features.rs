@@ -15,14 +15,14 @@
 ///
 /// This module provides feature extraction and heuristic-based classification.
 /// When an ONNX model is available, it can be loaded via the `tract-onnx` crate.
-
 use midi_library_shared::core::midi::types::{Event, MidiFile};
 
 /// Feature vector size expected by ONNX model
 pub const MODEL_INPUT_SIZE: usize = 128;
 
 /// Genre labels matching Python tag_manager
-pub const GENRE_LABELS: [&str; 7] = ["pop", "rock", "jazz", "classical", "hiphop", "edm", "ambient"];
+pub const GENRE_LABELS: [&str; 7] =
+    ["pop", "rock", "jazz", "classical", "hiphop", "edm", "ambient"];
 
 /// Mood labels matching Python tag_manager
 pub const MOOD_LABELS: [&str; 6] = ["happy", "calm", "energetic", "dark", "sad", "bright"];
@@ -68,10 +68,10 @@ impl MidiFeatures {
         }
 
         // Features 12-15: normalized auxiliary features
-        feats[12] = self.bpm / 300.0;                         // BPM normalized
-        feats[13] = (self.density / 50.0).min(1.0);           // Density capped
-        feats[14] = (self.length_s / 600.0).min(1.0);         // Length capped
-        feats[15] = self.drum_ratio;                          // Drum ratio
+        feats[12] = self.bpm / 300.0; // BPM normalized
+        feats[13] = (self.density / 50.0).min(1.0); // Density capped
+        feats[14] = (self.length_s / 600.0).min(1.0); // Length capped
+        feats[15] = self.drum_ratio; // Drum ratio
 
         // Features 16-127: zero padding
         // (already initialized to 0)
@@ -197,9 +197,9 @@ impl HeuristicClassifier {
 
         if drum_ratio >= 0.8 {
             // Very drum-heavy: likely EDM or Hip-Hop
-            if bpm >= 125.0 && bpm <= 145.0 {
+            if (125.0..=145.0).contains(&bpm) {
                 return ("edm".to_string(), 0.75);
-            } else if bpm >= 85.0 && bpm <= 100.0 {
+            } else if (85.0..=100.0).contains(&bpm) {
                 return ("hiphop".to_string(), 0.70);
             }
         }
@@ -212,7 +212,7 @@ impl HeuristicClassifier {
             } else {
                 return ("classical".to_string(), 0.65);
             }
-        } else if bpm >= 70.0 && bpm <= 100.0 {
+        } else if (70.0..=100.0).contains(&bpm) {
             // Medium-slow: jazz, pop ballad, hip-hop
             if drum_ratio >= 0.5 {
                 return ("hiphop".to_string(), 0.70);
@@ -221,19 +221,19 @@ impl HeuristicClassifier {
             } else {
                 return ("pop".to_string(), 0.60);
             }
-        } else if bpm >= 100.0 && bpm <= 125.0 {
+        } else if (100.0..=125.0).contains(&bpm) {
             // Medium: pop, rock, jazz
             if density > 8.0 {
                 return ("rock".to_string(), 0.65);
-            } else if drum_ratio >= 0.3 && drum_ratio < 0.8 {
+            } else if (0.3..0.8).contains(&drum_ratio) {
                 return ("pop".to_string(), 0.65);
             } else {
                 return ("jazz".to_string(), 0.60);
             }
-        } else if bpm >= 125.0 && bpm <= 145.0 {
+        } else if (125.0..=145.0).contains(&bpm) {
             // Dance tempo: EDM, house
             return ("edm".to_string(), 0.75);
-        } else if bpm >= 145.0 && bpm <= 180.0 {
+        } else if (145.0..=180.0).contains(&bpm) {
             // Fast: rock, drum & bass
             return ("rock".to_string(), 0.70);
         } else if bpm > 180.0 {
@@ -254,8 +254,8 @@ impl HeuristicClassifier {
         // Determine major/minor tendency from pitch class histogram
         // Major keys emphasize pitch classes 0, 4, 7 (C, E, G for C major)
         // Minor keys emphasize pitch classes 0, 3, 7 (C, Eb, G for C minor)
-        let major_score = pcs[0] + pcs[4] + pcs[7];  // Root, major 3rd, 5th
-        let minor_score = pcs[0] + pcs[3] + pcs[7];  // Root, minor 3rd, 5th
+        let major_score = pcs[0] + pcs[4] + pcs[7]; // Root, major 3rd, 5th
+        let minor_score = pcs[0] + pcs[3] + pcs[7]; // Root, minor 3rd, 5th
         let is_minor_leaning = minor_score > major_score * 1.1;
 
         // Heuristic mood classification
@@ -265,7 +265,7 @@ impl HeuristicClassifier {
             } else {
                 return ("calm".to_string(), 0.70);
             }
-        } else if bpm >= 80.0 && bpm <= 110.0 {
+        } else if (80.0..=110.0).contains(&bpm) {
             if is_minor_leaning {
                 return ("dark".to_string(), 0.65);
             } else if density > 5.0 {
@@ -273,7 +273,7 @@ impl HeuristicClassifier {
             } else {
                 return ("calm".to_string(), 0.60);
             }
-        } else if bpm >= 110.0 && bpm <= 135.0 {
+        } else if (110.0..=135.0).contains(&bpm) {
             if is_minor_leaning {
                 return ("dark".to_string(), 0.65);
             } else {
@@ -308,7 +308,8 @@ impl HeuristicClassifier {
         }
 
         // Key names (assuming major for simplicity)
-        const KEY_NAMES: [&str; 12] = ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
+        const KEY_NAMES: [&str; 12] =
+            ["C", "C#", "D", "Eb", "E", "F", "F#", "G", "Ab", "A", "Bb", "B"];
 
         // Check if minor by comparing major 3rd vs minor 3rd
         let major_third_idx = (max_idx + 4) % 12;
@@ -374,7 +375,10 @@ impl MlTagger {
     }
 
     /// Get feature vector for ONNX model (128 dimensions)
-    pub fn get_feature_vector(midi_file: &MidiFile, detected_bpm: Option<f64>) -> [f32; MODEL_INPUT_SIZE] {
+    pub fn get_feature_vector(
+        midi_file: &MidiFile,
+        detected_bpm: Option<f64>,
+    ) -> [f32; MODEL_INPUT_SIZE] {
         let features = MidiFeatures::from_midi_file(midi_file, detected_bpm);
         features.to_feature_vector()
     }
@@ -461,9 +465,9 @@ mod tests {
     fn test_key_detection_major() {
         let mut features = MidiFeatures::default();
         // Simulate C major: heavy emphasis on C (0), E (4), G (7)
-        features.pitch_class_histogram[0] = 0.4;  // C
-        features.pitch_class_histogram[4] = 0.3;  // E (major 3rd)
-        features.pitch_class_histogram[7] = 0.2;  // G
+        features.pitch_class_histogram[0] = 0.4; // C
+        features.pitch_class_histogram[4] = 0.3; // E (major 3rd)
+        features.pitch_class_histogram[7] = 0.2; // G
 
         let key = HeuristicClassifier::detect_key(&features);
         assert!(key.contains("C"));
@@ -474,9 +478,9 @@ mod tests {
     fn test_key_detection_minor() {
         let mut features = MidiFeatures::default();
         // Simulate A minor: heavy emphasis on A (9), C (0), E (4)
-        features.pitch_class_histogram[9] = 0.4;  // A
-        features.pitch_class_histogram[0] = 0.3;  // C (minor 3rd from A)
-        features.pitch_class_histogram[4] = 0.2;  // E
+        features.pitch_class_histogram[9] = 0.4; // A
+        features.pitch_class_histogram[0] = 0.3; // C (minor 3rd from A)
+        features.pitch_class_histogram[4] = 0.2; // E
 
         let key = HeuristicClassifier::detect_key(&features);
         assert!(key.contains("A"));
@@ -495,7 +499,11 @@ mod tests {
         // Should be EDM
         assert_eq!(classification.genre, "edm");
         // Mood should be happy or energetic at this tempo
-        assert!(classification.mood == "happy" || classification.mood == "energetic" || classification.mood == "bright");
+        assert!(
+            classification.mood == "happy"
+                || classification.mood == "energetic"
+                || classification.mood == "bright"
+        );
         // Should be drums since drum_ratio >= 0.5
         assert_eq!(classification.instrument, "drums");
     }

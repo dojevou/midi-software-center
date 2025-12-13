@@ -9,9 +9,7 @@ use sqlx::PgPool;
 use tracing::info;
 
 #[cfg(feature = "database")]
-use crate::db::models::{
-    CreateStyle, DbError, DbResult, Style, StyleWithCount, UpdateStyle,
-};
+use crate::db::models::{CreateStyle, DbError, DbResult, Style, StyleWithCount, UpdateStyle};
 
 /// Repository for style operations.
 #[derive(Clone)]

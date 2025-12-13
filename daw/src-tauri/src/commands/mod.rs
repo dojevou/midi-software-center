@@ -53,4 +53,3 @@ pub async fn initialize_database(state: State<'_, AppState>) -> Result<(), Strin
         .map_err(|e| format!("Database test failed: {}", e))?;
     Ok(())
 }
-

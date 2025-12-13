@@ -70,7 +70,7 @@ pub struct MidiRoute {
     pub input_port_id: Option<u64>,
     pub input_channel: Option<u8>, // None = all channels
     pub output_port_id: Option<u64>,
-    pub output_channel: Option<u8>, // None = pass through
+    pub output_channel: Option<u8>,  // None = pass through
     pub filter_type: Option<String>, // "notes", "cc", "program", "all"
     pub transpose: i8,
     pub velocity_scale: u8,
@@ -135,22 +135,14 @@ pub async fn midi_io_list_ports(state: State<'_, MidiIOState>) -> Result<Vec<Mid
 #[command]
 pub async fn midi_io_list_inputs(state: State<'_, MidiIOState>) -> Result<Vec<MidiPort>, String> {
     let ports = state.ports.lock().unwrap();
-    Ok(ports
-        .values()
-        .filter(|p| p.direction == "input")
-        .cloned()
-        .collect())
+    Ok(ports.values().filter(|p| p.direction == "input").cloned().collect())
 }
 
 /// List output ports only
 #[command]
 pub async fn midi_io_list_outputs(state: State<'_, MidiIOState>) -> Result<Vec<MidiPort>, String> {
     let ports = state.ports.lock().unwrap();
-    Ok(ports
-        .values()
-        .filter(|p| p.direction == "output")
-        .cloned()
-        .collect())
+    Ok(ports.values().filter(|p| p.direction == "output").cloned().collect())
 }
 
 /// Get a specific port by ID
@@ -160,10 +152,7 @@ pub async fn midi_io_get_port(
     port_id: u64,
 ) -> Result<MidiPort, String> {
     let ports = state.ports.lock().unwrap();
-    ports
-        .get(&port_id)
-        .cloned()
-        .ok_or_else(|| "Port not found".to_string())
+    ports.get(&port_id).cloned().ok_or_else(|| "Port not found".to_string())
 }
 
 /// Register a new MIDI port (called when system discovers ports)
@@ -274,10 +263,7 @@ pub async fn midi_io_remove_port(
     port_id: u64,
 ) -> Result<(), String> {
     let mut ports = state.ports.lock().unwrap();
-    ports
-        .remove(&port_id)
-        .map(|_| ())
-        .ok_or_else(|| "Port not found".to_string())
+    ports.remove(&port_id).map(|_| ()).ok_or_else(|| "Port not found".to_string())
 }
 
 // =============================================================================
@@ -304,12 +290,7 @@ pub async fn midi_io_create_port_group(
     let mut groups = state.port_groups.lock().unwrap();
     let mut next_id = state.next_group_id.lock().unwrap();
 
-    let group = MidiPortGroup {
-        id: *next_id,
-        name,
-        icon,
-        ports: port_ids,
-    };
+    let group = MidiPortGroup { id: *next_id, name, icon, ports: port_ids };
 
     groups.insert(group.id, group.clone());
     *next_id += 1;
@@ -375,10 +356,7 @@ pub async fn midi_io_get_route(
     route_id: u64,
 ) -> Result<MidiRoute, String> {
     let routes = state.routes.lock().unwrap();
-    routes
-        .get(&route_id)
-        .cloned()
-        .ok_or_else(|| "Route not found".to_string())
+    routes.get(&route_id).cloned().ok_or_else(|| "Route not found".to_string())
 }
 
 /// Create a new MIDI route
@@ -549,10 +527,7 @@ pub async fn midi_io_get_stats(
     let routes = state.routes.lock().unwrap();
 
     let mut stats = HashMap::new();
-    stats.insert(
-        "total_ports".to_string(),
-        ports.len(),
-    );
+    stats.insert("total_ports".to_string(), ports.len());
     stats.insert(
         "input_ports".to_string(),
         ports.values().filter(|p| p.direction == "input").count(),

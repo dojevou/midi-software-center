@@ -64,16 +64,13 @@ pub struct Vip3Filters {
 /// Sort configuration for VIP3 browser
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct Vip3Sort {
-    pub field: String,  // "filename", "bpm", "duration", "rating", "created_at"
-    pub order: String,  // "asc" or "desc"
+    pub field: String, // "filename", "bpm", "duration", "rating", "created_at"
+    pub order: String, // "asc" or "desc"
 }
 
 impl Default for Vip3Sort {
     fn default() -> Self {
-        Self {
-            field: "filename".to_string(),
-            order: "asc".to_string(),
-        }
+        Self { field: "filename".to_string(), order: "asc".to_string() }
     }
 }
 
@@ -398,13 +395,7 @@ pub async fn search_files_vip3(
 
     let total_pages = ((total_count as f64) / (page_size as f64)).ceil() as i32;
 
-    Ok(Vip3SearchResults {
-        files,
-        total_count,
-        page,
-        page_size,
-        total_pages,
-    })
+    Ok(Vip3SearchResults { files, total_count, page, page_size, total_pages })
 }
 
 /// Get counts for all VIP3 filter categories (for sidebar).
@@ -492,22 +483,12 @@ pub async fn get_vip3_filter_counts(
     .await
     .unwrap_or_default(); // Gracefully handle if tags table doesn't have instrument category
 
-    Ok(Vip3FilterCounts {
-        timbres,
-        styles,
-        articulations,
-        bpm_ranges,
-        keys,
-        instruments,
-    })
+    Ok(Vip3FilterCounts { timbres, styles, articulations, bpm_ranges, keys, instruments })
 }
 
 /// Toggle favorite status for a file.
 #[tauri::command]
-pub async fn toggle_favorite(
-    file_id: i64,
-    state: State<'_, AppState>,
-) -> Result<bool, String> {
+pub async fn toggle_favorite(file_id: i64, state: State<'_, AppState>) -> Result<bool, String> {
     let pool = state.database.pool().await;
 
     // Toggle and return new value
@@ -554,26 +535,14 @@ pub async fn get_favorites(
     page_size: Option<i32>,
     state: State<'_, AppState>,
 ) -> Result<Vip3SearchResults, String> {
-    let filters = Vip3Filters {
-        favorites_only: true,
-        ..Default::default()
-    };
+    let filters = Vip3Filters { favorites_only: true, ..Default::default() };
 
-    search_files_vip3(
-        filters,
-        Some(Vip3Sort::default()),
-        page,
-        page_size,
-        state,
-    )
-    .await
+    search_files_vip3(filters, Some(Vip3Sort::default()), page, page_size, state).await
 }
 
 /// Get favorite count.
 #[tauri::command]
-pub async fn get_favorite_count(
-    state: State<'_, AppState>,
-) -> Result<i64, String> {
+pub async fn get_favorite_count(state: State<'_, AppState>) -> Result<i64, String> {
     let pool = state.database.pool().await;
 
     let count: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM files WHERE favorite = TRUE")
@@ -665,10 +634,7 @@ pub async fn load_saved_search(
 
 /// Delete a saved search
 #[tauri::command]
-pub async fn delete_saved_search(
-    search_id: i64,
-    state: State<'_, AppState>,
-) -> Result<(), String> {
+pub async fn delete_saved_search(search_id: i64, state: State<'_, AppState>) -> Result<(), String> {
     let pool = state.database.pool().await;
 
     sqlx::query("DELETE FROM saved_searches WHERE id = $1")
@@ -784,13 +750,12 @@ pub async fn add_file_to_collection(
     let pool = state.database.pool().await;
 
     // Get next sort order
-    let max_order: Option<(Option<i32>,)> = sqlx::query_as(
-        "SELECT MAX(sort_order) FROM collection_files WHERE collection_id = $1",
-    )
-    .bind(collection_id)
-    .fetch_optional(&pool)
-    .await
-    .map_err(|e| format!("Failed to get max sort order: {}", e))?;
+    let max_order: Option<(Option<i32>,)> =
+        sqlx::query_as("SELECT MAX(sort_order) FROM collection_files WHERE collection_id = $1")
+            .bind(collection_id)
+            .fetch_optional(&pool)
+            .await
+            .map_err(|e| format!("Failed to get max sort order: {}", e))?;
 
     let next_order = max_order.and_then(|(o,)| o).unwrap_or(0) + 1;
 
@@ -844,13 +809,12 @@ pub async fn get_collection_files(
     let offset = (page - 1) * page_size;
 
     // Get total count
-    let total_count: (i64,) = sqlx::query_as(
-        "SELECT COUNT(*) FROM collection_files WHERE collection_id = $1",
-    )
-    .bind(collection_id)
-    .fetch_one(&pool)
-    .await
-    .map_err(|e| format!("Failed to count collection files: {}", e))?;
+    let total_count: (i64,) =
+        sqlx::query_as("SELECT COUNT(*) FROM collection_files WHERE collection_id = $1")
+            .bind(collection_id)
+            .fetch_one(&pool)
+            .await
+            .map_err(|e| format!("Failed to count collection files: {}", e))?;
 
     // Get files
     let files: Vec<Vip3FileResult> = sqlx::query_as(
@@ -883,13 +847,7 @@ pub async fn get_collection_files(
 
     let total_pages = ((total_count.0 as f64) / (page_size as f64)).ceil() as i32;
 
-    Ok(Vip3SearchResults {
-        files,
-        total_count: total_count.0,
-        page,
-        page_size,
-        total_pages,
-    })
+    Ok(Vip3SearchResults { files, total_count: total_count.0, page, page_size, total_pages })
 }
 
 /// Delete a collection
@@ -1126,11 +1084,7 @@ pub async fn get_file_categories(
     .await
     .map_err(|e| format!("Failed to get file articulations: {}", e))?;
 
-    Ok(FileCategoriesResponse {
-        timbres,
-        styles,
-        articulations,
-    })
+    Ok(FileCategoriesResponse { timbres, styles, articulations })
 }
 
 /// Response for file categories
@@ -1143,9 +1097,7 @@ pub struct FileCategoriesResponse {
 
 /// Get all timbres (for dropdown/multiselect).
 #[tauri::command]
-pub async fn get_all_timbres(
-    state: State<'_, AppState>,
-) -> Result<Vec<FilterOption>, String> {
+pub async fn get_all_timbres(state: State<'_, AppState>) -> Result<Vec<FilterOption>, String> {
     let pool = state.database.pool().await;
 
     let timbres: Vec<FilterOption> = sqlx::query_as(
@@ -1164,9 +1116,7 @@ pub async fn get_all_timbres(
 
 /// Get all styles (for dropdown/multiselect)
 #[tauri::command]
-pub async fn get_all_styles(
-    state: State<'_, AppState>,
-) -> Result<Vec<FilterOption>, String> {
+pub async fn get_all_styles(state: State<'_, AppState>) -> Result<Vec<FilterOption>, String> {
     let pool = state.database.pool().await;
 
     let styles: Vec<FilterOption> = sqlx::query_as(
@@ -1206,9 +1156,7 @@ pub async fn get_all_articulations(
 
 /// Get all BPM ranges (for dropdown)
 #[tauri::command]
-pub async fn get_all_bpm_ranges(
-    state: State<'_, AppState>,
-) -> Result<Vec<FilterOption>, String> {
+pub async fn get_all_bpm_ranges(state: State<'_, AppState>) -> Result<Vec<FilterOption>, String> {
     let pool = state.database.pool().await;
 
     let bpm_ranges: Vec<FilterOption> = sqlx::query_as(
@@ -1227,9 +1175,7 @@ pub async fn get_all_bpm_ranges(
 
 /// Get all musical keys (for dropdown)
 #[tauri::command]
-pub async fn get_all_musical_keys(
-    state: State<'_, AppState>,
-) -> Result<Vec<FilterOption>, String> {
+pub async fn get_all_musical_keys(state: State<'_, AppState>) -> Result<Vec<FilterOption>, String> {
     let pool = state.database.pool().await;
 
     let keys: Vec<FilterOption> = sqlx::query_as(

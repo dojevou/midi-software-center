@@ -1032,7 +1032,8 @@ async fn test_update_metadata_fields_nonexistent_file() {
     cleanup_database(&pool).await.expect("Cleanup failed");
 
     let result =
-        FileRepository::update_metadata_fields(&pool, 99999, Some(1), 1, Some(480), None, None).await;
+        FileRepository::update_metadata_fields(&pool, 99999, Some(1), 1, Some(480), None, None)
+            .await;
 
     assert!(
         result.is_ok(),
@@ -2094,7 +2095,10 @@ async fn test_num_tracks_at_max() {
             .build();
 
     let result = FileRepository::insert(&pool, file).await;
-    assert!(result.is_ok(), "num_tracks at i16::MAX (32767) should succeed");
+    assert!(
+        result.is_ok(),
+        "num_tracks at i16::MAX (32767) should succeed"
+    );
 
     cleanup_database(&pool).await.expect("Cleanup failed");
 }

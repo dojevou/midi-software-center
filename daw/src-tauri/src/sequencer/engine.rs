@@ -315,9 +315,7 @@ impl SequencerEngine {
         controller: u8,
         value: u8,
     ) -> Result<(), String> {
-        self.midi_manager
-            .send_control_change(channel, controller, value)
-            .await
+        self.midi_manager.send_control_change(channel, controller, value).await
     }
 
     /// Send a program change message via MIDI manager

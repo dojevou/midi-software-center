@@ -1,6 +1,8 @@
 //! MIDI Learn tests
 
-use midi_software_center_daw::midi::learn::{MidiLearn, ScalingMode, MidiMapping, MappingTarget, MidiSource, MidiMessageType, PickupMode};
+use midi_software_center_daw::midi::learn::{
+    MappingTarget, MidiLearn, MidiMapping, MidiMessageType, MidiSource, PickupMode, ScalingMode,
+};
 
 #[test]
 fn test_learn_creation() {

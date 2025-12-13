@@ -562,7 +562,8 @@ pub async fn daw_load_midi_from_bytes(
             if let (Some(pitch), Some(velocity)) = (event.note, event.velocity) {
                 if velocity > 0 {
                     // Convert tick to seconds
-                    let start_seconds = (event.tick as f64 / ticks_per_quarter as f64) * (60.0 / bpm);
+                    let start_seconds =
+                        (event.tick as f64 / ticks_per_quarter as f64) * (60.0 / bpm);
 
                     notes.push(MidiNote {
                         pitch,

@@ -10,8 +10,7 @@ use tracing::info;
 
 #[cfg(feature = "database")]
 use crate::db::models::{
-    Articulation, ArticulationWithCount, CreateArticulation, DbError, DbResult,
-    UpdateArticulation,
+    Articulation, ArticulationWithCount, CreateArticulation, DbError, DbResult, UpdateArticulation,
 };
 
 /// Repository for articulation operations.
@@ -45,7 +44,10 @@ impl ArticulationRepository {
         .await
         .map_err(DbError::from)?;
 
-        info!("Created articulation '{}' with id {}", articulation.name, id);
+        info!(
+            "Created articulation '{}' with id {}",
+            articulation.name, id
+        );
         Ok(id)
     }
 

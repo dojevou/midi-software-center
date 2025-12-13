@@ -9,7 +9,6 @@
 use sqlx::{PgPool, Row};
 use std::collections::HashMap;
 use std::env;
-use tokio;
 
 #[derive(Debug, Clone)]
 struct Tag {
@@ -120,7 +119,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     );
 
     let batch_size = 50000; // 5x larger batches without conflict checking
-    let total_batches = (file_tag_pairs.len() + batch_size - 1) / batch_size;
+    let total_batches = file_tag_pairs.len().div_ceil(batch_size);
 
     for (batch_num, chunk) in file_tag_pairs.chunks(batch_size).enumerate() {
         // Build VALUES clause

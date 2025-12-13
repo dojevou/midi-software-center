@@ -72,7 +72,7 @@ impl SanitizeWorker {
                 match Self::sanitize_file(&mut file_record, &db_pool).await {
                     Ok(_) => {
                         // Push to split queue
-                        if let Err(_) = output_queue.sanitize_to_split.push(file_record) {
+                        if output_queue.sanitize_to_split.push(file_record).is_err() {
                             debug!("Sanitize worker {}: split queue full", worker_id);
                             sleep(Duration::from_millis(10)).await;
                         }

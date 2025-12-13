@@ -4,7 +4,6 @@
 // Note: global allocator is defined in lib.rs
 
 use anyhow::{Context, Result};
-use blake3;
 use clap::Parser;
 use crossbeam_channel::bounded;
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};

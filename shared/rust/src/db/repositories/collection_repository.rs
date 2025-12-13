@@ -9,8 +9,8 @@ use tracing::info;
 
 #[cfg(feature = "database")]
 use crate::db::models::{
-    Collection, CollectionFile, CollectionWithCount, CreateCollection, DbError,
-    DbResult, UpdateCollection,
+    Collection, CollectionFile, CollectionWithCount, CreateCollection, DbError, DbResult,
+    UpdateCollection,
 };
 
 /// Repository for collection operations.
@@ -296,11 +296,7 @@ impl CollectionRepository {
     }
 
     /// Batch add files to a collection.
-    pub async fn batch_add_files(
-        &self,
-        collection_id: i64,
-        file_ids: &[i64],
-    ) -> DbResult<usize> {
+    pub async fn batch_add_files(&self, collection_id: i64, file_ids: &[i64]) -> DbResult<usize> {
         let mut added = 0;
 
         for file_id in file_ids {
@@ -373,7 +369,11 @@ impl CollectionRepository {
         .await
         .map_err(DbError::from)?;
 
-        info!("Reordered {} files in collection {}", file_ids_in_order.len(), collection_id);
+        info!(
+            "Reordered {} files in collection {}",
+            file_ids_in_order.len(),
+            collection_id
+        );
         Ok(())
     }
 
@@ -427,9 +427,10 @@ impl CollectionRepository {
     /// Duplicate a collection.
     pub async fn duplicate(&self, id: i64, new_name: &str) -> DbResult<i64> {
         // Get the original collection
-        let original = self.find_by_id(id).await?.ok_or_else(|| {
-            DbError::NotFound(format!("Collection {} not found", id))
-        })?;
+        let original = self
+            .find_by_id(id)
+            .await?
+            .ok_or_else(|| DbError::NotFound(format!("Collection {} not found", id)))?;
 
         // Create the new collection
         let new_id = self
@@ -455,7 +456,10 @@ impl CollectionRepository {
         .await
         .map_err(DbError::from)?;
 
-        info!("Duplicated collection {} as {} (id: {})", id, new_name, new_id);
+        info!(
+            "Duplicated collection {} as {} (id: {})",
+            id, new_name, new_id
+        );
         Ok(new_id)
     }
 }

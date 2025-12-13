@@ -9,9 +9,7 @@ use sqlx::PgPool;
 use tracing::info;
 
 #[cfg(feature = "database")]
-use crate::db::models::{
-    CreateTimbre, DbError, DbResult, Timbre, TimbreWithCount, UpdateTimbre,
-};
+use crate::db::models::{CreateTimbre, DbError, DbResult, Timbre, TimbreWithCount, UpdateTimbre};
 
 /// Repository for timbre operations.
 #[derive(Clone)]

@@ -83,7 +83,7 @@ impl AnalyzeWorker {
                             &output_queue.rename_to_export
                         };
 
-                        if let Err(_) = target_queue.push(file_record) {
+                        if target_queue.push(file_record).is_err() {
                             debug!("Analyze worker {}: next queue full", worker_id);
                             sleep(Duration::from_millis(10)).await;
                         }

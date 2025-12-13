@@ -4,7 +4,6 @@
 //! - Aggressive, Airy, Bright, Clean, Dark, Dirty, etc.
 //! - Pre-populated with 21 system timbres, users can add custom ones.
 
-
 use serde::{Deserialize, Serialize};
 
 /// Timbre record representing a sound character category.
@@ -67,21 +66,13 @@ impl CreateTimbre {
     /// Create a new custom timbre.
     #[must_use]
     pub fn new(name: &str) -> Self {
-        Self {
-            name: name.to_string(),
-            sort_order: None,
-            is_system: false,
-        }
+        Self { name: name.to_string(), sort_order: None, is_system: false }
     }
 
     /// Create a system timbre with sort order.
     #[must_use]
     pub fn system(name: &str, sort_order: i16) -> Self {
-        Self {
-            name: name.to_string(),
-            sort_order: Some(sort_order),
-            is_system: true,
-        }
+        Self { name: name.to_string(), sort_order: Some(sort_order), is_system: true }
     }
 
     /// Set sort order.

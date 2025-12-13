@@ -24,10 +24,8 @@ pub async fn get_recent_logs(
     let mut lines = reader.lines();
     let mut events: Vec<LogEvent> = Vec::new();
 
-    while let Some(line) = lines
-        .next_line()
-        .await
-        .map_err(|e| format!("Failed to read log: {}", e))?
+    while let Some(line) =
+        lines.next_line().await.map_err(|e| format!("Failed to read log: {}", e))?
     {
         if let Ok(event) = serde_json::from_str::<LogEvent>(&line) {
             // Filter by level if specified
@@ -96,8 +94,7 @@ fn get_log_path() -> Result<PathBuf, String> {
 pub async fn subscribe_to_logs(app: tauri::AppHandle) -> Result<(), String> {
     // This would typically use a channel or subscriber to forward logs
     // For now, we'll just acknowledge the subscription
-    app.emit("log-subscribed", ())
-        .map_err(|e| format!("Failed to emit: {}", e))?;
+    app.emit("log-subscribed", ()).map_err(|e| format!("Failed to emit: {}", e))?;
 
     Ok(())
 }

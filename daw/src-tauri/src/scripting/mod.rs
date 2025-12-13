@@ -9,4 +9,4 @@
 pub mod lua_runtime;
 
 #[allow(unused_imports)]
-pub use lua_runtime::{LuaRuntime, ScriptInfo, ScriptType, ScriptAction, ScriptingState};
+pub use lua_runtime::{LuaRuntime, ScriptAction, ScriptInfo, ScriptType, ScriptingState};

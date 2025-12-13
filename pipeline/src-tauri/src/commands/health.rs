@@ -9,9 +9,7 @@ pub struct HealthState {
 
 impl HealthState {
     pub fn new(checker: HealthChecker) -> Self {
-        Self {
-            checker: Arc::new(RwLock::new(checker)),
-        }
+        Self { checker: Arc::new(RwLock::new(checker)) }
     }
 }
 

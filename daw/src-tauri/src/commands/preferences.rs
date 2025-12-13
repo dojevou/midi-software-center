@@ -176,9 +176,7 @@ impl Default for AppSettingsState {
             },
         );
 
-        Self {
-            settings: Mutex::new(settings),
-        }
+        Self { settings: Mutex::new(settings) }
     }
 }
 
@@ -196,11 +194,7 @@ pub async fn settings_get_by_category(
     category: String,
 ) -> Result<Vec<Setting>, String> {
     let settings = state.settings.lock().unwrap();
-    Ok(settings
-        .values()
-        .filter(|s| s.category == category)
-        .cloned()
-        .collect())
+    Ok(settings.values().filter(|s| s.category == category).cloned().collect())
 }
 
 /// Get a single setting by key
@@ -344,7 +338,7 @@ pub async fn settings_reset(
                 "integer" => setting.value_int = default.parse().ok(),
                 "float" => setting.value_float = default.parse().ok(),
                 "boolean" => setting.value_bool = default.parse().ok(),
-                _ => {}
+                _ => {},
             }
         }
         setting.is_user_modified = false;
@@ -371,7 +365,7 @@ pub async fn settings_reset_category(
                     "integer" => setting.value_int = default.parse().ok(),
                     "float" => setting.value_float = default.parse().ok(),
                     "boolean" => setting.value_bool = default.parse().ok(),
-                    _ => {}
+                    _ => {},
                 }
             }
             setting.is_user_modified = false;
@@ -384,7 +378,10 @@ pub async fn settings_reset_category(
 
 /// Delete a user-defined setting
 #[command]
-pub async fn settings_delete(state: State<'_, AppSettingsState>, key: String) -> Result<bool, String> {
+pub async fn settings_delete(
+    state: State<'_, AppSettingsState>,
+    key: String,
+) -> Result<bool, String> {
     let mut settings = state.settings.lock().unwrap();
     Ok(settings.remove(&key).is_some())
 }
@@ -468,7 +465,9 @@ impl Default for WindowLayoutState {
 
 /// List all window layouts
 #[command]
-pub async fn layouts_list(state: State<'_, WindowLayoutState>) -> Result<Vec<WindowLayout>, String> {
+pub async fn layouts_list(
+    state: State<'_, WindowLayoutState>,
+) -> Result<Vec<WindowLayout>, String> {
     let layouts = state.layouts.lock().unwrap();
     Ok(layouts.clone())
 }
@@ -617,7 +616,7 @@ pub struct KeyboardShortcut {
     pub id: u64,
     pub action: String,
     pub category: String,
-    pub key_combo: String,   // e.g., "Ctrl+S", "Cmd+Shift+P"
+    pub key_combo: String, // e.g., "Ctrl+S", "Cmd+Shift+P"
     pub description: Option<String>,
     pub is_global: bool,
     pub is_user_modified: bool,
@@ -769,10 +768,7 @@ impl Default for KeyboardShortcutsState {
             },
         ];
 
-        Self {
-            shortcuts: Mutex::new(shortcuts),
-            next_id: Mutex::new(14),
-        }
+        Self { shortcuts: Mutex::new(shortcuts), next_id: Mutex::new(14) }
     }
 }
 
@@ -792,11 +788,7 @@ pub async fn shortcuts_list_by_category(
     category: String,
 ) -> Result<Vec<KeyboardShortcut>, String> {
     let shortcuts = state.shortcuts.lock().unwrap();
-    Ok(shortcuts
-        .iter()
-        .filter(|s| s.category == category)
-        .cloned()
-        .collect())
+    Ok(shortcuts.iter().filter(|s| s.category == category).cloned().collect())
 }
 
 /// Get shortcut by action
@@ -966,17 +958,15 @@ pub struct RecentProjectsState {
 
 impl Default for RecentProjectsState {
     fn default() -> Self {
-        Self {
-            projects: Mutex::new(Vec::new()),
-            max_items: 20,
-            next_id: Mutex::new(1),
-        }
+        Self { projects: Mutex::new(Vec::new()), max_items: 20, next_id: Mutex::new(1) }
     }
 }
 
 /// List recent projects
 #[command]
-pub async fn recent_list(state: State<'_, RecentProjectsState>) -> Result<Vec<RecentProject>, String> {
+pub async fn recent_list(
+    state: State<'_, RecentProjectsState>,
+) -> Result<Vec<RecentProject>, String> {
     let projects = state.projects.lock().unwrap();
     Ok(projects.clone())
 }
@@ -1131,14 +1121,17 @@ mod tests {
         {
             let mut settings = state.settings.lock().unwrap();
             let key = "test.custom_setting".to_string();
-            settings.insert(key.clone(), Setting {
-                key: key.clone(),
-                category: "test".to_string(),
-                value_type: "string".to_string(),
-                value_string: Some("test_value".to_string()),
-                is_user_modified: true,
-                ..Default::default()
-            });
+            settings.insert(
+                key.clone(),
+                Setting {
+                    key: key.clone(),
+                    category: "test".to_string(),
+                    value_type: "string".to_string(),
+                    value_string: Some("test_value".to_string()),
+                    is_user_modified: true,
+                    ..Default::default()
+                },
+            );
         }
 
         // Verify it was set
@@ -1155,15 +1148,11 @@ mod tests {
         let state = AppSettingsState::default();
         let settings = state.settings.lock().unwrap();
 
-        let audio_settings: Vec<_> = settings.values()
-            .filter(|s| s.category == "audio")
-            .collect();
+        let audio_settings: Vec<_> = settings.values().filter(|s| s.category == "audio").collect();
 
         assert_eq!(audio_settings.len(), 3); // sample_rate, buffer_size, driver
 
-        let midi_settings: Vec<_> = settings.values()
-            .filter(|s| s.category == "midi")
-            .collect();
+        let midi_settings: Vec<_> = settings.values().filter(|s| s.category == "midi").collect();
 
         assert_eq!(midi_settings.len(), 2); // clock_ppqn, send_clock
     }
@@ -1260,18 +1249,16 @@ mod tests {
                 name: "Custom Layout".to_string(),
                 description: Some("My custom layout".to_string()),
                 is_default: false,
-                windows: vec![
-                    WindowPosition {
-                        window_id: "piano_roll".to_string(),
-                        x: 0,
-                        y: 0,
-                        width: 1920,
-                        height: 1080,
-                        is_maximized: true,
-                        is_visible: true,
-                        z_order: 0,
-                    },
-                ],
+                windows: vec![WindowPosition {
+                    window_id: "piano_roll".to_string(),
+                    x: 0,
+                    y: 0,
+                    width: 1920,
+                    height: 1080,
+                    is_maximized: true,
+                    is_visible: true,
+                    z_order: 0,
+                }],
                 created_at: chrono::Utc::now().to_rfc3339(),
                 updated_at: chrono::Utc::now().to_rfc3339(),
             };
@@ -1633,15 +1620,18 @@ mod tests {
             let mut next_id = state.next_id.lock().unwrap();
 
             for i in 1..=25 {
-                projects.insert(0, RecentProject {
-                    id: *next_id,
-                    project_id: None,
-                    filepath: format!("/test/project{}.mid", i),
-                    name: format!("Project {}", i),
-                    last_opened: chrono::Utc::now().to_rfc3339(),
-                    thumbnail_path: None,
-                    is_pinned: false,
-                });
+                projects.insert(
+                    0,
+                    RecentProject {
+                        id: *next_id,
+                        project_id: None,
+                        filepath: format!("/test/project{}.mid", i),
+                        name: format!("Project {}", i),
+                        last_opened: chrono::Utc::now().to_rfc3339(),
+                        thumbnail_path: None,
+                        is_pinned: false,
+                    },
+                );
                 *next_id += 1;
 
                 // Trim to max

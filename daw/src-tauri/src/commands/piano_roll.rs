@@ -55,8 +55,14 @@ pub enum PianoRollError {
     #[error("State lock error: {0}")]
     LockError(String),
 
-    #[error("Invalid slice position: {slice_tick} not within note range [{note_start}, {note_end})")]
-    InvalidSlicePosition { slice_tick: i64, note_start: i64, note_end: i64 },
+    #[error(
+        "Invalid slice position: {slice_tick} not within note range [{note_start}, {note_end})"
+    )]
+    InvalidSlicePosition {
+        slice_tick: i64,
+        note_start: i64,
+        note_end: i64,
+    },
 
     #[error("Invalid stretch ratio: {0} (must be > 0 and <= 10)")]
     InvalidStretchRatio(f64),
@@ -257,6 +263,7 @@ pub struct PianoRollState {
 }
 
 /// Undo action for piano roll operations
+#[allow(clippy::enum_variant_names)]
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub enum UndoAction {
     AddNotes {
@@ -1120,7 +1127,7 @@ pub async fn slice_note_impl(
     let note = notes
         .iter()
         .find(|n| n.id == note_id)
-        .ok_or_else(|| PianoRollError::NoteNotFound(note_id))?;
+        .ok_or(PianoRollError::NoteNotFound(note_id))?;
 
     // Validate slice position
     let note_end = note.start_tick + note.duration;
@@ -1217,7 +1224,7 @@ pub async fn stretch_note_impl(
                 color: None,
                 muted: None,
             }
-        }
+        },
         "end" | "center" => {
             // Anchor at end or center: both start and duration change
             NoteUpdate {
@@ -1230,7 +1237,7 @@ pub async fn stretch_note_impl(
                 color: None,
                 muted: None,
             }
-        }
+        },
         _ => return Err(PianoRollError::InvalidAnchor(anchor.to_string())),
     };
 
@@ -1260,8 +1267,7 @@ pub async fn stretch_notes_impl(
 
     // Get notes
     let notes = get_track_notes_impl(track_id).await?;
-    let target_notes: Vec<&Note> =
-        notes.iter().filter(|n| note_ids.contains(&n.id)).collect();
+    let target_notes: Vec<&Note> = notes.iter().filter(|n| note_ids.contains(&n.id)).collect();
 
     if target_notes.is_empty() {
         return Err(PianoRollError::NoSelection);
@@ -1272,25 +1278,17 @@ pub async fn stretch_notes_impl(
         "start" => {
             let min_start = target_notes.iter().map(|n| n.start_tick).min().unwrap();
             (min_start, min_start)
-        }
+        },
         "end" => {
-            let max_end = target_notes
-                .iter()
-                .map(|n| n.start_tick + n.duration)
-                .max()
-                .unwrap();
+            let max_end = target_notes.iter().map(|n| n.start_tick + n.duration).max().unwrap();
             (max_end, max_end)
-        }
+        },
         "center" => {
             let min_start = target_notes.iter().map(|n| n.start_tick).min().unwrap();
-            let max_end = target_notes
-                .iter()
-                .map(|n| n.start_tick + n.duration)
-                .max()
-                .unwrap();
+            let max_end = target_notes.iter().map(|n| n.start_tick + n.duration).max().unwrap();
             let center = (min_start + max_end) / 2;
             (center, center)
-        }
+        },
         _ => return Err(PianoRollError::InvalidAnchor(anchor.to_string())),
     };
 
@@ -1306,14 +1304,13 @@ pub async fn stretch_notes_impl(
                     let offset_from_ref = ref_end - original_end;
                     let new_end = ref_end - (offset_from_ref as f64 * ratio).round() as i64;
                     new_end - new_duration
-                }
+                },
                 "center" => {
                     let note_center = n.start_tick + n.duration / 2;
                     let offset_from_ref = note_center - ref_start;
-                    let new_center =
-                        ref_start + (offset_from_ref as f64 * ratio).round() as i64;
+                    let new_center = ref_start + (offset_from_ref as f64 * ratio).round() as i64;
                     new_center - new_duration / 2
-                }
+                },
                 _ => n.start_tick,
             };
 
@@ -1366,8 +1363,7 @@ pub async fn scale_quantize_notes(
     }
 
     let notes = get_track_notes_impl(track_id).await?;
-    let selected_notes: Vec<&Note> =
-        notes.iter().filter(|n| selection.contains(&n.id)).collect();
+    let selected_notes: Vec<&Note> = notes.iter().filter(|n| selection.contains(&n.id)).collect();
 
     // Get scale intervals and transpose to root
     let intervals = scale_type.intervals();

@@ -125,18 +125,16 @@ fn convert_midi_to_mpcpattern(midi_data: &[u8]) -> Result<MpcPattern> {
                                 start_time: scaled_time,
                             },
                         );
-                    } else {
-                        if let Some(active) = active_notes.remove(note) {
-                            let duration = scaled_time - active.start_time;
-                            let normalized_velocity = active.velocity as f64 / 127.0;
+                    } else if let Some(active) = active_notes.remove(note) {
+                        let duration = scaled_time - active.start_time;
+                        let normalized_velocity = active.velocity as f64 / 127.0;
 
-                            mpc_events.push(MpcEvent::note_on(
-                                active.start_time,
-                                duration,
-                                *note,
-                                normalized_velocity,
-                            ));
-                        }
+                        mpc_events.push(MpcEvent::note_on(
+                            active.start_time,
+                            duration,
+                            *note,
+                            normalized_velocity,
+                        ));
                     }
                 },
 

@@ -7,7 +7,6 @@
 /// 4. More workers (default 48 vs 24)
 /// 5. Increased DB connections
 use anyhow::{Context, Result};
-use blake3;
 use clap::Parser;
 use futures::stream::{self, StreamExt};
 use indicatif::{ProgressBar, ProgressStyle};

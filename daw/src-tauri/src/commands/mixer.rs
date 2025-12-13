@@ -18,47 +18,47 @@ pub struct MixerChannel {
     pub enabled: bool,
 
     // MIDI Channel Configuration
-    pub midi_channel: u8,           // 1-16
-    pub midi_port_id: Option<u64>,  // Reference to midi_ports table
+    pub midi_channel: u8,          // 1-16
+    pub midi_port_id: Option<u64>, // Reference to midi_ports table
 
     // Core MIDI Parameters
-    pub transpose: i8,              // -48 to +48 semitones
-    pub octave_shift: i8,           // -4 to +4 octaves
-    pub velocity: u8,               // 0-127 base velocity
-    pub velocity_scale: u8,         // 1-200% velocity multiplier
-    pub velocity_min: u8,           // 0-127 minimum velocity
-    pub velocity_max: u8,           // 0-127 maximum velocity
-    pub velocity_offset: i16,       // -127 to +127 velocity offset
+    pub transpose: i8,        // -48 to +48 semitones
+    pub octave_shift: i8,     // -4 to +4 octaves
+    pub velocity: u8,         // 0-127 base velocity
+    pub velocity_scale: u8,   // 1-200% velocity multiplier
+    pub velocity_min: u8,     // 0-127 minimum velocity
+    pub velocity_max: u8,     // 0-127 maximum velocity
+    pub velocity_offset: i16, // -127 to +127 velocity offset
 
     // Pitch Control
-    pub pitch_bend: i16,            // -8192 to +8191
-    pub pitch_bend_range: u8,       // 1-24 semitones
+    pub pitch_bend: i16,      // -8192 to +8191
+    pub pitch_bend_range: u8, // 1-24 semitones
 
     // Note Range Filtering
-    pub note_low: u8,               // 0-127 lowest note
-    pub note_high: u8,              // 0-127 highest note
-    pub key_scale: Option<String>,  // Key scale filter (e.g., "C major")
+    pub note_low: u8,              // 0-127 lowest note
+    pub note_high: u8,             // 0-127 highest note
+    pub key_scale: Option<String>, // Key scale filter (e.g., "C major")
 
     // Timing Parameters
     pub quantize_grid: Option<String>, // e.g., "1/16", "1/8", "1/4"
-    pub quantize_strength: u8,      // 0-100% quantize strength
-    pub swing: u8,                  // 0-100%
-    pub delay_ms: i16,              // -100 to +100 ms
-    pub humanize: u8,               // 0-100%
+    pub quantize_strength: u8,         // 0-100% quantize strength
+    pub swing: u8,                     // 0-100%
+    pub delay_ms: i16,                 // -100 to +100 ms
+    pub humanize: u8,                  // 0-100%
 
     // Channel Controls (CC Messages)
-    pub volume: u8,                 // CC7: 0-127
-    pub pan: u8,                    // CC10: 0-127 (64 = center)
-    pub expression: u8,             // CC11: 0-127
-    pub modulation: u8,             // CC1: 0-127
-    pub sustain_pedal: bool,        // CC64: on/off
+    pub volume: u8,          // CC7: 0-127
+    pub pan: u8,             // CC10: 0-127 (64 = center)
+    pub expression: u8,      // CC11: 0-127
+    pub modulation: u8,      // CC1: 0-127
+    pub sustain_pedal: bool, // CC64: on/off
 
     // Additional CCs (ADSR-style synthesis controls)
-    pub cc74_brightness: u8,        // CC74: Filter cutoff/brightness
-    pub cc71_resonance: u8,         // CC71: Filter resonance
-    pub cc73_attack: u8,            // CC73: Attack time
-    pub cc75_decay: u8,             // CC75: Decay time
-    pub cc72_release: u8,           // CC72: Release time
+    pub cc74_brightness: u8, // CC74: Filter cutoff/brightness
+    pub cc71_resonance: u8,  // CC71: Filter resonance
+    pub cc73_attack: u8,     // CC73: Attack time
+    pub cc75_decay: u8,      // CC75: Decay time
+    pub cc72_release: u8,    // CC72: Release time
 
     // Program Change / Bank Select
     pub program_change: Option<u8>, // 0-127
@@ -140,39 +140,39 @@ pub struct MasterChannel {
     pub enabled: bool,
 
     // Global MIDI Parameters
-    pub velocity: u8,               // 0-127 global velocity
-    pub velocity_scale: u8,         // 1-200% global velocity scale
-    pub velocity_min: u8,           // 0-127 global minimum velocity
-    pub velocity_max: u8,           // 0-127 global maximum velocity
-    pub velocity_offset: i16,       // -127 to +127 global velocity offset
-    pub transpose: i8,              // -48 to +48 global transpose
-    pub volume: u8,                 // CC7: 0-127 global volume
-    pub pitch_bend: i16,            // -8192 to +8191 global pitch bend
+    pub velocity: u8,         // 0-127 global velocity
+    pub velocity_scale: u8,   // 1-200% global velocity scale
+    pub velocity_min: u8,     // 0-127 global minimum velocity
+    pub velocity_max: u8,     // 0-127 global maximum velocity
+    pub velocity_offset: i16, // -127 to +127 global velocity offset
+    pub transpose: i8,        // -48 to +48 global transpose
+    pub volume: u8,           // CC7: 0-127 global volume
+    pub pitch_bend: i16,      // -8192 to +8191 global pitch bend
 
     // Note Range Filtering
-    pub note_low: u8,               // 0-127 lowest note
-    pub note_high: u8,              // 0-127 highest note
+    pub note_low: u8,  // 0-127 lowest note
+    pub note_high: u8, // 0-127 highest note
 
     // Global Quantization
     pub quantize_grid: Option<String>, // e.g., "1/16", "1/8", "1/4"
-    pub quantize_strength: u8,      // 0-100% global quantize strength
+    pub quantize_strength: u8,         // 0-100% global quantize strength
 
     // Tempo Control
-    pub tempo: f32,                 // 20-300 BPM
-    pub tempo_multiplier: f32,      // Speed multiplier (0.5, 1.0, 2.0, etc.)
+    pub tempo: f32,            // 20-300 BPM
+    pub tempo_multiplier: f32, // Speed multiplier (0.5, 1.0, 2.0, etc.)
 
     // Global Timing
-    pub global_delay_ms: i16,       // Global delay offset
-    pub global_swing: u8,           // 0-100% global swing
-    pub global_humanize: u8,        // 0-100% global humanization
+    pub global_delay_ms: i16, // Global delay offset
+    pub global_swing: u8,     // 0-100% global swing
+    pub global_humanize: u8,  // 0-100% global humanization
 
     // Output Configuration
     pub output_device: Option<String>,
     pub output_port: u8,
 
     // MIDI Clock & Transport
-    pub clock_enabled: bool,        // Send MIDI clock
-    pub transport_enabled: bool,    // Send transport (start/stop/continue)
+    pub clock_enabled: bool,     // Send MIDI clock
+    pub transport_enabled: bool, // Send transport (start/stop/continue)
 
     // Master Processing
     pub limiter_enabled: bool,
@@ -972,10 +972,7 @@ pub async fn mixer_set_master_delay(
 
 /// Set master global swing (0-100%)
 #[command]
-pub async fn mixer_set_master_swing(
-    state: State<'_, MixerState>,
-    swing: u8,
-) -> Result<(), String> {
+pub async fn mixer_set_master_swing(state: State<'_, MixerState>, swing: u8) -> Result<(), String> {
     let swing = swing.min(100);
     let mut master = state.master.lock().unwrap();
     master.global_swing = swing;
@@ -1087,113 +1084,113 @@ pub async fn mixer_update_channel(
                     if let Some(v) = value.as_bool() {
                         channel.enabled = v;
                     }
-                }
+                },
                 "name" => {
                     if let Some(v) = value.as_str() {
                         channel.name = v.to_string();
                     }
-                }
+                },
                 "midi_channel" => {
                     if let Some(v) = value.as_u64() {
                         channel.midi_channel = (v as u8).clamp(1, 16);
                     }
-                }
+                },
                 "transpose" => {
                     if let Some(v) = value.as_i64() {
                         channel.transpose = (v as i8).clamp(-48, 48);
                     }
-                }
+                },
                 "octave_shift" => {
                     if let Some(v) = value.as_i64() {
                         channel.octave_shift = (v as i8).clamp(-4, 4);
                     }
-                }
+                },
                 "velocity" => {
                     if let Some(v) = value.as_u64() {
                         channel.velocity = (v as u8).min(127);
                     }
-                }
+                },
                 "velocity_min" => {
                     if let Some(v) = value.as_u64() {
                         channel.velocity_min = (v as u8).min(127);
                     }
-                }
+                },
                 "velocity_max" => {
                     if let Some(v) = value.as_u64() {
                         channel.velocity_max = (v as u8).min(127);
                     }
-                }
+                },
                 "pitch_bend" => {
                     if let Some(v) = value.as_i64() {
                         channel.pitch_bend = (v as i16).clamp(-8192, 8191);
                     }
-                }
+                },
                 "pitch_bend_range" => {
                     if let Some(v) = value.as_u64() {
                         channel.pitch_bend_range = (v as u8).clamp(1, 24);
                     }
-                }
+                },
                 "note_low" => {
                     if let Some(v) = value.as_u64() {
                         channel.note_low = (v as u8).min(127);
                     }
-                }
+                },
                 "note_high" => {
                     if let Some(v) = value.as_u64() {
                         channel.note_high = (v as u8).min(127);
                     }
-                }
+                },
                 "swing" => {
                     if let Some(v) = value.as_u64() {
                         channel.swing = (v as u8).min(100);
                     }
-                }
+                },
                 "delay_ms" => {
                     if let Some(v) = value.as_i64() {
                         channel.delay_ms = (v as i16).clamp(-100, 100);
                     }
-                }
+                },
                 "humanize" => {
                     if let Some(v) = value.as_u64() {
                         channel.humanize = (v as u8).min(100);
                     }
-                }
+                },
                 "volume" => {
                     if let Some(v) = value.as_u64() {
                         channel.volume = (v as u8).min(127);
                     }
-                }
+                },
                 "pan" => {
                     if let Some(v) = value.as_u64() {
                         channel.pan = (v as u8).min(127);
                     }
-                }
+                },
                 "expression" => {
                     if let Some(v) = value.as_u64() {
                         channel.expression = (v as u8).min(127);
                     }
-                }
+                },
                 "modulation" => {
                     if let Some(v) = value.as_u64() {
                         channel.modulation = (v as u8).min(127);
                     }
-                }
+                },
                 "sustain_pedal" => {
                     if let Some(v) = value.as_bool() {
                         channel.sustain_pedal = v;
                     }
-                }
+                },
                 "muted" => {
                     if let Some(v) = value.as_bool() {
                         channel.muted = v;
                     }
-                }
+                },
                 "solo" => {
                     if let Some(v) = value.as_bool() {
                         channel.solo = v;
                     }
-                }
-                _ => {} // Ignore unknown fields
+                },
+                _ => {}, // Ignore unknown fields
             }
         }
         Ok(channel.clone())

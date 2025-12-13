@@ -250,13 +250,7 @@ impl MidiClock {
                 let _ = message_tx.send(MidiClockMessage::TimingClock).await;
 
                 // Broadcast tick event
-                let clock_tick = ClockTick {
-                    tick,
-                    beat,
-                    bar,
-                    timestamp: now,
-                    position_millis,
-                };
+                let clock_tick = ClockTick { tick, beat, bar, timestamp: now, position_millis };
                 let _ = tick_tx.send(clock_tick);
             }
         });

@@ -13,22 +13,55 @@ pub mod playback;
 pub mod recording;
 pub mod thru;
 
-pub use manager::MidiManager;
 #[allow(unused_imports)]
 pub use export::{
     ExportOptions, ExportResult, KeyMode, KeySignature, MidiExporter, SmfFormat, TimeSignature,
     TrackMetadata,
 };
 #[allow(unused_imports)]
-pub use input::{MidiInputHandle, MidiInputMessage, MidiInputState, MidiInputDevice, InputDeviceStatus};
+pub use input::{
+    InputDeviceStatus, MidiInputDevice, MidiInputHandle, MidiInputMessage, MidiInputState,
+};
 #[allow(unused_imports)]
 pub use learn::{MidiLearn, MidiMapping, ScalingMode};
 #[allow(unused_imports)]
 pub use link::{AbletonLink, LinkState};
+pub use manager::MidiManager;
 #[allow(unused_imports)]
 pub use output::{
     BankSelectMode, MessagePriority, MidiOutputDevice, MidiOutputManager, MidiOutputMessageType,
     MidiOutputSendState, OutputDeviceStatus, ScheduledMessage,
+};
+#[allow(unused_imports)]
+pub use output_manager::{
+    DeviceChangeEvent, MidiOutputManager as OutputManager, MidiOutputState as OutputManagerState,
+    OutputPriority, OutputQueueStatus, TrackOutputAssignment, VirtualOutputPort,
+};
+#[allow(unused_imports)]
+pub use playback::{
+    add_playback_output,
+    clear_loop,
+    enable_chase,
+    enable_loop,
+    get_midi_playback_position,
+    get_midi_playback_state,
+    get_playback_bpm,
+    list_playback_outputs,
+    pause_playback,
+    // Tauri commands
+    play_midi_file,
+    remove_playback_output,
+    resume_playback,
+    seek_to_position,
+    set_loop_region,
+    set_playback_bpm,
+    set_playback_outputs,
+    stop_playback,
+    LoopRegion,
+    PlaybackEngine,
+    PlaybackPosition,
+    PlaybackState,
+    PlaybackState_,
 };
 #[allow(unused_imports)]
 pub use recording::{
@@ -38,20 +71,4 @@ pub use recording::{
 #[allow(unused_imports)]
 pub use thru::{
     MidiThru, MidiThruState, ThruConfig, ThruEvent, ThruMode, ThruStatus, VelocityCurve,
-};
-#[allow(unused_imports)]
-pub use output_manager::{
-    MidiOutputManager as OutputManager, MidiOutputState as OutputManagerState,
-    OutputPriority, TrackOutputAssignment, VirtualOutputPort, OutputQueueStatus,
-    DeviceChangeEvent,
-};
-#[allow(unused_imports)]
-pub use playback::{
-    PlaybackEngine, PlaybackPosition, PlaybackState, PlaybackState_, LoopRegion,
-    // Tauri commands
-    play_midi_file, stop_playback, pause_playback, resume_playback,
-    set_loop_region, clear_loop, enable_loop, enable_chase,
-    set_playback_outputs, add_playback_output, remove_playback_output,
-    seek_to_position, get_midi_playback_position, get_midi_playback_state,
-    set_playback_bpm, get_playback_bpm, list_playback_outputs,
 };

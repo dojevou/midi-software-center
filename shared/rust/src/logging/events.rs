@@ -23,7 +23,7 @@ pub struct LogEvent {
 }
 
 /// Categories of log events.
-#[derive(Debug, Clone, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Default, Serialize, Deserialize, PartialEq, Eq)]
 #[serde(rename_all = "snake_case")]
 pub enum LogCategory {
     Database,
@@ -34,13 +34,8 @@ pub enum LogCategory {
     Performance,
     Security,
     User,
+    #[default]
     Unknown,
-}
-
-impl Default for LogCategory {
-    fn default() -> Self {
-        Self::Unknown
-    }
 }
 
 impl std::fmt::Display for LogCategory {
@@ -104,27 +99,19 @@ pub struct LogEventBuilder {
 
 impl LogEventBuilder {
     pub fn info(category: LogCategory, message: impl Into<String>) -> Self {
-        Self {
-            event: LogEvent::new("info", category, message),
-        }
+        Self { event: LogEvent::new("info", category, message) }
     }
 
     pub fn warn(category: LogCategory, message: impl Into<String>) -> Self {
-        Self {
-            event: LogEvent::new("warn", category, message),
-        }
+        Self { event: LogEvent::new("warn", category, message) }
     }
 
     pub fn error(category: LogCategory, message: impl Into<String>) -> Self {
-        Self {
-            event: LogEvent::new("error", category, message),
-        }
+        Self { event: LogEvent::new("error", category, message) }
     }
 
     pub fn debug(category: LogCategory, message: impl Into<String>) -> Self {
-        Self {
-            event: LogEvent::new("debug", category, message),
-        }
+        Self { event: LogEvent::new("debug", category, message) }
     }
 
     pub fn field(mut self, key: &str, value: impl Serialize) -> Self {

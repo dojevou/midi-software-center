@@ -90,12 +90,7 @@ impl CreateCollection {
     /// Create a new collection with just a name.
     #[must_use]
     pub fn new(name: &str) -> Self {
-        Self {
-            name: name.to_string(),
-            description: None,
-            icon: None,
-            color: None,
-        }
+        Self { name: name.to_string(), description: None, icon: None, color: None }
     }
 
     /// Set description.
@@ -148,8 +143,8 @@ impl Collection {
 
 /// Pre-defined collection icons.
 pub const COLLECTION_ICONS: &[&str] = &[
-    "📁", "📂", "🎵", "🎶", "🎹", "🎸", "🥁", "🎺", "🎻", "🎷",
-    "🎤", "🎧", "🎼", "🔊", "💿", "📀", "⭐", "❤️", "🔥", "💎",
+    "📁", "📂", "🎵", "🎶", "🎹", "🎸", "🥁", "🎺", "🎻", "🎷", "🎤", "🎧", "🎼", "🔊", "💿", "📀",
+    "⭐", "❤️", "🔥", "💎",
 ];
 
 /// Pre-defined collection colors.
@@ -178,7 +173,10 @@ mod tests {
             .with_color("#FF5733");
 
         assert_eq!(collection.name, "My Drums");
-        assert_eq!(collection.description, Some("Favorite drum patterns".to_string()));
+        assert_eq!(
+            collection.description,
+            Some("Favorite drum patterns".to_string())
+        );
         assert_eq!(collection.icon, Some("🥁".to_string()));
         assert_eq!(collection.color, Some("#FF5733".to_string()));
     }

@@ -1,7 +1,8 @@
 //! Notation/Score rendering tests
 
 use midi_software_center_daw::notation::{
-    ScoreRenderer, Score, Staff, Measure, NotationNote, Clef, TimeSignature, KeySignature, QuantizeLevel,
+    Clef, KeySignature, Measure, NotationNote, QuantizeLevel, Score, ScoreRenderer, Staff,
+    TimeSignature,
 };
 
 #[test]
@@ -33,7 +34,10 @@ fn test_key_signature_names() {
     assert_eq!(KeySignature { sharps: 1, minor: false }.to_key_name(), "G");
     assert_eq!(KeySignature { sharps: 2, minor: false }.to_key_name(), "D");
     assert_eq!(KeySignature { sharps: -1, minor: false }.to_key_name(), "F");
-    assert_eq!(KeySignature { sharps: -2, minor: false }.to_key_name(), "Bb");
+    assert_eq!(
+        KeySignature { sharps: -2, minor: false }.to_key_name(),
+        "Bb"
+    );
 
     // Test minor keys
     assert_eq!(KeySignature { sharps: 0, minor: true }.to_key_name(), "Am");
@@ -43,19 +47,19 @@ fn test_key_signature_names() {
 #[test]
 fn test_quantize_level_ticks() {
     let ppq = 480;
-    assert_eq!(QuantizeLevel::Whole.ticks(ppq), 1920);    // 4 quarters
-    assert_eq!(QuantizeLevel::Half.ticks(ppq), 960);       // 2 quarters
-    assert_eq!(QuantizeLevel::Quarter.ticks(ppq), 480);    // 1 quarter
-    assert_eq!(QuantizeLevel::Eighth.ticks(ppq), 240);     // 1/2 quarter
-    assert_eq!(QuantizeLevel::Sixteenth.ticks(ppq), 120);  // 1/4 quarter
+    assert_eq!(QuantizeLevel::Whole.ticks(ppq), 1920); // 4 quarters
+    assert_eq!(QuantizeLevel::Half.ticks(ppq), 960); // 2 quarters
+    assert_eq!(QuantizeLevel::Quarter.ticks(ppq), 480); // 1 quarter
+    assert_eq!(QuantizeLevel::Eighth.ticks(ppq), 240); // 1/2 quarter
+    assert_eq!(QuantizeLevel::Sixteenth.ticks(ppq), 120); // 1/4 quarter
     assert_eq!(QuantizeLevel::ThirtySecond.ticks(ppq), 60); // 1/8 quarter
 }
 
 #[test]
 fn test_quantize_triplets() {
     let ppq = 480;
-    assert_eq!(QuantizeLevel::Triplet8th.ticks(ppq), 160);   // ppq / 3
-    assert_eq!(QuantizeLevel::Triplet16th.ticks(ppq), 80);   // ppq / 6
+    assert_eq!(QuantizeLevel::Triplet8th.ticks(ppq), 160); // ppq / 3
+    assert_eq!(QuantizeLevel::Triplet16th.ticks(ppq), 80); // ppq / 6
 }
 
 #[test]
@@ -96,19 +100,17 @@ fn test_single_note_render() {
         title: "Single Note".to_string(),
         composer: String::new(),
         ppq: 480,
-        staves: vec![
-            Staff {
-                clef: Clef::Treble,
-                measures: vec![Measure {
-                    number: 1,
-                    notes: vec![note],
-                    rests: vec![],
-                    time_signature: Some(TimeSignature::default()),
-                    key_signature: Some(KeySignature::default()),
-                    tempo: Some(120.0),
-                }],
-            },
-        ],
+        staves: vec![Staff {
+            clef: Clef::Treble,
+            measures: vec![Measure {
+                number: 1,
+                notes: vec![note],
+                rests: vec![],
+                time_signature: Some(TimeSignature::default()),
+                key_signature: Some(KeySignature::default()),
+                tempo: Some(120.0),
+            }],
+        }],
         key_signature: KeySignature::default(),
         time_signature: TimeSignature::default(),
         tempo: 120.0,
@@ -134,9 +136,7 @@ fn test_musicxml_export() {
         title: "Test Score".to_string(),
         composer: String::new(),
         ppq: 480,
-        staves: vec![
-            Staff { clef: Clef::Treble, measures: vec![] },
-        ],
+        staves: vec![Staff { clef: Clef::Treble, measures: vec![] }],
         key_signature: KeySignature::default(),
         time_signature: TimeSignature::default(),
         tempo: 120.0,

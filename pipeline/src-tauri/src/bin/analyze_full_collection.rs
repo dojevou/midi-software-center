@@ -574,7 +574,7 @@ fn generate_report(stats: &CollectionStats, output_path: &Path) -> std::io::Resu
             *count as f64 / total as f64 * 100.0
         ));
     }
-    output.push_str("\n");
+    output.push('\n');
 
     // Top Genres
     output.push_str("## Top Genres Found\n\n");
@@ -591,7 +591,7 @@ fn generate_report(stats: &CollectionStats, output_path: &Path) -> std::io::Resu
             *count as f64 / total as f64 * 100.0
         ));
     }
-    output.push_str("\n");
+    output.push('\n');
 
     // Top Pattern Types
     output.push_str("## Top Pattern Types\n\n");
@@ -609,7 +609,7 @@ fn generate_report(stats: &CollectionStats, output_path: &Path) -> std::io::Resu
             *count as f64 / total as f64 * 100.0
         ));
     }
-    output.push_str("\n");
+    output.push('\n');
 
     // Musical Keys
     output.push_str("## Musical Keys Found\n\n");
@@ -626,7 +626,7 @@ fn generate_report(stats: &CollectionStats, output_path: &Path) -> std::io::Resu
             *count as f64 / total as f64 * 100.0
         ));
     }
-    output.push_str("\n");
+    output.push('\n');
 
     // BPM Distribution
     output.push_str("## BPM Distribution\n\n");
@@ -643,7 +643,7 @@ fn generate_report(stats: &CollectionStats, output_path: &Path) -> std::io::Resu
             *count as f64 / total as f64 * 100.0
         ));
     }
-    output.push_str("\n");
+    output.push('\n');
 
     // Time Signatures
     output.push_str("## Time Signatures Found\n\n");
@@ -661,7 +661,7 @@ fn generate_report(stats: &CollectionStats, output_path: &Path) -> std::io::Resu
             *count as f64 / total as f64 * 100.0
         ));
     }
-    output.push_str("\n");
+    output.push('\n');
 
     // Drum Elements (for drum files)
     if stats.drum_files.load(Ordering::Relaxed) > 0 {
@@ -681,7 +681,7 @@ fn generate_report(stats: &CollectionStats, output_path: &Path) -> std::io::Resu
                 *count as f64 / drum_total as f64 * 100.0
             ));
         }
-        output.push_str("\n");
+        output.push('\n');
     }
 
     // BPM Ranges Summary
@@ -712,7 +712,7 @@ fn generate_report(stats: &CollectionStats, output_path: &Path) -> std::io::Resu
             count as f64 / total as f64 * 100.0
         ));
     }
-    output.push_str("\n");
+    output.push('\n');
 
     // Write to file
     fs::write(output_path, output)?;

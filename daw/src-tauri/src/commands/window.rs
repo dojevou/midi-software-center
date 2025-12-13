@@ -203,7 +203,10 @@ pub async fn add_window_track(
 
     // Emit event to notify frontend windows
     let _ = app_handle.emit("track-added", serde_json::json!({ "track_id": track_id }));
-    tracing::info!("[add_window_track] Emitted track-added event for track_id={}", track_id);
+    tracing::info!(
+        "[add_window_track] Emitted track-added event for track_id={}",
+        track_id
+    );
 
     Ok(track_id)
 }
@@ -225,7 +228,10 @@ pub async fn remove_window_track(
 
     // Emit event to notify frontend windows
     let _ = app_handle.emit("track-removed", serde_json::json!({ "track_id": track_id }));
-    tracing::info!("[remove_window_track] Emitted track-removed event for track_id={}", track_id);
+    tracing::info!(
+        "[remove_window_track] Emitted track-removed event for track_id={}",
+        track_id
+    );
 
     Ok(())
 }
@@ -347,7 +353,10 @@ pub async fn get_mixer_state(
 ) -> Result<MixerWindowState, String> {
     tracing::info!("[get_mixer_state] Called!");
     let mixer = state.mixer.read().await;
-    tracing::info!("[get_mixer_state] Returning mixer state with {} channels", mixer.channels.len());
+    tracing::info!(
+        "[get_mixer_state] Returning mixer state with {} channels",
+        mixer.channels.len()
+    );
     Ok(mixer.clone())
 }
 
@@ -522,9 +531,7 @@ pub async fn get_position_from_ticks(
 
 /// Validate current transport settings
 #[tauri::command]
-pub async fn validate_transport(
-    state: tauri::State<'_, DAWState>,
-) -> Result<(bool, bool), String> {
+pub async fn validate_transport(state: tauri::State<'_, DAWState>) -> Result<(bool, bool), String> {
     let daw = state.daw.read().await;
     let bpm_valid = daw.transport.is_bpm_valid();
     let time_sig_valid = daw.transport.is_time_signature_valid();
@@ -618,9 +625,7 @@ pub async fn should_track_play(
     track_id: i32,
 ) -> Result<bool, String> {
     let daw = state.daw.read().await;
-    let track = daw
-        .get_track(track_id)
-        .ok_or_else(|| format!("Track {} not found", track_id))?;
+    let track = daw.get_track(track_id).ok_or_else(|| format!("Track {} not found", track_id))?;
     let any_solo = daw.has_soloed_tracks();
     Ok(track.should_play(any_solo))
 }

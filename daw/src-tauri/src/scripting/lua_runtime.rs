@@ -19,9 +19,9 @@
 // - Timer/scheduling
 // =============================================================================
 
-use mlua::{Lua, Result as LuaResult, Function, Table};
-use std::collections::HashMap;
+use mlua::{Function, Lua, Result as LuaResult, Table};
 use parking_lot::RwLock;
+use std::collections::HashMap;
 use tokio::sync::mpsc;
 
 /// Script metadata
@@ -39,11 +39,11 @@ pub struct ScriptInfo {
 
 #[derive(Debug, Clone, serde::Serialize, serde::Deserialize)]
 pub enum ScriptType {
-    MidiProcessor,      // Transforms MIDI in real-time
-    Generator,          // Generates MIDI (arpeggiator, etc.)
-    Automation,         // Parameter automation
-    Utility,            // General utility
-    Action,             // One-shot action
+    MidiProcessor, // Transforms MIDI in real-time
+    Generator,     // Generates MIDI (arpeggiator, etc.)
+    Automation,    // Parameter automation
+    Utility,       // General utility
+    Action,        // One-shot action
 }
 
 /// Action sent from script to application
@@ -51,21 +51,21 @@ pub enum ScriptType {
 pub enum ScriptAction {
     // MIDI
     SendMidi { device: String, data: Vec<u8> },
-    
+
     // Transport
     Play,
     Stop,
     Record,
     SetTempo(f64),
     SetPosition(u64),
-    
+
     // Parameters
     SetParameter { path: String, value: f64 },
-    
+
     // UI
     ShowMessage { title: String, message: String },
     Log(String),
-    
+
     // File
     LoadMidi(String),
     SaveMidi { path: String, data: Vec<u8> },
@@ -83,114 +83,130 @@ impl LuaRuntime {
     pub fn new() -> LuaResult<(Self, mpsc::UnboundedReceiver<ScriptAction>)> {
         let lua = Lua::new();
         let (action_tx, action_rx) = mpsc::unbounded_channel();
-        
-        let runtime = Self {
-            lua,
-            scripts: RwLock::new(HashMap::new()),
-            action_tx,
-        };
-        
+
+        let runtime = Self { lua, scripts: RwLock::new(HashMap::new()), action_tx };
+
         runtime.register_api()?;
-        
+
         Ok((runtime, action_rx))
     }
 
     /// Register the scripting API
     fn register_api(&self) -> LuaResult<()> {
         let globals = self.lua.globals();
-        
+
         // MIDI API
         self.register_midi_api(&globals)?;
-        
+
         // Transport API
         self.register_transport_api(&globals)?;
-        
+
         // Parameter API
         self.register_parameter_api(&globals)?;
-        
+
         // Music theory API
         self.register_theory_api(&globals)?;
-        
+
         // Utility API
         self.register_utility_api(&globals)?;
-        
+
         // Timer API
         self.register_timer_api(&globals)?;
-        
+
         Ok(())
     }
 
     fn register_midi_api(&self, globals: &Table) -> LuaResult<()> {
         let midi = self.lua.create_table()?;
         let tx = self.action_tx.clone();
-        
+
         // midi.send(device, status, data1, data2)
         let tx_clone = tx.clone();
-        midi.set("send", self.lua.create_function(move |_, (device, status, data1, data2): (String, u8, u8, u8)| {
-            let _ = tx_clone.send(ScriptAction::SendMidi {
-                device,
-                data: vec![status, data1, data2],
-            });
-            Ok(())
-        })?)?;
-        
+        midi.set(
+            "send",
+            self.lua.create_function(
+                move |_, (device, status, data1, data2): (String, u8, u8, u8)| {
+                    let _ = tx_clone
+                        .send(ScriptAction::SendMidi { device, data: vec![status, data1, data2] });
+                    Ok(())
+                },
+            )?,
+        )?;
+
         // midi.note_on(device, channel, note, velocity)
         let tx_clone = tx.clone();
-        midi.set("note_on", self.lua.create_function(move |_, (device, channel, note, velocity): (String, u8, u8, u8)| {
-            let status = 0x90 | (channel & 0x0F);
-            let _ = tx_clone.send(ScriptAction::SendMidi {
-                device,
-                data: vec![status, note & 0x7F, velocity & 0x7F],
-            });
-            Ok(())
-        })?)?;
-        
+        midi.set(
+            "note_on",
+            self.lua.create_function(
+                move |_, (device, channel, note, velocity): (String, u8, u8, u8)| {
+                    let status = 0x90 | (channel & 0x0F);
+                    let _ = tx_clone.send(ScriptAction::SendMidi {
+                        device,
+                        data: vec![status, note & 0x7F, velocity & 0x7F],
+                    });
+                    Ok(())
+                },
+            )?,
+        )?;
+
         // midi.note_off(device, channel, note)
         let tx_clone = tx.clone();
-        midi.set("note_off", self.lua.create_function(move |_, (device, channel, note): (String, u8, u8)| {
-            let status = 0x80 | (channel & 0x0F);
-            let _ = tx_clone.send(ScriptAction::SendMidi {
-                device,
-                data: vec![status, note & 0x7F, 0],
-            });
-            Ok(())
-        })?)?;
-        
+        midi.set(
+            "note_off",
+            self.lua.create_function(move |_, (device, channel, note): (String, u8, u8)| {
+                let status = 0x80 | (channel & 0x0F);
+                let _ = tx_clone
+                    .send(ScriptAction::SendMidi { device, data: vec![status, note & 0x7F, 0] });
+                Ok(())
+            })?,
+        )?;
+
         // midi.cc(device, channel, controller, value)
         let tx_clone = tx.clone();
-        midi.set("cc", self.lua.create_function(move |_, (device, channel, cc, value): (String, u8, u8, u8)| {
-            let status = 0xB0 | (channel & 0x0F);
-            let _ = tx_clone.send(ScriptAction::SendMidi {
-                device,
-                data: vec![status, cc & 0x7F, value & 0x7F],
-            });
-            Ok(())
-        })?)?;
-        
+        midi.set(
+            "cc",
+            self.lua.create_function(
+                move |_, (device, channel, cc, value): (String, u8, u8, u8)| {
+                    let status = 0xB0 | (channel & 0x0F);
+                    let _ = tx_clone.send(ScriptAction::SendMidi {
+                        device,
+                        data: vec![status, cc & 0x7F, value & 0x7F],
+                    });
+                    Ok(())
+                },
+            )?,
+        )?;
+
         // midi.program_change(device, channel, program)
         let tx_clone = tx.clone();
-        midi.set("program_change", self.lua.create_function(move |_, (device, channel, program): (String, u8, u8)| {
-            let status = 0xC0 | (channel & 0x0F);
-            let _ = tx_clone.send(ScriptAction::SendMidi {
-                device,
-                data: vec![status, program & 0x7F],
-            });
-            Ok(())
-        })?)?;
-        
+        midi.set(
+            "program_change",
+            self.lua
+                .create_function(move |_, (device, channel, program): (String, u8, u8)| {
+                    let status = 0xC0 | (channel & 0x0F);
+                    let _ = tx_clone.send(ScriptAction::SendMidi {
+                        device,
+                        data: vec![status, program & 0x7F],
+                    });
+                    Ok(())
+                })?,
+        )?;
+
         // midi.pitch_bend(device, channel, value) - value: -8192 to +8191
         let tx_clone = tx.clone();
-        midi.set("pitch_bend", self.lua.create_function(move |_, (device, channel, value): (String, u8, i16)| {
-            let status = 0xE0 | (channel & 0x0F);
-            let unsigned = (value + 8192) as u16;
-            let lsb = (unsigned & 0x7F) as u8;
-            let msb = ((unsigned >> 7) & 0x7F) as u8;
-            let _ = tx_clone.send(ScriptAction::SendMidi {
-                device,
-                data: vec![status, lsb, msb],
-            });
-            Ok(())
-        })?)?;
+        midi.set(
+            "pitch_bend",
+            self.lua
+                .create_function(move |_, (device, channel, value): (String, u8, i16)| {
+                    let status = 0xE0 | (channel & 0x0F);
+                    let unsigned = (value + 8192) as u16;
+                    let lsb = (unsigned & 0x7F) as u8;
+                    let msb = ((unsigned >> 7) & 0x7F) as u8;
+                    let _ = tx_clone
+                        .send(ScriptAction::SendMidi { device, data: vec![status, lsb, msb] });
+                    Ok(())
+                })?,
+        )?;
 
         globals.set("midi", midi)?;
         Ok(())
@@ -199,36 +215,51 @@ impl LuaRuntime {
     fn register_transport_api(&self, globals: &Table) -> LuaResult<()> {
         let transport = self.lua.create_table()?;
         let tx = self.action_tx.clone();
-        
+
         let tx_clone = tx.clone();
-        transport.set("play", self.lua.create_function(move |_, ()| {
-            let _ = tx_clone.send(ScriptAction::Play);
-            Ok(())
-        })?)?;
-        
+        transport.set(
+            "play",
+            self.lua.create_function(move |_, ()| {
+                let _ = tx_clone.send(ScriptAction::Play);
+                Ok(())
+            })?,
+        )?;
+
         let tx_clone = tx.clone();
-        transport.set("stop", self.lua.create_function(move |_, ()| {
-            let _ = tx_clone.send(ScriptAction::Stop);
-            Ok(())
-        })?)?;
-        
+        transport.set(
+            "stop",
+            self.lua.create_function(move |_, ()| {
+                let _ = tx_clone.send(ScriptAction::Stop);
+                Ok(())
+            })?,
+        )?;
+
         let tx_clone = tx.clone();
-        transport.set("record", self.lua.create_function(move |_, ()| {
-            let _ = tx_clone.send(ScriptAction::Record);
-            Ok(())
-        })?)?;
-        
+        transport.set(
+            "record",
+            self.lua.create_function(move |_, ()| {
+                let _ = tx_clone.send(ScriptAction::Record);
+                Ok(())
+            })?,
+        )?;
+
         let tx_clone = tx.clone();
-        transport.set("set_tempo", self.lua.create_function(move |_, bpm: f64| {
-            let _ = tx_clone.send(ScriptAction::SetTempo(bpm));
-            Ok(())
-        })?)?;
-        
+        transport.set(
+            "set_tempo",
+            self.lua.create_function(move |_, bpm: f64| {
+                let _ = tx_clone.send(ScriptAction::SetTempo(bpm));
+                Ok(())
+            })?,
+        )?;
+
         let tx_clone = tx.clone();
-        transport.set("set_position", self.lua.create_function(move |_, ticks: u64| {
-            let _ = tx_clone.send(ScriptAction::SetPosition(ticks));
-            Ok(())
-        })?)?;
+        transport.set(
+            "set_position",
+            self.lua.create_function(move |_, ticks: u64| {
+                let _ = tx_clone.send(ScriptAction::SetPosition(ticks));
+                Ok(())
+            })?,
+        )?;
 
         globals.set("transport", transport)?;
         Ok(())
@@ -237,12 +268,15 @@ impl LuaRuntime {
     fn register_parameter_api(&self, globals: &Table) -> LuaResult<()> {
         let params = self.lua.create_table()?;
         let tx = self.action_tx.clone();
-        
+
         let tx_clone = tx.clone();
-        params.set("set", self.lua.create_function(move |_, (path, value): (String, f64)| {
-            let _ = tx_clone.send(ScriptAction::SetParameter { path, value });
-            Ok(())
-        })?)?;
+        params.set(
+            "set",
+            self.lua.create_function(move |_, (path, value): (String, f64)| {
+                let _ = tx_clone.send(ScriptAction::SetParameter { path, value });
+                Ok(())
+            })?,
+        )?;
 
         globals.set("params", params)?;
         Ok(())
@@ -250,7 +284,7 @@ impl LuaRuntime {
 
     fn register_theory_api(&self, globals: &Table) -> LuaResult<()> {
         let theory = self.lua.create_table()?;
-        
+
         // Scales
         let scales = self.lua.create_table()?;
         scales.set("major", vec![0, 2, 4, 5, 7, 9, 11])?;
@@ -267,7 +301,7 @@ impl LuaRuntime {
         scales.set("blues", vec![0, 3, 5, 6, 7, 10])?;
         scales.set("chromatic", vec![0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11])?;
         theory.set("scales", scales)?;
-        
+
         // Chords
         let chords = self.lua.create_table()?;
         chords.set("major", vec![0, 4, 7])?;
@@ -285,57 +319,69 @@ impl LuaRuntime {
         chords.set("min9", vec![0, 3, 7, 10, 14])?;
         chords.set("dom9", vec![0, 4, 7, 10, 14])?;
         theory.set("chords", chords)?;
-        
+
         // Helper functions
-        theory.set("note_name", self.lua.create_function(|_, note: u8| {
-            let names = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
-            let octave = (note / 12) as i8 - 1;
-            Ok(format!("{}{}", names[(note % 12) as usize], octave))
-        })?)?;
-        
-        theory.set("name_to_note", self.lua.create_function(|_, name: String| {
-            let notes = [("C", 0), ("D", 2), ("E", 4), ("F", 5), ("G", 7), ("A", 9), ("B", 11)];
-            let chars: Vec<char> = name.chars().collect();
-            if chars.is_empty() {
-                return Ok(60u8);
-            }
-            
-            let mut note = 0i8;
-            let mut idx = 0;
-            
-            // Base note
-            for (n, val) in &notes {
-                if chars[0].to_uppercase().to_string() == *n {
-                    note = *val as i8;
-                    idx = 1;
-                    break;
+        theory.set(
+            "note_name",
+            self.lua.create_function(|_, note: u8| {
+                let names = ["C", "C#", "D", "D#", "E", "F", "F#", "G", "G#", "A", "A#", "B"];
+                let octave = (note / 12) as i8 - 1;
+                Ok(format!("{}{}", names[(note % 12) as usize], octave))
+            })?,
+        )?;
+
+        theory.set(
+            "name_to_note",
+            self.lua.create_function(|_, name: String| {
+                let notes = [("C", 0), ("D", 2), ("E", 4), ("F", 5), ("G", 7), ("A", 9), ("B", 11)];
+                let chars: Vec<char> = name.chars().collect();
+                if chars.is_empty() {
+                    return Ok(60u8);
                 }
-            }
-            
-            // Accidentals
-            while idx < chars.len() {
-                match chars[idx] {
-                    '#' => note += 1,
-                    'b' => note -= 1,
-                    _ => break,
+
+                let mut note = 0i8;
+                let mut idx = 0;
+
+                // Base note
+                for (n, val) in &notes {
+                    if chars[0].to_uppercase().to_string() == *n {
+                        note = *val as i8;
+                        idx = 1;
+                        break;
+                    }
                 }
-                idx += 1;
-            }
-            
-            // Octave
-            let octave: i8 = name[idx..].parse().unwrap_or(4);
-            
-            Ok(((octave + 1) * 12 + note).clamp(0, 127) as u8)
-        })?)?;
-        
-        theory.set("transpose", self.lua.create_function(|_, (note, semitones): (u8, i8)| {
-            Ok((note as i16 + semitones as i16).clamp(0, 127) as u8)
-        })?)?;
-        
-        theory.set("in_scale", self.lua.create_function(|_, (note, root, scale): (u8, u8, Vec<i32>)| {
-            let interval = ((note as i32 - root as i32) % 12 + 12) % 12;
-            Ok(scale.contains(&interval))
-        })?)?;
+
+                // Accidentals
+                while idx < chars.len() {
+                    match chars[idx] {
+                        '#' => note += 1,
+                        'b' => note -= 1,
+                        _ => break,
+                    }
+                    idx += 1;
+                }
+
+                // Octave
+                let octave: i8 = name[idx..].parse().unwrap_or(4);
+
+                Ok(((octave + 1) * 12 + note).clamp(0, 127) as u8)
+            })?,
+        )?;
+
+        theory.set(
+            "transpose",
+            self.lua.create_function(|_, (note, semitones): (u8, i8)| {
+                Ok((note as i16 + semitones as i16).clamp(0, 127) as u8)
+            })?,
+        )?;
+
+        theory.set(
+            "in_scale",
+            self.lua.create_function(|_, (note, root, scale): (u8, u8, Vec<i32>)| {
+                let interval = ((note as i32 - root as i32) % 12 + 12) % 12;
+                Ok(scale.contains(&interval))
+            })?,
+        )?;
 
         globals.set("theory", theory)?;
         Ok(())
@@ -344,50 +390,73 @@ impl LuaRuntime {
     fn register_utility_api(&self, globals: &Table) -> LuaResult<()> {
         let util = self.lua.create_table()?;
         let tx = self.action_tx.clone();
-        
+
         // Logging
         let tx_clone = tx.clone();
-        util.set("log", self.lua.create_function(move |_, message: String| {
-            let _ = tx_clone.send(ScriptAction::Log(message));
-            Ok(())
-        })?)?;
-        
+        util.set(
+            "log",
+            self.lua.create_function(move |_, message: String| {
+                let _ = tx_clone.send(ScriptAction::Log(message));
+                Ok(())
+            })?,
+        )?;
+
         // Message dialog
         let tx_clone = tx.clone();
-        util.set("message", self.lua.create_function(move |_, (title, message): (String, String)| {
-            let _ = tx_clone.send(ScriptAction::ShowMessage { title, message });
-            Ok(())
-        })?)?;
-        
+        util.set(
+            "message",
+            self.lua.create_function(move |_, (title, message): (String, String)| {
+                let _ = tx_clone.send(ScriptAction::ShowMessage { title, message });
+                Ok(())
+            })?,
+        )?;
+
         // Random
-        util.set("random", self.lua.create_function(|_, (min, max): (i32, i32)| {
-            use std::time::{SystemTime, UNIX_EPOCH};
-            let seed = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos() as u64;
-            let range = (max - min + 1) as u64;
-            Ok(min + (seed % range) as i32)
-        })?)?;
-        
-        util.set("random_float", self.lua.create_function(|_, ()| {
-            use std::time::{SystemTime, UNIX_EPOCH};
-            let seed = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos() as u64;
-            Ok((seed % 10000) as f64 / 10000.0)
-        })?)?;
-        
+        util.set(
+            "random",
+            self.lua.create_function(|_, (min, max): (i32, i32)| {
+                use std::time::{SystemTime, UNIX_EPOCH};
+                let seed = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos() as u64;
+                let range = (max - min + 1) as u64;
+                Ok(min + (seed % range) as i32)
+            })?,
+        )?;
+
+        util.set(
+            "random_float",
+            self.lua.create_function(|_, ()| {
+                use std::time::{SystemTime, UNIX_EPOCH};
+                let seed = SystemTime::now().duration_since(UNIX_EPOCH).unwrap().as_nanos() as u64;
+                Ok((seed % 10000) as f64 / 10000.0)
+            })?,
+        )?;
+
         // Clamp
-        util.set("clamp", self.lua.create_function(|_, (value, min, max): (f64, f64, f64)| {
-            Ok(value.clamp(min, max))
-        })?)?;
-        
+        util.set(
+            "clamp",
+            self.lua.create_function(|_, (value, min, max): (f64, f64, f64)| {
+                Ok(value.clamp(min, max))
+            })?,
+        )?;
+
         // Lerp
-        util.set("lerp", self.lua.create_function(|_, (a, b, t): (f64, f64, f64)| {
-            Ok(a + (b - a) * t.clamp(0.0, 1.0))
-        })?)?;
-        
+        util.set(
+            "lerp",
+            self.lua.create_function(|_, (a, b, t): (f64, f64, f64)| {
+                Ok(a + (b - a) * t.clamp(0.0, 1.0))
+            })?,
+        )?;
+
         // Map range
-        util.set("map", self.lua.create_function(|_, (value, in_min, in_max, out_min, out_max): (f64, f64, f64, f64, f64)| {
-            let t = (value - in_min) / (in_max - in_min);
-            Ok(out_min + (out_max - out_min) * t)
-        })?)?;
+        util.set(
+            "map",
+            self.lua.create_function(
+                |_, (value, in_min, in_max, out_min, out_max): (f64, f64, f64, f64, f64)| {
+                    let t = (value - in_min) / (in_max - in_min);
+                    Ok(out_min + (out_max - out_min) * t)
+                },
+            )?,
+        )?;
 
         globals.set("util", util)?;
         Ok(())
@@ -397,11 +466,14 @@ impl LuaRuntime {
         // Timer functions would need async support
         // Simplified version here
         let timer = self.lua.create_table()?;
-        
-        timer.set("sleep_ms", self.lua.create_function(|_, ms: u64| {
-            std::thread::sleep(std::time::Duration::from_millis(ms));
-            Ok(())
-        })?)?;
+
+        timer.set(
+            "sleep_ms",
+            self.lua.create_function(|_, ms: u64| {
+                std::thread::sleep(std::time::Duration::from_millis(ms));
+                Ok(())
+            })?,
+        )?;
 
         globals.set("timer", timer)?;
         Ok(())
@@ -411,15 +483,18 @@ impl LuaRuntime {
     pub fn load_script(&self, info: ScriptInfo, source: &str) -> LuaResult<()> {
         // Compile script
         self.lua.load(source).exec()?;
-        
+
         // Store info
         self.scripts.write().insert(info.id.clone(), info);
-        
+
         Ok(())
     }
 
     /// Execute a script function with no arguments, returning a value
-    pub fn call_function_no_args<T: for<'a> mlua::FromLuaMulti<'a>>(&self, func_name: &str) -> LuaResult<T> {
+    pub fn call_function_no_args<T: for<'a> mlua::FromLuaMulti<'a>>(
+        &self,
+        func_name: &str,
+    ) -> LuaResult<T> {
         let globals = self.lua.globals();
         let func: Function = globals.get(func_name)?;
         func.call(())
@@ -437,9 +512,15 @@ impl LuaRuntime {
     }
 
     /// Process MIDI through all processor scripts
-    pub fn process_midi(&self, channel: u8, status: u8, data1: u8, data2: u8) -> Vec<(u8, u8, u8, u8)> {
+    pub fn process_midi(
+        &self,
+        channel: u8,
+        status: u8,
+        data1: u8,
+        data2: u8,
+    ) -> Vec<(u8, u8, u8, u8)> {
         let mut results = vec![(channel, status, data1, data2)];
-        
+
         // Call on_midi if defined
         if let Ok(func) = self.lua.globals().get::<_, Function>("on_midi") {
             if let Ok(result) = func.call::<_, Vec<Vec<u8>>>((channel, status, data1, data2)) {
@@ -451,7 +532,7 @@ impl LuaRuntime {
                 }
             }
         }
-        
+
         results
     }
 
@@ -612,7 +693,12 @@ end
 
 impl LuaRuntime {
     /// Load a script from name, code, and type (convenience method for Tauri commands)
-    pub fn load_script_from_code(&self, name: &str, code: &str, script_type: ScriptType) -> LuaResult<()> {
+    pub fn load_script_from_code(
+        &self,
+        name: &str,
+        code: &str,
+        script_type: ScriptType,
+    ) -> LuaResult<()> {
         let info = ScriptInfo {
             id: name.to_string(),
             name: name.to_string(),
@@ -648,13 +734,13 @@ pub struct ScriptingState {
 
 impl ScriptingState {
     pub fn new() -> Self {
-        Self {
-            scripts: Mutex::new(HashMap::new()),
-        }
+        Self { scripts: Mutex::new(HashMap::new()) }
     }
 
     /// Create a temporary runtime with all scripts loaded
-    fn create_runtime_with_scripts(&self) -> Result<(LuaRuntime, mpsc::UnboundedReceiver<ScriptAction>), String> {
+    fn create_runtime_with_scripts(
+        &self,
+    ) -> Result<(LuaRuntime, mpsc::UnboundedReceiver<ScriptAction>), String> {
         let (runtime, action_rx) = LuaRuntime::new().map_err(|e| e.to_string())?;
 
         // Load all enabled scripts into the runtime
@@ -685,7 +771,9 @@ pub fn scripting_load_script(
 ) -> Result<(), String> {
     // Validate script by compiling it
     let lua = Lua::new();
-    lua.load(&code).into_function().map_err(|e| format!("Script compilation error: {}", e))?;
+    lua.load(&code)
+        .into_function()
+        .map_err(|e| format!("Script compilation error: {}", e))?;
 
     let stype = match script_type.as_str() {
         "generator" => ScriptType::Generator,
@@ -783,9 +871,21 @@ pub fn scripting_get_script(
 #[tauri::command]
 pub fn scripting_get_example_scripts() -> Vec<(String, String, String)> {
     vec![
-        ("arpeggiator".to_string(), "processor".to_string(), SCRIPT_ARPEGGIATOR.to_string()),
-        ("chord_trigger".to_string(), "processor".to_string(), SCRIPT_CHORD_TRIGGER.to_string()),
-        ("velocity_curve".to_string(), "processor".to_string(), SCRIPT_VELOCITY_CURVE.to_string()),
+        (
+            "arpeggiator".to_string(),
+            "processor".to_string(),
+            SCRIPT_ARPEGGIATOR.to_string(),
+        ),
+        (
+            "chord_trigger".to_string(),
+            "processor".to_string(),
+            SCRIPT_CHORD_TRIGGER.to_string(),
+        ),
+        (
+            "velocity_curve".to_string(),
+            "processor".to_string(),
+            SCRIPT_VELOCITY_CURVE.to_string(),
+        ),
     ]
 }
 

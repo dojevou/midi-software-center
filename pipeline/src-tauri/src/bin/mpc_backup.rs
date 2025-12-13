@@ -107,14 +107,14 @@ fn calculate_bars(duration: f64, bpm: f64, time_sig_numerator: i16) -> i32 {
     let bars = (duration / seconds_per_bar).round() as i32;
 
     // Clamp to reasonable range (1-999 bars)
-    bars.max(1).min(999)
+    bars.clamp(1, 999)
 }
 
 /// Convert musical key to MPC format
 /// Examples: "C" → "c+", "Cm" → "c-", "F#" → "fs+", "F#m" → "fs-"
 fn format_key(key: &str) -> String {
     let is_minor = key.ends_with('m');
-    let note = key.trim_end_matches('m').replace('#', "s").replace('b', "s").to_lowercase();
+    let note = key.trim_end_matches('m').replace(['#', 'b'], "s").to_lowercase();
 
     if is_minor {
         format!("{}-", note)

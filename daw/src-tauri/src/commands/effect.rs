@@ -397,7 +397,7 @@ pub type EffectStateHandle = Arc<RwLock<EffectState>>;
 fn generate_effect_id() -> EffectId {
     format!(
         "fx_{}",
-        uuid::Uuid::new_v4().to_string().replace("-", "")[..12].to_string()
+        &uuid::Uuid::new_v4().to_string().replace("-", "")[..12]
     )
 }
 

@@ -22,7 +22,7 @@ use wmidi::MidiMessage;
 // ============================================================================
 
 /// Backend type for MIDI I/O
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize, Default)]
 pub enum MidiBackendType {
     /// JACK Audio Connection Kit - lowest latency (~3ms)
     Jack,
@@ -35,13 +35,8 @@ pub enum MidiBackendType {
     /// midir - cross-platform fallback (~10-15ms)
     Midir,
     /// Auto-select best available backend
+    #[default]
     Auto,
-}
-
-impl Default for MidiBackendType {
-    fn default() -> Self {
-        Self::Auto
-    }
 }
 
 /// MIDI port information

@@ -106,7 +106,7 @@ impl ImportWorker {
             match Self::process_file(path.to_path_buf(), &db_pool).await {
                 Ok(file_record) => {
                     // Push to sanitize queue
-                    if let Err(_) = output_queue.import_to_sanitize.push(file_record) {
+                    if output_queue.import_to_sanitize.push(file_record).is_err() {
                         warn!(
                             "Import worker {}: sanitize queue full, waiting...",
                             worker_id
@@ -145,7 +145,7 @@ impl ImportWorker {
         // Check for duplicate
         let existing: Option<i64> =
             sqlx::query_scalar("SELECT id FROM files WHERE content_hash = $1")
-                .bind(&hash)
+                .bind(hash)
                 .fetch_optional(db_pool)
                 .await?;
 
@@ -183,7 +183,7 @@ impl ImportWorker {
         .bind(&filename)
         .bind(&filepath)
         .bind(&parent_folder)
-        .bind(&hash)
+        .bind(hash)
         .bind(bytes.len() as i64)
         .fetch_one(db_pool)
         .await?;

@@ -4,7 +4,6 @@
 /// individual single-track files. Handles parallel processing, progress tracking,
 /// and database updates for the split tracks.
 use anyhow::{Context, Result};
-use blake3;
 use clap::Parser;
 use indicatif::{ProgressBar, ProgressStyle};
 use midi_pipeline::core::splitting::{split_tracks_with_repair, RepairResult};
@@ -308,7 +307,7 @@ async fn process_file(
     let track_count = split_tracks.len();
 
     // Save each split track
-    for (_idx, split_track) in split_tracks.iter().enumerate() {
+    for split_track in split_tracks.iter() {
         // Generate filename
         let base_name = Path::new(&file.filename)
             .file_stem()

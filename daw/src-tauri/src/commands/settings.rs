@@ -263,7 +263,7 @@ fn profile_path(profiles_dir: &PathBuf, profile_id: &str) -> PathBuf {
 
 /// Load all settings from disk
 pub async fn load_settings_impl(state: &SettingsState) -> Result<AppSettings, SettingsError> {
-    let loaded = AppSettings::load().map_err(|e| SettingsError::FileError(e))?;
+    let loaded = AppSettings::load().map_err(SettingsError::FileError)?;
 
     // Update state
     let mut settings = state.settings.write().await;
@@ -278,7 +278,7 @@ pub async fn save_settings_impl(
     settings: &AppSettings,
 ) -> Result<(), SettingsError> {
     // Validate before saving
-    settings.validate().map_err(|e| SettingsError::ValidationFailed(e))?;
+    settings.validate().map_err(SettingsError::ValidationFailed)?;
 
     // Update state
     {
@@ -287,7 +287,7 @@ pub async fn save_settings_impl(
     }
 
     // Save to disk
-    settings.save().map_err(|e| SettingsError::FileError(e))?;
+    settings.save().map_err(SettingsError::FileError)?;
 
     Ok(())
 }
@@ -339,97 +339,97 @@ pub async fn update_category_settings_impl(
         SettingsCategory::General => {
             let general: GeneralSettings = serde_json::from_value(value)
                 .map_err(|e| SettingsError::InvalidValue(e.to_string()))?;
-            general.validate().map_err(|e| SettingsError::ValidationFailed(e))?;
+            general.validate().map_err(SettingsError::ValidationFailed)?;
             settings.general = general;
         },
         SettingsCategory::Audio => {
             let audio: AudioSettings = serde_json::from_value(value)
                 .map_err(|e| SettingsError::InvalidValue(e.to_string()))?;
-            audio.validate().map_err(|e| SettingsError::ValidationFailed(e))?;
+            audio.validate().map_err(SettingsError::ValidationFailed)?;
             settings.audio = audio;
         },
         SettingsCategory::Display => {
             let display: DisplaySettings = serde_json::from_value(value)
                 .map_err(|e| SettingsError::InvalidValue(e.to_string()))?;
-            display.validate().map_err(|e| SettingsError::ValidationFailed(e))?;
+            display.validate().map_err(SettingsError::ValidationFailed)?;
             settings.display = display;
         },
         SettingsCategory::Keyboard => {
             let keyboard: KeyboardSettings = serde_json::from_value(value)
                 .map_err(|e| SettingsError::InvalidValue(e.to_string()))?;
-            keyboard.validate().map_err(|e| SettingsError::ValidationFailed(e))?;
+            keyboard.validate().map_err(SettingsError::ValidationFailed)?;
             settings.keyboard = keyboard;
         },
         SettingsCategory::Midi => {
             let midi: MidiSettings = serde_json::from_value(value)
                 .map_err(|e| SettingsError::InvalidValue(e.to_string()))?;
-            midi.validate().map_err(|e| SettingsError::ValidationFailed(e))?;
+            midi.validate().map_err(SettingsError::ValidationFailed)?;
             settings.midi = midi;
         },
         SettingsCategory::Mixer => {
             let mixer: MixerSettings = serde_json::from_value(value)
                 .map_err(|e| SettingsError::InvalidValue(e.to_string()))?;
-            mixer.validate().map_err(|e| SettingsError::ValidationFailed(e))?;
+            mixer.validate().map_err(SettingsError::ValidationFailed)?;
             settings.mixer = mixer;
         },
         SettingsCategory::Track => {
             let track: TrackSettings = serde_json::from_value(value)
                 .map_err(|e| SettingsError::InvalidValue(e.to_string()))?;
-            track.validate().map_err(|e| SettingsError::ValidationFailed(e))?;
+            track.validate().map_err(SettingsError::ValidationFailed)?;
             settings.track = track;
         },
         SettingsCategory::ImportExport => {
             let ie: ImportExportSettings = serde_json::from_value(value)
                 .map_err(|e| SettingsError::InvalidValue(e.to_string()))?;
-            ie.validate().map_err(|e| SettingsError::ValidationFailed(e))?;
+            ie.validate().map_err(SettingsError::ValidationFailed)?;
             settings.import_export = ie;
         },
         SettingsCategory::Performance => {
             let perf: PerformanceSettings = serde_json::from_value(value)
                 .map_err(|e| SettingsError::InvalidValue(e.to_string()))?;
-            perf.validate().map_err(|e| SettingsError::ValidationFailed(e))?;
+            perf.validate().map_err(SettingsError::ValidationFailed)?;
             settings.performance = perf;
         },
         SettingsCategory::Library => {
             let lib: LibrarySettings = serde_json::from_value(value)
                 .map_err(|e| SettingsError::InvalidValue(e.to_string()))?;
-            lib.validate().map_err(|e| SettingsError::ValidationFailed(e))?;
+            lib.validate().map_err(SettingsError::ValidationFailed)?;
             settings.library = lib;
         },
         SettingsCategory::Playback => {
             let pb: PlaybackSettings = serde_json::from_value(value)
                 .map_err(|e| SettingsError::InvalidValue(e.to_string()))?;
-            pb.validate().map_err(|e| SettingsError::ValidationFailed(e))?;
+            pb.validate().map_err(SettingsError::ValidationFailed)?;
             settings.playback = pb;
         },
         SettingsCategory::Recording => {
             let rec: RecordingSettings = serde_json::from_value(value)
                 .map_err(|e| SettingsError::InvalidValue(e.to_string()))?;
-            rec.validate().map_err(|e| SettingsError::ValidationFailed(e))?;
+            rec.validate().map_err(SettingsError::ValidationFailed)?;
             settings.recording = rec;
         },
         SettingsCategory::Sync => {
             let sync: SyncSettings = serde_json::from_value(value)
                 .map_err(|e| SettingsError::InvalidValue(e.to_string()))?;
-            sync.validate().map_err(|e| SettingsError::ValidationFailed(e))?;
+            sync.validate().map_err(SettingsError::ValidationFailed)?;
             settings.sync = sync;
         },
         SettingsCategory::Privacy => {
             let priv_settings: PrivacySettings = serde_json::from_value(value)
                 .map_err(|e| SettingsError::InvalidValue(e.to_string()))?;
-            priv_settings.validate().map_err(|e| SettingsError::ValidationFailed(e))?;
+            priv_settings.validate().map_err(SettingsError::ValidationFailed)?;
             settings.privacy = priv_settings;
         },
         SettingsCategory::Advanced => {
             let adv: AdvancedSettings = serde_json::from_value(value)
                 .map_err(|e| SettingsError::InvalidValue(e.to_string()))?;
-            adv.validate().map_err(|e| SettingsError::ValidationFailed(e))?;
+            adv.validate().map_err(SettingsError::ValidationFailed)?;
             settings.advanced = adv;
         },
     }
 
     // Save to disk
-    settings.save().map_err(|e| SettingsError::FileError(e))?;
+    settings.save().map_err(SettingsError::FileError)?;
 
     Ok(())
 }
@@ -460,7 +460,7 @@ pub async fn reset_category_impl(
     }
 
     // Save to disk
-    settings.save().map_err(|e| SettingsError::FileError(e))?;
+    settings.save().map_err(SettingsError::FileError)?;
 
     Ok(())
 }
@@ -470,7 +470,7 @@ pub async fn reset_all_settings_impl(state: &SettingsState) -> Result<(), Settin
     let mut settings = state.settings.write().await;
     *settings = AppSettings::default();
 
-    settings.save().map_err(|e| SettingsError::FileError(e))?;
+    settings.save().map_err(SettingsError::FileError)?;
 
     Ok(())
 }
@@ -607,7 +607,7 @@ pub async fn import_profile_impl(
     }
 
     // Save to disk
-    settings.save().map_err(|e| SettingsError::FileError(e))?;
+    settings.save().map_err(SettingsError::FileError)?;
 
     Ok(())
 }
@@ -701,14 +701,14 @@ pub async fn get_settings_history_impl(
 
 /// Get settings file path
 pub async fn get_settings_path_impl() -> Result<String, SettingsError> {
-    let path = AppSettings::config_path().map_err(|e| SettingsError::FileError(e))?;
+    let path = AppSettings::config_path().map_err(SettingsError::FileError)?;
 
     Ok(path.to_string_lossy().to_string())
 }
 
 /// Check if settings file exists
 pub async fn settings_file_exists_impl() -> Result<bool, SettingsError> {
-    let path = AppSettings::config_path().map_err(|e| SettingsError::FileError(e))?;
+    let path = AppSettings::config_path().map_err(SettingsError::FileError)?;
 
     Ok(path.exists())
 }

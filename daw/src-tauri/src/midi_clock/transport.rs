@@ -2,18 +2,13 @@
 
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
+#[derive(Debug, Clone, Copy, Default, PartialEq, Eq, Serialize, Deserialize)]
 pub enum TransportState {
+    #[default]
     Stopped,
     Playing,
     Recording,
     Paused,
-}
-
-impl Default for TransportState {
-    fn default() -> Self {
-        Self::Stopped
-    }
 }
 
 #[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
@@ -24,19 +19,13 @@ pub struct TimeSignature {
 
 impl Default for TimeSignature {
     fn default() -> Self {
-        Self {
-            numerator: 4,
-            denominator: 4,
-        }
+        Self { numerator: 4, denominator: 4 }
     }
 }
 
 impl TimeSignature {
     pub fn new(numerator: u8, denominator: u8) -> Self {
-        Self {
-            numerator,
-            denominator,
-        }
+        Self { numerator, denominator }
     }
 
     pub fn beats_per_bar(&self) -> u8 {

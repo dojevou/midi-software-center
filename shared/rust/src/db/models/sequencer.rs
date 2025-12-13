@@ -200,7 +200,7 @@ pub struct PlaybackState {
 impl SequencerProject {
     /// Create a new project with default settings.
     #[must_use]
-    pub fn new(name: &str) -> CreateSequencerProject {
+    pub fn create(name: &str) -> CreateSequencerProject {
         CreateSequencerProject {
             name: name.to_string(),
             bpm: 120.0,
@@ -353,7 +353,7 @@ mod tests {
 
     #[test]
     fn test_create_project() {
-        let project = SequencerProject::new("My Project");
+        let project = SequencerProject::create("My Project");
         assert_eq!(project.name, "My Project");
         assert_eq!(project.bpm, 120.0);
         assert_eq!(project.time_signature, "4/4");

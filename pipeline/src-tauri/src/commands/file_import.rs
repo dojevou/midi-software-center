@@ -283,7 +283,7 @@ pub async fn import_directory_impl(
                         errors.lock().await.push(error_msg);
                         skipped.fetch_add(1, Ordering::SeqCst);
                         return;
-                    }
+                    },
                 };
 
                 current_index.fetch_add(1, Ordering::SeqCst);
@@ -305,11 +305,11 @@ pub async fn import_directory_impl(
                                 skipped.fetch_add(batch.len(), Ordering::SeqCst);
                             }
                         }
-                    }
+                    },
                     Err(e) => {
                         errors.lock().await.push(format!("{}: {}", file_path.display(), e));
                         skipped.fetch_add(1, Ordering::SeqCst);
-                    }
+                    },
                 }
             }
         })
@@ -772,17 +772,20 @@ fn is_midi_file(path: &Path) -> bool {
 
 /// Convert ProcessedFile batch to FileRecord batch for database insertion
 fn to_file_records(files: &[ProcessedFile]) -> Vec<crate::database::batch_insert::FileRecord> {
-    files.iter().map(|f| {
-        crate::database::batch_insert::FileRecord::new(
-            f.filename.clone(),
-            f.original_filename.clone(),
-            f.filepath.clone(),
-            f.parent_folder.clone(),
-            hex::encode(&f.content_hash),
-            f.file_size_bytes,
-            f.category.clone(),
-        )
-    }).collect()
+    files
+        .iter()
+        .map(|f| {
+            crate::database::batch_insert::FileRecord::new(
+                f.filename.clone(),
+                f.original_filename.clone(),
+                f.filepath.clone(),
+                f.parent_folder.clone(),
+                hex::encode(&f.content_hash),
+                f.file_size_bytes,
+                f.category.clone(),
+            )
+        })
+        .collect()
 }
 
 /// Deduplicate files by checking hashes against the database
@@ -817,8 +820,12 @@ async fn deduplicate_files(
 
     for (path, hash_opt) in hash_results {
         match hash_opt {
-            Some(hash) => { file_to_hash.insert(path, hash); },
-            None => { hash_error_count += 1; },
+            Some(hash) => {
+                file_to_hash.insert(path, hash);
+            },
+            None => {
+                hash_error_count += 1;
+            },
         }
     }
 
@@ -827,13 +834,12 @@ async fn deduplicate_files(
     let existing: std::collections::HashSet<Vec<u8>> = if !hashes.is_empty() {
         let mut result = std::collections::HashSet::new();
         for chunk in hashes.chunks(DB_QUERY_CHUNK_SIZE) {
-            let found: Vec<Vec<u8>> = sqlx::query_scalar(
-                "SELECT content_hash FROM files WHERE content_hash = ANY($1)"
-            )
-            .bind(chunk)
-            .fetch_all(pool)
-            .await
-            .map_err(|e| format!("Database query failed: {}", e))?;
+            let found: Vec<Vec<u8>> =
+                sqlx::query_scalar("SELECT content_hash FROM files WHERE content_hash = ANY($1)")
+                    .bind(chunk)
+                    .fetch_all(pool)
+                    .await
+                    .map_err(|e| format!("Database query failed: {}", e))?;
             result.extend(found);
         }
         result

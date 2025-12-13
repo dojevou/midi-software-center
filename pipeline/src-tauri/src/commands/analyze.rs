@@ -462,7 +462,7 @@ pub async fn analyze_single_file(
 
     // 12. Melody detection (simple heuristic: monophonic content)
     let has_melody = note_stats.is_monophonic
-        || (note_stats.polyphony_avg.map_or(false, |p| p < 2.0) && note_stats.note_count > 10);
+        || (note_stats.polyphony_avg.is_some_and(|p| p < 2.0) && note_stats.note_count > 10);
     let melodic_range = if has_melody {
         note_stats.pitch_range_semitones
     } else {
@@ -643,7 +643,7 @@ pub async fn batch_insert_analyzed_files(
         .bind(file.is_polyphonic)
         .bind(file.is_percussive)
         .bind(file.has_chords)
-        .bind(file.chord_progression.as_ref().map(|v| serde_json::to_string(v).ok()).flatten())
+        .bind(file.chord_progression.as_ref().and_then(|v| serde_json::to_string(v).ok()))
         .bind(&file.chord_types)
         .bind(file.has_seventh_chords)
         .bind(file.has_extended_chords)
@@ -805,7 +805,7 @@ fn analyze_notes(midi_file: &MidiFile) -> NoteStats {
     let is_monophonic = polyphony_max == Some(1);
 
     // Polyphonic: max polyphony > 1
-    let is_polyphonic = polyphony_max.map_or(false, |p| p > 1);
+    let is_polyphonic = polyphony_max.is_some_and(|p| p > 1);
 
     // Percussive: >50% of notes on channel 10 OR pitch range in drum range (35-81)
     let is_percussive = if note_count > 0 {
@@ -1093,7 +1093,7 @@ fn extract_tempo_changes(midi_file: &MidiFile) -> Option<String> {
                 let bpm = 60_000_000.0 / *microseconds_per_quarter as f64;
                 tempo_changes.push(serde_json::json!({
                     "tick": track_tick,
-                    "bpm": ((bpm * 100.0) as f64).round() / 100.0 // Round to 2 decimals
+                    "bpm": ((bpm * 100.0)).round() / 100.0 // Round to 2 decimals
                 }));
             }
         }
@@ -1467,7 +1467,7 @@ fn analyze_structure(midi_file: &MidiFile) -> Option<String> {
         std::collections::HashMap::new();
     for (idx, &hash) in segment_hashes.iter().enumerate() {
         if hash != 0 {
-            pattern_map.entry(hash).or_insert_with(Vec::new).push(idx);
+            pattern_map.entry(hash).or_default().push(idx);
         }
     }
 

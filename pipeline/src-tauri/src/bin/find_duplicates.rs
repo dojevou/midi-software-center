@@ -1,4 +1,3 @@
-use blake3;
 use dashmap::DashMap;
 use rayon::prelude::*;
 use std::collections::HashMap;
@@ -109,7 +108,7 @@ fn detect_duplicates(files: Vec<PathBuf>) -> (HashMap<String, Vec<FileInfo>>, Ar
         let info = FileInfo { path: path.clone(), size, hash: hash.clone() };
 
         // Add to map
-        file_map.entry(hash).or_insert_with(Vec::new).push(info);
+        file_map.entry(hash).or_default().push(info);
 
         // Update stats
         stats.total_files.fetch_add(1, Ordering::Relaxed);
@@ -117,7 +116,7 @@ fn detect_duplicates(files: Vec<PathBuf>) -> (HashMap<String, Vec<FileInfo>>, Ar
 
         // Progress reporting
         let count = processed.fetch_add(1, Ordering::Relaxed) + 1;
-        if count % 10000 == 0 {
+        if count.is_multiple_of(10000) {
             let elapsed = start.elapsed();
             let rate = count as f64 / elapsed.as_secs_f64();
             println!("Processed: {}   files ({:.0} files/sec)", count, rate);
@@ -248,7 +247,7 @@ fn generate_report(
             output.push_str(&format!("| {} | `{}` |\n", status, file.path.display()));
         }
 
-        output.push_str("\n");
+        output.push('\n');
 
         // Only show first 100 groups in report (can be huge)
         if i >= 99 {
@@ -313,7 +312,7 @@ fn execute_deletion(delete_list_path: &Path) -> std::io::Result<u64> {
         }
 
         let count = deleted.load(Ordering::Relaxed);
-        if count % 1000 == 0 {
+        if count.is_multiple_of(1000) {
             println!("Deleted: {}   files", count);
         }
     });

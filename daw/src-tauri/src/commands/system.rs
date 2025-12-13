@@ -121,14 +121,14 @@ impl MidiDeviceSettings {
                     Ok(settings) => {
                         info!("Loaded MIDI device settings from {:?}", path);
                         return settings;
-                    }
+                    },
                     Err(e) => {
                         warn!("Failed to parse MIDI settings: {}", e);
-                    }
+                    },
                 },
                 Err(e) => {
                     warn!("Failed to read MIDI settings file: {}", e);
-                }
+                },
             }
         }
         Self::default()
@@ -394,7 +394,11 @@ pub async fn set_midi_device(
     midi_settings.set_device(config);
     midi_settings.save()?;
 
-    info!("Set MIDI {} device: {}", if is_input { "input" } else { "output" }, device_id);
+    info!(
+        "Set MIDI {} device: {}",
+        if is_input { "input" } else { "output" },
+        device_id
+    );
     Ok(())
 }
 
@@ -462,11 +466,7 @@ pub async fn get_cpu_usage(state: State<'_, SystemState>) -> Result<CpuUsage, St
     // Process CPU usage (approximation)
     let process = global * 0.1; // Placeholder - real impl would use process-specific data
 
-    Ok(CpuUsage {
-        global,
-        per_core,
-        process,
-    })
+    Ok(CpuUsage { global, per_core, process })
 }
 
 #[command]
@@ -480,13 +480,7 @@ pub async fn get_memory_usage(state: State<'_, SystemState>) -> Result<MemoryUsa
     let swap_used = sys.used_swap();
     let swap_total = sys.total_swap();
 
-    Ok(MemoryUsage {
-        used_bytes,
-        total_bytes,
-        percentage,
-        swap_used,
-        swap_total,
-    })
+    Ok(MemoryUsage { used_bytes, total_bytes, percentage, swap_used, swap_total })
 }
 
 // Monitoring loop function
@@ -553,7 +547,7 @@ pub async fn log_frontend_error(error: FrontendError) -> Result<(), String> {
                 "Frontend error: {}",
                 error.message
             );
-        }
+        },
         "warning" => {
             warn!(
                 category = %error.category,
@@ -561,7 +555,7 @@ pub async fn log_frontend_error(error: FrontendError) -> Result<(), String> {
                 "Frontend warning: {}",
                 error.message
             );
-        }
+        },
         _ => {
             info!(
                 category = %error.category,
@@ -569,7 +563,7 @@ pub async fn log_frontend_error(error: FrontendError) -> Result<(), String> {
                 "Frontend info: {}",
                 error.message
             );
-        }
+        },
     }
 
     Ok(())

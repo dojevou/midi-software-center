@@ -206,9 +206,7 @@ pub struct MidiExporter {
 impl MidiExporter {
     /// Create a new exporter with default options
     pub fn new() -> Self {
-        Self {
-            options: ExportOptions::default(),
-        }
+        Self { options: ExportOptions::default() }
     }
 
     /// Create a new exporter with custom options
@@ -350,7 +348,9 @@ impl MidiExporter {
             if let Some(ref instrument) = metadata.instrument {
                 events.push(TrackEvent {
                     delta: 0.into(),
-                    kind: TrackEventKind::Meta(MetaMessage::InstrumentName(Self::leak_str(instrument))),
+                    kind: TrackEventKind::Meta(MetaMessage::InstrumentName(Self::leak_str(
+                        instrument,
+                    ))),
                 });
             }
 
@@ -383,7 +383,7 @@ impl MidiExporter {
                         vel: midly::num::u7::new(vel & 0x7F),
                     },
                 })
-            }
+            },
             MidiEventType::NoteOff => {
                 let note = event.note?;
                 let vel = event.velocity.unwrap_or(64);
@@ -394,7 +394,7 @@ impl MidiExporter {
                         vel: midly::num::u7::new(vel & 0x7F),
                     },
                 })
-            }
+            },
             MidiEventType::ControlChange => {
                 let controller = event.controller?;
                 let value = event.value.unwrap_or(0);
@@ -405,7 +405,7 @@ impl MidiExporter {
                         value: midly::num::u7::new(value & 0x7F),
                     },
                 })
-            }
+            },
             MidiEventType::ProgramChange => {
                 let program = event.program?;
                 Some(TrackEventKind::Midi {
@@ -414,7 +414,7 @@ impl MidiExporter {
                         program: midly::num::u7::new(program & 0x7F),
                     },
                 })
-            }
+            },
             MidiEventType::PitchBend => {
                 // Value is stored as 14-bit value (0-16383, center at 8192)
                 let bend_value = event.value.map(|v| (v as u16) << 7).unwrap_or(8192);
@@ -424,7 +424,7 @@ impl MidiExporter {
                         bend: midly::PitchBend(midly::num::u14::new(bend_value)),
                     },
                 })
-            }
+            },
             MidiEventType::Aftertouch => {
                 let pressure = event.value.unwrap_or(0);
                 Some(TrackEventKind::Midi {
@@ -433,7 +433,7 @@ impl MidiExporter {
                         vel: midly::num::u7::new(pressure & 0x7F),
                     },
                 })
-            }
+            },
         }
     }
 
@@ -453,10 +453,7 @@ impl MidiExporter {
         for event in sorted_events {
             let delta = (event.tick.saturating_sub(last_tick)) as u32;
             if let Some(kind) = self.convert_event(event, event.channel) {
-                track_events.push(TrackEvent {
-                    delta: delta.into(),
-                    kind,
-                });
+                track_events.push(TrackEvent { delta: delta.into(), kind });
                 last_tick = event.tick;
             }
         }
@@ -472,10 +469,7 @@ impl MidiExporter {
             midly::Timing::Metrical(midly::num::u15::new(self.options.ticks_per_quarter)),
         );
 
-        Ok(Smf {
-            header,
-            tracks: vec![track_events],
-        })
+        Ok(Smf { header, tracks: vec![track_events] })
     }
 
     /// Export events to SMF Type 1 (multi-track)
@@ -512,10 +506,7 @@ impl MidiExporter {
             for event in events {
                 let delta = (event.tick.saturating_sub(last_tick)) as u32;
                 if let Some(kind) = self.convert_event(event, *channel) {
-                    track_events.push(TrackEvent {
-                        delta: delta.into(),
-                        kind,
-                    });
+                    track_events.push(TrackEvent { delta: delta.into(), kind });
                     last_tick = event.tick;
                 }
             }
@@ -534,10 +525,7 @@ impl MidiExporter {
             midly::Timing::Metrical(midly::num::u15::new(self.options.ticks_per_quarter)),
         );
 
-        Ok(Smf {
-            header,
-            tracks,
-        })
+        Ok(Smf { header, tracks })
     }
 
     /// Export MIDI events to a file
@@ -643,9 +631,7 @@ pub async fn export_midi_file(
     let exporter = MidiExporter::with_options(opts);
 
     let path = Path::new(&path);
-    exporter
-        .export_to_file(&events, path)
-        .map_err(|e| e.to_string())
+    exporter.export_to_file(&events, path).map_err(|e| e.to_string())
 }
 
 /// Set the global export format
@@ -679,15 +665,14 @@ pub async fn set_export_tempo(bpm: f64) -> Result<(), String> {
 
 /// Set export time signature
 #[command]
-pub async fn set_export_time_signature(
-    numerator: u8,
-    denominator: u8,
-) -> Result<(), String> {
+pub async fn set_export_time_signature(numerator: u8, denominator: u8) -> Result<(), String> {
     if numerator == 0 || numerator > 32 {
         return Err("Invalid numerator: must be between 1 and 32".to_string());
     }
     if !matches!(denominator, 1 | 2 | 4 | 8 | 16 | 32 | 64) {
-        return Err("Invalid denominator: must be a power of 2 (1, 2, 4, 8, 16, 32, 64)".to_string());
+        return Err(
+            "Invalid denominator: must be a power of 2 (1, 2, 4, 8, 16, 32, 64)".to_string(),
+        );
     }
 
     let mut opts = EXPORT_OPTIONS.write();
@@ -698,10 +683,7 @@ pub async fn set_export_time_signature(
 
 /// Set export key signature
 #[command]
-pub async fn set_export_key_signature(
-    key: i8,
-    minor: bool,
-) -> Result<(), String> {
+pub async fn set_export_key_signature(key: i8, minor: bool) -> Result<(), String> {
     if !(-7..=7).contains(&key) {
         return Err("Invalid key: must be between -7 and 7".to_string());
     }
@@ -709,7 +691,11 @@ pub async fn set_export_key_signature(
     let mut opts = EXPORT_OPTIONS.write();
     opts.key_signature = Some(KeySignature {
         key,
-        mode: if minor { KeyMode::Minor } else { KeyMode::Major },
+        mode: if minor {
+            KeyMode::Minor
+        } else {
+            KeyMode::Major
+        },
     });
     Ok(())
 }

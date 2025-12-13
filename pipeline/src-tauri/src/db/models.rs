@@ -70,9 +70,7 @@ mod option_bigdecimal_serde {
     {
         let opt: Option<String> = Option::deserialize(deserializer)?;
         match opt {
-            Some(s) => BigDecimal::from_str(&s)
-                .map(Some)
-                .map_err(serde::de::Error::custom),
+            Some(s) => BigDecimal::from_str(&s).map(Some).map_err(serde::de::Error::custom),
             None => Ok(None),
         }
     }

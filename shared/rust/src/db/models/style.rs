@@ -4,7 +4,6 @@
 //! - Ambient, Cinematic, Dance, EDM, Funk, Hip-Hop, House, Jazz, etc.
 //! - Pre-populated with 24 system styles, users can add custom ones.
 
-
 use serde::{Deserialize, Serialize};
 
 /// Style record representing a musical genre or category.
@@ -67,21 +66,13 @@ impl CreateStyle {
     /// Create a new custom style.
     #[must_use]
     pub fn new(name: &str) -> Self {
-        Self {
-            name: name.to_string(),
-            sort_order: None,
-            is_system: false,
-        }
+        Self { name: name.to_string(), sort_order: None, is_system: false }
     }
 
     /// Create a system style with sort order.
     #[must_use]
     pub fn system(name: &str, sort_order: i16) -> Self {
-        Self {
-            name: name.to_string(),
-            sort_order: Some(sort_order),
-            is_system: true,
-        }
+        Self { name: name.to_string(), sort_order: Some(sort_order), is_system: true }
     }
 
     /// Set sort order.

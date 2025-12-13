@@ -1,5 +1,3 @@
-#![cfg(feature = "database")]
-
 use super::status::{ServiceHealth, SystemHealth};
 use sqlx::PgPool;
 use std::sync::Arc;
@@ -69,10 +67,7 @@ impl HealthChecker {
     async fn check_postgres(&self, pool: &PgPool) -> ServiceHealth {
         let start = Instant::now();
 
-        match sqlx::query_scalar::<_, i32>("SELECT 1")
-            .fetch_one(pool)
-            .await
-        {
+        match sqlx::query_scalar::<_, i32>("SELECT 1").fetch_one(pool).await {
             Ok(_) => {
                 let latency = start.elapsed();
                 let latency_ms = latency.as_millis() as u64;
@@ -81,10 +76,7 @@ impl HealthChecker {
                 let details = self.get_postgres_details(pool).await;
 
                 if latency_ms > POSTGRES_LATENCY_WARNING_MS {
-                    warn!(
-                        latency_ms = latency_ms,
-                        "PostgreSQL responding slowly"
-                    );
+                    warn!(latency_ms = latency_ms, "PostgreSQL responding slowly");
                     ServiceHealth::degraded(
                         "postgresql",
                         latency,
@@ -95,11 +87,11 @@ impl HealthChecker {
                     debug!(latency_ms = latency_ms, "PostgreSQL health check passed");
                     ServiceHealth::healthy("postgresql", latency).with_details(details)
                 }
-            }
+            },
             Err(e) => {
                 error!(error = %e, "PostgreSQL health check failed");
                 ServiceHealth::unhealthy("postgresql", e.to_string())
-            }
+            },
         }
     }
 
@@ -152,10 +144,7 @@ impl HealthChecker {
                     let details = self.get_meilisearch_details(url).await;
 
                     if latency_ms > MEILISEARCH_LATENCY_WARNING_MS {
-                        warn!(
-                            latency_ms = latency_ms,
-                            "Meilisearch responding slowly"
-                        );
+                        warn!(latency_ms = latency_ms, "Meilisearch responding slowly");
                         ServiceHealth::degraded(
                             "meilisearch",
                             latency,
@@ -169,16 +158,13 @@ impl HealthChecker {
                 } else {
                     let status = response.status();
                     error!(status = %status, "Meilisearch returned error status");
-                    ServiceHealth::unhealthy(
-                        "meilisearch",
-                        format!("HTTP {}", status),
-                    )
+                    ServiceHealth::unhealthy("meilisearch", format!("HTTP {}", status))
                 }
-            }
+            },
             Err(e) => {
                 error!(error = %e, "Meilisearch health check failed");
                 ServiceHealth::unhealthy("meilisearch", e.to_string())
-            }
+            },
         }
     }
 
@@ -194,7 +180,7 @@ impl HealthChecker {
         match request.send().await {
             Ok(response) if response.status().is_success() => {
                 response.json().await.unwrap_or(serde_json::json!({}))
-            }
+            },
             _ => serde_json::json!({}),
         }
     }

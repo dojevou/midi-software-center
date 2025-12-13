@@ -1547,10 +1547,7 @@ async fn test_search_combines_multiple_filters_correctly() {
     insert_metadata(&pool, file2, Some(140.0), Some("C"), None).await;
 
     // Query: BPM > 130 AND key = C
-    let query = SearchQueryBuilder::new()
-        .min_bpm(130.0)
-        .key("C")
-        .build();
+    let query = SearchQueryBuilder::new().min_bpm(130.0).key("C").build();
 
     let results = SearchRepository::search(&pool, query, 100, 0).await.expect("Query failed");
     assert_eq!(results.len(), 1, "Should match only file2 (140 BPM in C)");

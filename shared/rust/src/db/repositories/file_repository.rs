@@ -98,7 +98,7 @@ impl FileRepository {
         .bind(new_file.format)
         .bind(new_file.num_tracks)
         .bind(new_file.ticks_per_quarter_note)
-        .bind(&new_file.import_batch_id)
+        .bind(new_file.import_batch_id)
         .fetch_one(&mut *tx)
         .await
         .map_err(DbError::from)?;
@@ -155,7 +155,7 @@ impl FileRepository {
             .bind(file.format)
             .bind(file.num_tracks)
             .bind(file.ticks_per_quarter_note)
-            .bind(&file.import_batch_id)
+            .bind(file.import_batch_id)
             .fetch_optional(&mut *tx)
             .await
             .map_err(DbError::from)?;

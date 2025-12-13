@@ -72,7 +72,7 @@ impl FrameRate {
         }
     }
 
-    pub fn to_mtc_type(&self) -> u8 {
+    pub fn to_mtc_type(self) -> u8 {
         match self {
             Self::Fps24 => 0,
             Self::Fps25 => 1,
@@ -84,13 +84,7 @@ impl FrameRate {
 
 impl MidiTimecode {
     pub fn new(frame_rate: FrameRate) -> Self {
-        Self {
-            hours: 0,
-            minutes: 0,
-            seconds: 0,
-            frames: 0,
-            frame_rate,
-        }
+        Self { hours: 0, minutes: 0, seconds: 0, frames: 0, frame_rate }
     }
 
     pub fn from_millis(millis: u64, frame_rate: FrameRate) -> Self {
@@ -104,16 +98,10 @@ impl MidiTimecode {
         let minutes = (total_minutes % 60) as u8;
         let hours = (total_minutes / 60) as u8;
 
-        Self {
-            hours,
-            minutes,
-            seconds,
-            frames,
-            frame_rate,
-        }
+        Self { hours, minutes, seconds, frames, frame_rate }
     }
 
-    pub fn to_millis(&self) -> u64 {
+    pub fn to_millis(self) -> u64 {
         let fps = self.frame_rate.frames_per_second();
         let total_seconds =
             self.hours as u64 * 3600 + self.minutes as u64 * 60 + self.seconds as u64;
@@ -123,16 +111,16 @@ impl MidiTimecode {
     }
 
     /// Generate MTC Quarter Frame messages
-    pub fn to_quarter_frames(&self) -> [u8; 8] {
+    pub fn to_quarter_frames(self) -> [u8; 8] {
         let frame_type = self.frame_rate.to_mtc_type();
         [
-            0x00 | (self.frames & 0x0F),                                    // Frame number low nibble
-            0x10 | ((self.frames >> 4) & 0x01),                             // Frame number high nibble
-            0x20 | (self.seconds & 0x0F),                                   // Seconds low nibble
-            0x30 | ((self.seconds >> 4) & 0x03),                            // Seconds high nibble
-            0x40 | (self.minutes & 0x0F),                                   // Minutes low nibble
-            0x50 | ((self.minutes >> 4) & 0x03),                            // Minutes high nibble
-            0x60 | (self.hours & 0x0F),                                     // Hours low nibble
+            self.frames & 0x0F,                                    // Frame number low nibble
+            0x10 | ((self.frames >> 4) & 0x01),                    // Frame number high nibble
+            0x20 | (self.seconds & 0x0F),                          // Seconds low nibble
+            0x30 | ((self.seconds >> 4) & 0x03),                   // Seconds high nibble
+            0x40 | (self.minutes & 0x0F),                          // Minutes low nibble
+            0x50 | ((self.minutes >> 4) & 0x03),                   // Minutes high nibble
+            0x60 | (self.hours & 0x0F),                            // Hours low nibble
             0x70 | ((self.hours >> 4) & 0x01) | (frame_type << 1), // Hours high + type
         ]
     }
@@ -146,17 +134,15 @@ pub struct SongPosition {
 
 impl SongPosition {
     pub fn new(beats: u16) -> Self {
-        Self {
-            beats: beats.min(16383),
-        }
+        Self { beats: beats.min(16383) }
     }
 
     pub fn from_bars(bars: u16, beats_per_bar: u8) -> Self {
-        let total_16ths = bars as u16 * beats_per_bar as u16 * 4;
+        let total_16ths = bars * beats_per_bar as u16 * 4;
         Self::new(total_16ths)
     }
 
-    pub fn to_bytes(&self) -> [u8; 2] {
+    pub fn to_bytes(self) -> [u8; 2] {
         [
             (self.beats & 0x7F) as u8,        // LSB (7 bits)
             ((self.beats >> 7) & 0x7F) as u8, // MSB (7 bits)
@@ -164,8 +150,6 @@ impl SongPosition {
     }
 
     pub fn from_bytes(lsb: u8, msb: u8) -> Self {
-        Self {
-            beats: (lsb as u16 & 0x7F) | ((msb as u16 & 0x7F) << 7),
-        }
+        Self { beats: (lsb as u16 & 0x7F) | ((msb as u16 & 0x7F) << 7) }
     }
 }

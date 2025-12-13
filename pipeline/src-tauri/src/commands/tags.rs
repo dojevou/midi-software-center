@@ -339,7 +339,10 @@ pub async fn set_file_rating(
 /// # Returns
 /// The rating (1-5) or None if unrated
 #[tauri::command]
-pub async fn get_file_rating(file_id: i64, state: State<'_, AppState>) -> Result<Option<i16>, String> {
+pub async fn get_file_rating(
+    file_id: i64,
+    state: State<'_, AppState>,
+) -> Result<Option<i16>, String> {
     let pool = state.database.pool().await;
 
     let result: Option<(Option<i16>,)> = sqlx::query_as("SELECT rating FROM files WHERE id = $1")

@@ -35,13 +35,29 @@ pub fn calculate_compatibility(source: &MidiFile, candidate: &MidiFile) -> Compa
 
             // Use name() method to show actual key names in explanations
             if score >= 95.0 {
-                explanations.push(format!("Perfect key match ({} → {})", key1.name(), key2.name()));
+                explanations.push(format!(
+                    "Perfect key match ({} → {})",
+                    key1.name(),
+                    key2.name()
+                ));
             } else if score >= 85.0 {
-                explanations.push(format!("Excellent key compatibility ({} → {})", key1.name(), key2.name()));
+                explanations.push(format!(
+                    "Excellent key compatibility ({} → {})",
+                    key1.name(),
+                    key2.name()
+                ));
             } else if score >= 70.0 {
-                explanations.push(format!("Good key compatibility ({} → {})", key1.name(), key2.name()));
+                explanations.push(format!(
+                    "Good key compatibility ({} → {})",
+                    key1.name(),
+                    key2.name()
+                ));
             } else if score < 50.0 {
-                explanations.push(format!("Keys may clash ({} → {})", key1.name(), key2.name()));
+                explanations.push(format!(
+                    "Keys may clash ({} → {})",
+                    key1.name(),
+                    key2.name()
+                ));
             }
 
             total_score += score * 0.4;

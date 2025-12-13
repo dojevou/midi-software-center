@@ -179,7 +179,7 @@ fn process_files(files: Vec<PathBuf>) -> DashMap<String, u64> {
 
         // Progress reporting
         let count = processed.fetch_add(1, Ordering::Relaxed) + 1;
-        if count % 10000 == 0 {
+        if count.is_multiple_of(10000) {
             let elapsed = start.elapsed();
             let rate = count as f64 / elapsed.as_secs_f64();
             println!("Processed: {} files ({:.0} files/sec)", count, rate);

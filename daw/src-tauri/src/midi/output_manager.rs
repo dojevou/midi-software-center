@@ -64,7 +64,7 @@ impl Ord for MidiOutputMessage {
             std::cmp::Ordering::Equal => {
                 // Earlier times come first (reverse for min-heap behavior)
                 other.scheduled_time.cmp(&self.scheduled_time)
-            }
+            },
             ord => ord,
         }
     }
@@ -73,21 +73,17 @@ impl Ord for MidiOutputMessage {
 /// Output message priority levels
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, PartialOrd, Ord, Hash)]
 #[serde(rename_all = "snake_case")]
+#[derive(Default)]
 pub enum OutputPriority {
     /// Background/scheduled messages
     Low = 0,
     /// Normal playback messages
+    #[default]
     Normal = 1,
     /// User-triggered messages (live input)
     High = 2,
     /// Real-time clock and transport
     RealTime = 3,
-}
-
-impl Default for OutputPriority {
-    fn default() -> Self {
-        Self::Normal
-    }
 }
 
 /// Track output assignment
@@ -103,14 +99,7 @@ pub struct TrackOutputAssignment {
 
 impl TrackOutputAssignment {
     pub fn new(track_id: i32, device_id: String, channel: u8) -> Self {
-        Self {
-            track_id,
-            device_id,
-            channel,
-            enabled: true,
-            volume_scale: 1.0,
-            transpose: 0,
-        }
+        Self { track_id, device_id, channel, enabled: true, volume_scale: 1.0, transpose: 0 }
     }
 }
 
@@ -149,8 +138,14 @@ pub struct OutputQueueStatus {
 #[derive(Debug, Clone, Serialize, Deserialize)]
 #[serde(tag = "event_type")]
 pub enum DeviceChangeEvent {
-    DeviceConnected { device_id: String, device_name: String },
-    DeviceDisconnected { device_id: String, device_name: String },
+    DeviceConnected {
+        device_id: String,
+        device_name: String,
+    },
+    DeviceDisconnected {
+        device_id: String,
+        device_name: String,
+    },
 }
 
 // =============================================================================
@@ -175,8 +170,21 @@ enum OutputManagerCommand {
     RemoveTrackOutput(i32, oneshot::Sender<Result<(), String>>),
 
     // Message sending
-    SendMessage(String, u8, Vec<u8>, OutputPriority, oneshot::Sender<Result<(), String>>),
-    ScheduleMessage(String, u8, Vec<u8>, u64, OutputPriority, oneshot::Sender<Result<(), String>>),
+    SendMessage(
+        String,
+        u8,
+        Vec<u8>,
+        OutputPriority,
+        oneshot::Sender<Result<(), String>>,
+    ),
+    ScheduleMessage(
+        String,
+        u8,
+        Vec<u8>,
+        u64,
+        OutputPriority,
+        oneshot::Sender<Result<(), String>>,
+    ),
 
     // Status queries
     GetOutputQueueStatus(oneshot::Sender<OutputQueueStatus>),
@@ -309,9 +317,7 @@ impl OutputManagerThreadState {
             .and_then(|s| s.parse().ok())
             .ok_or_else(|| format!("Invalid device ID: {}", device_id))?;
 
-        let port = ports
-            .get(port_idx)
-            .ok_or_else(|| format!("Device not found: {}", device_id))?;
+        let port = ports.get(port_idx).ok_or_else(|| format!("Device not found: {}", device_id))?;
 
         let device_name = midi_out
             .port_name(port)
@@ -341,7 +347,10 @@ impl OutputManagerThreadState {
     fn close_device(&mut self, device_id: &str) -> Result<(), String> {
         if let Some(wrapper) = self.connections.remove(device_id) {
             self.active_sensing_devices.remove(device_id);
-            info!("Closed MIDI output: {} ({})", wrapper.device_name, device_id);
+            info!(
+                "Closed MIDI output: {} ({})",
+                wrapper.device_name, device_id
+            );
             Ok(())
         } else {
             Err(format!("Device not open: {}", device_id))
@@ -349,7 +358,10 @@ impl OutputManagerThreadState {
     }
 
     fn create_virtual_output(&mut self, name: &str) -> Result<String, String> {
-        let id = format!("virtual_{}", uuid::Uuid::new_v4().to_string().split('-').next().unwrap_or("0"));
+        let id = format!(
+            "virtual_{}",
+            uuid::Uuid::new_v4().to_string().split('-').next().unwrap_or("0")
+        );
 
         let vport = VirtualOutputPort {
             id: id.clone(),
@@ -376,19 +388,29 @@ impl OutputManagerThreadState {
         }
     }
 
-    fn assign_track_output(&mut self, track_id: i32, device_id: String, channel: u8) -> Result<(), String> {
+    fn assign_track_output(
+        &mut self,
+        track_id: i32,
+        device_id: String,
+        channel: u8,
+    ) -> Result<(), String> {
         if channel > 15 {
             return Err("Channel must be 0-15".to_string());
         }
 
-        if !self.connections.contains_key(&device_id) && !self.virtual_ports.contains_key(&device_id) {
+        if !self.connections.contains_key(&device_id)
+            && !self.virtual_ports.contains_key(&device_id)
+        {
             return Err(format!("Device not found or not open: {}", device_id));
         }
 
         let assignment = TrackOutputAssignment::new(track_id, device_id.clone(), channel);
         self.track_assignments.insert(track_id, assignment);
 
-        info!("Assigned track {} to output {} channel {}", track_id, device_id, channel);
+        info!(
+            "Assigned track {} to output {} channel {}",
+            track_id, device_id, channel
+        );
         Ok(())
     }
 
@@ -405,7 +427,13 @@ impl OutputManagerThreadState {
         }
     }
 
-    fn send_message(&mut self, device_id: &str, _channel: u8, data: &[u8], priority: OutputPriority) -> Result<(), String> {
+    fn send_message(
+        &mut self,
+        device_id: &str,
+        _channel: u8,
+        data: &[u8],
+        priority: OutputPriority,
+    ) -> Result<(), String> {
         // Real-time messages go immediately
         if priority == OutputPriority::RealTime {
             return self.send_immediate(device_id, data);
@@ -425,25 +453,27 @@ impl OutputManagerThreadState {
                     wrapper.messages_sent += 1;
                     wrapper.last_message_time = current_time;
                     Ok(())
-                }
+                },
                 Err(e) => {
                     wrapper.error_count += 1;
                     Err(format!("Failed to send: {}", e))
-                }
+                },
             }
         } else {
             Err(format!("Device not open: {}", device_id))
         }
     }
 
-    fn schedule_message(&mut self, device_id: String, channel: u8, data: Vec<u8>, time_us: u64, priority: OutputPriority) -> Result<(), String> {
-        let message = MidiOutputMessage {
-            device_id,
-            channel,
-            data,
-            priority,
-            scheduled_time: Some(time_us),
-        };
+    fn schedule_message(
+        &mut self,
+        device_id: String,
+        channel: u8,
+        data: Vec<u8>,
+        time_us: u64,
+        priority: OutputPriority,
+    ) -> Result<(), String> {
+        let message =
+            MidiOutputMessage { device_id, channel, data, priority, scheduled_time: Some(time_us) };
         self.output_queue.push(message);
         Ok(())
     }
@@ -490,7 +520,11 @@ impl OutputManagerThreadState {
             total_queued: self.output_queue.len(),
             by_priority,
             oldest_message_age_ms: oldest_time.map(|t| {
-                if current_time > t { (current_time - t) / 1000 } else { 0 }
+                if current_time > t {
+                    (current_time - t) / 1000
+                } else {
+                    0
+                }
             }),
         }
     }
@@ -505,10 +539,17 @@ impl OutputManagerThreadState {
                 is_open: true,
                 is_virtual: wrapper.is_virtual,
                 messages_sent: wrapper.messages_sent,
-                last_message_time: if wrapper.last_message_time > 0 { Some(wrapper.last_message_time) } else { None },
+                last_message_time: if wrapper.last_message_time > 0 {
+                    Some(wrapper.last_message_time)
+                } else {
+                    None
+                },
                 error_count: wrapper.error_count,
                 queue_depth,
-                active_sensing_enabled: *self.active_sensing_devices.get(device_id).unwrap_or(&false),
+                active_sensing_enabled: *self
+                    .active_sensing_devices
+                    .get(device_id)
+                    .unwrap_or(&false),
             })
         } else {
             None
@@ -519,7 +560,8 @@ impl OutputManagerThreadState {
         self.connections
             .iter()
             .map(|(device_id, wrapper)| {
-                let queue_depth = self.output_queue.iter().filter(|m| m.device_id == *device_id).count();
+                let queue_depth =
+                    self.output_queue.iter().filter(|m| m.device_id == *device_id).count();
 
                 OutputDeviceStatus {
                     device_id: device_id.clone(),
@@ -527,10 +569,17 @@ impl OutputManagerThreadState {
                     is_open: true,
                     is_virtual: wrapper.is_virtual,
                     messages_sent: wrapper.messages_sent,
-                    last_message_time: if wrapper.last_message_time > 0 { Some(wrapper.last_message_time) } else { None },
+                    last_message_time: if wrapper.last_message_time > 0 {
+                        Some(wrapper.last_message_time)
+                    } else {
+                        None
+                    },
                     error_count: wrapper.error_count,
                     queue_depth,
-                    active_sensing_enabled: *self.active_sensing_devices.get(device_id).unwrap_or(&false),
+                    active_sensing_enabled: *self
+                        .active_sensing_devices
+                        .get(device_id)
+                        .unwrap_or(&false),
                 }
             })
             .collect()
@@ -553,7 +602,8 @@ impl OutputManagerThreadState {
 
     fn send_active_sensing(&mut self) {
         let active_sensing_byte: [u8; 1] = [0xFE];
-        let devices: Vec<String> = self.active_sensing_devices
+        let devices: Vec<String> = self
+            .active_sensing_devices
             .iter()
             .filter_map(|(id, enabled)| if *enabled { Some(id.clone()) } else { None })
             .collect();
@@ -585,7 +635,8 @@ impl OutputManagerThreadState {
             }
 
             // Check for removed devices
-            let removed: Vec<_> = self.known_devices
+            let removed: Vec<_> = self
+                .known_devices
                 .iter()
                 .filter(|(id, _)| !current.contains_key(*id))
                 .map(|(id, name)| (id.clone(), name.clone()))
@@ -631,11 +682,8 @@ impl MidiOutputManager {
             Self::run_thread(command_rx, device_change_tx_clone, running_clone);
         });
 
-        let manager = Arc::new(Self {
-            command_tx,
-            running,
-            device_change_tx: device_change_tx.clone(),
-        });
+        let manager =
+            Arc::new(Self { command_tx, running, device_change_tx: device_change_tx.clone() });
 
         (manager, device_change_rx)
     }
@@ -653,76 +701,83 @@ impl MidiOutputManager {
         while running.load(Ordering::SeqCst) {
             // Try to receive command with timeout
             match command_rx.recv_timeout(Duration::from_millis(10)) {
-                Ok(cmd) => {
-                    match cmd {
-                        OutputManagerCommand::ListDevices(tx) => {
-                            let _ = tx.send(state.list_devices());
-                        }
-                        OutputManagerCommand::OpenDevice(id, tx) => {
-                            let _ = tx.send(state.open_device(&id));
-                        }
-                        OutputManagerCommand::CloseDevice(id, tx) => {
-                            let _ = tx.send(state.close_device(&id));
-                        }
-                        OutputManagerCommand::CreateVirtualOutput(name, tx) => {
-                            let _ = tx.send(state.create_virtual_output(&name));
-                        }
-                        OutputManagerCommand::ListVirtualOutputs(tx) => {
-                            let _ = tx.send(state.list_virtual_outputs());
-                        }
-                        OutputManagerCommand::DeleteVirtualOutput(id, tx) => {
-                            let _ = tx.send(state.delete_virtual_output(&id));
-                        }
-                        OutputManagerCommand::AssignTrackOutput(track_id, device_id, channel, tx) => {
-                            let _ = tx.send(state.assign_track_output(track_id, device_id, channel));
-                        }
-                        OutputManagerCommand::GetTrackOutput(track_id, tx) => {
-                            let _ = tx.send(state.get_track_output(track_id));
-                        }
-                        OutputManagerCommand::RemoveTrackOutput(track_id, tx) => {
-                            let _ = tx.send(state.remove_track_output(track_id));
-                        }
-                        OutputManagerCommand::SendMessage(device_id, channel, data, priority, tx) => {
-                            let _ = tx.send(state.send_message(&device_id, channel, &data, priority));
-                        }
-                        OutputManagerCommand::ScheduleMessage(device_id, channel, data, time_us, priority, tx) => {
-                            let _ = tx.send(state.schedule_message(device_id, channel, data, time_us, priority));
-                        }
-                        OutputManagerCommand::GetOutputQueueStatus(tx) => {
-                            let _ = tx.send(state.get_output_queue_status());
-                        }
-                        OutputManagerCommand::GetDeviceStatus(id, tx) => {
-                            let _ = tx.send(state.get_device_status(&id));
-                        }
-                        OutputManagerCommand::GetAllStatuses(tx) => {
-                            let _ = tx.send(state.get_all_statuses());
-                        }
-                        OutputManagerCommand::EnableActiveSensing(id, tx) => {
-                            let _ = tx.send(state.enable_active_sensing(&id));
-                        }
-                        OutputManagerCommand::DisableActiveSensing(id, tx) => {
-                            let _ = tx.send(state.disable_active_sensing(&id));
-                        }
-                        OutputManagerCommand::SubscribeDeviceChanges(tx) => {
-                            let _ = tx.send(state.device_change_tx.subscribe());
-                        }
-                        OutputManagerCommand::RefreshDevices(tx) => {
-                            let _ = tx.send(state.list_devices());
-                        }
-                        OutputManagerCommand::Shutdown => {
-                            info!("Output manager thread shutting down");
-                            break;
-                        }
-                    }
-                }
+                Ok(cmd) => match cmd {
+                    OutputManagerCommand::ListDevices(tx) => {
+                        let _ = tx.send(state.list_devices());
+                    },
+                    OutputManagerCommand::OpenDevice(id, tx) => {
+                        let _ = tx.send(state.open_device(&id));
+                    },
+                    OutputManagerCommand::CloseDevice(id, tx) => {
+                        let _ = tx.send(state.close_device(&id));
+                    },
+                    OutputManagerCommand::CreateVirtualOutput(name, tx) => {
+                        let _ = tx.send(state.create_virtual_output(&name));
+                    },
+                    OutputManagerCommand::ListVirtualOutputs(tx) => {
+                        let _ = tx.send(state.list_virtual_outputs());
+                    },
+                    OutputManagerCommand::DeleteVirtualOutput(id, tx) => {
+                        let _ = tx.send(state.delete_virtual_output(&id));
+                    },
+                    OutputManagerCommand::AssignTrackOutput(track_id, device_id, channel, tx) => {
+                        let _ = tx.send(state.assign_track_output(track_id, device_id, channel));
+                    },
+                    OutputManagerCommand::GetTrackOutput(track_id, tx) => {
+                        let _ = tx.send(state.get_track_output(track_id));
+                    },
+                    OutputManagerCommand::RemoveTrackOutput(track_id, tx) => {
+                        let _ = tx.send(state.remove_track_output(track_id));
+                    },
+                    OutputManagerCommand::SendMessage(device_id, channel, data, priority, tx) => {
+                        let _ = tx.send(state.send_message(&device_id, channel, &data, priority));
+                    },
+                    OutputManagerCommand::ScheduleMessage(
+                        device_id,
+                        channel,
+                        data,
+                        time_us,
+                        priority,
+                        tx,
+                    ) => {
+                        let _ = tx.send(
+                            state.schedule_message(device_id, channel, data, time_us, priority),
+                        );
+                    },
+                    OutputManagerCommand::GetOutputQueueStatus(tx) => {
+                        let _ = tx.send(state.get_output_queue_status());
+                    },
+                    OutputManagerCommand::GetDeviceStatus(id, tx) => {
+                        let _ = tx.send(state.get_device_status(&id));
+                    },
+                    OutputManagerCommand::GetAllStatuses(tx) => {
+                        let _ = tx.send(state.get_all_statuses());
+                    },
+                    OutputManagerCommand::EnableActiveSensing(id, tx) => {
+                        let _ = tx.send(state.enable_active_sensing(&id));
+                    },
+                    OutputManagerCommand::DisableActiveSensing(id, tx) => {
+                        let _ = tx.send(state.disable_active_sensing(&id));
+                    },
+                    OutputManagerCommand::SubscribeDeviceChanges(tx) => {
+                        let _ = tx.send(state.device_change_tx.subscribe());
+                    },
+                    OutputManagerCommand::RefreshDevices(tx) => {
+                        let _ = tx.send(state.list_devices());
+                    },
+                    OutputManagerCommand::Shutdown => {
+                        info!("Output manager thread shutting down");
+                        break;
+                    },
+                },
                 Err(std::sync::mpsc::RecvTimeoutError::Timeout) => {
                     // Process scheduled messages
                     state.process_scheduled_messages();
-                }
+                },
                 Err(std::sync::mpsc::RecvTimeoutError::Disconnected) => {
                     info!("Output manager command channel disconnected");
                     break;
-                }
+                },
             }
 
             // Hot-plug detection every 2 seconds
@@ -748,28 +803,35 @@ impl MidiOutputManager {
 
     pub fn list_devices(&self) -> Result<Vec<MidiOutputDevice>, String> {
         let (tx, rx) = oneshot::channel();
-        self.command_tx.send(OutputManagerCommand::ListDevices(tx))
+        self.command_tx
+            .send(OutputManagerCommand::ListDevices(tx))
             .map_err(|_| "Output manager thread stopped".to_string())?;
         rx.blocking_recv().map_err(|_| "Failed to receive response".to_string())?
     }
 
     pub fn open_device(&self, device_id: &str) -> Result<(), String> {
         let (tx, rx) = oneshot::channel();
-        self.command_tx.send(OutputManagerCommand::OpenDevice(device_id.to_string(), tx))
+        self.command_tx
+            .send(OutputManagerCommand::OpenDevice(device_id.to_string(), tx))
             .map_err(|_| "Output manager thread stopped".to_string())?;
         rx.blocking_recv().map_err(|_| "Failed to receive response".to_string())?
     }
 
     pub fn close_device(&self, device_id: &str) -> Result<(), String> {
         let (tx, rx) = oneshot::channel();
-        self.command_tx.send(OutputManagerCommand::CloseDevice(device_id.to_string(), tx))
+        self.command_tx
+            .send(OutputManagerCommand::CloseDevice(device_id.to_string(), tx))
             .map_err(|_| "Output manager thread stopped".to_string())?;
         rx.blocking_recv().map_err(|_| "Failed to receive response".to_string())?
     }
 
     pub fn create_virtual_output(&self, name: &str) -> Result<String, String> {
         let (tx, rx) = oneshot::channel();
-        self.command_tx.send(OutputManagerCommand::CreateVirtualOutput(name.to_string(), tx))
+        self.command_tx
+            .send(OutputManagerCommand::CreateVirtualOutput(
+                name.to_string(),
+                tx,
+            ))
             .map_err(|_| "Output manager thread stopped".to_string())?;
         rx.blocking_recv().map_err(|_| "Failed to receive response".to_string())?
     }
@@ -784,21 +846,37 @@ impl MidiOutputManager {
 
     pub fn delete_virtual_output(&self, port_id: &str) -> Result<(), String> {
         let (tx, rx) = oneshot::channel();
-        self.command_tx.send(OutputManagerCommand::DeleteVirtualOutput(port_id.to_string(), tx))
+        self.command_tx
+            .send(OutputManagerCommand::DeleteVirtualOutput(
+                port_id.to_string(),
+                tx,
+            ))
             .map_err(|_| "Output manager thread stopped".to_string())?;
         rx.blocking_recv().map_err(|_| "Failed to receive response".to_string())?
     }
 
-    pub fn assign_track_output(&self, track_id: i32, device_id: String, channel: u8) -> Result<(), String> {
+    pub fn assign_track_output(
+        &self,
+        track_id: i32,
+        device_id: String,
+        channel: u8,
+    ) -> Result<(), String> {
         let (tx, rx) = oneshot::channel();
-        self.command_tx.send(OutputManagerCommand::AssignTrackOutput(track_id, device_id, channel, tx))
+        self.command_tx
+            .send(OutputManagerCommand::AssignTrackOutput(
+                track_id, device_id, channel, tx,
+            ))
             .map_err(|_| "Output manager thread stopped".to_string())?;
         rx.blocking_recv().map_err(|_| "Failed to receive response".to_string())?
     }
 
     pub fn get_track_output(&self, track_id: i32) -> Option<TrackOutputAssignment> {
         let (tx, rx) = oneshot::channel();
-        if self.command_tx.send(OutputManagerCommand::GetTrackOutput(track_id, tx)).is_err() {
+        if self
+            .command_tx
+            .send(OutputManagerCommand::GetTrackOutput(track_id, tx))
+            .is_err()
+        {
             return None;
         }
         rx.blocking_recv().ok().flatten()
@@ -806,24 +884,51 @@ impl MidiOutputManager {
 
     pub fn remove_track_output(&self, track_id: i32) -> Result<(), String> {
         let (tx, rx) = oneshot::channel();
-        self.command_tx.send(OutputManagerCommand::RemoveTrackOutput(track_id, tx))
+        self.command_tx
+            .send(OutputManagerCommand::RemoveTrackOutput(track_id, tx))
             .map_err(|_| "Output manager thread stopped".to_string())?;
         rx.blocking_recv().map_err(|_| "Failed to receive response".to_string())?
     }
 
-    pub fn send_message(&self, device_id: &str, channel: u8, data: &[u8], priority: OutputPriority) -> Result<(), String> {
+    pub fn send_message(
+        &self,
+        device_id: &str,
+        channel: u8,
+        data: &[u8],
+        priority: OutputPriority,
+    ) -> Result<(), String> {
         let (tx, rx) = oneshot::channel();
-        self.command_tx.send(OutputManagerCommand::SendMessage(
-            device_id.to_string(), channel, data.to_vec(), priority, tx
-        )).map_err(|_| "Output manager thread stopped".to_string())?;
+        self.command_tx
+            .send(OutputManagerCommand::SendMessage(
+                device_id.to_string(),
+                channel,
+                data.to_vec(),
+                priority,
+                tx,
+            ))
+            .map_err(|_| "Output manager thread stopped".to_string())?;
         rx.blocking_recv().map_err(|_| "Failed to receive response".to_string())?
     }
 
-    pub fn schedule_message(&self, device_id: &str, channel: u8, data: &[u8], time_us: u64, priority: OutputPriority) -> Result<(), String> {
+    pub fn schedule_message(
+        &self,
+        device_id: &str,
+        channel: u8,
+        data: &[u8],
+        time_us: u64,
+        priority: OutputPriority,
+    ) -> Result<(), String> {
         let (tx, rx) = oneshot::channel();
-        self.command_tx.send(OutputManagerCommand::ScheduleMessage(
-            device_id.to_string(), channel, data.to_vec(), time_us, priority, tx
-        )).map_err(|_| "Output manager thread stopped".to_string())?;
+        self.command_tx
+            .send(OutputManagerCommand::ScheduleMessage(
+                device_id.to_string(),
+                channel,
+                data.to_vec(),
+                time_us,
+                priority,
+                tx,
+            ))
+            .map_err(|_| "Output manager thread stopped".to_string())?;
         rx.blocking_recv().map_err(|_| "Failed to receive response".to_string())?
     }
 
@@ -845,7 +950,14 @@ impl MidiOutputManager {
 
     pub fn get_device_status(&self, device_id: &str) -> Option<OutputDeviceStatus> {
         let (tx, rx) = oneshot::channel();
-        if self.command_tx.send(OutputManagerCommand::GetDeviceStatus(device_id.to_string(), tx)).is_err() {
+        if self
+            .command_tx
+            .send(OutputManagerCommand::GetDeviceStatus(
+                device_id.to_string(),
+                tx,
+            ))
+            .is_err()
+        {
             return None;
         }
         rx.blocking_recv().ok().flatten()
@@ -861,14 +973,22 @@ impl MidiOutputManager {
 
     pub fn enable_active_sensing(&self, device_id: &str) -> Result<(), String> {
         let (tx, rx) = oneshot::channel();
-        self.command_tx.send(OutputManagerCommand::EnableActiveSensing(device_id.to_string(), tx))
+        self.command_tx
+            .send(OutputManagerCommand::EnableActiveSensing(
+                device_id.to_string(),
+                tx,
+            ))
             .map_err(|_| "Output manager thread stopped".to_string())?;
         rx.blocking_recv().map_err(|_| "Failed to receive response".to_string())?
     }
 
     pub fn disable_active_sensing(&self, device_id: &str) -> Result<(), String> {
         let (tx, rx) = oneshot::channel();
-        self.command_tx.send(OutputManagerCommand::DisableActiveSensing(device_id.to_string(), tx))
+        self.command_tx
+            .send(OutputManagerCommand::DisableActiveSensing(
+                device_id.to_string(),
+                tx,
+            ))
             .map_err(|_| "Output manager thread stopped".to_string())?;
         rx.blocking_recv().map_err(|_| "Failed to receive response".to_string())?
     }
@@ -879,7 +999,8 @@ impl MidiOutputManager {
 
     pub fn refresh_output_devices(&self) -> Result<Vec<MidiOutputDevice>, String> {
         let (tx, rx) = oneshot::channel();
-        self.command_tx.send(OutputManagerCommand::RefreshDevices(tx))
+        self.command_tx
+            .send(OutputManagerCommand::RefreshDevices(tx))
             .map_err(|_| "Output manager thread stopped".to_string())?;
         rx.blocking_recv().map_err(|_| "Failed to receive response".to_string())?
     }
@@ -1020,7 +1141,9 @@ pub fn set_output_priority(
     priority: OutputPriority,
 ) -> Result<(), String> {
     // Priority is applied per-message, this just validates the device exists
-    let _ = state.0.get_device_status(&device_id)
+    let _ = state
+        .0
+        .get_device_status(&device_id)
         .ok_or_else(|| format!("Device not found: {}", device_id))?;
     debug!("Set priority {:?} for device {}", priority, device_id);
     Ok(())
@@ -1161,7 +1284,10 @@ mod tests {
     #[test]
     fn test_parse_manufacturer() {
         assert_eq!(parse_manufacturer("AKAI FORCE"), Some("Akai".into()));
-        assert_eq!(parse_manufacturer("Steinberg UR22"), Some("Steinberg".into()));
+        assert_eq!(
+            parse_manufacturer("Steinberg UR22"),
+            Some("Steinberg".into())
+        );
         assert_eq!(parse_manufacturer("Roland TD-17"), Some("Roland".into()));
         assert_eq!(parse_manufacturer("Unknown Device"), None);
     }

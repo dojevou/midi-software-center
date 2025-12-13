@@ -168,10 +168,8 @@ impl MidiDeviceState {
         device2.add_output("MIDI Device 2 Output".to_string());
         device2.latency_ms = 10.0;
 
-        self.available_devices
-            .insert("midi-device-1".to_string(), device1);
-        self.available_devices
-            .insert("midi-device-2".to_string(), device2);
+        self.available_devices.insert("midi-device-1".to_string(), device1);
+        self.available_devices.insert("midi-device-2".to_string(), device2);
 
         Ok(())
     }
@@ -308,13 +306,11 @@ impl Default for MidiDeviceState {
 pub async fn list_devices(
     state: State<'_, Arc<RwLock<MidiDeviceState>>>,
 ) -> Result<Vec<MidiDevice>, String> {
-    list_devices_impl(&*state).await.map_err(|e| e.to_string())
+    list_devices_impl(&state).await.map_err(|e| e.to_string())
 }
 
 /// Implementation function for testing - accepts Arc directly
-pub async fn list_devices_impl(
-    state: &Arc<RwLock<MidiDeviceState>>,
-) -> Result<Vec<MidiDevice>> {
+pub async fn list_devices_impl(state: &Arc<RwLock<MidiDeviceState>>) -> Result<Vec<MidiDevice>> {
     let mut device_state = state.write().await;
     device_state.scan_devices().context("Failed to scan devices")?;
 
@@ -360,7 +356,7 @@ pub async fn connect_device(
     device_id: String,
     state: State<'_, Arc<RwLock<MidiDeviceState>>>,
 ) -> Result<(), String> {
-    connect_device_impl(&device_id, &*state).await.map_err(|e| e.to_string())
+    connect_device_impl(&device_id, &state).await.map_err(|e| e.to_string())
 }
 
 /// Implementation function for testing - accepts Arc directly
@@ -379,7 +375,7 @@ pub async fn disconnect_device(
     device_id: String,
     state: State<'_, Arc<RwLock<MidiDeviceState>>>,
 ) -> Result<(), String> {
-    disconnect_device_impl(&device_id, &*state).await.map_err(|e| e.to_string())
+    disconnect_device_impl(&device_id, &state).await.map_err(|e| e.to_string())
 }
 
 /// Implementation function for testing - accepts Arc directly
@@ -398,7 +394,7 @@ pub async fn get_device_info(
     device_id: String,
     state: State<'_, Arc<RwLock<MidiDeviceState>>>,
 ) -> Result<MidiDevice, String> {
-    get_device_info_impl(&device_id, &*state).await.map_err(|e| e.to_string())
+    get_device_info_impl(&device_id, &state).await.map_err(|e| e.to_string())
 }
 
 /// Implementation function for testing - accepts Arc directly
@@ -417,7 +413,7 @@ pub async fn set_device_mapping(
     mapping: HashMap<String, String>,
     state: State<'_, Arc<RwLock<MidiDeviceState>>>,
 ) -> Result<(), String> {
-    set_device_mapping_impl(&device_id, mapping, &*state)
+    set_device_mapping_impl(&device_id, mapping, &state)
         .await
         .map_err(|e| e.to_string())
 }

@@ -17,9 +17,9 @@
 // - Pickup mode to avoid jumps
 // =============================================================================
 
+use parking_lot::RwLock;
 use std::collections::HashMap;
 use std::sync::Arc;
-use parking_lot::RwLock;
 use tokio::sync::{broadcast, mpsc};
 
 /// Mapping target type
@@ -30,7 +30,10 @@ pub enum MappingTarget {
     /// Transport control
     Transport { action: TransportAction },
     /// Send MIDI to output
-    MidiThrough { output: String, transform: Option<MidiTransform> },
+    MidiThrough {
+        output: String,
+        transform: Option<MidiTransform>,
+    },
     /// Execute script
     Script { script_id: String },
     /// UI action
@@ -60,8 +63,8 @@ pub struct MidiTransform {
 pub struct MidiSource {
     pub device_id: String,
     pub message_type: MidiMessageType,
-    pub channel: Option<u8>,  // None = any channel
-    pub data1: Option<u8>,    // CC number, note number, etc.
+    pub channel: Option<u8>, // None = any channel
+    pub data1: Option<u8>,   // CC number, note number, etc.
 }
 
 #[derive(Debug, Clone, Hash, Eq, PartialEq, serde::Serialize, serde::Deserialize)]
@@ -98,31 +101,37 @@ impl ScalingMode {
     /// Convert MIDI value (0-127) to scaled value
     pub fn scale(&self, midi_value: u8, current_value: Option<f32>) -> f32 {
         let normalized = midi_value as f32 / 127.0;
-        
+
         match self {
-            ScalingMode::Linear { min, max } => {
-                min + (max - min) * normalized
-            }
+            ScalingMode::Linear { min, max } => min + (max - min) * normalized,
             ScalingMode::Logarithmic { min, max } => {
                 let log_min = min.ln();
                 let log_max = max.ln();
                 (log_min + (log_max - log_min) * normalized).exp()
-            }
+            },
             ScalingMode::Exponential { min, max, curve } => {
                 let curved = normalized.powf(*curve);
                 min + (max - min) * curved
-            }
+            },
             ScalingMode::Stepped { values } => {
                 let index = ((normalized * (values.len() - 1) as f32).round() as usize)
                     .min(values.len() - 1);
                 values[index]
-            }
+            },
             ScalingMode::Toggle => {
-                if midi_value > 63 { 1.0 } else { 0.0 }
-            }
+                if midi_value > 63 {
+                    1.0
+                } else {
+                    0.0
+                }
+            },
             ScalingMode::Momentary => {
-                if midi_value > 0 { 1.0 } else { 0.0 }
-            }
+                if midi_value > 0 {
+                    1.0
+                } else {
+                    0.0
+                }
+            },
             ScalingMode::Relative { sensitivity } => {
                 let current = current_value.unwrap_or(0.5);
                 let delta = if midi_value > 64 {
@@ -132,7 +141,7 @@ impl ScalingMode {
                     midi_value as f32 * sensitivity
                 };
                 (current + delta).clamp(0.0, 1.0)
-            }
+            },
         }
     }
 }
@@ -195,10 +204,10 @@ pub struct LearnState {
 pub struct MidiLearn {
     mappings: RwLock<HashMap<String, MidiMapping>>,
     learn_state: RwLock<LearnState>,
-    
+
     // Event broadcasting
     event_tx: broadcast::Sender<LearnEvent>,
-    
+
     // Parameter value requests
     param_request_tx: mpsc::UnboundedSender<ParameterRequest>,
 }
@@ -225,20 +234,28 @@ pub struct ParameterRequest {
 
 impl MidiLearn {
     /// Create new MIDI learn manager
-    pub fn new() -> (Self, broadcast::Receiver<LearnEvent>, mpsc::UnboundedReceiver<ParameterRequest>) {
+    pub fn new() -> (
+        Self,
+        broadcast::Receiver<LearnEvent>,
+        mpsc::UnboundedReceiver<ParameterRequest>,
+    ) {
         let (event_tx, event_rx) = broadcast::channel(256);
         let (param_tx, param_rx) = mpsc::unbounded_channel();
-        
-        (Self {
-            mappings: RwLock::new(HashMap::new()),
-            learn_state: RwLock::new(LearnState {
-                active: false,
-                target: None,
-                waiting_for_midi: false,
-            }),
-            event_tx,
-            param_request_tx: param_tx,
-        }, event_rx, param_rx)
+
+        (
+            Self {
+                mappings: RwLock::new(HashMap::new()),
+                learn_state: RwLock::new(LearnState {
+                    active: false,
+                    target: None,
+                    waiting_for_midi: false,
+                }),
+                event_tx,
+                param_request_tx: param_tx,
+            },
+            event_rx,
+            param_rx,
+        )
     }
 
     /// Subscribe to events
@@ -252,7 +269,7 @@ impl MidiLearn {
         state.active = true;
         state.target = Some(target.clone());
         state.waiting_for_midi = true;
-        
+
         let _ = self.event_tx.send(LearnEvent::LearnModeStarted { target });
     }
 
@@ -262,7 +279,7 @@ impl MidiLearn {
         state.active = false;
         state.target = None;
         state.waiting_for_midi = false;
-        
+
         let _ = self.event_tx.send(LearnEvent::LearnModeCancelled);
     }
 
@@ -272,7 +289,14 @@ impl MidiLearn {
     }
 
     /// Process incoming MIDI message
-    pub fn process_midi(&self, device_id: &str, msg_type: MidiMessageType, channel: u8, data1: u8, data2: u8) {
+    pub fn process_midi(
+        &self,
+        device_id: &str,
+        msg_type: MidiMessageType,
+        channel: u8,
+        data1: u8,
+        data2: u8,
+    ) {
         // Check if we're in learn mode
         {
             let state = self.learn_state.read();
@@ -342,15 +366,11 @@ impl MidiLearn {
                 data1: Some(data1),
             };
 
-            let mapping = MidiMapping::new(
-                &format!("Mapping {}", data1),
-                source,
-                target,
-            );
+            let mapping = MidiMapping::new(&format!("Mapping {}", data1), source, target);
 
             let mapping_clone = mapping.clone();
             self.mappings.write().insert(mapping.id.clone(), mapping);
-            
+
             let _ = self.event_tx.send(LearnEvent::LearnModeCompleted { mapping: mapping_clone });
         }
     }
@@ -376,38 +396,34 @@ impl MidiLearn {
         // Apply to target
         match &mapping.target {
             MappingTarget::Parameter { path } => {
-                let _ = self.event_tx.send(LearnEvent::ParameterChanged { 
-                    path: path.clone(), 
-                    value: scaled 
-                });
-            }
+                let _ = self
+                    .event_tx
+                    .send(LearnEvent::ParameterChanged { path: path.clone(), value: scaled });
+            },
             MappingTarget::Transport { action } => {
                 if midi_value > 0 {
                     let _ = self.event_tx.send(LearnEvent::TransportTriggered(action.clone()));
                 }
-            }
+            },
             MappingTarget::Script { script_id } => {
                 // Handle script execution
                 tracing::info!("Execute script: {} with value {}", script_id, scaled);
-            }
+            },
             MappingTarget::UIAction { action } => {
                 tracing::info!("UI action: {} with value {}", action, scaled);
-            }
+            },
             MappingTarget::MidiThrough { .. } => {
                 // MIDI through handled separately
-            }
+            },
         }
     }
 
     fn get_current_value(&self, target: &MappingTarget) -> Option<f32> {
         if let MappingTarget::Parameter { path } = target {
             let (tx, rx) = tokio::sync::oneshot::channel();
-            let request = ParameterRequest {
-                path: path.clone(),
-                response_tx: tx,
-            };
+            let request = ParameterRequest { path: path.clone(), response_tx: tx };
             let _ = self.param_request_tx.send(request);
-            
+
             // Try to get response (non-blocking in practice would use async)
             rx.blocking_recv().ok().flatten()
         } else {
@@ -456,11 +472,11 @@ impl MidiLearn {
     pub fn import_mappings(&self, json: &str) -> Result<usize, serde_json::Error> {
         let mappings: Vec<MidiMapping> = serde_json::from_str(json)?;
         let count = mappings.len();
-        
+
         for mapping in mappings {
             self.mappings.write().insert(mapping.id.clone(), mapping);
         }
-        
+
         Ok(count)
     }
 }
@@ -530,12 +546,7 @@ pub fn learn_add_mapping(
     data1: Option<u8>,
     target_path: String,
 ) {
-    let source = MidiSource {
-        device_id,
-        message_type,
-        channel,
-        data1,
-    };
+    let source = MidiSource { device_id, message_type, channel, data1 };
     let target = MappingTarget::Parameter { path: target_path };
     let mapping = MidiMapping::new(&name, source, target);
     state.0.add_mapping(mapping);
@@ -588,28 +599,28 @@ pub async fn learn_subscribe(
             let event_data = match event {
                 LearnEvent::MappingCreated(m) => {
                     serde_json::json!({"type": "created", "mapping": m})
-                }
+                },
                 LearnEvent::MappingDeleted(id) => {
                     serde_json::json!({"type": "deleted", "id": id})
-                }
+                },
                 LearnEvent::MappingUpdated(m) => {
                     serde_json::json!({"type": "updated", "mapping": m})
-                }
+                },
                 LearnEvent::ParameterChanged { path, value } => {
                     serde_json::json!({"type": "param", "path": path, "value": value})
-                }
+                },
                 LearnEvent::TransportTriggered(action) => {
                     serde_json::json!({"type": "transport", "action": format!("{:?}", action)})
-                }
+                },
                 LearnEvent::LearnModeStarted { target } => {
                     serde_json::json!({"type": "learn_started", "target": format!("{:?}", target)})
-                }
+                },
                 LearnEvent::LearnModeCompleted { mapping } => {
                     serde_json::json!({"type": "learn_completed", "mapping": mapping})
-                }
+                },
                 LearnEvent::LearnModeCancelled => {
                     serde_json::json!({"type": "learn_cancelled"})
-                }
+                },
             };
 
             if app.emit("midi-learn-event", event_data).is_err() {

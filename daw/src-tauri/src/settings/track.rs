@@ -34,7 +34,7 @@ impl TrackColor {
         Ok(Self { r, g, b })
     }
 
-    pub fn to_hex(&self) -> String {
+    pub fn to_hex(self) -> String {
         format!("#{:02X}{:02X}{:02X}", self.r, self.g, self.b)
     }
 }

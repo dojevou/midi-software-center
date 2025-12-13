@@ -98,9 +98,9 @@ pub const SYSTEM_BPM_RANGES: &[(&str, i16, i16, i16)] = &[
 #[must_use]
 pub fn bpm_to_range_index(bpm: f64) -> Option<usize> {
     let bpm_int = bpm as i16;
-    SYSTEM_BPM_RANGES.iter().position(|(_, min, max, _)| {
-        bpm_int >= *min && bpm_int < *max
-    })
+    SYSTEM_BPM_RANGES
+        .iter()
+        .position(|(_, min, max, _)| bpm_int >= *min && bpm_int < *max)
 }
 
 #[cfg(test)]
@@ -164,8 +164,8 @@ mod tests {
 
     #[test]
     fn test_bpm_to_range_index() {
-        assert_eq!(bpm_to_range_index(50.0), Some(0));  // 0-60
-        assert_eq!(bpm_to_range_index(75.0), Some(1));  // 60-80
+        assert_eq!(bpm_to_range_index(50.0), Some(0)); // 0-60
+        assert_eq!(bpm_to_range_index(75.0), Some(1)); // 60-80
         assert_eq!(bpm_to_range_index(120.0), Some(4)); // 120-140
         assert_eq!(bpm_to_range_index(200.0), Some(7)); // 180+
     }

@@ -117,7 +117,7 @@ pub struct MixerPreset {
 // =============================================================================
 
 /// MIDI routing configuration for a track template
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct TrackMidiRouting {
     pub input_port: Option<String>,
     pub input_channel: Option<u8>,
@@ -126,20 +126,6 @@ pub struct TrackMidiRouting {
     pub program_change: Option<u8>,
     pub bank_msb: Option<u8>,
     pub bank_lsb: Option<u8>,
-}
-
-impl Default for TrackMidiRouting {
-    fn default() -> Self {
-        Self {
-            input_port: None,
-            input_channel: None,
-            output_port: None,
-            output_channel: None,
-            program_change: None,
-            bank_msb: None,
-            bank_lsb: None,
-        }
-    }
 }
 
 /// Track template definition
@@ -213,20 +199,18 @@ pub struct PresetsState {
 impl Default for PresetsState {
     fn default() -> Self {
         // Create some factory presets
-        let mixer_presets = vec![
-            MixerPreset {
-                id: 1,
-                name: "Default Mix".to_string(),
-                description: Some("Standard starting mix".to_string()),
-                category: Some("General".to_string()),
-                tags: vec!["default".to_string()],
-                channels: vec![MixerPresetChannel::default()],
-                master: MixerPresetMaster::default(),
-                is_factory: true,
-                created_at: chrono::Utc::now().to_rfc3339(),
-                updated_at: chrono::Utc::now().to_rfc3339(),
-            },
-        ];
+        let mixer_presets = vec![MixerPreset {
+            id: 1,
+            name: "Default Mix".to_string(),
+            description: Some("Standard starting mix".to_string()),
+            category: Some("General".to_string()),
+            tags: vec!["default".to_string()],
+            channels: vec![MixerPresetChannel::default()],
+            master: MixerPresetMaster::default(),
+            is_factory: true,
+            created_at: chrono::Utc::now().to_rfc3339(),
+            updated_at: chrono::Utc::now().to_rfc3339(),
+        }];
 
         let track_templates = vec![
             TrackTemplate {
@@ -255,14 +239,8 @@ impl Default for PresetsState {
                 track_type: "midi".to_string(),
                 color: Some("#e74c3c".to_string()),
                 icon: None,
-                mixer_settings: MixerPresetChannel {
-                    track_number: 10,
-                    ..Default::default()
-                },
-                midi_routing: TrackMidiRouting {
-                    output_channel: Some(10),
-                    ..Default::default()
-                },
+                mixer_settings: MixerPresetChannel { track_number: 10, ..Default::default() },
+                midi_routing: TrackMidiRouting { output_channel: Some(10), ..Default::default() },
                 gear_profile_id: None,
                 default_instrument: Some("Standard Drum Kit".to_string()),
                 is_factory: true,
@@ -409,7 +387,9 @@ impl Default for PresetsState {
 
 /// List all mixer presets
 #[command]
-pub async fn mixer_presets_list(state: State<'_, PresetsState>) -> Result<Vec<MixerPreset>, String> {
+pub async fn mixer_presets_list(
+    state: State<'_, PresetsState>,
+) -> Result<Vec<MixerPreset>, String> {
     let presets = state.mixer_presets.lock().unwrap();
     Ok(presets.clone())
 }
@@ -584,11 +564,7 @@ pub async fn track_templates_list_by_type(
     track_type: String,
 ) -> Result<Vec<TrackTemplate>, String> {
     let templates = state.track_templates.lock().unwrap();
-    Ok(templates
-        .iter()
-        .filter(|t| t.track_type == track_type)
-        .cloned()
-        .collect())
+    Ok(templates.iter().filter(|t| t.track_type == track_type).cloned().collect())
 }
 
 /// Get a track template by ID
@@ -1894,10 +1870,7 @@ mod tests {
             Some("Lead and bass duo".to_string()),
             Some("Duo".to_string()),
             vec!["duo".to_string()],
-            MixerPresetMaster {
-                tempo: 130.0,
-                ..Default::default()
-            },
+            MixerPresetMaster { tempo: 130.0, ..Default::default() },
             tracks,
             "4/4".to_string(),
             130.0,
@@ -2235,7 +2208,10 @@ mod tests {
         assert_eq!(retrieved.channels.len(), 1);
         assert_eq!(retrieved.channels[0].volume, 80);
         assert_eq!(retrieved.channels[0].transpose, -2);
-        assert_eq!(retrieved.channels[0].quantize_grid, Some("1/16".to_string()));
+        assert_eq!(
+            retrieved.channels[0].quantize_grid,
+            Some("1/16".to_string())
+        );
         assert_eq!(retrieved.master.tempo, 145.0);
         assert_eq!(retrieved.master.time_signature_numerator, 7);
     }

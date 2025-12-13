@@ -26,10 +26,7 @@ impl LogContext {
 
     /// Create a context with a request ID.
     pub fn with_request_id(request_id: impl Into<String>) -> Self {
-        Self {
-            request_id: Some(request_id.into()),
-            ..Default::default()
-        }
+        Self { request_id: Some(request_id.into()), ..Default::default() }
     }
 
     /// Add a metadata field.
@@ -53,10 +50,8 @@ impl LogContext {
     /// Generate a new unique request ID.
     pub fn generate_request_id() -> String {
         use std::time::{SystemTime, UNIX_EPOCH};
-        let timestamp = SystemTime::now()
-            .duration_since(UNIX_EPOCH)
-            .unwrap_or_default()
-            .as_micros();
+        let timestamp =
+            SystemTime::now().duration_since(UNIX_EPOCH).unwrap_or_default().as_micros();
         format!("req-{:x}-{:04x}", timestamp, rand::random::<u16>())
     }
 

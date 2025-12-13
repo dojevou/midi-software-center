@@ -233,7 +233,7 @@ impl Default for MidiMonitorState {
 pub async fn start_monitoring(
     state: State<'_, Arc<RwLock<MidiMonitorState>>>,
 ) -> Result<(), String> {
-    start_monitoring_impl(&*state).await.map_err(|e| e.to_string())
+    start_monitoring_impl(&state).await.map_err(|e| e.to_string())
 }
 
 pub async fn start_monitoring_impl(state: &Arc<RwLock<MidiMonitorState>>) -> Result<()> {
@@ -247,7 +247,7 @@ pub async fn start_monitoring_impl(state: &Arc<RwLock<MidiMonitorState>>) -> Res
 pub async fn stop_monitoring(
     state: State<'_, Arc<RwLock<MidiMonitorState>>>,
 ) -> Result<(), String> {
-    stop_monitoring_impl(&*state).await.map_err(|e| e.to_string())
+    stop_monitoring_impl(&state).await.map_err(|e| e.to_string())
 }
 
 pub async fn stop_monitoring_impl(state: &Arc<RwLock<MidiMonitorState>>) -> Result<()> {
@@ -259,7 +259,7 @@ pub async fn stop_monitoring_impl(state: &Arc<RwLock<MidiMonitorState>>) -> Resu
 /// Clear all recorded events
 #[tauri::command]
 pub async fn clear_events(state: State<'_, Arc<RwLock<MidiMonitorState>>>) -> Result<(), String> {
-    clear_events_impl(&*state).await.map_err(|e| e.to_string())
+    clear_events_impl(&state).await.map_err(|e| e.to_string())
 }
 
 pub async fn clear_events_impl(state: &Arc<RwLock<MidiMonitorState>>) -> Result<()> {
@@ -274,7 +274,7 @@ pub async fn get_events(
     limit: i32,
     state: State<'_, Arc<RwLock<MidiMonitorState>>>,
 ) -> Result<Vec<MidiEvent>, String> {
-    get_events_impl(limit, &*state).await.map_err(|e| e.to_string())
+    get_events_impl(limit, &state).await.map_err(|e| e.to_string())
 }
 
 pub async fn get_events_impl(

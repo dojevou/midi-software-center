@@ -355,7 +355,7 @@ async fn insert_tags_to_database(
             println!(
                 "  Batch {}/{} | Tags: {} | Elapsed: {:.1}s",
                 batch_num + 1,
-                (keywords_vec.len() + batch_size - 1) / batch_size,
+                keywords_vec.len().div_ceil(batch_size),
                 tag_map.len(),
                 start.elapsed().as_secs_f64()
             );
@@ -490,7 +490,7 @@ async fn batch_insert_tags(
             println!(
                 "  Batch {}/{} | Elapsed: {:.1}s",
                 batch_num + 1,
-                (file_tags.len() + batch_size - 1) / batch_size,
+                file_tags.len().div_ceil(batch_size),
                 start.elapsed().as_secs_f64()
             );
         }
@@ -558,7 +558,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         println!(
             "Processing chunk {}/{} ({} files)...",
             chunk_num + 1,
-            (all_files.len() + args.chunk_size - 1) / args.chunk_size,
+            all_files.len().div_ceil(args.chunk_size),
             chunk.len()
         );
 

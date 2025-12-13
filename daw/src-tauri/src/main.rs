@@ -40,7 +40,9 @@ use commands::AppState;
 // MIDI Hardware State wrappers
 use hardware::HardwareState;
 use midi::MidiManager;
-use midi::{MidiInputState, MidiOutputSendState, MidiRecordingState, MidiThruState, PlaybackState_};
+use midi::{
+    MidiInputState, MidiOutputSendState, MidiRecordingState, MidiThruState, PlaybackState_,
+};
 use sequencer::SequencerEngine;
 use std::sync::Arc;
 use tracing::{info, warn};
@@ -109,7 +111,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let clock_arc = Arc::new(midi_clock);
     let midi_clock_state = commands::midi_clock::MidiClockState {
         clock: clock_arc.clone(),
-        sync_manager: Arc::new(tokio::sync::RwLock::new(midi_clock::SyncManager::new(clock_arc))),
+        sync_manager: Arc::new(tokio::sync::RwLock::new(midi_clock::SyncManager::new(
+            clock_arc,
+        ))),
     };
     info!("✅ MIDI Clock state initialized");
 
@@ -128,9 +132,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     info!("✅ MIDI Learn state initialized");
 
     // Notation state
-    let notation_state = notation::ScoreRendererState(
-        std::sync::Mutex::new(notation::ScoreRenderer::new(480))
-    );
+    let notation_state =
+        notation::ScoreRendererState(std::sync::Mutex::new(notation::ScoreRenderer::new(480)));
     info!("✅ Notation renderer state initialized");
 
     // Scripting state (Lua runtime for macros and automation)

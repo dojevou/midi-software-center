@@ -241,18 +241,42 @@ impl BrowserFilters {
     #[must_use]
     pub fn active_filter_count(&self) -> usize {
         let mut count = 0;
-        if !self.folder_ids.is_empty() { count += 1; }
-        if !self.instrument_ids.is_empty() { count += 1; }
-        if !self.timbre_ids.is_empty() { count += 1; }
-        if !self.style_ids.is_empty() { count += 1; }
-        if !self.articulation_ids.is_empty() { count += 1; }
-        if !self.bpm_range_ids.is_empty() { count += 1; }
-        if !self.key_ids.is_empty() { count += 1; }
-        if self.channel.is_some() { count += 1; }
-        if self.search_query.is_some() { count += 1; }
-        if self.min_rating.is_some() { count += 1; }
-        if self.favorites_only { count += 1; }
-        if !self.tag_ids.is_empty() { count += 1; }
+        if !self.folder_ids.is_empty() {
+            count += 1;
+        }
+        if !self.instrument_ids.is_empty() {
+            count += 1;
+        }
+        if !self.timbre_ids.is_empty() {
+            count += 1;
+        }
+        if !self.style_ids.is_empty() {
+            count += 1;
+        }
+        if !self.articulation_ids.is_empty() {
+            count += 1;
+        }
+        if !self.bpm_range_ids.is_empty() {
+            count += 1;
+        }
+        if !self.key_ids.is_empty() {
+            count += 1;
+        }
+        if self.channel.is_some() {
+            count += 1;
+        }
+        if self.search_query.is_some() {
+            count += 1;
+        }
+        if self.min_rating.is_some() {
+            count += 1;
+        }
+        if self.favorites_only {
+            count += 1;
+        }
+        if !self.tag_ids.is_empty() {
+            count += 1;
+        }
         count
     }
 }
@@ -270,8 +294,7 @@ mod tests {
             ..Default::default()
         };
 
-        let search = CreateSavedSearch::new("My Drums", filters)
-            .with_sort("bpm", "asc");
+        let search = CreateSavedSearch::new("My Drums", filters).with_sort("bpm", "asc");
 
         assert_eq!(search.name, "My Drums");
         assert_eq!(search.sort_by, Some("bpm".to_string()));

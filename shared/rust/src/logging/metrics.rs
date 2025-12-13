@@ -33,13 +33,7 @@ pub struct TimingStats {
 
 impl Default for TimingStats {
     fn default() -> Self {
-        Self {
-            count: 0,
-            total_ms: 0,
-            min_ms: u64::MAX,
-            max_ms: 0,
-            avg_ms: 0.0,
-        }
+        Self { count: 0, total_ms: 0, min_ms: u64::MAX, max_ms: 0, avg_ms: 0.0 }
     }
 }
 
@@ -59,11 +53,7 @@ struct TimingAccumulator {
 
 impl MetricsRegistry {
     fn new() -> Self {
-        Self {
-            counters: HashMap::new(),
-            timings: HashMap::new(),
-            gauges: HashMap::new(),
-        }
+        Self { counters: HashMap::new(), timings: HashMap::new(), gauges: HashMap::new() }
     }
 }
 
@@ -103,12 +93,7 @@ pub fn record_timing(name: &str, duration: Duration) {
         drop(registry);
         let mut registry = METRICS.write().unwrap();
         registry.timings.entry(name.to_string()).or_insert_with(|| {
-            RwLock::new(TimingAccumulator {
-                count: 1,
-                total_ns: ns,
-                min_ns: ns,
-                max_ns: ns,
-            })
+            RwLock::new(TimingAccumulator { count: 1, total_ns: ns, min_ns: ns, max_ns: ns })
         });
     }
 }
@@ -122,10 +107,7 @@ pub fn set_gauge(name: &str, value: f64) {
     } else {
         drop(registry);
         let mut registry = METRICS.write().unwrap();
-        registry
-            .gauges
-            .entry(name.to_string())
-            .or_insert_with(|| RwLock::new(0.0));
+        registry.gauges.entry(name.to_string()).or_insert_with(|| RwLock::new(0.0));
         if let Some(gauge) = registry.gauges.get(name) {
             *gauge.write().unwrap() = value;
         }
@@ -139,9 +121,7 @@ pub fn get_metrics() -> PerformanceMetrics {
 
     // Counters
     for (name, counter) in &registry.counters {
-        metrics
-            .counters
-            .insert(name.clone(), counter.load(Ordering::Relaxed));
+        metrics.counters.insert(name.clone(), counter.load(Ordering::Relaxed));
     }
 
     // Timings
@@ -186,10 +166,7 @@ pub struct Timer {
 impl Timer {
     /// Start a new timer.
     pub fn start(name: impl Into<String>) -> Self {
-        Self {
-            name: name.into(),
-            start: Instant::now(),
-        }
+        Self { name: name.into(), start: Instant::now() }
     }
 }
 

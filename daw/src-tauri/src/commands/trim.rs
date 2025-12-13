@@ -615,7 +615,7 @@ fn analyze_midi_file(data: &[u8], options: &TrimOptions) -> Result<TrimAnalysis,
         data.len() as u64
     };
 
-    let space_savings = if data.len() > 0 {
+    let space_savings = if !data.is_empty() {
         ((data.len() as u64 - estimated_trimmed_size) as f32 / data.len() as f32) * 100.0
     } else {
         0.0
@@ -744,11 +744,7 @@ fn trim_midi_file(
 
                         if should_preserve || new_tick >= trim_start {
                             // Adjust delta time
-                            let adjusted_tick = if new_tick >= trim_start {
-                                new_tick - trim_start
-                            } else {
-                                0
-                            };
+                            let adjusted_tick = new_tick.saturating_sub(trim_start);
 
                             let new_delta = if first_event_in_track {
                                 adjusted_tick as u32

@@ -255,7 +255,7 @@ pub async fn create_route(
     to: String,
     state: State<'_, Arc<RwLock<MidiRouterState>>>,
 ) -> Result<i32, String> {
-    create_route_impl(&from, &to, &*state).await.map_err(|e| e.to_string())
+    create_route_impl(&from, &to, &state).await.map_err(|e| e.to_string())
 }
 
 pub async fn create_route_impl(
@@ -295,13 +295,10 @@ pub async fn delete_route(
     route_id: i32,
     state: State<'_, Arc<RwLock<MidiRouterState>>>,
 ) -> Result<(), String> {
-    delete_route_impl(route_id, &*state).await.map_err(|e| e.to_string())
+    delete_route_impl(route_id, &state).await.map_err(|e| e.to_string())
 }
 
-pub async fn delete_route_impl(
-    route_id: i32,
-    state: &Arc<RwLock<MidiRouterState>>,
-) -> Result<()> {
+pub async fn delete_route_impl(route_id: i32, state: &Arc<RwLock<MidiRouterState>>) -> Result<()> {
     let mut router_state = state.write().await;
     router_state.delete_route(route_id).context("Failed to delete route")?;
     Ok(())
@@ -313,13 +310,10 @@ pub async fn enable_route(
     route_id: i32,
     state: State<'_, Arc<RwLock<MidiRouterState>>>,
 ) -> Result<(), String> {
-    enable_route_impl(route_id, &*state).await.map_err(|e| e.to_string())
+    enable_route_impl(route_id, &state).await.map_err(|e| e.to_string())
 }
 
-pub async fn enable_route_impl(
-    route_id: i32,
-    state: &Arc<RwLock<MidiRouterState>>,
-) -> Result<()> {
+pub async fn enable_route_impl(route_id: i32, state: &Arc<RwLock<MidiRouterState>>) -> Result<()> {
     let mut router_state = state.write().await;
     router_state.enable_route(route_id).context("Failed to enable route")?;
     Ok(())
@@ -331,13 +325,10 @@ pub async fn disable_route(
     route_id: i32,
     state: State<'_, Arc<RwLock<MidiRouterState>>>,
 ) -> Result<(), String> {
-    disable_route_impl(route_id, &*state).await.map_err(|e| e.to_string())
+    disable_route_impl(route_id, &state).await.map_err(|e| e.to_string())
 }
 
-pub async fn disable_route_impl(
-    route_id: i32,
-    state: &Arc<RwLock<MidiRouterState>>,
-) -> Result<()> {
+pub async fn disable_route_impl(route_id: i32, state: &Arc<RwLock<MidiRouterState>>) -> Result<()> {
     let mut router_state = state.write().await;
     router_state.disable_route(route_id).context("Failed to disable route")?;
     Ok(())
@@ -348,12 +339,10 @@ pub async fn disable_route_impl(
 pub async fn get_all_routes(
     state: State<'_, Arc<RwLock<MidiRouterState>>>,
 ) -> Result<Vec<MidiRoute>, String> {
-    get_all_routes_impl(&*state).await.map_err(|e| e.to_string())
+    get_all_routes_impl(&state).await.map_err(|e| e.to_string())
 }
 
-pub async fn get_all_routes_impl(
-    state: &Arc<RwLock<MidiRouterState>>,
-) -> Result<Vec<MidiRoute>> {
+pub async fn get_all_routes_impl(state: &Arc<RwLock<MidiRouterState>>) -> Result<Vec<MidiRoute>> {
     let router_state = state.read().await;
     Ok(router_state.get_all_routes())
 }
@@ -364,13 +353,10 @@ pub async fn test_route(
     route_id: i32,
     state: State<'_, Arc<RwLock<MidiRouterState>>>,
 ) -> Result<bool, String> {
-    test_route_impl(route_id, &*state).await.map_err(|e| e.to_string())
+    test_route_impl(route_id, &state).await.map_err(|e| e.to_string())
 }
 
-pub async fn test_route_impl(
-    route_id: i32,
-    state: &Arc<RwLock<MidiRouterState>>,
-) -> Result<bool> {
+pub async fn test_route_impl(route_id: i32, state: &Arc<RwLock<MidiRouterState>>) -> Result<bool> {
     let router_state = state.read().await;
     router_state.test_route(route_id).context("Failed to test route")
 }

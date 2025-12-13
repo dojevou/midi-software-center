@@ -70,7 +70,7 @@ impl SplitWorker {
                 // Check if multi-track
                 if !file_record.is_multi_track {
                     // Single track, pass through
-                    if let Err(_) = output_queue.split_to_analyze.push(file_record) {
+                    if output_queue.split_to_analyze.push(file_record).is_err() {
                         debug!("Split worker {}: analyze queue full", worker_id);
                         sleep(Duration::from_millis(10)).await;
                     }
@@ -170,7 +170,7 @@ impl SplitWorker {
             .bind(&track_filename)
             .bind(&track_filepath)
             .bind(file_record.parent_folder.as_ref())
-            .bind(&track_hash)
+            .bind(track_hash)
             .bind(split_track.midi_bytes.len() as i64)
             .fetch_one(db_pool)
             .await?;

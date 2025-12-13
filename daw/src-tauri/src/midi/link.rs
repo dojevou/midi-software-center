@@ -16,8 +16,8 @@
 // - Peer count monitoring
 // =============================================================================
 
-use std::sync::Arc;
 use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::sync::Arc;
 use tokio::sync::broadcast;
 
 #[cfg(feature = "link")]
@@ -52,19 +52,19 @@ pub enum LinkEvent {
 #[allow(dead_code)]
 pub struct AbletonLink {
     enabled: AtomicBool,
-    tempo: AtomicU64,      // Stored as tempo * 1000
-    quantum: AtomicU64,    // Stored as quantum * 1000
+    tempo: AtomicU64,   // Stored as tempo * 1000
+    quantum: AtomicU64, // Stored as quantum * 1000
     num_peers: AtomicU64,
     is_playing: AtomicBool,
     start_stop_sync: AtomicBool,
 
     // Beat tracking
-    beat: AtomicU64,       // Stored as beat * 1000000 for precision
+    beat: AtomicU64, // Stored as beat * 1000000 for precision
     session_start_us: AtomicU64,
-    
+
     // Event broadcasting
     event_tx: broadcast::Sender<LinkEvent>,
-    
+
     // Internal link state (would be rusty_link::AbletonLink in production)
     #[cfg(feature = "link")]
     link: RwLock<Option<rusty_link::AbletonLink>>,
@@ -74,11 +74,11 @@ impl AbletonLink {
     /// Create new Link instance
     pub fn new(initial_tempo: f64) -> Arc<Self> {
         let (event_tx, _) = broadcast::channel(256);
-        
+
         Arc::new(Self {
             enabled: AtomicBool::new(false),
             tempo: AtomicU64::new((initial_tempo * 1000.0) as u64),
-            quantum: AtomicU64::new(4000),  // 4 beats default
+            quantum: AtomicU64::new(4000), // 4 beats default
             num_peers: AtomicU64::new(0),
             is_playing: AtomicBool::new(false),
             start_stop_sync: AtomicBool::new(true),
@@ -98,7 +98,7 @@ impl AbletonLink {
     /// Enable/disable Link
     pub fn set_enabled(&self, enabled: bool) {
         self.enabled.store(enabled, Ordering::Relaxed);
-        
+
         #[cfg(feature = "link")]
         {
             let mut link = self.link.write();
@@ -113,8 +113,11 @@ impl AbletonLink {
                 l.enable(false);
             }
         }
-        
-        tracing::info!("Ableton Link {}", if enabled { "enabled" } else { "disabled" });
+
+        tracing::info!(
+            "Ableton Link {}",
+            if enabled { "enabled" } else { "disabled" }
+        );
     }
 
     /// Check if Link is enabled
@@ -131,14 +134,14 @@ impl AbletonLink {
     pub fn set_tempo(&self, bpm: f64) {
         let bpm = bpm.clamp(20.0, 999.0);
         self.tempo.store((bpm * 1000.0) as u64, Ordering::Relaxed);
-        
+
         #[cfg(feature = "link")]
         if let Some(ref link) = *self.link.read() {
             let session = link.capture_audio_session_state();
             session.set_tempo(bpm, link.clock_micros());
             link.commit_audio_session_state(session);
         }
-        
+
         let _ = self.event_tx.send(LinkEvent::TempoChanged(bpm));
     }
 
@@ -168,16 +171,16 @@ impl AbletonLink {
         if !self.start_stop_sync.load(Ordering::Relaxed) {
             return;
         }
-        
+
         self.is_playing.store(true, Ordering::Relaxed);
-        
+
         #[cfg(feature = "link")]
         if let Some(ref link) = *self.link.read() {
             let session = link.capture_audio_session_state();
             session.set_is_playing(true, link.clock_micros());
             link.commit_audio_session_state(session);
         }
-        
+
         let _ = self.event_tx.send(LinkEvent::StartStopChanged(true));
     }
 
@@ -186,23 +189,23 @@ impl AbletonLink {
         if !self.start_stop_sync.load(Ordering::Relaxed) {
             return;
         }
-        
+
         self.is_playing.store(false, Ordering::Relaxed);
-        
+
         #[cfg(feature = "link")]
         if let Some(ref link) = *self.link.read() {
             let session = link.capture_audio_session_state();
             session.set_is_playing(false, link.clock_micros());
             link.commit_audio_session_state(session);
         }
-        
+
         let _ = self.event_tx.send(LinkEvent::StartStopChanged(false));
     }
 
     /// Enable/disable start/stop sync
     pub fn set_start_stop_sync(&self, enabled: bool) {
         self.start_stop_sync.store(enabled, Ordering::Relaxed);
-        
+
         #[cfg(feature = "link")]
         if let Some(ref link) = *self.link.read() {
             link.enable_start_stop_sync(enabled);
@@ -268,42 +271,38 @@ impl AbletonLink {
         if let Some(ref link) = *self.link.read() {
             let now = link.clock_micros();
             let session = link.capture_audio_session_state();
-            
+
             // Update stored values
             let tempo = session.tempo();
             let beat = session.beat_at_time(now + output_latency_us as i64, self.quantum());
             let is_playing = session.is_playing();
             let num_peers = link.num_peers();
-            
+
             self.tempo.store((tempo * 1000.0) as u64, Ordering::Relaxed);
             self.beat.store((beat * 1000000.0) as u64, Ordering::Relaxed);
             self.is_playing.store(is_playing, Ordering::Relaxed);
             self.num_peers.store(num_peers as u64, Ordering::Relaxed);
-            
+
             // Send events if changed
-            let _ = self.event_tx.send(LinkEvent::BeatPhase { 
-                beat, 
-                phase: beat % self.quantum() 
-            });
+            let _ = self.event_tx.send(LinkEvent::BeatPhase { beat, phase: beat % self.quantum() });
         }
-        
+
         // For mock implementation, simulate beat progression
         #[cfg(not(feature = "link"))]
         if self.is_playing.load(Ordering::Relaxed) {
             let tempo = self.tempo();
             let quantum = self.quantum();
-            
+
             // Advance beat based on elapsed time (simplified)
             let current_beat = self.beat.load(Ordering::Relaxed) as f64 / 1000000.0;
-            let new_beat = current_beat + tempo / 60.0 / 1000.0;  // ~1ms update rate
+            let new_beat = current_beat + tempo / 60.0 / 1000.0; // ~1ms update rate
             self.beat.store((new_beat * 1000000.0) as u64, Ordering::Relaxed);
-            
-            let _ = self.event_tx.send(LinkEvent::BeatPhase {
-                beat: new_beat,
-                phase: new_beat % quantum,
-            });
+
+            let _ = self
+                .event_tx
+                .send(LinkEvent::BeatPhase { beat: new_beat, phase: new_beat % quantum });
         }
-        
+
         self.state()
     }
 }
@@ -311,10 +310,10 @@ impl AbletonLink {
 /// Run Link update loop (call from audio thread or dedicated timer)
 pub async fn run_link_engine(link: Arc<AbletonLink>, output_latency_us: u64) {
     let mut interval = tokio::time::interval(std::time::Duration::from_millis(1));
-    
+
     loop {
         interval.tick().await;
-        
+
         if link.is_enabled() {
             link.update(output_latency_us);
         }
@@ -430,16 +429,16 @@ pub async fn link_subscribe(
             let event_data = match event {
                 LinkEvent::TempoChanged(tempo) => {
                     serde_json::json!({"type": "tempo", "value": tempo})
-                }
+                },
                 LinkEvent::NumPeersChanged(peers) => {
                     serde_json::json!({"type": "peers", "value": peers})
-                }
+                },
                 LinkEvent::StartStopChanged(playing) => {
                     serde_json::json!({"type": "playing", "value": playing})
-                }
+                },
                 LinkEvent::BeatPhase { beat, phase } => {
                     serde_json::json!({"type": "beat", "beat": beat, "phase": phase})
-                }
+                },
             };
 
             if app.emit("link-event", event_data).is_err() {

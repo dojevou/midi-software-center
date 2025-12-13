@@ -19,13 +19,13 @@ static SENTRY_GUARD: std::sync::OnceLock<Option<sentry::ClientInitGuard>> =
 use midi_pipeline::{AppState as PipelineState, Database};
 
 // Import DAW types
-use midi_software_center_daw::commands::mixer::MixerState;
-use midi_software_center_daw::commands::system::SystemState;
 use midi_software_center_daw::commands::gear::GearState;
-use midi_software_center_daw::commands::presets::PresetsState;
+use midi_software_center_daw::commands::mixer::MixerState;
 use midi_software_center_daw::commands::preferences::{
-    AppSettingsState, WindowLayoutState, KeyboardShortcutsState, RecentProjectsState,
+    AppSettingsState, KeyboardShortcutsState, RecentProjectsState, WindowLayoutState,
 };
+use midi_software_center_daw::commands::presets::PresetsState;
+use midi_software_center_daw::commands::system::SystemState;
 use midi_software_center_daw::commands::{
     AppState as DawAppState,
     AutomationState,
@@ -627,17 +627,12 @@ static APP_START_TIME: std::sync::OnceLock<std::time::Instant> = std::sync::Once
 /// - Application uptime
 /// - Version information
 #[tauri::command]
-async fn health_check(
-    state: tauri::State<'_, AppState>,
-) -> Result<HealthCheckResponse, String> {
+async fn health_check(state: tauri::State<'_, AppState>) -> Result<HealthCheckResponse, String> {
     // Initialize start time on first call
     let _ = APP_START_TIME.get_or_init(std::time::Instant::now);
 
     // Calculate uptime
-    let uptime = APP_START_TIME
-        .get()
-        .map(|start| start.elapsed().as_secs())
-        .unwrap_or(0);
+    let uptime = APP_START_TIME.get().map(|start| start.elapsed().as_secs()).unwrap_or(0);
 
     // Check database connectivity
     let db_start = std::time::Instant::now();
@@ -650,15 +645,16 @@ async fn health_check(
 
     let database = DatabaseHealth {
         connected: db_connected,
-        pool_status: if db_connected { "healthy".to_string() } else { "disconnected".to_string() },
+        pool_status: if db_connected {
+            "healthy".to_string()
+        } else {
+            "disconnected".to_string()
+        },
         latency_ms: db_latency,
     };
 
     // Check Sentry status
-    let sentry_configured = SENTRY_GUARD
-        .get()
-        .map(|guard| guard.is_some())
-        .unwrap_or(false);
+    let sentry_configured = SENTRY_GUARD.get().map(|guard| guard.is_some()).unwrap_or(false);
 
     let sentry_env = if sentry_configured {
         std::env::var("SENTRY_ENVIRONMENT").ok()
@@ -666,17 +662,10 @@ async fn health_check(
         None
     };
 
-    let sentry = SentryHealth {
-        configured: sentry_configured,
-        environment: sentry_env,
-    };
+    let sentry = SentryHealth { configured: sentry_configured, environment: sentry_env };
 
     // Determine overall status
-    let status = if db_connected {
-        "healthy"
-    } else {
-        "degraded"
-    };
+    let status = if db_connected { "healthy" } else { "degraded" };
 
     let response = HealthCheckResponse {
         status: status.to_string(),
@@ -687,10 +676,10 @@ async fn health_check(
         timestamp: chrono::Utc::now().to_rfc3339(),
     };
 
-    info!("Health check: status={}, db={}, sentry={}",
-          response.status,
-          response.database.connected,
-          response.sentry.configured);
+    info!(
+        "Health check: status={}, db={}, sentry={}",
+        response.status, response.database.connected, response.sentry.configured
+    );
 
     Ok(response)
 }
@@ -774,8 +763,8 @@ fn init_sentry() -> Option<sentry::ClientInitGuard> {
         return None;
     }
 
-    let environment = std::env::var("SENTRY_ENVIRONMENT")
-        .unwrap_or_else(|_| "development".to_string());
+    let environment =
+        std::env::var("SENTRY_ENVIRONMENT").unwrap_or_else(|_| "development".to_string());
 
     let guard = sentry::init((
         dsn,

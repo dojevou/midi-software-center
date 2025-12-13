@@ -16,7 +16,6 @@ use midi_pipeline::core::pipeline::{PipelineConfig, PipelineOrchestrator};
 use sqlx::PgPool;
 use std::path::PathBuf;
 use tracing::{error, info};
-use tracing_subscriber;
 
 /// Pipeline Orchestrator - Pipelined Parallel MIDI Processing
 #[derive(Parser, Debug)]

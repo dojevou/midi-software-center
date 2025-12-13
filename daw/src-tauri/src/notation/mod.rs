@@ -19,8 +19,8 @@
 // - Multi-voice support
 // =============================================================================
 
-use std::collections::HashMap;
 use midly::Smf;
+use std::collections::HashMap;
 
 /// Note representation for notation
 #[derive(Debug, Clone)]
@@ -56,20 +56,14 @@ impl Default for TimeSignature {
 }
 
 /// Key signature
-#[derive(Debug, Clone, Copy)]
+#[derive(Debug, Clone, Copy, Default)]
 pub struct KeySignature {
-    pub sharps: i8,  // Negative for flats
+    pub sharps: i8, // Negative for flats
     pub minor: bool,
 }
 
-impl Default for KeySignature {
-    fn default() -> Self {
-        Self { sharps: 0, minor: false }
-    }
-}
-
 impl KeySignature {
-    pub fn to_key_name(&self) -> &'static str {
+    pub fn to_key_name(self) -> &'static str {
         match (self.sharps, self.minor) {
             (0, false) => "C",
             (0, true) => "Am",
@@ -174,10 +168,7 @@ pub struct ScoreRenderer {
 
 impl ScoreRenderer {
     pub fn new(ppq: u32) -> Self {
-        Self {
-            ppq,
-            quantize_level: QuantizeLevel::Sixteenth,
-        }
+        Self { ppq, quantize_level: QuantizeLevel::Sixteenth }
     }
 
     /// Set quantization level
@@ -211,10 +202,13 @@ impl ScoreRenderer {
                         match message {
                             midly::MidiMessage::NoteOn { key, vel } => {
                                 if vel.as_int() > 0 {
-                                    active_notes.insert((ch, key.as_int()), (current_tick, vel.as_int()));
+                                    active_notes
+                                        .insert((ch, key.as_int()), (current_tick, vel.as_int()));
                                 } else {
                                     // Note off
-                                    if let Some((start, velocity)) = active_notes.remove(&(ch, key.as_int())) {
+                                    if let Some((start, velocity)) =
+                                        active_notes.remove(&(ch, key.as_int()))
+                                    {
                                         let note = NotationNote {
                                             pitch: key.as_int(),
                                             start_tick: start,
@@ -227,9 +221,11 @@ impl ScoreRenderer {
                                         all_notes.push((ch, note));
                                     }
                                 }
-                            }
+                            },
                             midly::MidiMessage::NoteOff { key, .. } => {
-                                if let Some((start, velocity)) = active_notes.remove(&(ch, key.as_int())) {
+                                if let Some((start, velocity)) =
+                                    active_notes.remove(&(ch, key.as_int()))
+                                {
                                     let note = NotationNote {
                                         pitch: key.as_int(),
                                         start_tick: start,
@@ -241,28 +237,26 @@ impl ScoreRenderer {
                                     };
                                     all_notes.push((ch, note));
                                 }
-                            }
-                            _ => {}
+                            },
+                            _ => {},
                         }
-                    }
-                    midly::TrackEventKind::Meta(meta) => {
-                        match meta {
-                            midly::MetaMessage::Tempo(t) => {
-                                tempo = 60_000_000.0 / t.as_int() as f64;
-                            }
-                            midly::MetaMessage::TimeSignature(num, denom, _, _) => {
-                                time_sig = TimeSignature {
-                                    numerator: num,
-                                    denominator: 2u8.pow(denom as u32),
-                                };
-                            }
-                            midly::MetaMessage::KeySignature(sharps, minor) => {
-                                key_sig = KeySignature { sharps, minor };
-                            }
-                            _ => {}
-                        }
-                    }
-                    _ => {}
+                    },
+                    midly::TrackEventKind::Meta(meta) => match meta {
+                        midly::MetaMessage::Tempo(t) => {
+                            tempo = 60_000_000.0 / t.as_int() as f64;
+                        },
+                        midly::MetaMessage::TimeSignature(num, denom, _, _) => {
+                            time_sig = TimeSignature {
+                                numerator: num,
+                                denominator: 2u8.pow(denom as u32),
+                            };
+                        },
+                        midly::MetaMessage::KeySignature(sharps, minor) => {
+                            key_sig = KeySignature { sharps, minor };
+                        },
+                        _ => {},
+                    },
+                    _ => {},
                 }
             }
         }
@@ -271,26 +265,32 @@ impl ScoreRenderer {
         let quantize_ticks = self.quantize_level.ticks(ppq);
         for (_, note) in &mut all_notes {
             note.start_tick = (note.start_tick / quantize_ticks) * quantize_ticks;
-            note.duration_ticks = ((note.duration_ticks + quantize_ticks / 2) / quantize_ticks) * quantize_ticks;
+            note.duration_ticks =
+                ((note.duration_ticks + quantize_ticks / 2) / quantize_ticks) * quantize_ticks;
             note.duration_ticks = note.duration_ticks.max(quantize_ticks);
         }
 
         // Split into treble and bass staves
         let split_point = 60; // Middle C
-        let treble_notes: Vec<NotationNote> = all_notes.iter()
+        let treble_notes: Vec<NotationNote> = all_notes
+            .iter()
             .filter(|(_, n)| n.pitch >= split_point)
             .map(|(_, n)| n.clone())
             .collect();
-        let bass_notes: Vec<NotationNote> = all_notes.iter()
+        let bass_notes: Vec<NotationNote> = all_notes
+            .iter()
             .filter(|(_, n)| n.pitch < split_point)
             .map(|(_, n)| n.clone())
             .collect();
 
         // Create measures
-        let ticks_per_measure = ppq as u64 * 4 * time_sig.numerator as u64 / time_sig.denominator as u64;
-        
-        let treble_measures = self.notes_to_measures(&treble_notes, ticks_per_measure, &time_sig, &key_sig, tempo);
-        let bass_measures = self.notes_to_measures(&bass_notes, ticks_per_measure, &time_sig, &key_sig, tempo);
+        let ticks_per_measure =
+            ppq as u64 * 4 * time_sig.numerator as u64 / time_sig.denominator as u64;
+
+        let treble_measures =
+            self.notes_to_measures(&treble_notes, ticks_per_measure, &time_sig, &key_sig, tempo);
+        let bass_measures =
+            self.notes_to_measures(&bass_notes, ticks_per_measure, &time_sig, &key_sig, tempo);
 
         Score {
             title: title.to_string(),
@@ -327,7 +327,8 @@ impl ScoreRenderer {
             let measure_start = m as u64 * ticks_per_measure;
             let measure_end = measure_start + ticks_per_measure;
 
-            let measure_notes: Vec<NotationNote> = notes.iter()
+            let measure_notes: Vec<NotationNote> = notes
+                .iter()
                 .filter(|n| n.start_tick >= measure_start && n.start_tick < measure_end)
                 .cloned()
                 .collect();
@@ -335,7 +336,7 @@ impl ScoreRenderer {
             measures.push(Measure {
                 number: m + 1,
                 notes: measure_notes,
-                rests: vec![],  // Simplified - would calculate rests
+                rests: vec![], // Simplified - would calculate rests
                 time_signature: if m == 0 { Some(*time_sig) } else { None },
                 key_signature: if m == 0 { Some(*key_sig) } else { None },
                 tempo: if m == 0 { Some(tempo) } else { None },
@@ -385,7 +386,10 @@ impl ScoreRenderer {
                 let y = staff_y + line as f64 * line_spacing;
                 svg.push_str(&format!(
                     r#"<line class="staff-line" x1="{}" y1="{}" x2="{}" y2="{}"/>"#,
-                    margin_left - 20.0, y, width as f64 - 20.0, y
+                    margin_left - 20.0,
+                    y,
+                    width as f64 - 20.0,
+                    y
                 ));
             }
 
@@ -398,12 +402,15 @@ impl ScoreRenderer {
             };
             svg.push_str(&format!(
                 r#"<text class="clef" x="{}" y="{}">{}</text>"#,
-                margin_left - 15.0, staff_y + 30.0, clef_char
+                margin_left - 15.0,
+                staff_y + 30.0,
+                clef_char
             ));
 
             // Draw notes
-            let note_spacing = (width as f64 - margin_left - 40.0) / score.staves[0].measures.len().max(1) as f64;
-            
+            let note_spacing =
+                (width as f64 - margin_left - 40.0) / score.staves[0].measures.len().max(1) as f64;
+
             for (measure_idx, measure) in staff.measures.iter().enumerate() {
                 let measure_x = margin_left + measure_idx as f64 * note_spacing;
 
@@ -412,11 +419,15 @@ impl ScoreRenderer {
                     if let Some(ts) = &measure.time_signature {
                         svg.push_str(&format!(
                             r#"<text class="time-sig" x="{}" y="{}">{}</text>"#,
-                            margin_left + 25.0, staff_y + 15.0, ts.numerator
+                            margin_left + 25.0,
+                            staff_y + 15.0,
+                            ts.numerator
                         ));
                         svg.push_str(&format!(
                             r#"<text class="time-sig" x="{}" y="{}">{}</text>"#,
-                            margin_left + 25.0, staff_y + 35.0, ts.denominator
+                            margin_left + 25.0,
+                            staff_y + 35.0,
+                            ts.denominator
                         ));
                     }
                     // Display key signature name (using to_key_name())
@@ -424,14 +435,17 @@ impl ScoreRenderer {
                         let key_name = ks.to_key_name();
                         svg.push_str(&format!(
                             r#"<text class="key-name" x="{}" y="{}">{}</text>"#,
-                            margin_left + 50.0, staff_y - 5.0, key_name
+                            margin_left + 50.0,
+                            staff_y - 5.0,
+                            key_name
                         ));
                         // Draw sharps/flats symbols
                         let sharp_positions = [0, 3, 6, 2, 5, 1, 4]; // F C G D A E B
-                        let flat_positions = [6, 3, 7, 4, 1, 5, 2];  // B E A D G C F
+                        let flat_positions = [6, 3, 7, 4, 1, 5, 2]; // B E A D G C F
                         if ks.sharps > 0 {
-                            for i in 0..ks.sharps.min(7) as usize {
-                                let pos = sharp_positions[i];
+                            for (i, &pos) in
+                                sharp_positions.iter().enumerate().take(ks.sharps.min(7) as usize)
+                            {
                                 let y_offset = pos as f64 * (line_spacing / 2.0);
                                 svg.push_str(&format!(
                                     r#"<text class="key-sig" x="{}" y="{}">♯</text>"#,
@@ -440,8 +454,9 @@ impl ScoreRenderer {
                                 ));
                             }
                         } else if ks.sharps < 0 {
-                            for i in 0..(-ks.sharps).min(7) as usize {
-                                let pos = flat_positions[i];
+                            for (i, &pos) in
+                                flat_positions.iter().enumerate().take((-ks.sharps).min(7) as usize)
+                            {
                                 let y_offset = pos as f64 * (line_spacing / 2.0);
                                 svg.push_str(&format!(
                                     r#"<text class="key-sig" x="{}" y="{}">♭</text>"#,
@@ -457,7 +472,10 @@ impl ScoreRenderer {
                 if measure_idx > 0 {
                     svg.push_str(&format!(
                         r#"<line class="staff-line" x1="{}" y1="{}" x2="{}" y2="{}"/>"#,
-                        measure_x, staff_y, measure_x, staff_y + 40.0
+                        measure_x,
+                        staff_y,
+                        measure_x,
+                        staff_y + 40.0
                     ));
                 }
 
@@ -469,7 +487,9 @@ impl ScoreRenderer {
                     // Quarter rest symbol (simplified path)
                     svg.push_str(&format!(
                         r#"<text class="rest voice-{}" x="{}" y="{}" font-size="24">𝄽</text>"#,
-                        rest.voice.min(3), rest_x, rest_y
+                        rest.voice.min(3),
+                        rest_x,
+                        rest_y
                     ));
                 }
 
@@ -494,7 +514,11 @@ impl ScoreRenderer {
                     let stem_up = note_y > staff_y + 20.0;
                     let stem_x = if stem_up { note_x + 5.5 } else { note_x - 5.5 };
                     let stem_y1 = note_y;
-                    let stem_y2 = if stem_up { note_y - 35.0 } else { note_y + 35.0 };
+                    let stem_y2 = if stem_up {
+                        note_y - 35.0
+                    } else {
+                        note_y + 35.0
+                    };
                     svg.push_str(&format!(
                         r#"<line class="stem" x1="{}" y1="{}" x2="{}" y2="{}" style="opacity: {};"/>"#,
                         stem_x, stem_y1, stem_x, stem_y2, velocity_opacity
@@ -508,9 +532,12 @@ impl ScoreRenderer {
                         let tie_curve = if stem_up { 8.0 } else { -8.0 };
                         svg.push_str(&format!(
                             r#"<path class="tie" d="M{},{} Q{},{} {},{}"/>"#,
-                            tie_x1, note_y + tie_y_offset,
-                            (tie_x1 + tie_x2) / 2.0, note_y + tie_y_offset + tie_curve,
-                            tie_x2, note_y + tie_y_offset
+                            tie_x1,
+                            note_y + tie_y_offset,
+                            (tie_x1 + tie_x2) / 2.0,
+                            note_y + tie_y_offset + tie_curve,
+                            tie_x2,
+                            note_y + tie_y_offset
                         ));
                     }
 
@@ -521,7 +548,10 @@ impl ScoreRenderer {
                             let ledger_y = staff_y - i as f64 * line_spacing;
                             svg.push_str(&format!(
                                 r#"<line class="staff-line" x1="{}" y1="{}" x2="{}" y2="{}"/>"#,
-                                note_x - 10.0, ledger_y, note_x + 10.0, ledger_y
+                                note_x - 10.0,
+                                ledger_y,
+                                note_x + 10.0,
+                                ledger_y
                             ));
                         }
                     } else if note_y > staff_y + 40.0 + line_spacing / 2.0 {
@@ -530,7 +560,10 @@ impl ScoreRenderer {
                             let ledger_y = staff_y + 40.0 + i as f64 * line_spacing;
                             svg.push_str(&format!(
                                 r#"<line class="staff-line" x1="{}" y1="{}" x2="{}" y2="{}"/>"#,
-                                note_x - 10.0, ledger_y, note_x + 10.0, ledger_y
+                                note_x - 10.0,
+                                ledger_y,
+                                note_x + 10.0,
+                                ledger_y
                             ));
                         }
                     }
@@ -546,82 +579,106 @@ impl ScoreRenderer {
         // Calculate Y position based on pitch
         // Middle C (60) should be on the ledger line below treble staff
         let half_step = line_spacing / 2.0;
-        
+
         let reference = match clef {
-            Clef::Treble => 71,  // B4 on middle line
+            Clef::Treble => 71, // B4 on middle line
             Clef::Bass => 50,   // D3 on middle line
             _ => 60,
         };
-        
+
         // Calculate position in half steps from reference
         let pitch_class = pitch % 12;
         let octave = pitch / 12;
         let ref_class = reference % 12;
         let ref_octave = reference / 12;
-        
+
         // Map to staff positions (C D E F G A B = 0 1 2 3 4 5 6)
         let note_map = [0, 0, 1, 1, 2, 3, 3, 4, 4, 5, 5, 6]; // Chromatic to diatonic
-        
-        let pitch_position = note_map[pitch_class as usize] as i32 + (octave as i32 * 7);
-        let ref_position = note_map[ref_class as usize] as i32 + (ref_octave as i32 * 7);
-        
+
+        let pitch_position = note_map[pitch_class as usize] + (octave * 7);
+        let ref_position = note_map[ref_class as usize] + (ref_octave * 7);
+
         let offset = ref_position - pitch_position;
-        
+
         staff_y + 20.0 + offset as f64 * half_step
     }
 
     /// Export to MusicXML
     pub fn to_musicxml(&self, score: &Score) -> String {
-        let mut xml = String::from(r#"<?xml version="1.0" encoding="UTF-8"?>
+        let mut xml = String::from(
+            r#"<?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE score-partwise PUBLIC "-//Recordare//DTD MusicXML 4.0 Partwise//EN" "http://www.musicxml.org/dtds/partwise.dtd">
 <score-partwise version="4.0">
-"#);
+"#,
+        );
 
         // Work info
-        xml.push_str(&format!(r#"  <work>
+        xml.push_str(&format!(
+            r#"  <work>
     <work-title>{}</work-title>
   </work>
-"#, score.title));
+"#,
+            score.title
+        ));
 
         // Part list
-        xml.push_str(r#"  <part-list>
-"#);
+        xml.push_str(
+            r#"  <part-list>
+"#,
+        );
         for (i, staff) in score.staves.iter().enumerate() {
             let clef_name = match staff.clef {
                 Clef::Treble => "Treble",
                 Clef::Bass => "Bass",
                 _ => "Part",
             };
-            xml.push_str(&format!(r#"    <score-part id="P{}">
+            xml.push_str(&format!(
+                r#"    <score-part id="P{}">
       <part-name>{}</part-name>
     </score-part>
-"#, i + 1, clef_name));
+"#,
+                i + 1,
+                clef_name
+            ));
         }
-        xml.push_str(r#"  </part-list>
-"#);
+        xml.push_str(
+            r#"  </part-list>
+"#,
+        );
 
         // Parts
         for (i, staff) in score.staves.iter().enumerate() {
-            xml.push_str(&format!(r#"  <part id="P{}">
-"#, i + 1));
+            xml.push_str(&format!(
+                r#"  <part id="P{}">
+"#,
+                i + 1
+            ));
 
             for measure in &staff.measures {
-                xml.push_str(&format!(r#"    <measure number="{}">
-"#, measure.number));
+                xml.push_str(&format!(
+                    r#"    <measure number="{}">
+"#,
+                    measure.number
+                ));
 
                 // Attributes on first measure
                 if measure.number == 1 {
-                    xml.push_str(r#"      <attributes>
+                    xml.push_str(
+                        r#"      <attributes>
         <divisions>1</divisions>
-"#);
+"#,
+                    );
                     if let Some(ts) = &measure.time_signature {
-                        xml.push_str(&format!(r#"        <time>
+                        xml.push_str(&format!(
+                            r#"        <time>
           <beats>{}</beats>
           <beat-type>{}</beat-type>
         </time>
-"#, ts.numerator, ts.denominator));
+"#,
+                            ts.numerator, ts.denominator
+                        ));
                     }
-                    
+
                     // Clef
                     let (sign, line) = match staff.clef {
                         Clef::Treble => ("G", 2),
@@ -629,14 +686,19 @@ impl ScoreRenderer {
                         Clef::Alto => ("C", 3),
                         _ => ("G", 2),
                     };
-                    xml.push_str(&format!(r#"        <clef>
+                    xml.push_str(&format!(
+                        r#"        <clef>
           <sign>{}</sign>
           <line>{}</line>
         </clef>
-"#, sign, line));
-                    
-                    xml.push_str(r#"      </attributes>
-"#);
+"#,
+                        sign, line
+                    ));
+
+                    xml.push_str(
+                        r#"      </attributes>
+"#,
+                    );
                 }
 
                 // Notes
@@ -645,40 +707,57 @@ impl ScoreRenderer {
                     let duration = (note.duration_ticks / (score.ppq as u64 / 4)).max(1);
                     let note_type = self.duration_to_type(note.duration_ticks, score.ppq);
 
-                    xml.push_str(r#"      <note>
+                    xml.push_str(
+                        r#"      <note>
         <pitch>
-"#);
-                    xml.push_str(&format!(r#"          <step>{}</step>
-"#, step));
+"#,
+                    );
+                    xml.push_str(&format!(
+                        r#"          <step>{}</step>
+"#,
+                        step
+                    ));
                     if alter != 0 {
-                        xml.push_str(&format!(r#"          <alter>{}</alter>
-"#, alter));
+                        xml.push_str(&format!(
+                            r#"          <alter>{}</alter>
+"#,
+                            alter
+                        ));
                     }
-                    xml.push_str(&format!(r#"          <octave>{}</octave>
+                    xml.push_str(&format!(
+                        r#"          <octave>{}</octave>
         </pitch>
         <duration>{}</duration>
         <type>{}</type>
       </note>
-"#, octave, duration, note_type));
+"#,
+                        octave, duration, note_type
+                    ));
                 }
 
-                xml.push_str(r#"    </measure>
-"#);
+                xml.push_str(
+                    r#"    </measure>
+"#,
+                );
             }
 
-            xml.push_str(r#"  </part>
-"#);
+            xml.push_str(
+                r#"  </part>
+"#,
+            );
         }
 
-        xml.push_str(r#"</score-partwise>
-"#);
+        xml.push_str(
+            r#"</score-partwise>
+"#,
+        );
         xml
     }
 
     fn midi_to_musicxml_pitch(&self, midi: u8) -> (&'static str, i32, i32) {
         let octave = (midi / 12) as i32 - 1;
         let pitch_class = midi % 12;
-        
+
         match pitch_class {
             0 => ("C", octave, 0),
             1 => ("C", octave, 1),
@@ -698,13 +777,20 @@ impl ScoreRenderer {
 
     fn duration_to_type(&self, ticks: u64, ppq: u32) -> &'static str {
         let quarter = ppq as u64;
-        
-        if ticks >= quarter * 4 { "whole" }
-        else if ticks >= quarter * 2 { "half" }
-        else if ticks >= quarter { "quarter" }
-        else if ticks >= quarter / 2 { "eighth" }
-        else if ticks >= quarter / 4 { "16th" }
-        else { "32nd" }
+
+        if ticks >= quarter * 4 {
+            "whole"
+        } else if ticks >= quarter * 2 {
+            "half"
+        } else if ticks >= quarter {
+            "quarter"
+        } else if ticks >= quarter / 2 {
+            "eighth"
+        } else if ticks >= quarter / 4 {
+            "16th"
+        } else {
+            "32nd"
+        }
     }
 }
 
@@ -712,8 +798,8 @@ impl ScoreRenderer {
 // TAURI COMMANDS
 // =============================================================================
 
-use tauri::State;
 use std::sync::Mutex;
+use tauri::State;
 
 pub struct ScoreRendererState(pub Mutex<ScoreRenderer>);
 
@@ -744,10 +830,7 @@ pub fn export_musicxml(
 }
 
 #[tauri::command]
-pub fn set_quantize_level(
-    state: State<ScoreRendererState>,
-    level: String,
-) -> Result<(), String> {
+pub fn set_quantize_level(state: State<ScoreRendererState>, level: String) -> Result<(), String> {
     let mut renderer = state.0.lock().map_err(|e| e.to_string())?;
     let quantize = match level.to_lowercase().as_str() {
         "whole" => QuantizeLevel::Whole,

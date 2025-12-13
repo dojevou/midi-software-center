@@ -26,9 +26,10 @@ pub enum ThruMode {
 }
 
 /// Velocity curve for scaling
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub enum VelocityCurve {
     /// Linear pass-through (no change)
+    #[default]
     Linear,
     /// Compress dynamics (soft compression)
     Compress { ratio: f32 },
@@ -44,12 +45,6 @@ pub enum VelocityCurve {
     SCurve { amount: f32 },
 }
 
-impl Default for VelocityCurve {
-    fn default() -> Self {
-        VelocityCurve::Linear
-    }
-}
-
 impl VelocityCurve {
     /// Apply velocity curve to a value
     pub fn apply(&self, velocity: u8) -> u8 {
@@ -61,20 +56,18 @@ impl VelocityCurve {
                 let normalized = velocity as f32 / 127.0;
                 let compressed = 0.5 + (normalized - 0.5) * ratio;
                 (compressed * 127.0).clamp(1.0, 127.0) as u8
-            }
+            },
 
             VelocityCurve::Expand { ratio } => {
                 // Expand dynamics away from center
                 let normalized = velocity as f32 / 127.0;
                 let expanded = 0.5 + (normalized - 0.5) * ratio;
                 (expanded * 127.0).clamp(1.0, 127.0) as u8
-            }
+            },
 
             VelocityCurve::Fixed { velocity: fixed } => *fixed,
 
-            VelocityCurve::Scale { factor } => {
-                ((velocity as f32) * factor).clamp(1.0, 127.0) as u8
-            }
+            VelocityCurve::Scale { factor } => ((velocity as f32) * factor).clamp(1.0, 127.0) as u8,
 
             VelocityCurve::Custom { points } => {
                 // Linear interpolation between control points
@@ -103,7 +96,7 @@ impl VelocityCurve {
                 } else {
                     points.last().map(|p| p.1).unwrap_or(velocity)
                 }
-            }
+            },
 
             VelocityCurve::SCurve { amount } => {
                 // S-curve using tanh
@@ -111,7 +104,7 @@ impl VelocityCurve {
                 let curved = (normalized * amount).tanh() / amount.tanh();
                 let result = (curved + 1.0) / 2.0; // back to 0-1
                 (result * 127.0).clamp(1.0, 127.0) as u8
-            }
+            },
         }
     }
 }
@@ -243,12 +236,15 @@ impl MidiThru {
     pub fn new() -> (Self, broadcast::Receiver<ThruEvent>) {
         let (event_tx, event_rx) = broadcast::channel(2048);
 
-        (Self {
-            enabled: RwLock::new(false),
-            config: RwLock::new(ThruConfig::default()),
-            stats: RwLock::new(ThruStats::default()),
-            event_tx,
-        }, event_rx)
+        (
+            Self {
+                enabled: RwLock::new(false),
+                config: RwLock::new(ThruConfig::default()),
+                stats: RwLock::new(ThruStats::default()),
+                event_tx,
+            },
+            event_rx,
+        )
     }
 
     /// Subscribe to thru events
@@ -363,7 +359,7 @@ impl MidiThru {
             None => {
                 self.stats.write().messages_filtered += 1;
                 return false;
-            }
+            },
         };
 
         // Process message based on type
@@ -378,28 +374,27 @@ impl MidiThru {
                     timestamp_us.saturating_sub((-config.latency_compensation_us) as u64)
                 };
 
-                let event = ThruEvent {
-                    output_device,
-                    data,
-                    timestamp_us: adjusted_time,
-                };
+                let event = ThruEvent { output_device, data, timestamp_us: adjusted_time };
 
                 // Send to output
                 if self.event_tx.send(event).is_ok() {
                     let mut stats = self.stats.write();
                     stats.messages_passed += 1;
                     stats.last_message_time = Some(timestamp_us);
-                    debug!("MIDI thru: passed message from {} at {}us", device_id, timestamp_us);
+                    debug!(
+                        "MIDI thru: passed message from {} at {}us",
+                        device_id, timestamp_us
+                    );
                     true
                 } else {
                     warn!("MIDI thru: no receivers for output");
                     false
                 }
-            }
+            },
             None => {
                 self.stats.write().messages_filtered += 1;
                 false
-            }
+            },
         }
     }
 
@@ -438,7 +433,7 @@ impl MidiThru {
                     return None;
                 }
                 self.process_note_message(command, output_channel, message, config)
-            }
+            },
 
             0xA0 => {
                 // Poly Aftertouch
@@ -448,7 +443,7 @@ impl MidiThru {
                 let mut out = message.to_vec();
                 out[0] = 0xA0 | output_channel;
                 Some(out)
-            }
+            },
 
             0xB0 => {
                 // Control Change
@@ -458,7 +453,7 @@ impl MidiThru {
                 let mut out = message.to_vec();
                 out[0] = 0xB0 | output_channel;
                 Some(out)
-            }
+            },
 
             0xC0 => {
                 // Program Change
@@ -468,7 +463,7 @@ impl MidiThru {
                 let mut out = message.to_vec();
                 out[0] = 0xC0 | output_channel;
                 Some(out)
-            }
+            },
 
             0xD0 => {
                 // Channel Aftertouch
@@ -478,7 +473,7 @@ impl MidiThru {
                 let mut out = message.to_vec();
                 out[0] = 0xD0 | output_channel;
                 Some(out)
-            }
+            },
 
             0xE0 => {
                 // Pitch Bend
@@ -488,7 +483,7 @@ impl MidiThru {
                 let mut out = message.to_vec();
                 out[0] = 0xE0 | output_channel;
                 Some(out)
-            }
+            },
 
             _ => None,
         }
@@ -549,7 +544,7 @@ impl MidiThru {
                 } else {
                     None
                 }
-            }
+            },
 
             // SysEx - pass through if enabled
             0xF0 => {
@@ -558,7 +553,7 @@ impl MidiThru {
                 } else {
                     None
                 }
-            }
+            },
 
             // Other system common messages
             0xF1 | 0xF2 | 0xF3 | 0xF6 => {
@@ -567,7 +562,7 @@ impl MidiThru {
                 } else {
                     None
                 }
-            }
+            },
 
             _ => None,
         }
@@ -751,9 +746,7 @@ mod tests {
 
     #[test]
     fn test_velocity_custom_curve() {
-        let curve = VelocityCurve::Custom {
-            points: vec![(0, 0), (64, 100), (127, 127)],
-        };
+        let curve = VelocityCurve::Custom { points: vec![(0, 0), (64, 100), (127, 127)] };
         assert_eq!(curve.apply(0), 0);
         assert_eq!(curve.apply(64), 100);
         assert_eq!(curve.apply(127), 127);
@@ -811,8 +804,8 @@ mod tests {
         assert!(result.is_some());
         let msg = result.unwrap();
         assert_eq!(msg[0], 0x90); // Note on, channel 0
-        assert_eq!(msg[1], 72);   // C5
-        assert_eq!(msg[2], 100);  // velocity unchanged
+        assert_eq!(msg[1], 72); // C5
+        assert_eq!(msg[2], 100); // velocity unchanged
     }
 
     #[test]

@@ -60,14 +60,8 @@ pub struct UpdateTagRequest {
 /// # Returns
 /// The newly created tag with its assigned ID
 #[tauri::command]
-pub async fn create_tag(
-    tag: CreateTagRequest,
-    state: State<'_, AppState>,
-) -> Result<Tag, String> {
-    let pool = state
-        .db_pool
-        .as_ref()
-        .ok_or("Database not connected")?;
+pub async fn create_tag(tag: CreateTagRequest, state: State<'_, AppState>) -> Result<Tag, String> {
+    let pool = state.db_pool.as_ref().ok_or("Database not connected")?;
 
     // Insert the new tag
     let row = sqlx::query_as::<_, (i32, String, Option<String>, i32)>(
@@ -105,10 +99,7 @@ pub async fn update_tag(
     updates: UpdateTagRequest,
     state: State<'_, AppState>,
 ) -> Result<(), String> {
-    let pool = state
-        .db_pool
-        .as_ref()
-        .ok_or("Database not connected")?;
+    let pool = state.db_pool.as_ref().ok_or("Database not connected")?;
 
     // Build dynamic update query based on provided fields
     let mut set_clauses = Vec::new();
@@ -146,10 +137,7 @@ pub async fn update_tag(
         return Ok(());
     };
 
-    query
-        .execute(pool)
-        .await
-        .map_err(|e| format!("Failed to update tag: {}", e))?;
+    query.execute(pool).await.map_err(|e| format!("Failed to update tag: {}", e))?;
 
     Ok(())
 }
@@ -160,16 +148,10 @@ pub async fn update_tag(
 /// * `tag_id` - ID of the tag to delete
 #[tauri::command]
 pub async fn delete_tag(tag_id: i32, state: State<'_, AppState>) -> Result<(), String> {
-    let pool = state
-        .db_pool
-        .as_ref()
-        .ok_or("Database not connected")?;
+    let pool = state.db_pool.as_ref().ok_or("Database not connected")?;
 
     // Start a transaction to ensure atomicity
-    let mut tx = pool
-        .begin()
-        .await
-        .map_err(|e| format!("Failed to start transaction: {}", e))?;
+    let mut tx = pool.begin().await.map_err(|e| format!("Failed to start transaction: {}", e))?;
 
     // First, delete all file_tags associations
     sqlx::query("DELETE FROM file_tags WHERE tag_id = $1")
@@ -190,9 +172,7 @@ pub async fn delete_tag(tag_id: i32, state: State<'_, AppState>) -> Result<(), S
     }
 
     // Commit the transaction
-    tx.commit()
-        .await
-        .map_err(|e| format!("Failed to commit transaction: {}", e))?;
+    tx.commit().await.map_err(|e| format!("Failed to commit transaction: {}", e))?;
 
     Ok(())
 }
@@ -219,16 +199,10 @@ pub async fn merge_tags(
         return Err("Target tag cannot be in source tags".to_string());
     }
 
-    let pool = state
-        .db_pool
-        .as_ref()
-        .ok_or("Database not connected")?;
+    let pool = state.db_pool.as_ref().ok_or("Database not connected")?;
 
     // Start a transaction
-    let mut tx = pool
-        .begin()
-        .await
-        .map_err(|e| format!("Failed to start transaction: {}", e))?;
+    let mut tx = pool.begin().await.map_err(|e| format!("Failed to start transaction: {}", e))?;
 
     // Move all file associations from source tags to target tag
     // Use ON CONFLICT to avoid duplicates
@@ -275,9 +249,7 @@ pub async fn merge_tags(
     .map_err(|e| format!("Failed to update usage count: {}", e))?;
 
     // Commit the transaction
-    tx.commit()
-        .await
-        .map_err(|e| format!("Failed to commit transaction: {}", e))?;
+    tx.commit().await.map_err(|e| format!("Failed to commit transaction: {}", e))?;
 
     Ok(())
 }
@@ -288,10 +260,7 @@ pub async fn merge_tags(
 /// CSV string with columns: id, name, category, count
 #[tauri::command]
 pub async fn export_tags_csv(state: State<'_, AppState>) -> Result<String, String> {
-    let pool = state
-        .db_pool
-        .as_ref()
-        .ok_or("Database not connected")?;
+    let pool = state.db_pool.as_ref().ok_or("Database not connected")?;
 
     // Fetch all tags
     let tags = sqlx::query_as::<_, (i32, String, Option<String>, i32)>(
@@ -310,11 +279,11 @@ pub async fn export_tags_csv(state: State<'_, AppState>) -> Result<String, Strin
     for (id, name, category, count) in tags {
         // Escape CSV fields (handle commas and quotes)
         let escaped_name = escape_csv_field(&name);
-        let escaped_category = category
-            .as_ref()
-            .map(|c| escape_csv_field(c))
-            .unwrap_or_default();
-        csv.push_str(&format!("{},{},{},{}\n", id, escaped_name, escaped_category, count));
+        let escaped_category = category.as_ref().map(|c| escape_csv_field(c)).unwrap_or_default();
+        csv.push_str(&format!(
+            "{},{},{},{}\n",
+            id, escaped_name, escaped_category, count
+        ));
     }
 
     Ok(csv)
@@ -331,17 +300,13 @@ pub async fn export_tags_csv(state: State<'_, AppState>) -> Result<String, Strin
 /// # Returns
 /// Import result with counts of imported, skipped, and errored rows
 #[tauri::command]
-pub async fn import_tags_csv(csv: String, state: State<'_, AppState>) -> Result<ImportResult, String> {
-    let pool = state
-        .db_pool
-        .as_ref()
-        .ok_or("Database not connected")?;
+pub async fn import_tags_csv(
+    csv: String,
+    state: State<'_, AppState>,
+) -> Result<ImportResult, String> {
+    let pool = state.db_pool.as_ref().ok_or("Database not connected")?;
 
-    let mut result = ImportResult {
-        imported: 0,
-        skipped: 0,
-        errors: Vec::new(),
-    };
+    let mut result = ImportResult { imported: 0, skipped: 0, errors: Vec::new() };
 
     let lines: Vec<&str> = csv.lines().collect();
     if lines.is_empty() {
@@ -390,10 +355,10 @@ pub async fn import_tags_csv(csv: String, state: State<'_, AppState>) -> Result<
                 } else {
                     result.skipped += 1; // Tag already exists
                 }
-            }
+            },
             Err(e) => {
                 result.errors.push(format!("Line {}: {}", line_num + 1, e));
-            }
+            },
         }
     }
 
@@ -403,10 +368,7 @@ pub async fn import_tags_csv(csv: String, state: State<'_, AppState>) -> Result<
 /// Get a single tag by ID
 #[tauri::command]
 pub async fn get_tag(tag_id: i32, state: State<'_, AppState>) -> Result<Tag, String> {
-    let pool = state
-        .db_pool
-        .as_ref()
-        .ok_or("Database not connected")?;
+    let pool = state.db_pool.as_ref().ok_or("Database not connected")?;
 
     let row = sqlx::query_as::<_, (i32, String, Option<String>, i32)>(
         r#"
@@ -421,22 +383,13 @@ pub async fn get_tag(tag_id: i32, state: State<'_, AppState>) -> Result<Tag, Str
     .map_err(|e| format!("Failed to fetch tag: {}", e))?
     .ok_or_else(|| format!("Tag with id {} not found", tag_id))?;
 
-    Ok(Tag {
-        id: row.0,
-        name: row.1,
-        category: row.2,
-        description: None,
-        usage_count: row.3,
-    })
+    Ok(Tag { id: row.0, name: row.1, category: row.2, description: None, usage_count: row.3 })
 }
 
 /// Get all tags
 #[tauri::command]
 pub async fn get_all_tags(state: State<'_, AppState>) -> Result<Vec<Tag>, String> {
-    let pool = state
-        .db_pool
-        .as_ref()
-        .ok_or("Database not connected")?;
+    let pool = state.db_pool.as_ref().ok_or("Database not connected")?;
 
     let rows = sqlx::query_as::<_, (i32, String, Option<String>, i32)>(
         r#"

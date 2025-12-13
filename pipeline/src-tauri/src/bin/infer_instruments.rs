@@ -256,7 +256,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Step 3: Batch update database (in chunks of 10,000)
     println!("💾 Updating database in batches...");
     let batch_size = 10_000;
-    let total_batches = (results.len() + batch_size - 1) / batch_size;
+    let total_batches = results.len().div_ceil(batch_size);
     let mut total_updated = 0u64;
 
     for (batch_idx, batch) in results.chunks(batch_size).enumerate() {

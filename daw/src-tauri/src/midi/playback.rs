@@ -108,15 +108,12 @@ impl ChaseState {
                 if let Some(program) = event.program {
                     self.programs.insert(event.channel, program);
                 }
-            }
+            },
             MidiEventType::ControlChange => {
                 if let (Some(controller), Some(value)) = (event.controller, event.value) {
-                    self.controllers
-                        .entry(event.channel)
-                        .or_default()
-                        .insert(controller, value);
+                    self.controllers.entry(event.channel).or_default().insert(controller, value);
                 }
-            }
+            },
             MidiEventType::PitchBend => {
                 if let Some(value) = event.value {
                     // Store as LSB, MSB (7-bit each)
@@ -124,8 +121,8 @@ impl ChaseState {
                     let msb = (value >> 7) & 0x7F;
                     self.pitch_bends.insert(event.channel, (lsb, msb));
                 }
-            }
-            _ => {}
+            },
+            _ => {},
         }
     }
 
@@ -247,9 +244,7 @@ enum PlaybackCommand {
         response: oneshot::Sender<Result<(), String>>,
     },
     /// Get BPM
-    GetBpm {
-        response: oneshot::Sender<f64>,
-    },
+    GetBpm { response: oneshot::Sender<f64> },
     /// Set loop region
     SetLoopRegion {
         start_tick: u64,
@@ -257,27 +252,21 @@ enum PlaybackCommand {
         response: oneshot::Sender<Result<(), String>>,
     },
     /// Clear loop region
-    ClearLoopRegion {
-        response: oneshot::Sender<()>,
-    },
+    ClearLoopRegion { response: oneshot::Sender<()> },
     /// Enable/disable loop
     SetLoopEnabled {
         enabled: bool,
         response: oneshot::Sender<()>,
     },
     /// Check if loop enabled
-    IsLoopEnabled {
-        response: oneshot::Sender<bool>,
-    },
+    IsLoopEnabled { response: oneshot::Sender<bool> },
     /// Enable/disable chase
     SetChaseEnabled {
         enabled: bool,
         response: oneshot::Sender<()>,
     },
     /// Check if chase enabled
-    IsChaseEnabled {
-        response: oneshot::Sender<bool>,
-    },
+    IsChaseEnabled { response: oneshot::Sender<bool> },
     /// Add output device
     AddOutput {
         device_name: String,
@@ -412,24 +401,24 @@ impl PlaybackThreadState {
                 let note = event.note.ok_or("Missing note for note event")?;
                 let velocity = event.velocity.unwrap_or(100);
                 (note, velocity)
-            }
+            },
             MidiEventType::ControlChange => {
                 let controller = event.controller.ok_or("Missing controller")?;
                 let value = event.value.unwrap_or(0);
                 (controller, value)
-            }
+            },
             MidiEventType::ProgramChange => {
                 let program = event.program.ok_or("Missing program")?;
                 (program, 0)
-            }
+            },
             MidiEventType::PitchBend => {
                 let value = event.value.unwrap_or(64);
                 (value & 0x7F, (value >> 7) & 0x7F)
-            }
+            },
             MidiEventType::Aftertouch => {
                 let value = event.value.unwrap_or(0);
                 (value, 0)
-            }
+            },
         };
 
         Ok(MidiMessage {
@@ -463,14 +452,7 @@ impl PlaybackThreadState {
         let sub_beat = (tick % ticks_per_beat) as u32;
         let millis = self.ticks_to_millis(tick);
 
-        PlaybackPosition {
-            tick,
-            millis,
-            bar,
-            beat,
-            sub_beat,
-            loop_count: self.loop_count as u32,
-        }
+        PlaybackPosition { tick, millis, bar, beat, sub_beat, loop_count: self.loop_count as u32 }
     }
 
     /// Process playback tick
@@ -500,7 +482,8 @@ impl PlaybackThreadState {
                         self.loop_count = loops_completed;
 
                         // Reset event index to loop start
-                        self.event_index = self.events
+                        self.event_index = self
+                            .events
                             .iter()
                             .position(|e| e.tick >= region.start_tick)
                             .unwrap_or(0);
@@ -536,10 +519,7 @@ impl PlaybackThreadState {
         if self.last_broadcast.elapsed() >= Duration::from_millis(50) {
             self.last_broadcast = Instant::now();
             let position = self.get_position();
-            let _ = self.event_tx.send(PlaybackEvent {
-                position,
-                state: self.state,
-            });
+            let _ = self.event_tx.send(PlaybackEvent { position, state: self.state });
         }
     }
 
@@ -552,9 +532,13 @@ impl PlaybackThreadState {
                 self.current_tick = 0;
                 self.event_index = 0;
                 self.loop_count = 0;
-                info!("Loaded {} events, {} ticks/quarter", self.events.len(), ticks_per_quarter);
+                info!(
+                    "Loaded {} events, {} ticks/quarter",
+                    self.events.len(),
+                    ticks_per_quarter
+                );
                 let _ = response.send(Ok(()));
-            }
+            },
             PlaybackCommand::Play { response } => {
                 if self.state == PlaybackState::Playing {
                     let _ = response.send(Ok(()));
@@ -571,7 +555,7 @@ impl PlaybackThreadState {
                 self.state = PlaybackState::Playing;
                 self.start_time = Some(Instant::now());
                 let _ = response.send(Ok(()));
-            }
+            },
             PlaybackCommand::Pause { response } => {
                 if self.state != PlaybackState::Playing {
                     let _ = response.send(Ok(()));
@@ -584,7 +568,7 @@ impl PlaybackThreadState {
                 self.state = PlaybackState::Paused;
                 self.start_time = None;
                 let _ = response.send(Ok(()));
-            }
+            },
             PlaybackCommand::Stop { response } => {
                 info!("Stopping playback");
                 self.all_notes_off();
@@ -595,16 +579,14 @@ impl PlaybackThreadState {
                 self.event_index = 0;
                 self.loop_count = 0;
                 let _ = response.send(Ok(()));
-            }
+            },
             PlaybackCommand::Seek { tick, response } => {
                 info!("Seeking to tick: {}", tick);
                 self.all_notes_off();
                 self.current_tick = tick;
                 self.tick_offset = tick;
-                self.event_index = self.events
-                    .iter()
-                    .position(|e| e.tick >= tick)
-                    .unwrap_or(self.events.len());
+                self.event_index =
+                    self.events.iter().position(|e| e.tick >= tick).unwrap_or(self.events.len());
 
                 if self.state == PlaybackState::Playing {
                     self.start_time = Some(Instant::now());
@@ -613,7 +595,7 @@ impl PlaybackThreadState {
                     }
                 }
                 let _ = response.send(Ok(()));
-            }
+            },
             PlaybackCommand::SetBpm { bpm, response } => {
                 if (20.0..=300.0).contains(&bpm) {
                     self.config.bpm = bpm;
@@ -622,10 +604,10 @@ impl PlaybackThreadState {
                 } else {
                     let _ = response.send(Err("BPM must be between 20 and 300".to_string()));
                 }
-            }
+            },
             PlaybackCommand::GetBpm { response } => {
                 let _ = response.send(self.config.bpm);
-            }
+            },
             PlaybackCommand::SetLoopRegion { start_tick, end_tick, response } => {
                 if end_tick > start_tick {
                     self.loop_region = Some(LoopRegion::new(start_tick, end_tick));
@@ -634,33 +616,33 @@ impl PlaybackThreadState {
                 } else {
                     let _ = response.send(Err("Loop end must be after loop start".to_string()));
                 }
-            }
+            },
             PlaybackCommand::ClearLoopRegion { response } => {
                 self.loop_region = None;
                 self.loop_count = 0;
                 info!("Cleared loop region");
                 let _ = response.send(());
-            }
+            },
             PlaybackCommand::SetLoopEnabled { enabled, response } => {
                 self.config.loop_enabled = enabled;
                 info!("Loop enabled: {}", enabled);
                 let _ = response.send(());
-            }
+            },
             PlaybackCommand::IsLoopEnabled { response } => {
                 let _ = response.send(self.config.loop_enabled);
-            }
+            },
             PlaybackCommand::SetChaseEnabled { enabled, response } => {
                 self.config.chase_enabled = enabled;
                 info!("Chase enabled: {}", enabled);
                 let _ = response.send(());
-            }
+            },
             PlaybackCommand::IsChaseEnabled { response } => {
                 let _ = response.send(self.config.chase_enabled);
-            }
+            },
             PlaybackCommand::AddOutput { device_name, response } => {
                 let result = self.add_output(&device_name);
                 let _ = response.send(result);
-            }
+            },
             PlaybackCommand::RemoveOutput { device_name, response } => {
                 let initial_len = self.outputs.len();
                 self.outputs.retain(|o| o.name != device_name);
@@ -670,7 +652,7 @@ impl PlaybackThreadState {
                 } else {
                     let _ = response.send(Err(format!("Device '{}' not found", device_name)));
                 }
-            }
+            },
             PlaybackCommand::SetOutputs { device_names, response } => {
                 self.outputs.clear();
                 let mut errors = Vec::new();
@@ -684,22 +666,22 @@ impl PlaybackThreadState {
                 } else {
                     let _ = response.send(Err(errors.join("; ")));
                 }
-            }
+            },
             PlaybackCommand::ListOutputs { response } => {
                 let names: Vec<String> = self.outputs.iter().map(|o| o.name.clone()).collect();
                 let _ = response.send(names);
-            }
+            },
             PlaybackCommand::GetPosition { response } => {
                 let _ = response.send(self.get_position());
-            }
+            },
             PlaybackCommand::GetState { response } => {
                 let _ = response.send(self.state);
-            }
+            },
             PlaybackCommand::Shutdown => {
                 info!("Shutting down playback thread");
                 self.all_notes_off();
                 return false;
-            }
+            },
         }
         true
     }
@@ -714,17 +696,17 @@ impl PlaybackThreadState {
         let ports = midi_out.ports();
         let port = ports
             .iter()
-            .find(|p| midi_out.port_name(p).ok().as_ref().map(|n| n == device_name).unwrap_or(false))
+            .find(|p| {
+                midi_out.port_name(p).ok().as_ref().map(|n| n == device_name).unwrap_or(false)
+            })
             .ok_or_else(|| format!("Device '{}' not found", device_name))?;
 
         let connection = midi_out
             .connect(port, "playback-output")
             .map_err(|e| format!("Connection failed: {}", e))?;
 
-        self.outputs.push(ThreadOutputDevice {
-            name: device_name.to_string(),
-            connection,
-        });
+        self.outputs
+            .push(ThreadOutputDevice { name: device_name.to_string(), connection });
 
         info!("Successfully added output device: {}", device_name);
         Ok(())
@@ -791,11 +773,7 @@ impl PlaybackEngine {
             })
             .expect("Failed to spawn playback thread");
 
-        Self {
-            command_tx,
-            running,
-            event_tx,
-        }
+        Self { command_tx, running, event_tx }
     }
 
     /// Load a MIDI file for playback
@@ -890,7 +868,11 @@ impl PlaybackEngine {
     /// Enable/disable loop
     pub async fn set_loop_enabled(&self, enabled: bool) {
         let (tx, rx) = oneshot::channel();
-        if self.command_tx.send(PlaybackCommand::SetLoopEnabled { enabled, response: tx }).is_ok() {
+        if self
+            .command_tx
+            .send(PlaybackCommand::SetLoopEnabled { enabled, response: tx })
+            .is_ok()
+        {
             let _ = rx.await;
         }
     }
@@ -907,7 +889,11 @@ impl PlaybackEngine {
     /// Enable/disable chase
     pub async fn set_chase_enabled(&self, enabled: bool) {
         let (tx, rx) = oneshot::channel();
-        if self.command_tx.send(PlaybackCommand::SetChaseEnabled { enabled, response: tx }).is_ok() {
+        if self
+            .command_tx
+            .send(PlaybackCommand::SetChaseEnabled { enabled, response: tx })
+            .is_ok()
+        {
             let _ = rx.await;
         }
     }
@@ -925,10 +911,7 @@ impl PlaybackEngine {
     pub async fn add_output(&self, device_name: &str) -> Result<(), String> {
         let (tx, rx) = oneshot::channel();
         self.command_tx
-            .send(PlaybackCommand::AddOutput {
-                device_name: device_name.to_string(),
-                response: tx,
-            })
+            .send(PlaybackCommand::AddOutput { device_name: device_name.to_string(), response: tx })
             .map_err(|_| "Playback thread not running")?;
         rx.await.map_err(|_| "Playback thread dropped response")?
     }
@@ -1148,10 +1131,7 @@ pub async fn remove_playback_output(
 
 /// Seek to a position in ticks
 #[command]
-pub async fn seek_to_position(
-    state: State<'_, PlaybackState_>,
-    tick: u64,
-) -> Result<(), String> {
+pub async fn seek_to_position(state: State<'_, PlaybackState_>, tick: u64) -> Result<(), String> {
     state.engine.seek(tick).await
 }
 
@@ -1165,9 +1145,7 @@ pub async fn get_midi_playback_position(
 
 /// Get current playback state
 #[command]
-pub async fn get_midi_playback_state(
-    state: State<'_, PlaybackState_>,
-) -> Result<String, String> {
+pub async fn get_midi_playback_state(state: State<'_, PlaybackState_>) -> Result<String, String> {
     let playback_state = state.engine.get_state().await;
     Ok(match playback_state {
         PlaybackState::Stopped => "stopped".to_string(),
@@ -1178,10 +1156,7 @@ pub async fn get_midi_playback_state(
 
 /// Set playback BPM
 #[command]
-pub async fn set_playback_bpm(
-    state: State<'_, PlaybackState_>,
-    bpm: f64,
-) -> Result<(), String> {
+pub async fn set_playback_bpm(state: State<'_, PlaybackState_>, bpm: f64) -> Result<(), String> {
     state.engine.set_bpm(bpm).await
 }
 
