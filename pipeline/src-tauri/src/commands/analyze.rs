@@ -228,13 +228,14 @@ pub async fn start_analysis(
                 let analyzed_files = Arc::clone(&analyzed_files);
                 let window = window.clone();
 
-                    let pool = pool.clone();
+                let pool = pool.clone();
                 async move {
                     // Acquire semaphore permit (blocks if at limit)
                     let _permit = match sem.acquire().await {
                         Ok(permit) => permit,
                         Err(e) => {
-                            let error_msg = format!("FATAL: Semaphore unavailable during analysis: {}", e);
+                            let error_msg =
+                                format!("FATAL: Semaphore unavailable during analysis: {}", e);
                             eprintln!("ERROR: {}", error_msg);
 
                             // Track this as an error
@@ -243,7 +244,7 @@ pub async fn start_analysis(
                             // Mark file as skipped
                             skipped.fetch_add(1, Ordering::SeqCst);
                             return;
-                        }
+                        },
                     };
 
                     let current = current_index.fetch_add(1, Ordering::SeqCst) + 1;
@@ -251,20 +252,33 @@ pub async fn start_analysis(
                     // Emit progress every 10 files
                     if current.is_multiple_of(10) || current == total_usize {
                         let elapsed = start_time.elapsed().as_secs_f64();
-                        let rate = if elapsed > 0.0 { current as f64 / elapsed } else { 0.0 };
+                        let rate = if elapsed > 0.0 {
+                            current as f64 / elapsed
+                        } else {
+                            0.0
+                        };
                         let remaining = total_usize - current;
-                        let eta_seconds = if rate > 0.0 { remaining as f64 / rate } else { 0.0 };
+                        let eta_seconds = if rate > 0.0 {
+                            remaining as f64 / rate
+                        } else {
+                            0.0
+                        };
 
-                        if let Err(e) = window.emit("analysis-progress", AnalysisProgress {
-                            current,
-                            total: total_usize,
-                            current_file: file_record.filename.clone(),
-                            rate,
-                            eta_seconds,
-                        }) {
+                        if let Err(e) = window.emit(
+                            "analysis-progress",
+                            AnalysisProgress {
+                                current,
+                                total: total_usize,
+                                current_file: file_record.filename.clone(),
+                                rate,
+                                eta_seconds,
+                            },
+                        ) {
                             // Log but don't fail the operation
-                            eprintln!("WARNING: Failed to emit analysis progress (file {}): {}",
-                                      file_record.filename, e);
+                            eprintln!(
+                                "WARNING: Failed to emit analysis progress (file {}): {}",
+                                file_record.filename, e
+                            );
                         }
 
                         // Print progress every 100 files
@@ -303,12 +317,12 @@ pub async fn start_analysis(
                                     skipped.fetch_add(batch.len(), Ordering::SeqCst);
                                 }
                             }
-                        }
+                        },
                         Err(e) => {
                             let error_msg = format!("{}: {}", file_record.filepath, e);
                             errors.lock().await.push(error_msg);
                             skipped.fetch_add(1, Ordering::SeqCst);
-                        }
+                        },
                     }
                 }
             })
@@ -368,8 +382,7 @@ pub async fn analyze_single_file(
 
     // BPM Detection
     let bpm_result = detect_bpm(&midi_file);
-    let tempo_bpm =
-        (bpm_result.confidence > BPM_CONFIDENCE_THRESHOLD).then_some(bpm_result.bpm);
+    let tempo_bpm = (bpm_result.confidence > BPM_CONFIDENCE_THRESHOLD).then_some(bpm_result.bpm);
     let bpm_confidence = Some(bpm_result.confidence);
     let has_tempo_variation = !bpm_result.metadata.is_constant;
 
