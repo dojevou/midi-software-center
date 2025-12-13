@@ -24,19 +24,13 @@ use std::sync::Arc;
 use tauri::{Emitter, State, Window};
 use tokio::sync::Mutex;
 
-//=============================================================================
-// CONSTANTS
-//=============================================================================
-
+// Configuration constants
 const HASH_CONCURRENCY: usize = 64;
 const BATCH_INSERT_SIZE: usize = 1000;
 const BATCH_FLUSH_THRESHOLD: usize = 100;
 const DB_QUERY_CHUNK_SIZE: usize = 10000;
+#[allow(dead_code)]
 const PROGRESS_EMIT_INTERVAL: usize = 10;
-
-//=============================================================================
-// TYPE DEFINITIONS
-//=============================================================================
 
 /// Progress event for real-time UI updates
 #[derive(Clone, Debug, Deserialize, Serialize)]
@@ -107,10 +101,6 @@ struct ProcessedFile {
     markers: Vec<String>,
     lyrics: Vec<String>,
 }
-
-//=============================================================================
-// TAURI COMMANDS (Thin Wrappers - Grown-up Script Pattern)
-//=============================================================================
 
 /// Import a single MIDI file (implementation for tests and reuse)
 pub async fn import_single_file_impl(
