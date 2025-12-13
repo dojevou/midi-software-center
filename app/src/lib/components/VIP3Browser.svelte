@@ -1,9 +1,12 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
+  import { logger } from '$lib/utils/logger';
   import VIP3Column from './VIP3Column.svelte';
   import VIP3SearchBar from './VIP3SearchBar.svelte';
   import VIP3FileList from './VIP3FileList.svelte';
   import type { FileDetails } from '$lib/types';
+
+  const log = logger.child({ component: 'VIP3Browser' });
 
   // Filter state
   export let folders: string[] = [];
@@ -99,12 +102,14 @@
       ? [...currentValues, value]
       : currentValues.filter(v => v !== value);
 
+    log.info('Filter changed', { type, value, selected, totalSelected: newValues.length });
     dispatch('filterChange', { type, values: newValues });
   }
 
   function handleColumnClear(
     type: 'folder' | 'instrument' | 'timbre' | 'style' | 'articulation' | 'bpm' | 'key' | 'channel'
   ) {
+    log.info('Filter column cleared', { type });
     dispatch('filterChange', { type, values: [] });
   }
 
@@ -130,6 +135,7 @@
       case 'channel': currentValues = channels; break;
     }
 
+    log.debug('Filter removed', { type: filterType, value });
     dispatch('filterChange', {
       type: filterType,
       values: currentValues.filter(v => v !== value)
@@ -137,14 +143,17 @@
   }
 
   function handleClearAllFilters() {
+    log.info('All filters cleared', { previousFilterCount: activeFilters.length });
     dispatch('clearAllFilters');
   }
 
   function handleSearch(event: CustomEvent<{ query: string }>) {
+    log.info('Search executed', { query: event.detail.query });
     dispatch('search', event.detail);
   }
 
   function handleSearchClear() {
+    log.debug('Search cleared');
     searchQuery = '';
     dispatch('search', { query: '' });
   }
