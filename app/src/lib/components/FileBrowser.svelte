@@ -1,5 +1,8 @@
 <script lang="ts">
   import { createEventDispatcher } from 'svelte';
+  import { logger } from '$lib/utils/logger';
+
+  const log = logger.child({ component: 'FileBrowser' });
 
   interface FileItem {
     id: number;
@@ -73,9 +76,11 @@
       if (event.ctrlKey) {
         // Add range to selection
         selectedFiles = [...new Set([...selectedFiles, ...rangeIds])];
+        log.debug('Range added to selection', { count: rangeIds.length, start, end });
       } else {
         // Replace with range
         selectedFiles = rangeIds;
+        log.debug('Range selection', { count: rangeIds.length, start, end });
       }
     } else {
       dispatch('fileSelect', {
@@ -84,19 +89,23 @@
         shiftKey: event.shiftKey,
       });
       lastSelectedIndex = index;
+      log.debug('File selected', { fileId: file.id, name: file.name, ctrlKey: event.ctrlKey });
     }
   }
 
   function handleFileDoubleClick(file: FileItem) {
     if (file.type === 'folder') {
+      log.info('Folder opened', { folderId: file.id, name: file.name });
       dispatch('folderOpen', { folderId: file.id });
     } else {
+      log.info('File opened', { fileId: file.id, name: file.name, bpm: file.bpm, key: file.key });
       dispatch('fileOpen', { fileId: file.id });
     }
   }
 
   function handleContextMenu(event: MouseEvent, file: FileItem) {
     event.preventDefault();
+    log.debug('Context menu opened', { fileId: file.id, name: file.name });
     dispatch('fileContextMenu', {
       fileId: file.id,
       x: event.clientX,
@@ -111,6 +120,7 @@
     if (file.type === 'folder' || !event.dataTransfer) return;
 
     draggedFileId = file.id;
+    log.debug('Drag started', { fileId: file.id, name: file.name });
 
     // Set drag data in the format expected by Sequencer.svelte
     const dragData = {
@@ -163,6 +173,7 @@
   }
 
   function handleDragEnd() {
+    log.debug('Drag ended', { fileId: draggedFileId });
     draggedFileId = null;
   }
 
