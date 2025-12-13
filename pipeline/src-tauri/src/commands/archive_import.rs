@@ -1,20 +1,13 @@
+//! Archive Import Commands - Process collections of nested archives with auto-tagging
+
 use crate::commands::file_import::import_directory;
 use crate::io::decompressor::extractor::{extract_archive, ExtractionConfig};
-/// Archive Collection Import Command
-///
-/// Processes entire collections of nested archives, extracting and importing
-/// all MIDI files with automatic tagging.
-///
-/// # Archetype: Grown-up Script (Tauri Command Wrapper)
-/// - Thin wrapper around core functionality
-/// - Coordinates decompressor + file import modules
-/// - Provides progress feedback to UI
 use crate::AppState;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 use tauri::{Emitter, State, Window};
 
-/// Helper function to cleanup temp directories with proper error logging
+/// Cleanup temp directories with error logging.
 fn cleanup_temp_dir(path: &Path) {
     if let Err(e) = std::fs::remove_dir_all(path) {
         eprintln!(
@@ -26,7 +19,7 @@ fn cleanup_temp_dir(path: &Path) {
     }
 }
 
-/// Summary of archive collection import
+/// Summary of archive collection import.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ArchiveImportSummary {
     pub total_archives: usize,
@@ -37,7 +30,7 @@ pub struct ArchiveImportSummary {
     pub archives_processed: Vec<ArchiveStatus>,
 }
 
-/// Status of individual archive processing
+/// Status of individual archive processing.
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ArchiveStatus {
     pub archive_name: String,
@@ -47,19 +40,7 @@ pub struct ArchiveStatus {
     pub error_message: Option<String>,
 }
 
-/// Import entire collection of archives (recursively extracts and imports all MIDI files)
-///
-/// # Arguments
-/// * `collection_path` - Directory containing zip archives
-/// * `state` - Application state
-/// * `window` - Tauri window for progress events
-///
-/// # Frontend Usage
-/// ```typescript
-/// await invoke('import_archive_collection', {
-///   collectionPath: '/home/user/midi-collection/'
-/// });
-/// ```
+/// Import entire collection of archives (recursively extracts and imports all MIDI files).
 #[tauri::command]
 pub async fn import_archive_collection(
     collection_path: String,
@@ -192,7 +173,7 @@ pub async fn import_archive_collection(
     })
 }
 
-/// Process a single archive file
+/// Process a single archive file.
 async fn process_single_archive(
     archive_path: &Path,
     archive_name: &str,
