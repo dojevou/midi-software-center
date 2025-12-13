@@ -3,10 +3,15 @@
 
 [advisories]
 # Advisories to ignore (with justification)
+# All of these are transitive dependencies from Tauri and its GTK/webkit bindings.
+# We don't use the affected APIs directly in our codebase.
 ignore = [
-    # RUSTSEC-2024-0429: Unsoundness in glib::VariantStrIter
-    # This is a transitive dependency from Tauri's GTK bindings (webkit2gtk).
-    # The affected API (VariantStrIter) is not used in our codebase.
-    # Waiting for gtk-rs to release a fix upstream.
+    # glib: Unsoundness in VariantStrIter (gtk-rs transitive dep)
     "RUSTSEC-2024-0429",
+    # unic-ucd-version: unmaintained (tauri-utils -> urlpattern transitive dep)
+    "RUSTSEC-2025-0098",
+    # yaml-rust: unmaintained (config crate transitive dep)
+    "RUSTSEC-2024-0320",
+    # atty: potential unaligned read (old transitive dep)
+    "RUSTSEC-2021-0145",
 ]
