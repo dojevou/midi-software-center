@@ -121,9 +121,9 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             midi_pipeline::commands::tags::get_files_by_tags,
             midi_pipeline::commands::tags::get_tag_stats,
             // Rating commands
-            midi_pipeline::commands::tags::set_file_rating,
-            midi_pipeline::commands::tags::get_file_rating,
-            midi_pipeline::commands::tags::get_files_by_rating,
+            midi_pipeline::commands::tags::ratings::set_file_rating,
+            midi_pipeline::commands::tags::ratings::get_file_rating,
+            midi_pipeline::commands::tags::ratings::get_files_by_rating,
             // VIP3 Browser commands
             midi_pipeline::commands::vip3::search::search_files_vip3,
             midi_pipeline::commands::vip3::search::get_vip3_filter_counts,
