@@ -259,17 +259,13 @@ pub async fn import_directory_impl(
     // Semaphore to limit concurrency
     let semaphore = Arc::new(tokio::sync::Semaphore::new(concurrency_limit));
 
-    // OPTIMIZATION 2: Batch inserter for database writes
     let batch_inserter = Arc::new(BatchInserter::new(pool.clone(), BATCH_INSERT_SIZE));
     let processed_files = Arc::new(Mutex::new(Vec::new()));
-
     let category_clone = category.clone();
-    let _total_clone = total;
 
     // Parallel file processing
     stream::iter(dedup.files_to_process)
         .map(|file_path| {
-            // Clone Arc pointers for each concurrent task
             let sem = Arc::clone(&semaphore);
             let category = category_clone.clone();
             let imported = Arc::clone(&imported);
@@ -280,69 +276,44 @@ pub async fn import_directory_impl(
             let batch_inserter = Arc::clone(&batch_inserter);
 
             async move {
-                // Acquire semaphore permit (blocks if at limit)
                 let _permit = match sem.acquire().await {
                     Ok(permit) => permit,
                     Err(e) => {
-                        // Semaphore closed - this is a fatal error condition
-                        let error_msg = format!("FATAL: Semaphore unavailable during file import: {}", e);
-                        eprintln!("ERROR: {}", error_msg);
-
-                        // Track this as an error
+                        let error_msg = format!("Semaphore error: {}", e);
                         errors.lock().await.push(error_msg);
-
-                        // Mark file as skipped
                         skipped.fetch_add(1, Ordering::SeqCst);
                         return;
                     }
                 };
 
-                let current = current_index.fetch_add(1, Ordering::SeqCst) + 1;
+                current_index.fetch_add(1, Ordering::SeqCst);
 
-                // Emit progress every 10 files (reduce UI spam)
-                // Note: window emission is skipped in _impl version (used by tests)
-                // The original Tauri command wrapper will handle emission
-                let _elapsed = start_time.elapsed().as_secs_f64();
-                let _rate = if _elapsed > 0.0 { current as f64 / _elapsed } else { 0.0 };
-
-                // Progress tracking available for batch processing metrics
-                // In the Tauri command wrapper, this would emit an event
-
-                // OPTIMIZATION 3: Process file with BLAKE3 hashing
                 match process_single_file(&file_path, category).await {
                     Ok(processed) => {
-                        // Add to batch for insertion
                         processed_files.lock().await.push(processed);
                         imported.fetch_add(1, Ordering::SeqCst);
 
-                        // Flush batch if it reaches threshold
+                        // Flush batch if threshold reached
                         let mut files = processed_files.lock().await;
                         if files.len() >= BATCH_FLUSH_THRESHOLD {
                             let batch: Vec<ProcessedFile> = files.drain(..).collect();
-                            drop(files); // Release lock
+                            drop(files);
 
                             let file_records = to_file_records(&batch);
                             if let Err(e) = batch_inserter.insert_files_batch(file_records).await {
-                                let error_msg = format!("Batch insert failed: {}", e);
-                                eprintln!("ERROR: {}", error_msg);
-
-                                // Record the error
-                                errors.lock().await.push(error_msg);
-
-                                // Mark files as skipped (conservative estimate: entire batch failed)
+                                errors.lock().await.push(format!("Batch insert failed: {}", e));
                                 skipped.fetch_add(batch.len(), Ordering::SeqCst);
                             }
                         }
                     }
                     Err(e) => {
-                        let error_msg = format!("{}: {}", file_path.display(), e);
-                        errors.lock().await.push(error_msg);
+                        errors.lock().await.push(format!("{}: {}", file_path.display(), e));
                         skipped.fetch_add(1, Ordering::SeqCst);
                     }
                 }
             }
         })
-        .buffer_unordered(concurrency_limit)  // ← THE MAGIC: Process N files concurrently!
+        .buffer_unordered(concurrency_limit)
         .collect::<Vec<_>>()
         .await;
 
@@ -400,59 +371,31 @@ pub async fn import_directory(
     import_directory_impl(directory_path, recursive, category, &state).await
 }
 
-//=============================================================================
-// CORE LOGIC (Grown-up Script - orchestrates Trusty Modules)
-//=============================================================================
-
-/// Process a single MIDI file and prepare for database insertion
-///
-/// This function orchestrates multiple Trusty Modules:
-/// - hash::blake3 (BLAKE3 hashing - 7x faster than SHA-256)
-/// - midi::parser (MIDI parsing)
-/// - analysis::bpm_detector (tempo detection)
-/// - analysis::key_detector (key signature detection)
-/// - analysis::auto_tagger (intelligent tag extraction)
-/// - naming::generator (filename generation)
+/// Process a single MIDI file: hash, parse, extract metadata, generate tags
 async fn process_single_file(
     file_path: &Path,
     category: Option<String>,
 ) -> Result<ProcessedFile, Box<dyn std::error::Error + Send + Sync>> {
-    // 1. Generate BLAKE3 hash for deduplication (7x faster than SHA-256)
     let hash_bytes = calculate_file_hash(file_path)?;
-    let content_hash: Vec<u8> = hash_bytes.to_vec(); // Convert [u8; 32] to Vec<u8> for bytea
-
-    // 2. Read file bytes
+    let content_hash: Vec<u8> = hash_bytes.to_vec();
     let file_bytes = tokio::fs::read(file_path).await?;
-
-    // 3. Parse MIDI file (Trusty Module)
     let midi_file = parse_midi_file(&file_bytes)?;
 
-    // 4. Extract parent folder name
     let parent_folder = file_path
         .parent()
         .and_then(|p| p.file_name())
         .and_then(|n| n.to_str())
         .map(|s| s.to_string());
 
-    // 5. Extract metadata (Trusty Modules)
+    // Extract BPM and key with confidence threshold
     let bpm_result = detect_bpm(&midi_file);
-    let bpm = if bpm_result.confidence > 0.5 {
-        Some(bpm_result.bpm) // Keep as f64 for numeric(6,2)
-    } else {
-        None
-    };
+    let bpm = (bpm_result.confidence > 0.5).then_some(bpm_result.bpm);
 
     let key_result = detect_key(&midi_file);
-    let key_signature = if key_result.confidence > 0.5 {
-        Some(key_result.key.clone())
-    } else {
-        None
-    };
+    let key_signature = (key_result.confidence > 0.5).then(|| key_result.key.clone());
 
-    // 5b. Extract text metadata (track names, copyright, lyrics, markers)
     let text_meta = TextMetadata::extract(&midi_file);
 
-    // 6. Get file info
     let original_filename = file_path
         .file_name()
         .and_then(|n| n.to_str())
@@ -461,38 +404,25 @@ async fn process_single_file(
 
     let filepath = file_path.to_str().ok_or("Invalid file path")?.to_string();
 
-    // 6b. Generate Production template filename
-    // Extract pack name from parent folder
     let pack_name = parent_folder.clone().unwrap_or_else(|| "Unknown".to_string());
-
-    // Extract time signature from MIDI events (default to 4-4 if not found)
     let time_signature = extract_time_signature(&midi_file).unwrap_or_else(|| "4-4".to_string());
-
-    // Clean original filename (remove extension, sanitize)
     let original_name_clean =
         original_filename.trim_end_matches(".mid").trim_end_matches(".MID").to_string();
-
-    // Determine category for filename
     let detected_category = category.clone().unwrap_or_else(|| "MIDI".to_string());
 
-    // Generate standardized Production filename
-    // Format: {CATEGORY}_{TIMESIG}_{BPM}BPM_{KEY}_{ID}_{PACK}_{ORIGINAL}.mid
     let filename = generate_production_filename(
         &detected_category,
-        bpm.unwrap_or(120.0), // Default BPM if not detected
-        &key_signature.clone().unwrap_or_else(|| "C".to_string()), // Default key
-        "000000",             // Placeholder - database assigns real ID
+        bpm.unwrap_or(120.0),
+        &key_signature.clone().unwrap_or_else(|| "C".to_string()),
+        "000000",
         &time_signature,
         &pack_name,
         &original_name_clean,
     );
 
     let file_size_bytes = tokio::fs::metadata(file_path).await?.len() as i64;
-
-    // 7. Extract MIDI instruments for tag extraction
     let midi_instruments = extract_instrument_names(&midi_file);
 
-    // 8. Auto-tag extraction (NEW: intelligently extract tags from filename, path, and MIDI content)
     let auto_tagger =
         AutoTagger::new().map_err(|e| format!("Failed to initialize auto-tagger: {}", e))?;
     let tags = auto_tagger.extract_tags(
@@ -501,10 +431,9 @@ async fn process_single_file(
         &midi_instruments,
         bpm,
         key_signature.as_deref(),
-        Some(&midi_file), // Pass parsed MidiFile for drum analysis (v2.1 enhancement)
+        Some(&midi_file),
     );
 
-    // Phase 2: Extract filename metadata (Auto-Tagger v2.1)
     let filename_meta = FilenameMetadata::extract_from_filename(&filename);
 
     Ok(ProcessedFile {
@@ -518,13 +447,11 @@ async fn process_single_file(
         bpm,
         key_signature,
         tags,
-        // Filename-based metadata (convert f64 to f32 for database)
         filename_bpm: filename_meta.bpm.map(|v| v as f32),
         filename_key: filename_meta.key,
         filename_genres: filename_meta.genres,
         structure_tags: filename_meta.structure_tags,
         track_number: filename_meta.track_number,
-        // Text metadata from MIDI file
         track_names: text_meta.track_names,
         copyright: text_meta.copyright,
         instrument_names_text: text_meta.instrument_names,
@@ -791,10 +718,6 @@ async fn insert_single_file(
     Ok(file_id)
 }
 
-//=============================================================================
-// HELPER FUNCTIONS
-//=============================================================================
-
 /// Recursively collect all MIDI files in a directory
 fn find_midi_files_recursive(dir: &Path) -> Result<Vec<PathBuf>, std::io::Error> {
     let mut files = Vec::new();
@@ -934,10 +857,6 @@ async fn deduplicate_files(
         elapsed_secs: start.elapsed().as_secs_f64(),
     })
 }
-
-//=============================================================================
-// TESTS
-//=============================================================================
 
 #[cfg(test)]
 mod tests {
