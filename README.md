@@ -4,16 +4,17 @@ A high-performance MIDI library management system for organizing, analyzing, and
 
 ## Overview
 
-MIDI Software Center manages **2.1M+ MIDI files** with advanced musical analysis, deduplication, and organization capabilities. Built with Rust and Tauri for maximum performance.
+MIDI Software Center manages **2.15M+ MIDI files** with advanced musical analysis, deduplication, and organization capabilities. Built with Rust and Tauri for maximum performance.
 
 ### Key Features
 
 - **High-Speed Import**: 7,830 files/sec with automatic deduplication
 - **Musical Analysis**: BPM detection, key detection, chord analysis, drum pattern recognition
-- **Smart Organization**: 97 instrument categories, database-centric organization
+- **Smart Organization**: 97 instrument categories, 1,861 tag types, 7.9M+ tags applied
 - **Auto-Repair**: Fixes corrupted MIDI files automatically (99.5% success rate)
 - **Track Splitting**: Separates multi-track files into individual tracks
 - **Full-Text Search**: Meilisearch integration for instant search
+- **DAW Integration**: Real-time MIDI I/O, sequencer, piano roll editor
 
 ### Performance
 
@@ -23,12 +24,13 @@ MIDI Software Center manages **2.1M+ MIDI files** with advanced musical analysis
 | Analysis | 181-360 files/sec | 3-7x faster |
 | Hash Calculation | 88,656 files/sec | BLAKE3 |
 | Query Performance | < 10ms | Indexed PostgreSQL |
+| Deduplication | 73.4% | 4.74M duplicates removed |
 
 ## Architecture
 
 ```
 midi-software-center/
-├── app/                    # Main Tauri application (React/TypeScript frontend)
+├── app/                    # Main Tauri application (Svelte/TypeScript frontend)
 ├── pipeline/               # Batch processing pipeline (import, analysis, splitting)
 ├── daw/                    # DAW integration features (sequencer, MIDI I/O)
 ├── shared/rust/            # Shared Rust library (MIDI parsing, analysis algorithms)
@@ -36,16 +38,24 @@ midi-software-center/
 └── scripts/                # Automation and utility scripts
 ```
 
+### Component Separation
+
+| Component | Responsibility |
+|-----------|----------------|
+| **Pipeline** | Batch import, archive extraction, analysis (NO playback, NO MIDI I/O) |
+| **DAW** | Real-time MIDI, hardware I/O, sequencer (NO batch import, NO archives) |
+| **Shared** | MIDI parsing, BPM/key detection, DB models (NO UI, NO commands) |
+
 ### Technology Stack
 
 **Backend:**
-- Rust 1.70+ with Tokio async runtime
-- Tauri 2.7 for desktop application framework
+- Rust 2021 Edition with Tokio async runtime
+- Tauri 2.0 for desktop application framework
 - SQLx 0.7 for type-safe database queries
 - midly 0.5 for MIDI parsing
 
 **Frontend:**
-- Svelte 4.2 with TypeScript 5.3
+- Svelte 5 with TypeScript 5.3
 - Vite 5.0 build system
 - Tailwind CSS
 
@@ -58,8 +68,8 @@ midi-software-center/
 
 ### Prerequisites
 
-- Rust 1.70+
-- Node.js 18+ and pnpm
+- Rust 1.75+
+- Node.js 20+ and pnpm 8+
 - PostgreSQL 16
 - Docker (optional, for containerized database)
 
@@ -67,7 +77,7 @@ midi-software-center/
 
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/midi-software-center.git
+git clone https://github.com/dojevou/midi-software-center.git
 cd midi-software-center
 
 # Setup (installs dependencies, starts database)
@@ -84,8 +94,11 @@ make dev-both    # Launches Pipeline (:5173) and DAW (:5174)
 ### Running the Pipeline
 
 ```bash
-# Import MIDI files
+# Import MIDI files (ultra-fast mode)
 ./scripts/run-pipeline-ultra-fast.sh /path/to/midi/files
+
+# Apply instrument organization (97 categories)
+./scripts/organize-database.sh
 
 # Monitor progress
 ./scripts/monitor-pipeline.sh
@@ -103,11 +116,13 @@ The system uses PostgreSQL with 15 tables:
 |-------|---------|
 | `files` | Core file metadata (path, hash, size) |
 | `musical_metadata` | BPM, key, duration, time signature |
-| `tags` | Tag definitions (97 instrument categories) |
-| `file_tags` | File-to-tag relationships |
+| `tags` | Tag definitions (1,861 types) |
+| `file_tags` | File-to-tag relationships (7.9M+) |
 | `midi_tracks` | Track information per file |
+| `midi_events` | Individual MIDI events |
 | `analysis_results` | Enhanced analysis (chords, structure) |
 | `drum_patterns` | Drum-specific analysis |
+| `chords` | Chord progressions |
 
 ### Example Queries
 
@@ -120,10 +135,13 @@ JOIN file_tags ft ON f.id = ft.file_id
 JOIN tags t ON ft.tag_id = t.id
 WHERE t.name = 'drums' AND m.bpm BETWEEN 118 AND 122;
 
--- Get files by instrument
+-- Get files by instrument (built-in function)
 SELECT * FROM get_files_by_instrument('piano');
 
--- Search by multiple criteria
+-- Get files by BPM range
+SELECT * FROM get_files_by_bpm_range(118, 122);
+
+-- Search by multiple instruments
 SELECT * FROM get_files_by_instruments(ARRAY['jazz', 'piano']);
 ```
 
@@ -155,8 +173,8 @@ make db-reset          # Reset database (destructive!)
 ### Running Tests
 
 ```bash
-# All library tests
-cargo test --workspace --lib
+# All library tests (use single thread for DB tests)
+cargo test --workspace --lib -- --test-threads=1
 
 # Specific crate
 cargo test -p midi-pipeline
@@ -166,23 +184,32 @@ cargo test -p midi-library-shared
 cargo tarpaulin --workspace --out Html
 ```
 
-**Current Test Status:** 1,623+ tests passing
+**Current Test Status:** 2,071 tests passing
 
-### Code Organization
+### Key Files
 
-**Shared Library** (`shared/rust/src/`):
-- `core/midi/parser.rs` - MIDI file parsing
-- `core/analysis/` - BPM, key, chord detection
-- `db/repositories/` - Database access layer
+| Purpose | Location |
+|---------|----------|
+| MIDI Parser | `shared/rust/src/core/midi/parser.rs` |
+| BPM Detector | `shared/rust/src/core/analysis/bpm_detector.rs` |
+| Key Detector | `pipeline/src-tauri/src/core/analysis/key_detector.rs` |
+| Auto-tagger | `pipeline/src-tauri/src/core/analysis/auto_tagger.rs` |
+| Drum Analyzer | `pipeline/src-tauri/src/core/analysis/drum_analyzer.rs` |
+| File Repository | `pipeline/src-tauri/src/db/repositories/file_repository.rs` |
+| Sequencer Engine | `daw/src-tauri/src/sequencer/engine.rs` |
+| Hardware Manager | `daw/src-tauri/src/hardware/device_manager.rs` |
 
-**Pipeline** (`pipeline/src-tauri/src/`):
-- `commands/` - Tauri command handlers
-- `core/analysis/` - Auto-tagger, drum analyzer
-- `io/decompressor/` - Archive extraction
+## Pipeline Phases
 
-**DAW** (`daw/src-tauri/src/`):
-- `sequencer/` - Real-time playback engine
-- `hardware/` - MIDI device integration
+| Phase | Purpose | Speed |
+|-------|---------|-------|
+| 1. Import | Ingest + hash + parse + tag + index | 7,830/sec |
+| 2. Sanitize | Clean filenames | Instant |
+| 3. Split | Multi-track separation + auto-repair | Batch |
+| 4. Analyze | BPM, key, drums, chords, structure | 181-360/sec |
+| 5. Rename | Metadata-based filenames | Batch |
+
+**Recommended Order:** Import → Sanitize → Split → Analyze → Rename
 
 ## Configuration
 
@@ -248,24 +275,10 @@ tag_repository.add_tags(file_id, &tags).await?;
 tag_repository.get_files_by_tag("drums").await?;
 ```
 
-## Contributing
-
-1. Read `CLAUDE.md` for detailed development guidelines
-2. Follow the Three Archetypes pattern (see `ARCHITECTURE-REFERENCE.md`)
-3. Ensure tests pass: `make check && make test`
-4. Use semantic commits via `/git-commit-smart:commit-smart`
-
-## Documentation
-
-- **CLAUDE.md** - Development guidelines and project status
-- **ARCHITECTURE-REFERENCE.md** - System architecture details
-- **PROJECT-STRUCTURE.md** - Directory and file organization
-- **DEVELOPMENT-WORKFLOW.md** - 8-step implementation process
-
 ## License
 
-[License details here]
+This project is proprietary software. All rights reserved.
 
 ---
 
-**Status:** Production Ready | **Tests:** 1,623+ passing | **Files Managed:** 2.1M+
+**Status:** Production Ready | **Tests:** 2,071 passing | **Files Managed:** 2.15M+ | **Tags:** 7.9M+
