@@ -1,4 +1,3 @@
-
 /// Database Window State
 ///
 /// Trusty Module: Pure data structures for database window state including
@@ -332,6 +331,11 @@ impl DatabaseWindowState {
     pub fn next_page(&mut self) -> bool {
         if self.pagination.has_next {
             self.filters.page += 1;
+            // Update pagination state
+            self.pagination.current_page = self.filters.page;
+            self.pagination.has_previous = self.pagination.current_page > 0;
+            self.pagination.has_next =
+                self.pagination.current_page + 1 < self.pagination.total_pages;
             true
         } else {
             false
@@ -340,8 +344,13 @@ impl DatabaseWindowState {
 
     /// Go to previous page
     pub fn previous_page(&mut self) -> bool {
-        if self.pagination.has_previous {
+        if self.filters.page > 0 {
             self.filters.page -= 1;
+            // Update pagination state
+            self.pagination.current_page = self.filters.page;
+            self.pagination.has_previous = self.pagination.current_page > 0;
+            self.pagination.has_next =
+                self.pagination.current_page + 1 < self.pagination.total_pages;
             true
         } else {
             false

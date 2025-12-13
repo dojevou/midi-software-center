@@ -1,0 +1,27 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT COUNT(*) as \"count!\"\n            FROM files f\n            LEFT JOIN musical_metadata mm ON f.id = mm.file_id\n            WHERE\n                ($1::text IS NULL OR f.search_vector @@ plainto_tsquery('english', $1))\n                AND ($2::float8 IS NULL OR mm.bpm::float8 >= $2)\n                AND ($3::float8 IS NULL OR mm.bpm::float8 <= $3)\n                AND ($4::text IS NULL OR mm.key_signature::text = $4)\n                AND ($5::text IS NULL OR f.manufacturer = $5)\n                AND ($6::text IS NULL OR f.collection_name = $6)\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "count!",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Float8",
+        "Float8",
+        "Text",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "e09c1a6928be0e2220eec91566e9e4b735077aa757ad527d34a327bdfc40e3d5"
+}

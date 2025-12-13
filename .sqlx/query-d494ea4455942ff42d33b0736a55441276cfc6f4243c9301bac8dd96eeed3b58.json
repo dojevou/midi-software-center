@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE musical_metadata\n            SET bpm = $1,\n                bpm_confidence = $2\n            WHERE file_id = $3\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Numeric",
+        "Float4",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "d494ea4455942ff42d33b0736a55441276cfc6f4243c9301bac8dd96eeed3b58"
+}

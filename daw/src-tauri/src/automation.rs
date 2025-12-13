@@ -61,6 +61,10 @@ pub enum CurveType {
     Exponential,
     /// Step (hold value until next point)
     Step,
+    /// S-Curve (smooth ease-in-out)
+    SCurve,
+    /// Hold (alias for Step, keeps value constant)
+    Hold,
 }
 
 /// Parameter type for automation
@@ -155,6 +159,19 @@ impl AutomationCurve {
         } else {
             Ok(())
         }
+    }
+
+    /// Remove multiple automation points by ID (batch operation)
+    ///
+    /// # Arguments
+    /// * `point_ids` - Vector of point IDs to remove
+    ///
+    /// # Returns
+    /// Number of points removed
+    pub fn remove_points_batch(&mut self, point_ids: &[i32]) -> usize {
+        let initial_len = self.points.len();
+        self.points.retain(|p| !point_ids.contains(&p.id));
+        initial_len - self.points.len()
     }
 
     /// Move automation point
@@ -274,9 +291,15 @@ impl AutomationCurve {
                 };
                 p1.value + (p2.value - p1.value) * t_exp
             },
-            CurveType::Step => {
+            CurveType::Step | CurveType::Hold => {
                 // Hold value until next point
                 p1.value
+            },
+            CurveType::SCurve => {
+                // S-Curve (smooth ease-in-out with cubic bezier)
+                // Uses smoothstep formula: 6t^5 - 15t^4 + 10t^3
+                let t_smooth = t * t * t * (t * (t * 6.0 - 15.0) + 10.0);
+                p1.value + (p2.value - p1.value) * t_smooth
             },
         }
     }
@@ -553,6 +576,33 @@ impl AutomationManager {
         lane.curve.remove_point(point_id)
     }
 
+    /// Remove multiple automation points (batch operation)
+    ///
+    /// # Arguments
+    /// * `track_id` - Parent track ID
+    /// * `parameter_type` - Parameter type
+    /// * `point_ids` - Vector of point IDs to remove
+    ///
+    /// # Returns
+    /// Number of points removed
+    pub fn remove_points_batch(
+        &mut self,
+        track_id: i32,
+        parameter_type: ParameterType,
+        point_ids: &[i32],
+    ) -> Result<usize, String> {
+        let track = self
+            .tracks
+            .get_mut(&track_id)
+            .ok_or_else(|| format!("Track {} not found", track_id))?;
+
+        let lane = track
+            .get_lane_mut(parameter_type)
+            .ok_or_else(|| format!("Lane for {:?} not found", parameter_type))?;
+
+        Ok(lane.curve.remove_points_batch(point_ids))
+    }
+
     /// Move automation point
     ///
     /// # Arguments
@@ -681,6 +731,42 @@ impl AutomationManager {
     /// Clear all automation
     pub fn clear_all(&mut self) {
         self.tracks.clear();
+    }
+
+    /// Get track by ID
+    ///
+    /// # Arguments
+    /// * `track_id` - Track ID
+    ///
+    /// # Returns
+    /// AutomationTrack reference, or Err if not found
+    pub fn get_track(&self, track_id: i32) -> Result<&AutomationTrack, String> {
+        self.tracks
+            .get(&track_id)
+            .ok_or_else(|| format!("Track {} not found", track_id))
+    }
+
+    /// Get mutable lane for track/parameter
+    ///
+    /// # Arguments
+    /// * `track_id` - Track ID
+    /// * `parameter_type` - Parameter type
+    ///
+    /// # Returns
+    /// Mutable lane reference, or Err if not found
+    pub fn get_lane_mut(
+        &mut self,
+        track_id: i32,
+        parameter_type: ParameterType,
+    ) -> Result<&mut AutomationLane, String> {
+        let track = self
+            .tracks
+            .get_mut(&track_id)
+            .ok_or_else(|| format!("Track {} not found", track_id))?;
+
+        track
+            .get_lane_mut(parameter_type)
+            .ok_or_else(|| format!("Lane for {:?} not found", parameter_type))
     }
 }
 
@@ -1159,13 +1245,16 @@ mod tests {
         curve.add_point(100, 0.0).unwrap();
 
         // Exponential falling: fast start, slow end
+        // Using t_exp = 1.0 - (1.0 - t) * (1.0 - t)
+        // At t=0.25: t_exp = 1.0 - 0.75*0.75 = 0.4375
+        // value = 1.0 + (0.0 - 1.0) * 0.4375 = 0.5625
         let value_25 = curve.get_value_at(25).unwrap();
         let value_75 = curve.get_value_at(75).unwrap();
 
-        // At 25%, should be more than linear (0.75)
-        assert!(value_25 > 0.9);
-        // At 75%, should be less than linear (0.25)
-        assert!(value_75 < 0.5);
+        // At 25%, value should be less than linear (0.75) due to fast decay
+        assert!(value_25 < 0.75, "value_25={} should be < 0.75", value_25);
+        // At 75%, should be less than linear (0.25) - approaching target slowly
+        assert!(value_75 < 0.25, "value_75={} should be < 0.25", value_75);
     }
 
     #[test]

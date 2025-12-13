@@ -1,4 +1,3 @@
-
 /// Archive Extraction Logic
 ///
 /// # Archetype: Grown-up Script
@@ -158,9 +157,17 @@ fn extract_zip(
             // Check if it's a nested archive
             if config.recursive && formats::is_archive(&outpath) {
                 if let Some(nested_format) = formats::detect_format(&outpath) {
+                    // Create unique subdirectory for nested archive extraction
+                    // Use archive filename (without extension) as subdirectory name
+                    let nested_dir = if let Some(stem) = outpath.file_stem() {
+                        output_dir.join(format!("{}_extracted", stem.to_string_lossy()))
+                    } else {
+                        output_dir.join(format!("nested_{}", current_depth + 1))
+                    };
+
                     let _ = extract_recursive(
                         &outpath,
-                        output_dir,
+                        &nested_dir, // Extract to unique subdirectory, not parent dir
                         config,
                         current_depth + 1,
                         result,

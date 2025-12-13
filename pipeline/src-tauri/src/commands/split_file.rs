@@ -1,4 +1,3 @@
-
 use crate::core::analysis::bpm_detector::detect_bpm;
 use crate::core::analysis::key_detector::detect_key;
 /// Track Splitting Commands - GROWN-UP SCRIPT
@@ -16,7 +15,8 @@ use crate::core::analysis::key_detector::detect_key;
 /// The actual splitting logic is delegated to the track_splitter Trusty Module,
 /// which operates on byte arrays with no I/O.
 use crate::core::hash::calculate_file_hash;
-use crate::core::splitting::track_splitter::{split_tracks, SplitError, SplitTrack};
+use crate::core::naming::generator::generate_production_layer_filename;
+use crate::core::splitting::{split_tracks_with_repair, RepairResult, SplitError, SplitTrack};
 use midi_library_shared::core::midi::parser::parse_midi_file;
 use serde::{Deserialize, Serialize};
 use std::path::{Path, PathBuf};
@@ -138,12 +138,14 @@ pub async fn split_and_import(
     output_dir: PathBuf,
     pool: &sqlx::PgPool,
 ) -> Result<SplitResult, SplitCommandError> {
-    // 1. Query database for parent file info
+    // 1. Query database for parent file info with metadata for Production naming
     let parent_file = sqlx::query!(
         r#"
-        SELECT id, filename, original_filename, filepath
-        FROM files
-        WHERE id = $1
+        SELECT f.id, f.filename, f.original_filename, f.filepath, f.parent_folder,
+               m.bpm, m.key_signature::text as "key_signature?"
+        FROM files f
+        LEFT JOIN musical_metadata m ON f.id = m.file_id
+        WHERE f.id = $1
         "#,
         file_id
     )
@@ -162,8 +164,33 @@ pub async fn split_and_import(
 
     let original_bytes = tokio::fs::read(file_path).await?;
 
-    // 3. Call Trusty Module to split tracks (pure logic, no I/O)
-    let split_tracks = split_tracks(&original_bytes)?;
+    // 2b. Parse MIDI to extract time signature for Production naming
+    let midi_data = parse_midi_file(&original_bytes)
+        .map_err(|e| SplitCommandError::DatabaseError(format!("Failed to parse MIDI: {}", e)))?;
+
+    // Extract time signature from events (default to 4-4)
+    let time_signature =
+        extract_time_signature_from_midi(&midi_data).unwrap_or_else(|| "4-4".to_string());
+
+    // 3. Call Trusty Module to split tracks with automatic repair
+    let (split_tracks, repair_result) = split_tracks_with_repair(&original_bytes)
+        .map_err(|e| SplitCommandError::SplitError(SplitError::ParseError(e.to_string())))?;
+
+    // Log repair if it occurred
+    match &repair_result {
+        RepairResult::Valid => {
+            // File was valid, no repair needed
+        },
+        RepairResult::Repaired { fix_description, .. } => {
+            eprintln!(
+                "🔧 REPAIRED: {} - {}",
+                parent_file.filename, fix_description
+            );
+        },
+        RepairResult::Corrupt { reason } => {
+            eprintln!("❌ CORRUPT: {} - {}", parent_file.filename, reason);
+        },
+    }
 
     if split_tracks.is_empty() {
         return Err(SplitCommandError::SplitError(SplitError::NoTracksToSplit));
@@ -176,16 +203,58 @@ pub async fn split_and_import(
             .map_err(|e| SplitCommandError::DirectoryCreationError(e.to_string()))?;
     }
 
-    // 5. Process each split track
+    // 5. Process each split track with Production naming
     let mut split_file_ids = Vec::new();
-    let base_filename = Path::new(&parent_file.original_filename)
-        .file_stem()
-        .and_then(|s| s.to_str())
-        .unwrap_or("track");
 
-    for split_track in &split_tracks {
-        // Generate filename: {base}_track_{num:02}_{instrument}.mid
-        let filename = generate_split_filename(base_filename, split_track);
+    // Extract metadata for Production template
+    // Query musical_metadata for category if available
+    // query_scalar with fetch_optional returns Result<Option<Option<String>>>
+    // We unwrap the Result, then flatten the nested Options to get Option<String>,
+    // then unwrap_or to get the final String value
+    let category = sqlx::query_scalar::<_, Option<String>>(
+        "SELECT category FROM musical_metadata WHERE file_id = $1"
+    )
+    .bind(parent_file.id)
+    .fetch_optional(pool)
+    .await
+    .ok()
+    .flatten()  // Flattens Option<Option<Option<String>>> to Option<Option<String>>
+    .flatten()  // Flattens Option<Option<String>> to Option<String>
+    .unwrap_or_else(|| "MIDI".to_string());
+
+    let pack_name = parent_file.parent_folder.clone().unwrap_or_else(|| "Unknown".to_string());
+    let file_id_str = format!("{:06}", parent_file.id);
+
+    // Convert Option<BigDecimal> to f64 for BPM
+    let bpm = parent_file
+        .bpm
+        .as_ref()
+        .and_then(|bd| bd.to_string().parse::<f64>().ok())
+        .unwrap_or(120.0);
+
+    let key_signature = parent_file.key_signature.clone().unwrap_or_else(|| "C".to_string());
+
+    for (layer_idx, split_track) in split_tracks.iter().enumerate() {
+        // Extract layer name from instrument or track name
+        let layer_name = if let Some(ref instrument) = split_track.instrument {
+            instrument.clone()
+        } else if let Some(ref track_name) = split_track.track_name {
+            track_name.clone()
+        } else {
+            format!("Track{:02}", split_track.track_number)
+        };
+
+        // Generate Production filename: {CATEGORY}_{TIMESIG}_{BPM}BPM_{KEY}_{ID}_{PACK}_{LAYER}_L{NUM}.mid
+        let filename = generate_production_layer_filename(
+            category.as_str(), // Convert String to &str for function parameter
+            bpm,
+            &key_signature,
+            &file_id_str,
+            &time_signature,
+            &pack_name,
+            &layer_name,
+            layer_idx + 1, // 1-based layer numbering
+        );
 
         // Full path for split file
         let split_path = output_dir.join(&filename);
@@ -208,6 +277,72 @@ pub async fn split_and_import(
     }
 
     Ok(SplitResult { split_file_ids, tracks_split: split_tracks.len(), output_dir })
+}
+
+//=============================================================================
+// TAURI COMMAND WRAPPERS (Task-O-Matic Pattern)
+//=============================================================================
+
+use crate::AppState;
+use tauri::State;
+
+/// Tauri command: Split a single multi-track MIDI file into individual tracks.
+///
+/// Wraps split_and_import for Tauri IPC.
+///
+/// # Arguments
+///
+/// * `state` - Tauri managed state containing database pool
+/// * `file_id` - Database ID of the file to split
+/// * `output_dir` - Directory where split files will be written
+///
+/// # Returns
+///
+/// `SplitResult` with IDs of created files and statistics
+#[tauri::command]
+pub async fn split_file(
+    state: State<'_, AppState>,
+    file_id: i64,
+    output_dir: String,
+) -> Result<SplitResult, String> {
+    let pool = state.database.pool().await;
+    let output_path = PathBuf::from(output_dir);
+
+    split_and_import(file_id, output_path, &pool).await.map_err(|e| e.to_string())
+}
+
+/// Tauri command: Split multiple multi-track MIDI files into individual tracks.
+///
+/// Batch version of split_file for processing multiple files.
+///
+/// # Arguments
+///
+/// * `state` - Tauri managed state containing database pool
+/// * `file_ids` - Database IDs of files to split
+/// * `output_dir` - Directory where split files will be written
+///
+/// # Returns
+///
+/// Vector of `SplitResult` for each file (or error string)
+#[tauri::command]
+pub async fn split_file_batch(
+    state: State<'_, AppState>,
+    file_ids: Vec<i64>,
+    output_dir: String,
+) -> Result<Vec<Result<SplitResult, String>>, String> {
+    let pool = state.database.pool().await;
+    let output_path = PathBuf::from(output_dir);
+
+    let mut results = Vec::with_capacity(file_ids.len());
+
+    for file_id in file_ids {
+        let result = split_and_import(file_id, output_path.clone(), &pool)
+            .await
+            .map_err(|e| e.to_string());
+        results.push(result);
+    }
+
+    Ok(results)
 }
 
 //=============================================================================
@@ -477,6 +612,27 @@ pub fn sanitize_filename(name: &str) -> String {
         .filter(|s| !s.is_empty())
         .collect::<Vec<_>>()
         .join("_")
+}
+
+/// Extract time signature from MIDI file events
+/// Returns format like "4-4" for 4/4 time, or None if not found
+fn extract_time_signature_from_midi(
+    midi: &midi_library_shared::core::midi::types::MidiFile,
+) -> Option<String> {
+    use midi_library_shared::core::midi::types::Event;
+
+    // Search all tracks for TimeSignature event
+    for track in &midi.tracks {
+        for timed_event in &track.events {
+            if let Event::TimeSignature { numerator, denominator, .. } = &timed_event.event {
+                // Convert denominator from power-of-2 format (e.g., 2 = quarter note = 4)
+                let denom_value = 2_u8.pow(*denominator as u32);
+                return Some(format!("{}-{}", numerator, denom_value));
+            }
+        }
+    }
+
+    None // No time signature found
 }
 
 //=============================================================================

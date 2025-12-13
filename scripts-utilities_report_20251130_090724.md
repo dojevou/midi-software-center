@@ -1,0 +1,401 @@
+# Project Report: scripts-utilities
+
+> Generated: 2025-11-30 09:09:13
+> Path: `/home/dojevou/projects/midi-software-center/scripts`
+
+## Legend
+
+| Symbol | Meaning |
+|--------|---------|
+| ✅ | **Excellent** - Score ≥ 8/10 or Maintainability ≥ 65 |
+| ⚠️ | **Warning** - Score 5-8/10 or Maintainability 40-65 |
+| ❌ | **Needs Work** - Score < 5/10 or Maintainability < 40 |
+| 🔒 | **Security** - Security-related finding or issue |
+| 🐛 | **Bug** - Potential bug or error detected |
+| 📁 | **File/Folder** - File system related item |
+| 📊 | **Metrics** - Statistical data or analysis |
+| 📝 | **Documentation** - Docstring or comment related |
+| 🔍 | **Analysis** - Currently being analyzed |
+| 📦 | **Package** - Dependency or import related |
+| 🚀 | **Performance** - Performance or optimization related |
+
+## Table of Contents
+
+- [Legend](#legend)
+- [Summary](#summary)
+- [Project Statistics](#project-statistics)
+- [Code Quality](#code-quality)
+- [Dependencies](#dependencies)
+- [File Structure](#file-structure)
+- [TODOs and FIXMEs](#todos-and-fixmes)
+- [File Details](#file-details)
+
+## Summary
+
+| Metric | Value |
+|--------|-------|
+| Total Files | 31 |
+| Total Lines | 8,343 |
+| Lines of Code | 5,612 |
+| Functions | 208 |
+| Classes | 19 |
+| Avg Pylint Score | 7.85/10 |
+| Docstring Coverage | 77.9% |
+
+## Project Statistics
+
+### Files by Extension
+
+| Extension | Count | Lines |
+|-----------|-------|-------|
+| .py | 24 | 6,990 |
+| .rs | 4 | 1,249 |
+| .toml | 2 | 27 |
+| .ts | 1 | 77 |
+
+## Code Quality
+
+### Pylint Score Distribution
+
+- Excellent (9-10): 8 files
+- Good (7-9): 7 files
+- Fair (5-7): 6 files
+- Needs Work (<5): 2 files
+
+### Files Needing Attention
+
+| File | Score | Issues |
+|------|-------|--------|
+| `fixes/fix_e0308_pool.py` | 4.3 | 0 |
+| `fixes/format_string_fixer.py` | 4.5 | 0 |
+| `derive_injector.py` | 5.7 | 0 |
+| `fixes/fix_list_files.py` | 5.8 | 0 |
+| `fixes/fix_e0308_appstate.py` | 6.0 | 0 |
+| `grok/supercharged_grok_reviewer.py` | 6.3 | 0 |
+| `analysis/error_parser.py` | 6.3 | 0 |
+| `grok/ultra_supercharged_grok_reviewer.py` | 6.4 | 0 |
+
+## Dependencies
+
+### Most Used Imports
+
+| Package | Usage Count |
+|---------|-------------|
+| `pathlib` | 20 |
+| `sys` | 20 |
+| `re` | 15 |
+| `os` | 12 |
+| `collections` | 8 |
+| `json` | 8 |
+| `psycopg2` | 7 |
+| `subprocess` | 6 |
+| `time` | 5 |
+| `typing` | 4 |
+| `datetime` | 4 |
+| `httpx` | 4 |
+| `concurrent.futures` | 2 |
+| `multiprocessing` | 2 |
+| `argparse` | 2 |
+| `psycopg2.extras` | 2 |
+| `traceback` | 2 |
+| `csv` | 1 |
+| `dataclasses` | 1 |
+| `shutil` | 1 |
+
+## File Structure
+
+```
+scripts/
+├── analysis/
+│   ├── analyze_files.py
+│   └── error_parser.py
+├── analyze-tool/
+│   └── src/
+│       ├── analyzer.rs
+│       └── tag_extractor.rs
+├── backups/
+│   └── project_backup_20251130_090335.zip
+├── fixes/
+│   ├── apply_test_fixes.sh
+│   ├── auto_fix.sh
+│   ├── fix_add_tags_calls.py
+│   ├── fix_e0308_appstate.py
+│   ├── fix_e0308_calls.sh
+│   ├── fix_e0308_pool.py
+│   ├── fix_lint.sh
+│   ├── fix_list_files.py
+│   ├── fix_workflows_imports.sh
+│   ├── fix_workflows_manually.sh
+│   ├── format_string_fixer.py
+│   └── master_fixer.sh
+├── grok/
+│   ├── grok4-review.sh
+│   ├── grok4_project_reviewer.py
+│   ├── midi_grok_reviewer.py
+│   ├── supercharged_grok_reviewer.py
+│   └── ultra_supercharged_grok_reviewer.py
+├── import/
+│   └── import-collection.sh
+├── import-tool/
+│   ├── src/
+│   │   ├── main.rs
+│   │   └── main.rs.backup
+│   └── Cargo.toml
+├── launch/
+│   ├── frontend.sh
+│   ├── launch-all.sh
+│   ├── launch-daw.sh
+│   ├── launch-midi-center.sh
+│   ├── launch-pipeline.sh
+│   ├── status.sh
+│   └── stop-all.sh
+├── modules/
+│   └── database.sh
+├── organization/
+│   ├── cleanup_root.sh
+│   ├── organize-files.sh
+│   ├── organize_docs.sh
+│   └── organize_remaining.sh
+├── setup/
+│   ├── 00_COMPLETE_RESET_AND_SETUP.sh
+│   ├── 01_COMPLETE_MCP_RESET.sh
+│   ├── 02_SETUP_MCP_CORRECT.sh
+│   ├── 03_FULL_SETUP_ALL_SERVERS.sh
+│   ├── complete_setup.sh
+│   ├── install-launcher.sh
+│   ├── setup-agents.sh
+│   ├── setup-project-structure.sh
+│   └── uninstall-launcher.sh
+├── tasks/
+├── test-midi-files/
+│   ├── src/
+│   │   ├── main.rs
+│   │   └── main.rs.backup
+│   └── Cargo.toml
+├── verify/
+│   ├── integration_test.sh
+│   └── quick_check.sh
+├── analyze_filenames.py
+├── audit-core-io.sh
+├── audit-missing-imports.ts
+├── benchmark-comparison.sh
+├── BENCHMARK-EXAMPLES.md
+└── BENCHMARK-GUIDE.md
+    ... and 81 more
+```
+
+## TODOs and FIXMEs
+
+*No TODOs or FIXMEs found*
+
+## File Details
+
+### `analysis/analyze_files.py` {#analysis-analyze-files-py}
+
+- **Lines**: 40 (code: 30, comments: 3, blank: 7)
+
+<details>
+<summary>Issues (1)</summary>
+
+```
+SyntaxError: Could not parse file
+```
+</details>
+
+### `analysis/error_parser.py` {#analysis-error-parser-py}
+
+- **Lines**: 261 (code: 206, comments: 20, blank: 35)
+- **Pylint Score**: 6.31/10 ⚠️
+- **Docstring Coverage**: 71.4%
+- **Functions**: __post_init__, __init__, _compile_patterns, parse, _categorize_error, _get_error_type, _extract_affected_items, _generate_report, export_csv, export_json
+  *... and 2 more*
+- **Classes**: ErrorInfo, QuantumErrorParser
+
+### `analyze-tool/src/analyzer.rs` {#analyze-tool-src-analyzer-rs}
+
+- **Lines**: 347 (code: 287, comments: 0, blank: 60)
+
+### `analyze-tool/src/tag_extractor.rs` {#analyze-tool-src-tag-extractor-rs}
+
+- **Lines**: 151 (code: 122, comments: 0, blank: 29)
+
+### `analyze_filenames.py` {#analyze-filenames-py}
+
+- **Lines**: 569 (code: 427, comments: 61, blank: 81)
+- **Pylint Score**: 9.47/10 ✅
+- **Docstring Coverage**: 78.6%
+- **Functions**: extract_bpm, extract_key, extract_time_signature, extract_instruments, extract_genres, extract_patterns, extract_drum_elements, analyze_file, process_batch, generate_report
+  *... and 3 more*
+- **Classes**: FilenameAnalyzer
+
+### `audit-missing-imports.ts` {#audit-missing-imports-ts}
+
+- **Lines**: 77 (code: 69, comments: 0, blank: 8)
+
+### `build_tag_expansions.py` {#build-tag-expansions-py}
+
+- **Lines**: 441 (code: 292, comments: 73, blank: 76)
+- **Pylint Score**: 7.83/10 ⚠️
+- **Docstring Coverage**: 83.3%
+- **Functions**: query_files_for_pack, get_bpm_folder, convert_and_organize, build_pack, list_packs, main
+
+### `convert_instruments_python.py` {#convert-instruments-python-py}
+
+- **Lines**: 165 (code: 108, comments: 27, blank: 30)
+- **Pylint Score**: 8.70/10 ✅
+- **Functions**: main
+
+### `derive_injector.py` {#derive-injector-py}
+
+- **Lines**: 249 (code: 168, comments: 32, blank: 49)
+- **Pylint Score**: 5.73/10 ⚠️
+- **Docstring Coverage**: 66.7%
+- **Functions**: __init__, find_struct_definitions, get_existing_derives, inject_derives, fix_tagged_response, fix_import_progress, fix_emitter_generics, fix_file, run, replace_tag_response
+  *... and 1 more*
+- **Classes**: DeriveMacroInjector
+
+### `export-force-midi.py` {#export-force-midi-py}
+
+- **Lines**: 329 (code: 196, comments: 81, blank: 52)
+- **Pylint Score**: 9.18/10 ✅
+- **Docstring Coverage**: 80.0%
+- **Functions**: connect_db, export_progressions, export_arp_patterns, export_drum_patterns, main
+
+### `fast_multi_level_tagger.py` {#fast-multi-level-tagger-py}
+
+- **Lines**: 361 (code: 177, comments: 119, blank: 65)
+- **Pylint Score**: 9.22/10 ✅
+- **Docstring Coverage**: 100.0%
+- **Functions**: normalize_keyword, extract_path_components, load_curated_tags, process_files, insert_batch, verify_results, main
+
+### `fixes/fix_add_tags_calls.py` {#fixes-fix-add-tags-calls-py}
+
+- **Lines**: 143 (code: 85, comments: 29, blank: 29)
+- **Pylint Score**: 9.47/10 ✅
+- **Docstring Coverage**: 50.0%
+- **Functions**: fix_add_tags_to_file, fix_add_tags_to_file_impl, process_file, main, replacer1, replacer2, replacer3, replacer
+
+### `fixes/fix_e0308_appstate.py` {#fixes-fix-e0308-appstate-py}
+
+- **Lines**: 20 (code: 10, comments: 4, blank: 6)
+- **Pylint Score**: 6.00/10 ⚠️
+
+### `fixes/fix_e0308_pool.py` {#fixes-fix-e0308-pool-py}
+
+- **Lines**: 46 (code: 27, comments: 10, blank: 9)
+- **Pylint Score**: 4.29/10 ❌
+
+### `fixes/fix_list_files.py` {#fixes-fix-list-files-py}
+
+- **Lines**: 82 (code: 41, comments: 28, blank: 13)
+- **Pylint Score**: 5.75/10 ⚠️
+- **Docstring Coverage**: 33.3%
+- **Functions**: fix_list_files_calls, main, replace_fn
+
+### `fixes/format_string_fixer.py` {#fixes-format-string-fixer-py}
+
+- **Lines**: 198 (code: 123, comments: 34, blank: 41)
+- **Pylint Score**: 4.51/10 ❌
+- **Docstring Coverage**: 50.0%
+- **Functions**: __init__, _compile_patterns, find_rust_files, analyze_format_string, fix_file, run, replace_indexed_with_empty, replace_indexed_format, replace_write_indexed
+- **Classes**: FormatStringFixer
+
+### `generate_detailed_report.py` {#generate-detailed-report-py}
+
+- **Lines**: 356 (code: 275, comments: 21, blank: 60)
+- **Pylint Score**: 9.35/10 ✅
+- **Docstring Coverage**: 100.0%
+- **Functions**: load_analysis, generate_comprehensive_report
+
+### `grok/grok4_project_reviewer.py` {#grok-grok4-project-reviewer-py}
+
+- **Lines**: 184 (code: 115, comments: 38, blank: 31)
+- **Pylint Score**: 9.43/10 ✅
+- **Docstring Coverage**: 100.0%
+- **Functions**: main, __init__, call_grok, analyze_compilation_errors, close
+- **Classes**: Grok4ProjectReviewer
+
+### `grok/midi_grok_reviewer.py` {#grok-midi-grok-reviewer-py}
+
+- **Lines**: 797 (code: 495, comments: 209, blank: 93)
+- **Pylint Score**: 8.94/10 ✅
+- **Docstring Coverage**: 97.1%
+- **Functions**: main, __init__, gather_project_context, detect_project_phase, analyze_midi_architecture, analyze_rust_backends, analyze_backend, analyze_tauri_frontends, analyze_frontend, analyze_database_layer
+  *... and 24 more*
+- **Classes**: MIDIProjectReviewer
+
+### `grok/supercharged_grok_reviewer.py` {#grok-supercharged-grok-reviewer-py}
+
+- **Lines**: 878 (code: 557, comments: 173, blank: 148)
+- **Pylint Score**: 6.29/10 ⚠️
+- **Docstring Coverage**: 88.1%
+- **Functions**: main, __init__, apply_recommended_fixes, should_apply_fix, fix_tauri_ts_conflicts, rewrite_tauri_types, fix_rust_dead_code, create_missing_backends, fix_build_config, enable_disabled_tests
+  *... and 27 more*
+- **Classes**: MIDIAutoFixer, PredictiveAnalyzer, AnalysisLearner, DevelopmentWorkflowIntegrator, SuperchargedMIDIReviewer
+
+### `grok/ultra_supercharged_grok_reviewer.py` {#grok-ultra-supercharged-grok-reviewer-py}
+
+- **Lines**: 744 (code: 429, comments: 197, blank: 118)
+- **Pylint Score**: 6.38/10 ⚠️
+- **Docstring Coverage**: 84.1%
+- **Functions**: main, __init__, start_capture, stop_capture, write, flush, __init__, start_analysis, update_progress, __init__
+  *... and 27 more*
+- **Classes**: TerminalOutputCapture, ProgressTracker, RealErrorCapture, SimpleAutoFixer, PredictiveAnalyzer, AnalysisLearner, UltraSuperchargedMIDIReviewer
+
+### `import-split-files.py` {#import-split-files-py}
+
+- **Lines**: 276 (code: 177, comments: 56, blank: 43)
+- **Pylint Score**: 8.88/10 ✅
+- **Docstring Coverage**: 100.0%
+- **Functions**: calculate_blake3_hash, parse_midi_basic, extract_parent_info_from_filename, process_file, get_missing_files, import_files
+
+### `import-tool/Cargo.toml` {#import-tool-cargo-toml}
+
+- **Lines**: 12 (code: 11, comments: 0, blank: 1)
+
+### `import-tool/src/main.rs` {#import-tool-src-main-rs}
+
+- **Lines**: 483 (code: 419, comments: 0, blank: 64)
+
+### `mpcpattern_to_midi.py` {#mpcpattern-to-midi-py}
+
+- **Lines**: 131 (code: 79, comments: 21, blank: 31)
+- **Pylint Score**: 9.00/10 ✅
+- **Docstring Coverage**: 50.0%
+- **Functions**: mpcpattern_to_midi, main
+
+### `normalize-files-and-database.py` {#normalize-files-and-database-py}
+
+- **Lines**: 217 (code: 134, comments: 47, blank: 36)
+- **Pylint Score**: 8.93/10 ✅
+- **Docstring Coverage**: 100.0%
+- **Functions**: sanitize_strict, normalize_files_and_database
+
+### `restore-original-filenames.py` {#restore-original-filenames-py}
+
+- **Lines**: 154 (code: 90, comments: 38, blank: 26)
+- **Pylint Score**: 8.85/10 ✅
+- **Docstring Coverage**: 100.0%
+- **Functions**: sanitize_strict, restore_files
+
+### `strict-sanitize-filenames.py` {#strict-sanitize-filenames-py}
+
+- **Lines**: 182 (code: 117, comments: 33, blank: 32)
+- **Pylint Score**: 9.30/10 ✅
+- **Docstring Coverage**: 75.0%
+- **Functions**: sanitize_filename_strict, sanitize_file, find_midi_files, main
+
+### `test-midi-files/Cargo.toml` {#test-midi-files-cargo-toml}
+
+- **Lines**: 15 (code: 13, comments: 0, blank: 2)
+
+### `test-midi-files/src/main.rs` {#test-midi-files-src-main-rs}
+
+- **Lines**: 268 (code: 234, comments: 0, blank: 34)
+
+### `test-normalization-sample.py` {#test-normalization-sample-py}
+
+- **Lines**: 167 (code: 99, comments: 36, blank: 32)
+- **Pylint Score**: 8.79/10 ✅
+- **Docstring Coverage**: 50.0%
+- **Functions**: test_on_files_needing_normalization, sanitize_strict

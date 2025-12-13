@@ -1,4 +1,3 @@
-
 /// Tempo Editor Undo/Redo Commands - Trusty Module
 ///
 /// Commands for tempo editor operations: add/remove markers, set tempo, create ramps.

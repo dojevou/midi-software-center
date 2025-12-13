@@ -1,7 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub enum ClickSound {
     #[default]
     Digital,
@@ -9,7 +8,6 @@ pub enum ClickSound {
     Cowbell,
     Beep,
 }
-
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct PlaybackSettings {

@@ -16,8 +16,8 @@ pub use controller::{
     add_cc_point, delete_cc_point, AutomationPoint, CCError, ControllerEditorState,
 };
 pub use piano_roll::{
-    add_note, delete_note, move_note, select_note, set_quantize_grid, GridSnap, NoteSelection,
-    PianoRollError, PianoRollState,
+    add_note_simple, delete_note, move_note, select_note, set_quantize_grid, GridSnap,
+    NoteSelection, PianoRollError, PianoRollState,
 };
 pub use tempo::{
     tempo_editor_add_tempo_ramp, tempo_editor_set_tempo, TempoEditorState, TempoError, TempoPoint,

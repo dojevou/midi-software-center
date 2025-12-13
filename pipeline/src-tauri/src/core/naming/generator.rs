@@ -1,4 +1,3 @@
-
 /// Filename Generator
 ///
 /// Generates intelligent filenames from MIDI file metadata.
@@ -141,6 +140,127 @@ pub fn generate_from_analysis(
     };
 
     generate_filename(&metadata, config)
+}
+
+/// Generates production filename with pack name and original filename
+///
+/// # Arguments
+/// * `category` - File category
+/// * `bpm` - Beats per minute
+/// * `key` - Musical key
+/// * `file_id` - Zero-padded file ID (e.g., "000001")
+/// * `timesig` - Time signature (e.g., "4-4", "6-8")
+/// * `pack_name` - Name of the pack/folder
+/// * `original_name` - Original filename (cleaned)
+///
+/// # Returns
+/// * Formatted filename: {CATEGORY}_{TIMESIG}_{BPM}BPM_{KEY}_{ID}_{PACK}_{ORIGINAL}.mid
+///
+/// # Examples
+/// ```
+/// use pipeline::core::naming::generator::generate_production_filename;
+///
+/// let filename = generate_production_filename(
+///     "KICK",
+///     120.0,
+///     "C",
+///     "000001",
+///     "4-4",
+///     "DrumPack2024",
+///     "Heavy_Boom"
+/// );
+/// assert_eq!(filename, "KICK_4-4_120BPM_C_000001_DrumPack2024_Heavy_Boom.mid");
+/// ```
+pub fn generate_production_filename(
+    category: &str,
+    bpm: f64,
+    key: &str,
+    file_id: &str,
+    timesig: &str,
+    pack_name: &str,
+    original_name: &str,
+) -> String {
+    let sanitized_category = sanitizer::sanitize_filename(&category.to_uppercase());
+    let sanitized_key = sanitizer::sanitize_filename(key);
+    let sanitized_pack = sanitizer::sanitize_filename(pack_name);
+    let sanitized_original = sanitizer::sanitize_filename(original_name);
+
+    let filename_base = templates::apply_template_extended(
+        &templates::NamingTemplate::Production,
+        &sanitized_category,
+        &sanitized_key,
+        bpm,
+        "", // description not used in Production template
+        file_id,
+        Some(timesig),
+        Some(&sanitized_pack),
+        Some(&sanitized_original),
+        None, // no layer info
+    );
+
+    sanitizer::ensure_mid_extension(&filename_base)
+}
+
+/// Generates production filename for split/layer files
+///
+/// # Arguments
+/// * `category` - File category
+/// * `bpm` - Beats per minute
+/// * `key` - Musical key
+/// * `file_id` - Zero-padded file ID
+/// * `timesig` - Time signature
+/// * `pack_name` - Name of the pack/folder
+/// * `layer_name` - Name of the layer (e.g., "OpenHat", "ClosedHat")
+/// * `layer_number` - Layer number (1-based)
+///
+/// # Returns
+/// * Formatted filename: {CATEGORY}_{TIMESIG}_{BPM}BPM_{KEY}_{ID}_{PACK}_{LAYER}_L{NUM}.mid
+///
+/// # Examples
+/// ```
+/// use pipeline::core::naming::generator::generate_production_layer_filename;
+///
+/// let filename = generate_production_layer_filename(
+///     "HIHAT",
+///     140.0,
+///     "Am",
+///     "000123",
+///     "6-8",
+///     "VintageDrums",
+///     "OpenHat",
+///     1
+/// );
+/// assert_eq!(filename, "HIHAT_6-8_140BPM_Am_000123_VintageDrums_OpenHat_L01.mid");
+/// ```
+pub fn generate_production_layer_filename(
+    category: &str,
+    bpm: f64,
+    key: &str,
+    file_id: &str,
+    timesig: &str,
+    pack_name: &str,
+    layer_name: &str,
+    layer_number: usize,
+) -> String {
+    let sanitized_category = sanitizer::sanitize_filename(&category.to_uppercase());
+    let sanitized_key = sanitizer::sanitize_filename(key);
+    let sanitized_pack = sanitizer::sanitize_filename(pack_name);
+    let sanitized_layer = sanitizer::sanitize_filename(layer_name);
+
+    let filename_base = templates::apply_template_extended(
+        &templates::NamingTemplate::Production,
+        &sanitized_category,
+        &sanitized_key,
+        bpm,
+        "",
+        file_id,
+        Some(timesig),
+        Some(&sanitized_pack),
+        None, // no original for split files
+        Some((&sanitized_layer, layer_number)),
+    );
+
+    sanitizer::ensure_mid_extension(&filename_base)
 }
 
 /// Extracts useful parts from original filename

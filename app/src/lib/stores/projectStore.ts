@@ -1,6 +1,6 @@
-import { writable, derived, get } from 'svelte/store';
+import { derived, get, writable } from 'svelte/store';
 import { api } from '$lib/api';
-import type { Track, MidiPattern } from '$lib/types';
+import type { MidiPattern, Track } from '$lib/types';
 
 // ============================================================================
 // PROJECT STATE ✅ NEW - Completely missing from v1.0
@@ -30,18 +30,12 @@ export const projectStore = writable<ProjectState>(initialState);
 
 export const selectedTrack = derived(
   projectStore,
-  ($project) => $project.tracks.find(t => t.id === $project.selectedTrackId) || null
+  ($project) => $project.tracks.find((t) => t.id === $project.selectedTrackId) || null
 );
 
-export const trackCount = derived(
-  projectStore,
-  ($project) => $project.tracks.length
-);
+export const trackCount = derived(projectStore, ($project) => $project.tracks.length);
 
-export const hasSelection = derived(
-  projectStore,
-  ($project) => $project.selectedTrackId !== null
-);
+export const hasSelection = derived(projectStore, ($project) => $project.selectedTrackId !== null);
 
 // ============================================================================
 // ACTIONS
@@ -51,7 +45,7 @@ export const projectActions = {
   async addTrack(fileId: number, channel: number) {
     try {
       const track = await api.sequencer.addTrack(fileId, channel);
-      projectStore.update(state => ({
+      projectStore.update((state) => ({
         ...state,
         tracks: [...state.tracks, track],
         hasUnsavedChanges: true,
@@ -66,9 +60,9 @@ export const projectActions = {
   async removeTrack(trackId: number) {
     try {
       await api.sequencer.removeTrack(trackId);
-      projectStore.update(state => ({
+      projectStore.update((state) => ({
         ...state,
-        tracks: state.tracks.filter(t => t.id !== trackId),
+        tracks: state.tracks.filter((t) => t.id !== trackId),
         selectedTrackId: state.selectedTrackId === trackId ? null : state.selectedTrackId,
         hasUnsavedChanges: true,
       }));
@@ -81,11 +75,9 @@ export const projectActions = {
   async updateTrack(trackId: number, properties: Partial<Track>) {
     try {
       await api.sequencer.updateTrack(trackId, properties);
-      projectStore.update(state => ({
+      projectStore.update((state) => ({
         ...state,
-        tracks: state.tracks.map(t =>
-          t.id === trackId ? { ...t, ...properties } : t
-        ),
+        tracks: state.tracks.map((t) => (t.id === trackId ? { ...t, ...properties } : t)),
         hasUnsavedChanges: true,
       }));
     } catch (error) {
@@ -95,11 +87,11 @@ export const projectActions = {
   },
 
   selectTrack(trackId: number | null) {
-    projectStore.update(state => ({ ...state, selectedTrackId: trackId }));
+    projectStore.update((state) => ({ ...state, selectedTrackId: trackId }));
   },
 
   copyPattern(pattern: MidiPattern) {
-    projectStore.update(state => ({ ...state, clipboardContent: pattern }));
+    projectStore.update((state) => ({ ...state, clipboardContent: pattern }));
   },
 
   pastePattern(): MidiPattern | null {
@@ -110,7 +102,7 @@ export const projectActions = {
   async loadTracks() {
     try {
       const tracks = await api.sequencer.getTracks();
-      projectStore.update(state => ({ ...state, tracks }));
+      projectStore.update((state) => ({ ...state, tracks }));
     } catch (error) {
       console.error('Failed to load tracks:', error);
       throw error;
@@ -120,7 +112,7 @@ export const projectActions = {
   async clearAllTracks() {
     try {
       await api.project.clearAllTracks();
-      projectStore.update(state => ({
+      projectStore.update((state) => ({
         ...state,
         tracks: [],
         selectedTrackId: null,
@@ -133,14 +125,54 @@ export const projectActions = {
   },
 
   markSaved() {
-    projectStore.update(state => ({ ...state, hasUnsavedChanges: false }));
+    projectStore.update((state) => ({ ...state, hasUnsavedChanges: false }));
   },
 
   markUnsaved() {
-    projectStore.update(state => ({ ...state, hasUnsavedChanges: true }));
+    projectStore.update((state) => ({ ...state, hasUnsavedChanges: true }));
   },
 
   setProjectName(name: string) {
-    projectStore.update(state => ({ ...state, projectName: name, hasUnsavedChanges: true }));
+    projectStore.update((state) => ({ ...state, projectName: name, hasUnsavedChanges: true }));
+  },
+
+  // Project file operations (Ctrl+N, Ctrl+O, Ctrl+S)
+  async newProject() {
+    const state = get(projectStore);
+    if (state.hasUnsavedChanges) {
+      const proceed = window.confirm('You have unsaved changes. Create new project anyway?');
+      if (!proceed) {return;}
+    }
+    try {
+      await api.project.create({ name: 'Untitled Project' });
+      projectStore.set({ ...initialState });
+    } catch (error) {
+      console.error('Failed to create new project:', error);
+      // Fallback: just reset state locally
+      projectStore.set({ ...initialState });
+    }
+  },
+
+  async openProject() {
+    const state = get(projectStore);
+    if (state.hasUnsavedChanges) {
+      const proceed = window.confirm('You have unsaved changes. Open another project anyway?');
+      if (!proceed) {return;}
+    }
+    try {
+      // Open project dialog and load selected project
+      await api.project.openProjectDialog();
+    } catch (error) {
+      console.error('Failed to open project:', error);
+    }
+  },
+
+  async saveProject() {
+    try {
+      await api.project.saveProject();
+      projectStore.update((s) => ({ ...s, hasUnsavedChanges: false }));
+    } catch (error) {
+      console.error('Failed to save project:', error);
+    }
   },
 };

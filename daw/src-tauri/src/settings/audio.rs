@@ -1,7 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub enum BufferSize {
     Samples32 = 32,
     Samples64 = 64,
@@ -13,7 +12,6 @@ pub enum BufferSize {
     Samples2048 = 2048,
     Samples4096 = 4096,
 }
-
 
 impl BufferSize {
     pub fn as_u32(self) -> u32 {
@@ -41,8 +39,7 @@ impl BufferSize {
     }
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub enum SampleRate {
     Hz44100 = 44100,
     #[default]
@@ -52,7 +49,6 @@ pub enum SampleRate {
     Hz176400 = 176400,
     Hz192000 = 192000,
 }
-
 
 impl SampleRate {
     pub fn as_u32(self) -> u32 {

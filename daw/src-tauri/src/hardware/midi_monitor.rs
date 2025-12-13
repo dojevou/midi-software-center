@@ -51,24 +51,11 @@ pub struct MidiEvent {
 
 impl MidiEvent {
     /// Create a new MIDI event
-    pub fn new(
-        timestamp: f64,
-        status: u8,
-        data1: u8,
-        data2: u8,
-        device_id: String,
-    ) -> Self {
+    pub fn new(timestamp: f64, status: u8, data1: u8, data2: u8, device_id: String) -> Self {
         let message_type = MidiMessageType::from_status(status);
         let channel = status & 0x0F;
 
-        Self {
-            timestamp,
-            message_type,
-            channel,
-            data1,
-            data2,
-            device_id,
-        }
+        Self { timestamp, message_type, channel, data1, data2, device_id }
     }
 
     /// Create a note on event
@@ -84,7 +71,13 @@ impl MidiEvent {
     }
 
     /// Create a note off event
-    pub fn note_off(timestamp: f64, channel: u8, note: u8, velocity: u8, device_id: String) -> Self {
+    pub fn note_off(
+        timestamp: f64,
+        channel: u8,
+        note: u8,
+        velocity: u8,
+        device_id: String,
+    ) -> Self {
         Self {
             timestamp,
             message_type: MidiMessageType::NoteOff,
@@ -96,7 +89,13 @@ impl MidiEvent {
     }
 
     /// Create a control change event
-    pub fn control_change(timestamp: f64, channel: u8, controller: u8, value: u8, device_id: String) -> Self {
+    pub fn control_change(
+        timestamp: f64,
+        channel: u8,
+        controller: u8,
+        value: u8,
+        device_id: String,
+    ) -> Self {
         Self {
             timestamp,
             message_type: MidiMessageType::ControlChange,
@@ -112,26 +111,26 @@ impl MidiEvent {
         match self.message_type {
             MidiMessageType::NoteOn => {
                 format!("Note On: {} velocity {}", self.data1, self.data2)
-            }
+            },
             MidiMessageType::NoteOff => {
                 format!("Note Off: {} velocity {}", self.data1, self.data2)
-            }
+            },
             MidiMessageType::ControlChange => {
                 format!("CC {}: {}", self.data1, self.data2)
-            }
+            },
             MidiMessageType::ProgramChange => {
                 format!("Program Change: {}", self.data1)
-            }
+            },
             MidiMessageType::PitchBend => {
                 let bend_value = (self.data2 as u16) << 7 | (self.data1 as u16);
                 format!("Pitch Bend: {}", bend_value)
-            }
+            },
             MidiMessageType::Aftertouch => {
                 format!("Aftertouch: note {} pressure {}", self.data1, self.data2)
-            }
+            },
             MidiMessageType::ChannelPressure => {
                 format!("Channel Pressure: {}", self.data1)
-            }
+            },
             MidiMessageType::SystemExclusive => "System Exclusive".to_string(),
             MidiMessageType::Unknown => "Unknown".to_string(),
         }
@@ -149,11 +148,7 @@ pub struct MidiMonitorState {
 impl MidiMonitorState {
     /// Create new monitor state
     pub fn new() -> Self {
-        Self {
-            is_recording: false,
-            event_history: Vec::new(),
-            max_history_size: 1000,
-        }
+        Self { is_recording: false, event_history: Vec::new(), max_history_size: 1000 }
     }
 
     /// Start monitoring/recording events
@@ -238,18 +233,12 @@ impl Default for MidiMonitorState {
 pub async fn start_monitoring(
     state: State<'_, Arc<RwLock<MidiMonitorState>>>,
 ) -> Result<(), String> {
-    start_monitoring_impl(&state)
-        .await
-        .map_err(|e| e.to_string())
+    start_monitoring_impl(&*state).await.map_err(|e| e.to_string())
 }
 
-async fn start_monitoring_impl(
-    state: &State<'_, Arc<RwLock<MidiMonitorState>>>,
-) -> Result<()> {
+pub async fn start_monitoring_impl(state: &Arc<RwLock<MidiMonitorState>>) -> Result<()> {
     let mut monitor_state = state.write().await;
-    monitor_state
-        .start()
-        .context("Failed to start monitoring")?;
+    monitor_state.start().context("Failed to start monitoring")?;
     Ok(())
 }
 
@@ -258,14 +247,10 @@ async fn start_monitoring_impl(
 pub async fn stop_monitoring(
     state: State<'_, Arc<RwLock<MidiMonitorState>>>,
 ) -> Result<(), String> {
-    stop_monitoring_impl(&state)
-        .await
-        .map_err(|e| e.to_string())
+    stop_monitoring_impl(&*state).await.map_err(|e| e.to_string())
 }
 
-async fn stop_monitoring_impl(
-    state: &State<'_, Arc<RwLock<MidiMonitorState>>>,
-) -> Result<()> {
+pub async fn stop_monitoring_impl(state: &Arc<RwLock<MidiMonitorState>>) -> Result<()> {
     let mut monitor_state = state.write().await;
     monitor_state.stop().context("Failed to stop monitoring")?;
     Ok(())
@@ -273,15 +258,11 @@ async fn stop_monitoring_impl(
 
 /// Clear all recorded events
 #[tauri::command]
-pub async fn clear_events(
-    state: State<'_, Arc<RwLock<MidiMonitorState>>>,
-) -> Result<(), String> {
-    clear_events_impl(&state).await.map_err(|e| e.to_string())
+pub async fn clear_events(state: State<'_, Arc<RwLock<MidiMonitorState>>>) -> Result<(), String> {
+    clear_events_impl(&*state).await.map_err(|e| e.to_string())
 }
 
-async fn clear_events_impl(
-    state: &State<'_, Arc<RwLock<MidiMonitorState>>>,
-) -> Result<()> {
+pub async fn clear_events_impl(state: &Arc<RwLock<MidiMonitorState>>) -> Result<()> {
     let mut monitor_state = state.write().await;
     monitor_state.clear();
     Ok(())
@@ -293,14 +274,12 @@ pub async fn get_events(
     limit: i32,
     state: State<'_, Arc<RwLock<MidiMonitorState>>>,
 ) -> Result<Vec<MidiEvent>, String> {
-    get_events_impl(limit, &state)
-        .await
-        .map_err(|e| e.to_string())
+    get_events_impl(limit, &*state).await.map_err(|e| e.to_string())
 }
 
-async fn get_events_impl(
+pub async fn get_events_impl(
     limit: i32,
-    state: &State<'_, Arc<RwLock<MidiMonitorState>>>,
+    state: &Arc<RwLock<MidiMonitorState>>,
 ) -> Result<Vec<MidiEvent>> {
     let monitor_state = state.read().await;
 
@@ -319,14 +298,8 @@ mod tests {
 
     #[test]
     fn test_message_type_from_status() {
-        assert_eq!(
-            MidiMessageType::from_status(0x90),
-            MidiMessageType::NoteOn
-        );
-        assert_eq!(
-            MidiMessageType::from_status(0x80),
-            MidiMessageType::NoteOff
-        );
+        assert_eq!(MidiMessageType::from_status(0x90), MidiMessageType::NoteOn);
+        assert_eq!(MidiMessageType::from_status(0x80), MidiMessageType::NoteOff);
         assert_eq!(
             MidiMessageType::from_status(0xB0),
             MidiMessageType::ControlChange
@@ -517,9 +490,8 @@ mod tests {
     #[tokio::test]
     async fn test_start_monitoring_impl() {
         let state = Arc::new(RwLock::new(MidiMonitorState::new()));
-        let tauri_state = State::from(&state);
 
-        let result = start_monitoring_impl(&tauri_state).await;
+        let result = start_monitoring_impl(&state).await;
         assert!(result.is_ok());
 
         let s = state.read().await;
@@ -534,8 +506,7 @@ mod tests {
             s.start().unwrap();
         }
 
-        let tauri_state = State::from(&state);
-        let result = stop_monitoring_impl(&tauri_state).await;
+        let result = stop_monitoring_impl(&state).await;
         assert!(result.is_ok());
 
         let s = state.read().await;
@@ -552,8 +523,7 @@ mod tests {
             s.add_event(event);
         }
 
-        let tauri_state = State::from(&state);
-        let result = clear_events_impl(&tauri_state).await;
+        let result = clear_events_impl(&state).await;
         assert!(result.is_ok());
 
         let s = state.read().await;
@@ -572,12 +542,11 @@ mod tests {
             }
         }
 
-        let tauri_state = State::from(&state);
-        let events = get_events_impl(-1, &tauri_state).await;
+        let events = get_events_impl(-1, &state).await;
         assert!(events.is_ok());
         assert_eq!(events.unwrap().len(), 5);
 
-        let events = get_events_impl(3, &tauri_state).await;
+        let events = get_events_impl(3, &state).await;
         assert!(events.is_ok());
         assert_eq!(events.unwrap().len(), 3);
     }

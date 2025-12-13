@@ -1,0 +1,19 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                    INSERT INTO track_splits (\n                        parent_file_id, split_file_id, track_number,\n                        track_name, instrument, note_count\n                    ) VALUES ($1, $2, $3, $4, $5, $6)\n                    ON CONFLICT (parent_file_id, split_file_id) DO NOTHING\n                    ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8",
+        "Int4",
+        "Text",
+        "Text",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "4f23f5992cd65d415dd2fd19dc98afc67c462d53367cc617cfa4532cd07516e9"
+}

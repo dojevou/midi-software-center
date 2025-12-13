@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                INSERT INTO file_tags (file_id, tag_id)\n                VALUES ($1, $2)\n                ON CONFLICT (file_id, tag_id) DO NOTHING\n                ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "6d3129013c67230869a1f161da178a38e45027294692aae1424857194c32c9c5"
+}

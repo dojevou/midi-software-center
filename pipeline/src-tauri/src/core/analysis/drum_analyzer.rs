@@ -470,7 +470,7 @@ pub fn extract_bpm_from_filename(file_name: &str) -> Option<f64> {
         let before_bpm = &name_lower[..pos].trim();
         if let Some(num_start) = before_bpm.rfind(|c: char| !c.is_ascii_digit()) {
             if let Ok(bpm) = before_bpm[num_start + 1..].parse::<f64>() {
-                if (30.0..=300.0).contains(&bpm) {
+                if (40.0..=220.0).contains(&bpm) {
                     return Some(bpm);
                 }
             }
@@ -480,7 +480,7 @@ pub fn extract_bpm_from_filename(file_name: &str) -> Option<f64> {
     // Pattern 2: "XXX_" at start
     if file_name.len() >= 4 && file_name.chars().nth(3) == Some('_') {
         if let Ok(bpm) = file_name[..3].parse::<f64>() {
-            if (30.0..=300.0).contains(&bpm) {
+            if (40.0..=220.0).contains(&bpm) {
                 return Some(bpm);
             }
         }
@@ -489,7 +489,7 @@ pub fn extract_bpm_from_filename(file_name: &str) -> Option<f64> {
     // Pattern 3: "XXX " at start (space after number)
     if file_name.len() >= 4 && file_name.chars().nth(3) == Some(' ') {
         if let Ok(bpm) = file_name[..3].parse::<f64>() {
-            if (30.0..=300.0).contains(&bpm) {
+            if (40.0..=220.0).contains(&bpm) {
                 return Some(bpm);
             }
         }
@@ -501,7 +501,7 @@ pub fn extract_bpm_from_filename(file_name: &str) -> Option<f64> {
         // Check if segment is exactly 3 digits
         if segment.len() == 3 && segment.chars().all(|c| c.is_ascii_digit()) {
             if let Ok(bpm) = segment.parse::<f64>() {
-                if (30.0..=300.0).contains(&bpm) {
+                if (40.0..=220.0).contains(&bpm) {
                     return Some(bpm);
                 }
             }

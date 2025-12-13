@@ -1,4 +1,3 @@
-
 /// Track Splitter - TRUSTY MODULE
 ///
 /// Pure logic for splitting multi-track MIDI files into individual single-track files.
@@ -266,7 +265,10 @@ pub fn create_single_track_midi(
 /// Track name if found, `None` otherwise
 pub fn extract_track_name(track: &Track) -> Option<String> {
     for event in track.iter() {
-        if let TrackEventKind::Meta(MetaMessage::TrackName(name) | MetaMessage::InstrumentName(name)) = &event.kind {
+        if let TrackEventKind::Meta(
+            MetaMessage::TrackName(name) | MetaMessage::InstrumentName(name),
+        ) = &event.kind
+        {
             // Convert bytes to string
             if let Ok(name_str) = String::from_utf8(name.to_vec()) {
                 let trimmed = name_str.trim();

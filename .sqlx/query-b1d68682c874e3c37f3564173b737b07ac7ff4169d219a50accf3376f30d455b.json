@@ -1,0 +1,32 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                INSERT INTO files (\n                    filepath, filename, original_filename, content_hash, file_size_bytes,\n                    parent_file_id, track_number, format, num_tracks,\n                    ticks_per_quarter_note, duration_ticks\n                )\n                VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11)\n                ON CONFLICT (filepath) DO NOTHING\n                RETURNING id\n                ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Bytea",
+        "Int8",
+        "Int8",
+        "Int2",
+        "Int2",
+        "Int2",
+        "Int4",
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "b1d68682c874e3c37f3564173b737b07ac7ff4169d219a50accf3376f30d455b"
+}

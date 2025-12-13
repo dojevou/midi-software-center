@@ -16,8 +16,8 @@ use std::sync::OnceLock;
 /// Filename metadata extracted from a MIDI file name
 #[derive(Debug, Clone, PartialEq)]
 pub struct FilenameMetadata {
-    /// BPM value extracted from filename (30-300 range)
-    pub bpm: Option<f32>,
+    /// BPM value extracted from filename (40-220 range)
+    pub bpm: Option<f64>,
     /// Musical key signature (e.g., "Cm", "Am", "F#")
     pub key: Option<String>,
     /// Genre tags (house, techno, dnb, etc.)
@@ -73,7 +73,7 @@ fn get_bpm_regex() -> &'static Regex {
 /// - Explicit: "120_BPM_house_loop.mid", "Drums_140bpm.mid"
 /// - Implicit: "house_120.mid", "bass_140.mid"
 ///
-/// Valid range: 30-300 BPM
+/// Valid range: 40-220 BPM
 ///
 /// # Examples
 /// ```
@@ -84,7 +84,7 @@ fn get_bpm_regex() -> &'static Regex {
 /// assert_eq!(extract_bpm_from_filename("drums_128_beats.mid"), Some(128.0));
 /// assert_eq!(extract_bpm_from_filename("no_bpm_here.mid"), None);
 /// ```
-pub fn extract_bpm_from_filename(filename: &str) -> Option<f32> {
+pub fn extract_bpm_from_filename(filename: &str) -> Option<f64> {
     // Use find_iter to get all matches and pick the best one
     // Prioritize explicit BPM notation (with "bpm", "beats", "tempo")
     // over implicit standalone numbers
@@ -93,8 +93,8 @@ pub fn extract_bpm_from_filename(filename: &str) -> Option<f32> {
     // First, try to find explicit BPM notation
     for caps in regex.captures_iter(filename) {
         if let Some(m) = caps.get(1) {
-            if let Ok(bpm) = m.as_str().parse::<f32>() {
-                if (30.0..=300.0).contains(&bpm) {
+            if let Ok(bpm) = m.as_str().parse::<f64>() {
+                if (40.0..=220.0).contains(&bpm) {
                     return Some(bpm);
                 }
             }
@@ -104,8 +104,8 @@ pub fn extract_bpm_from_filename(filename: &str) -> Option<f32> {
     // If no explicit BPM found, try implicit numbers
     for caps in regex.captures_iter(filename) {
         if let Some(m) = caps.get(3) {
-            if let Ok(bpm) = m.as_str().parse::<f32>() {
-                if (30.0..=300.0).contains(&bpm) {
+            if let Ok(bpm) = m.as_str().parse::<f64>() {
+                if (40.0..=220.0).contains(&bpm) {
                     return Some(bpm);
                 }
             }
@@ -342,7 +342,7 @@ pub fn extract_leading_number(filename: &str) -> Option<u32> {
 pub enum NumberType {
     /// Track number (1-99)
     TrackNumber,
-    /// Could be BPM value (30-300)
+    /// Could be BPM value (40-220)
     PossibleBPM,
     /// Unknown purpose
     Unknown,
@@ -361,8 +361,10 @@ pub enum NumberType {
 /// ```
 pub fn classify_leading_number(num: u32) -> NumberType {
     match num {
-        30..=300 => NumberType::PossibleBPM,
-        1..=29 => NumberType::TrackNumber,
+        // Track numbers are typically 1-99 (most sample packs number tracks up to 99)
+        1..=99 => NumberType::TrackNumber,
+        // BPM range: 100-220 BPM is typical for music (100+ to avoid track number overlap)
+        100..=220 => NumberType::PossibleBPM,
         _ => NumberType::Unknown,
     }
 }

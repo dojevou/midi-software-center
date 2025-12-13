@@ -1,0 +1,20 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE musical_metadata\n            SET chord_progression = $1,\n                chord_types = $2,\n                has_seventh_chords = $3,\n                has_extended_chords = $4,\n                chord_change_rate = $5,\n                chord_complexity_score = $6\n            WHERE file_id = $7\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Jsonb",
+        "TextArray",
+        "Bool",
+        "Bool",
+        "Numeric",
+        "Numeric",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "0ea8c3947082699dc220e9968c542c30a755b21e5571ca9c3747a567d1c4c3ec"
+}

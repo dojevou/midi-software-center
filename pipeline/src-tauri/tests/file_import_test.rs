@@ -32,13 +32,11 @@
 /// - File size overflow handling (> 2GB edge case)
 /// - Unicode filename normalization and path sanitization
 use midi_pipeline::commands::file_import::{
-    import_directory_impl, import_single_file_impl,
-    ImportProgress,
+    import_directory_impl, import_single_file_impl, ImportProgress,
 };
 use midi_pipeline::{AppState, Database};
 use std::path::PathBuf;
 use std::sync::Arc;
-use tauri::Emitter;
 use tokio::sync::Mutex;
 
 // Test Database Helper
@@ -303,41 +301,18 @@ impl MockWindow {
     async fn event_count(&self, event_name: &str) -> usize {
         self.get_events(event_name).await.len()
     }
-}
 
-impl Emitter for MockWindow {
-    fn emit<S: serde::Serialize + Clone>(&self, event: &str, payload: S) -> tauri::Result<()> {
+    /// Emit an event - Mock implementation without requiring Tauri Emitter trait
+    async fn emit<S: serde::Serialize>(&self, event: &str, payload: S) -> Result<(), String> {
         let payload_json =
-            serde_json::to_string(&payload).map_err(|e| tauri::Error::Emit(e.to_string()))?;
+            serde_json::to_string(&payload).map_err(|e| format!("Serialization error: {}", e))?;
 
-        let events_clone = Arc::clone(&self.events);
-        let event_name = event.to_string();
-
-        tokio::spawn(async move {
-            events_clone
-                .lock()
-                .await
-                .push(MockEvent { name: event_name, payload: payload_json });
-        });
+        self.events
+            .lock()
+            .await
+            .push(MockEvent { name: event.to_string(), payload: payload_json });
 
         Ok(())
-    }
-
-    fn emit_to<S: serde::Serialize + Clone>(
-        &self,
-        _target: &str,
-        event: &str,
-        payload: S,
-    ) -> tauri::Result<()> {
-        self.emit(event, payload)
-    }
-
-    fn emit_filter<S, F>(&self, event: &str, payload: S, _filter: F) -> tauri::Result<()>
-    where
-        S: serde::Serialize + Clone,
-        F: Fn(&tauri::EventTarget) -> bool,
-    {
-        self.emit(event, payload)
     }
 }
 
@@ -514,9 +489,7 @@ async fn test_import_single_file_invalid_midi_format() {
 
     assert!(result.is_err(), "Import should fail for invalid MIDI");
     let err = result.unwrap_err();
-    assert!(
-        err.contains("process") || err.contains("parse") || result.unwrap_err().contains("Failed")
-    );
+    assert!(err.contains("process") || err.contains("parse") || err.contains("Failed"));
 
     db.cleanup().await;
 }
@@ -1769,10 +1742,10 @@ async fn test_import_single_file_disk_space_exhaustion() {
     // Write may fail if disk space is low
     let write_result = tokio::fs::write(&large_path, large_data).await;
 
-    if write_result.is_err() {
+    if let Err(e) = write_result {
+        let err_msg = e.to_string();
         assert!(
-            write_result.unwrap_err().to_string().contains("No space")
-                || write_result.unwrap_err().to_string().contains("space"),
+            err_msg.contains("No space") || err_msg.contains("space"),
             "Should detect disk space issues"
         );
     }
@@ -1803,8 +1776,9 @@ async fn test_import_single_file_race_condition_deleted() {
         result.is_err(),
         "Should fail when file is deleted during import"
     );
+    let err = result.unwrap_err();
     assert!(
-        result.unwrap_err().contains("not found") || result.unwrap_err().contains("No such file"),
+        err.contains("not found") || err.contains("No such file"),
         "Error should indicate file not found"
     );
 
@@ -1846,10 +1820,9 @@ async fn test_import_single_file_malformed_track_data() {
         import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state).await;
 
     assert!(result.is_err(), "Should fail with corrupted track data");
+    let err = result.unwrap_err();
     assert!(
-        result.unwrap_err().contains("process")
-            || result.unwrap_err().contains("parse")
-            || result.unwrap_err().contains("Failed"),
+        err.contains("process") || err.contains("parse") || err.contains("Failed"),
         "Error should indicate processing failure"
     );
 
@@ -1947,9 +1920,9 @@ async fn test_import_single_file_invalid_chars_db_insertion() {
         import_single_file_impl(file_path.to_str().unwrap().to_string(), None, &state).await;
 
     // Should either succeed with sanitization or fail gracefully
-    if result.is_err() {
+    if let Err(err) = result {
         assert!(
-            result.unwrap_err().contains("character") || result.unwrap_err().contains("invalid"),
+            err.contains("character") || err.contains("invalid"),
             "Should indicate character handling issue"
         );
     }
@@ -2074,9 +2047,11 @@ async fn test_import_single_file_invalid_permissions() {
     #[cfg(unix)]
     {
         assert!(result.is_err(), "Should fail with permission denied");
+        let err = result.unwrap_err();
         assert!(
-            result.unwrap_err().contains("permission") || result.unwrap_err().contains("denied"),
-            "Error should indicate permission issue"
+            err.contains("permission") || err.contains("denied"),
+            "Error should indicate permission issue: {}",
+            err
         );
     }
 
@@ -2106,10 +2081,11 @@ async fn test_import_single_file_symlink_broken() {
             import_single_file_impl(symlink_path.to_str().unwrap().to_string(), None, &state).await;
 
         assert!(result.is_err(), "Broken symlink should fail");
+        let err = result.unwrap_err();
         assert!(
-            result.unwrap_err().contains("not found")
-                || result.unwrap_err().contains("No such file"),
-            "Should indicate target not found"
+            err.contains("not found") || err.contains("No such file"),
+            "Should indicate target not found: {}",
+            err
         );
     }
 

@@ -1,0 +1,261 @@
+================================================================================
+PIPELINE ERROR HANDLING AUDIT - QUICK REFERENCE
+================================================================================
+
+All 14 issues identified with exact locations for easy fixing:
+
+================================================================================
+CRITICAL ISSUES (5) - FIX FIRST
+================================================================================
+
+1. SILENT FILE LOSS - Semaphore closure
+   File: /pipeline/src-tauri/src/commands/file_import.rs
+   Lines: 262-268
+   Problem: Files silently disappear when semaphore closes
+   Pattern: Err(_) => { eprintln!("..."); return; }  // Files not tracked
+   Fix: Track skipped files: skipped.fetch_add(1, Ordering::SeqCst);
+
+2. DISK SPACE LEAK - Cleanup ignored
+   File: /pipeline/src-tauri/src/commands/archive_import.rs
+   Lines: 206, 228
+   Problem: Temp directories not deleted on error
+   Pattern: let _ = std::fs::remove_dir_all(&temp_dir);
+   Fix: if let Err(e) = ... { eprintln!("ERROR: {}", e); }
+
+3. PROCESS PANIC - Bare unwrap
+   File: /pipeline/src-tauri/src/commands/progress.rs
+   Lines: 277, 302
+   Problem: Can panic if mutex poisoned
+   Pattern: *tracker.start_time.lock().unwrap() = ...
+   Fix: match lock() { Ok(x) => x, Err(e) => poisoned.into_inner() }
+
+4. SILENT DATA LOSS - Database failure
+   File: /pipeline/src-tauri/src/commands/analyze.rs
+   Lines: 267-269
+   Problem: Batch insert fails but operation continues
+   Pattern: if let Err(e) = batch_insert(...) { errors.push(...); }
+   Fix: Return Err(...) to abort operation
+
+5. UI COMMUNICATION FAILURE - Window emit ignored
+   File: /pipeline/src-tauri/src/commands/file_import.rs
+   Line: 174-177
+   File: /pipeline/src-tauri/src/commands/analyze.rs
+   Line: 233-239
+   Problem: Frontend events fail silently
+   Pattern: let _ = window.emit(...);
+   Fix: if let Err(e) = window.emit(...) { eprintln!("ERROR: {}", e); }
+
+================================================================================
+HIGH SEVERITY ISSUES (6) - FIX SECOND
+================================================================================
+
+6. SEMAPHORE CLOSURE NOT TRACKED
+   File: /pipeline/src-tauri/src/commands/analyze.rs
+   Lines: 217-222
+   Problem: Same as issue #1 but in analyze module
+   Pattern: Same as issue #1
+   Fix: Same as issue #1
+
+7. MUTEX POISONING SILENT RECOVERY
+   File: /pipeline/src-tauri/src/commands/progress.rs
+   Lines: 56, 64, 71, 107, 140, 219, 238
+   Problem: Poisoning silently recovered without logging
+   Pattern: .unwrap_or_else(|poisoned| poisoned.into_inner())
+   Fix: match lock() { Ok(x) => x, Err(_) => { eprintln!("ERROR: poisoned"); e.into_inner() } }
+
+8. UNUSED PROGRESS CALCULATIONS
+   File: /pipeline/src-tauri/src/commands/file_import.rs
+   Lines: 276-277
+   Problem: Progress calculated but unused (not emitted)
+   Pattern: let _elapsed = ...; let _rate = ...;
+   Fix: Document why unused OR implement progress emission
+
+9. BATCH INSERT ERROR SILENT
+   File: /pipeline/src-tauri/src/commands/file_import.rs
+   Lines: 308-310
+   Problem: Batch insert failure logged but not tracked in counters
+   Pattern: if let Err(e) = ... { errors.lock().await.push(...); }
+   Fix: Also increment skipped counter: skipped.fetch_add(batch.len(), ...)
+
+10. ARCHIVE ERROR NOT LOGGED
+    File: /pipeline/src-tauri/src/commands/archive_import.rs
+    Lines: 147-153
+    Problem: Archive processing error not logged to stderr
+    Pattern: status.unwrap_or_else(|e| ArchiveStatus { error_message: Some(e), ... })
+    Fix: eprintln!("ERROR: Archive failed: {}", e); before creating fallback status
+
+================================================================================
+MEDIUM SEVERITY ISSUES (3) - FIX THIRD
+================================================================================
+
+11. TEST ERROR CONTEXT MISSING
+    File: /pipeline/src-tauri/src/commands/file_import.rs
+    Lines: 912, 979
+    Problem: Test .expect() messages don't explain context
+    Pattern: .expect("Failed to fetch tags from database");
+    Fix: .expect("Failed to fetch tags - ensure test DB is running");
+
+12. AUTO-TAGGER INITIALIZATION ERROR
+    File: /pipeline/src-tauri/src/commands/file_import.rs
+    Lines: 463-464
+    Problem: Auto-tagger failure stops entire import
+    Pattern: AutoTagger::new().map_err(|e| format!("Failed to initialize: {}", e))?;
+    Fix: Handle gracefully - continue without tagging: match { Ok(t) => t, Err(e) => { warn!(...); Vec::new() } }
+
+13. ERROR CONTEXT MISSING
+    File: /pipeline/src-tauri/src/commands/file_import.rs
+    Line: 419
+    Problem: MIDI parse error doesn't include filename
+    Pattern: let midi_data = parse_midi_file(&file_bytes)?;
+    Fix: .map_err(|e| format!("Failed to parse MIDI {}: {}", file_path.display(), e))?;
+
+================================================================================
+PATTERN-BASED FIXES
+================================================================================
+
+PATTERN 1: Ignored Results
+  LOCATIONS: file_import.rs:174, 206, 228, 308-310
+             analyze.rs:233, 267-269
+             archive_import.rs:206, 228
+  
+  BEFORE:
+    let _ = operation().await;
+
+  AFTER:
+    if let Err(e) = operation().await {
+        eprintln!("ERROR: Operation failed: {}", e);
+        // Additional tracking if needed
+    }
+
+PATTERN 2: Mutex Unwrap
+  LOCATIONS: progress.rs:56, 64, 71, 107, 140, 219, 238, 277, 302
+
+  BEFORE:
+    lock().unwrap()
+
+  AFTER:
+    match lock() {
+        Ok(x) => x,
+        Err(poisoned) => {
+            eprintln!("ERROR: Mutex poisoned, recovering...");
+            poisoned.into_inner()
+        }
+    }
+
+PATTERN 3: Semaphore Error
+  LOCATIONS: file_import.rs:262-268, analyze.rs:217-222
+
+  BEFORE:
+    Err(_) => { eprintln!("..."); return; }
+
+  AFTER:
+    Err(e) => {
+        errors.lock().await.push(format!("Error: {}", e));
+        skipped.fetch_add(1, Ordering::SeqCst);
+        return;
+    }
+
+PATTERN 4: Critical Database Operation
+  LOCATIONS: analyze.rs:267-269
+
+  BEFORE:
+    if let Err(e) = operation().await {
+        errors.push(e.to_string());
+    }
+
+  AFTER:
+    match operation().await {
+        Ok(_) => {},
+        Err(e) => {
+            eprintln!("ERROR: Critical operation failed: {}", e);
+            return Err(format!("Operation failed: {}", e));
+        }
+    }
+
+================================================================================
+FILES AND LINE NUMBERS
+================================================================================
+
+file_import.rs:
+  174-177 : Window emit result ignored
+  262-268 : Semaphore closure not tracked
+  276-277 : Progress variables unused
+  308-310 : Batch error not tracked in counters
+  419     : MIDI parse error missing context
+  463-464 : Auto-tagger error handling
+  912     : Test expect needs context
+  979     : Test expect needs context
+
+analyze.rs:
+  217-222 : Semaphore closure not tracked
+  233-239 : Window emit result ignored
+  267-269 : Database error doesn't abort
+
+archive_import.rs:
+  147-153 : Archive error not logged to stderr
+  206     : Cleanup error ignored
+  228     : Cleanup error ignored
+
+progress.rs:
+  56      : Mutex lock unwrap_or_else
+  64      : Mutex lock unwrap_or_else
+  71      : Mutex lock unwrap_or_else
+  107     : Mutex lock unwrap_or_else
+  140     : Mutex lock unwrap_or_else
+  219     : Mutex lock unwrap_or_else
+  238     : Mutex lock unwrap_or_else
+  277     : Bare unwrap()
+  302     : Bare unwrap()
+
+================================================================================
+TESTING EACH FIX
+================================================================================
+
+After fixing each issue, test with:
+
+1. Unit tests pass:
+   cargo test --package pipeline --lib -- --test-threads=1
+
+2. Integration tests pass:
+   cargo test --package pipeline -- --test-threads=1
+
+3. Manual testing scenarios:
+   - Import with filesystem error
+   - Archive with cleanup permission denied
+   - Database with connection lost
+   - Frontend with window closed
+   - Thread panic inducing mutex poisoning
+
+4. Check stderr for all error messages
+5. Check final summaries for accuracy
+
+================================================================================
+COMPLETION CHECKLIST
+================================================================================
+
+Critical (5 issues):
+  [ ] file_import.rs:262-268 - Semaphore closure
+  [ ] archive_import.rs:206, 228 - Cleanup errors
+  [ ] progress.rs:277, 302 - Bare unwrap
+  [ ] analyze.rs:267-269 - Database error abort
+  [ ] file_import.rs:174-177, analyze.rs:233-239 - Window emit
+
+High (6 issues):
+  [ ] analyze.rs:217-222 - Semaphore closure
+  [ ] progress.rs:56-238 - Mutex poisoning
+  [ ] file_import.rs:276-277 - Unused progress
+  [ ] file_import.rs:308-310 - Batch error tracking
+  [ ] archive_import.rs:147-153 - Archive error logging
+
+Medium (3 issues):
+  [ ] file_import.rs:912, 979 - Test context
+  [ ] file_import.rs:463-464 - Auto-tagger graceful
+  [ ] file_import.rs:419 - Error context
+
+Testing:
+  [ ] All tests pass
+  [ ] Manual error scenarios tested
+  [ ] Stderr output verified
+  [ ] Summaries accurate
+
+================================================================================

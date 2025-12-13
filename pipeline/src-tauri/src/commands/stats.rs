@@ -1,4 +1,3 @@
-
 /// Statistics command handlers - GROWN-UP SCRIPT ARCHETYPE
 ///
 /// PURPOSE: Database statistics and metrics

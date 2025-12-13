@@ -1,4 +1,3 @@
-
 /// BLAKE3 hashing module for file content deduplication and integrity verification.
 ///
 /// This is a **Trusty Module** with pure hashing logic.

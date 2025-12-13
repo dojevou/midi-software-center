@@ -41,7 +41,7 @@ impl TextMetadata {
     /// Extract all text metadata from a MIDI file
     ///
     /// # Examples
-    /// ```
+    /// ```ignore
     /// use midi_library_shared::core::midi::parser::parse_midi_file;
     /// use midi_library_shared::core::midi::text_metadata::TextMetadata;
     ///

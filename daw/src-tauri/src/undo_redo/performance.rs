@@ -1,4 +1,3 @@
-
 /// Performance Optimization - Trusty Module
 ///
 /// Command compression and memory management for optimal performance.
@@ -11,10 +10,7 @@ impl CommandCompressor {
     /// Try to compress two commands into one
     ///
     /// Returns true if compression was successful.
-    pub fn compress(
-        target: &mut Box<dyn Command>,
-        source: &dyn Command,
-    ) -> UndoRedoResult<bool> {
+    pub fn compress(target: &mut Box<dyn Command>, source: &dyn Command) -> UndoRedoResult<bool> {
         if target.can_merge_with(source) {
             target.merge_with(source)?;
             Ok(true)
@@ -244,7 +240,10 @@ mod tests {
         let cmd1: Box<dyn Command> = Box::new(MockCommand::mergeable(100));
         let cmd2: Box<dyn Command> = Box::new(MockCommand::mergeable(50));
 
-        assert!(CommandCompressor::can_compress(cmd1.as_ref(), cmd2.as_ref()));
+        assert!(CommandCompressor::can_compress(
+            cmd1.as_ref(),
+            cmd2.as_ref()
+        ));
     }
 
     #[test]
@@ -252,7 +251,10 @@ mod tests {
         let cmd1: Box<dyn Command> = Box::new(MockCommand::new(100));
         let cmd2: Box<dyn Command> = Box::new(MockCommand::new(50));
 
-        assert!(!CommandCompressor::can_compress(cmd1.as_ref(), cmd2.as_ref()));
+        assert!(!CommandCompressor::can_compress(
+            cmd1.as_ref(),
+            cmd2.as_ref()
+        ));
     }
 
     #[test]

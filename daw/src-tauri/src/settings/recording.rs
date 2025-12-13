@@ -1,14 +1,12 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub enum RecordingFormat {
     #[default]
     Wav,
     Mp3,
     Flac,
 }
-
 
 impl RecordingFormat {
     pub fn extension(&self) -> &'static str {
@@ -73,10 +71,12 @@ impl RecordingSettings {
             return Err("Punch out bar must be greater than 0".to_string());
         }
 
-        if self.auto_punch_in_enabled && self.auto_punch_out_enabled
-            && self.punch_out_bar <= self.punch_in_bar {
-                return Err("Punch out bar must be after punch in bar".to_string());
-            }
+        if self.auto_punch_in_enabled
+            && self.auto_punch_out_enabled
+            && self.punch_out_bar <= self.punch_in_bar
+        {
+            return Err("Punch out bar must be after punch in bar".to_string());
+        }
 
         Ok(())
     }

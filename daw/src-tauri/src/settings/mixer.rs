@@ -1,7 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub enum MeteringMode {
     Peak,
     Rms,
@@ -9,15 +8,12 @@ pub enum MeteringMode {
     Both,
 }
 
-
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub enum FaderType {
     Linear,
     #[default]
     Exponential,
 }
-
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MixerSettings {

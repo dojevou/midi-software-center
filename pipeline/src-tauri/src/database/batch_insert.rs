@@ -1,4 +1,3 @@
-
 /// Batch Database Insert Operations
 ///
 /// Architecture: Grown-up Script (service layer with database access)
@@ -25,7 +24,9 @@
 use crate::core::performance::concurrency::calculate_all_settings;
 use serde::{Deserialize, Serialize};
 use sqlx::{PgPool, Postgres, Transaction};
+use std::sync::Arc;
 use thiserror::Error;
+use tokio::sync::Mutex;
 
 //=============================================================================
 // ERROR TYPES
@@ -201,9 +202,16 @@ impl MusicalMetadata {
 ///
 /// All operations use transactions with automatic rollback on error.
 /// If any record in a batch fails, the entire batch is rolled back.
+///
+/// # Concurrency Safety
+///
+/// Uses a mutex to serialize database writes, preventing deadlocks when
+/// multiple workers attempt simultaneous batch inserts. File processing
+/// can still happen in parallel - only the final database INSERT is serialized.
 pub struct BatchInserter {
     pool: PgPool,
     batch_size: usize,
+    write_mutex: Arc<Mutex<()>>,
 }
 
 impl BatchInserter {
@@ -220,7 +228,7 @@ impl BatchInserter {
     /// let inserter = BatchInserter::new(pool, 1000);
     /// ```
     pub fn new(pool: PgPool, batch_size: usize) -> Self {
-        Self { pool, batch_size }
+        Self { pool, batch_size, write_mutex: Arc::new(Mutex::new(())) }
     }
 
     /// Create with default batch size (1000)
@@ -404,6 +412,9 @@ impl BatchInserter {
         for (file_chunk, meta_chunk) in
             files.chunks(self.batch_size).zip(metadata.chunks(self.batch_size))
         {
+            // Acquire write lock to serialize database operations
+            let _guard = self.write_mutex.lock().await;
+
             let mut tx = self.pool.begin().await?;
 
             // Insert files and get IDs
@@ -437,7 +448,14 @@ impl BatchInserter {
     //=========================================================================
 
     /// Insert a single chunk of files (internal method)
+    ///
+    /// Uses write mutex to prevent concurrent INSERT operations that could
+    /// cause database deadlocks. Multiple workers can process files in parallel,
+    /// but only one worker can write to the database at a time.
     async fn insert_files_chunk(&self, files: &[FileRecord]) -> Result<Vec<i64>> {
+        // Acquire write lock to serialize database operations
+        let _guard = self.write_mutex.lock().await;
+
         let mut tx = self.pool.begin().await?;
         let ids = self.insert_files_in_transaction(&mut tx, files).await?;
         tx.commit().await?;
@@ -483,7 +501,13 @@ impl BatchInserter {
     }
 
     /// Insert a single chunk of metadata (internal method)
+    ///
+    /// Uses write mutex to prevent concurrent INSERT operations that could
+    /// cause database deadlocks.
     async fn insert_metadata_chunk(&self, metadata: &[MusicalMetadata]) -> Result<()> {
+        // Acquire write lock to serialize database operations
+        let _guard = self.write_mutex.lock().await;
+
         let mut tx = self.pool.begin().await?;
         self.insert_metadata_in_transaction(&mut tx, metadata).await?;
         tx.commit().await?;

@@ -1,4 +1,3 @@
-
 /// Error Handling Module - PURE FUNCTION ARCHETYPE
 ///
 /// PURPOSE: Transform and convert error types for Tauri commands
@@ -49,9 +48,15 @@ pub enum AppError {
     /// MIDI parsing or analysis error
     MidiError(String),
 
+    /// Configuration error
+    Config(String),
+
     /// Generic application error
     GeneralError(String),
 }
+
+/// Type alias for pipeline-specific errors
+pub type PipelineError = AppError;
 
 // =============================================================================
 // DISPLAY TRAIT - Pure transformation to string representation
@@ -65,6 +70,7 @@ impl fmt::Display for AppError {
             AppError::ValidationError(msg) => write!(f, "Validation error: {}", msg),
             AppError::IOError(e) => write!(f, "I/O error: {}", e),
             AppError::MidiError(msg) => write!(f, "MIDI error: {}", msg),
+            AppError::Config(msg) => write!(f, "Configuration error: {}", msg),
             AppError::GeneralError(msg) => write!(f, "Error: {}", msg),
         }
     }

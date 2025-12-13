@@ -1,0 +1,40 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT id, filepath, filename, num_tracks\n         FROM files\n         WHERE num_tracks > 1\n           AND analyzed_at IS NOT NULL\n           AND (is_multi_track IS NULL OR is_multi_track = false)\n         ORDER BY id\n         LIMIT $1",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "filepath",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "filename",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "num_tracks",
+        "type_info": "Int2"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false
+    ]
+  },
+  "hash": "1d967fa137247be6c594dde5cf784120c00a2f5a19b5b55e7e3bb121f3ddaec1"
+}

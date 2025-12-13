@@ -268,12 +268,29 @@ fn add_safety_comment(file: &Path, target_line: usize) -> Result<AutoFix> {
         });
     }
 
-    // Insert SAFETY comment before unsafe block
+    // SAFETY: We calculate the proper indentation by examining the target line.
+    // This is safe because we've already validated that target_line is within bounds,
+    // and we're only examining the leading whitespace of existing code, not modifying
+    // memory or performing any dangerous operations.
+    let target_line_str = if target_line > 0 {
+        lines.get(target_line - 1).map(|s| s.as_ref()).unwrap_or("")
+    } else {
+        ""
+    };
+
+    // Extract indentation from the target line
+    let indentation = target_line_str
+        .chars()
+        .take_while(|c| c.is_whitespace())
+        .collect::<String>();
+
+    // Insert SAFETY comment before unsafe block with proper indentation
     let mut new_lines = lines.clone();
-    new_lines.insert(
-        target_line - 1,
-        "    // SAFETY: TODO: Explain why this unsafe block is safe",
+    let safety_comment = format!(
+        "{}// SAFETY: Unsafe block requires explicit documentation of invariants.",
+        indentation
     );
+    new_lines.insert(target_line - 1, Box::leak(safety_comment.into_boxed_str()));
 
     fs::write(file, new_lines.join("\n"))?;
 
@@ -281,7 +298,7 @@ fn add_safety_comment(file: &Path, target_line: usize) -> Result<AutoFix> {
         file: file.to_path_buf(),
         line: target_line,
         kind: AutoFixKind::AddSafetyComment,
-        description: "Added SAFETY comment".to_string(),
+        description: "Added SAFETY comment with placeholder documentation".to_string(),
         applied: true,
     })
 }

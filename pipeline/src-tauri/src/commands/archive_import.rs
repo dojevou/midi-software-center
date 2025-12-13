@@ -1,4 +1,3 @@
-
 use crate::commands::file_import::import_directory;
 use crate::io::decompressor::extractor::{extract_archive, ExtractionConfig};
 /// Archive Collection Import Command
@@ -14,6 +13,18 @@ use crate::AppState;
 use serde::{Deserialize, Serialize};
 use std::path::Path;
 use tauri::{Emitter, State, Window};
+
+/// Helper function to cleanup temp directories with proper error logging
+fn cleanup_temp_dir(path: &Path) {
+    if let Err(e) = std::fs::remove_dir_all(path) {
+        eprintln!(
+            "WARNING: Failed to cleanup temp directory {}: {}",
+            path.display(),
+            e
+        );
+        eprintln!("  This may lead to disk space accumulation - manual cleanup may be required");
+    }
+}
 
 /// Summary of archive collection import
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -204,7 +215,7 @@ async fn process_single_archive(
 
     if midi_count == 0 {
         // Cleanup and return
-        let _ = std::fs::remove_dir_all(&temp_dir);
+        cleanup_temp_dir(&temp_dir);
         return Ok(ArchiveStatus {
             archive_name: archive_name.to_string(),
             midi_files_found: 0,
@@ -226,7 +237,7 @@ async fn process_single_archive(
     .await;
 
     // Cleanup temp directory
-    let _ = std::fs::remove_dir_all(&temp_dir);
+    cleanup_temp_dir(&temp_dir);
 
     match import_result {
         Ok(summary) => Ok(ArchiveStatus {

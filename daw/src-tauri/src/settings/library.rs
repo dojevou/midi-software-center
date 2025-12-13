@@ -1,8 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::path::PathBuf;
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub enum WatchMode {
     Disabled,
     #[default]
@@ -10,14 +9,11 @@ pub enum WatchMode {
     Continuous,
 }
 
-
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct LibrarySettings {
     pub library_paths: Vec<PathBuf>,
     pub watch_mode: WatchMode,
 }
-
 
 impl LibrarySettings {
     pub fn new() -> Self {

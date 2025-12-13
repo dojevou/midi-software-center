@@ -1,9 +1,7 @@
 // orchestrator.rs - Intelligent pipeline orchestrator
 // Coordinates import, analysis, splitting, and renaming phases with optimal parallelization
 
-// Use jemalloc for better multi-threaded performance
-#[global_allocator]
-static GLOBAL: tikv_jemallocator::Jemalloc = tikv_jemallocator::Jemalloc;
+// Note: global allocator is defined in lib.rs
 
 use anyhow::{Context, Result};
 use blake3;
@@ -71,7 +69,7 @@ struct MultiTrackRecord {
     id: i64,
     filepath: String,
     filename: String,
-    num_tracks: i32,
+    _num_tracks: i32,
 }
 
 #[derive(Debug)]
@@ -222,7 +220,10 @@ async fn main() -> Result<()> {
         .context("Failed to connect to database")?;
 
     println!("✅ Connected to database");
-    println!("📊 Connection pool: {} workers × 1 connection (+ 2 utility connections)", args.workers);
+    println!(
+        "📊 Connection pool: {} workers × 1 connection (+ 2 utility connections)",
+        args.workers
+    );
     println!("⚡ Pool config: keep-warm, indefinite reuse");
     println!();
 
@@ -543,7 +544,7 @@ async fn spawn_split_phase(
 
 fn spawn_rename_filesystem_phase(
     source: PathBuf,
-    worker_count: usize,
+    _worker_count: usize,
     stats: Arc<Stats>,
     shutdown: Arc<AtomicBool>,
     multi_progress: Arc<MultiProgress>,
@@ -590,6 +591,7 @@ fn spawn_rename_filesystem_phase(
     })
 }
 
+#[allow(dead_code)]
 async fn spawn_rename_phase(
     pool: Pool<Postgres>,
     worker_count: usize,
@@ -787,11 +789,12 @@ async fn fetch_multitrack_files(
             id: f.id,
             filepath: f.filepath,
             filename: f.filename,
-            num_tracks: f.num_tracks as i32,
+            _num_tracks: f.num_tracks as i32,
         })
         .collect())
 }
 
+#[allow(dead_code)]
 async fn fetch_all_files(pool: &Pool<Postgres>, limit: i64) -> Result<Vec<FileRecord>> {
     let files = sqlx::query_as!(
         FileRecord,
@@ -1016,6 +1019,7 @@ fn rename_file_filesystem(filepath: &Path) -> Result<bool> {
     Ok(true)
 }
 
+#[allow(dead_code)]
 async fn rename_file(pool: &Pool<Postgres>, file: &FileRecord) -> Result<()> {
     let filepath = Path::new(&file.filepath);
     let filename = &file.filename;

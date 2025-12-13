@@ -1,0 +1,124 @@
+# MIDI Software Center - CI/CD Test Configuration
+# Lightweight compose for GitHub Actions and local test runs
+#
+# Usage:
+#   docker-compose -f docker-compose.test.yml up -d    # Start test services
+#   docker-compose -f docker-compose.test.yml down -v  # Cleanup after tests
+#
+# For CI:
+#   Uses ephemeral containers with tmpfs for speed
+#   No persistent volumes (clean state each run)
+
+services:
+  # ============================================================================
+  # PostgreSQL 16 - Test Database
+  # ============================================================================
+  postgres-test:
+    image: postgres:16-bookworm
+    container_name: midi-postgres-test
+    restart: "no"
+    environment:
+      POSTGRES_USER: midiuser
+      POSTGRES_PASSWORD: "145278963"
+      POSTGRES_DB: midi_library_test
+      PGDATA: /var/lib/postgresql/data/pgdata
+    ports:
+      - "5434:5432"
+    # Use tmpfs for faster test execution (no disk I/O)
+    tmpfs:
+      - /var/lib/postgresql/data:rw,size=512m
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U midiuser -d midi_library_test"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    # Fast PostgreSQL config for tests
+    command: >
+      postgres
+      -c shared_buffers=128MB
+      -c fsync=off
+      -c synchronous_commit=off
+      -c full_page_writes=off
+      -c max_connections=50
+      -c log_statement=none
+    networks:
+      - midi-test-network
+
+  # ============================================================================
+  # Meilisearch - Test Search Engine
+  # ============================================================================
+  meilisearch-test:
+    image: getmeili/meilisearch:v1.5
+    container_name: midi-meilisearch-test
+    restart: "no"
+    environment:
+      MEILI_ENV: development
+      MEILI_NO_ANALYTICS: "true"
+      MEILI_LOG_LEVEL: ERROR
+    ports:
+      - "7701:7700"
+    tmpfs:
+      - /meili_data:rw,size=256m
+    healthcheck:
+      test: ["CMD", "curl", "-sf", "http://localhost:7700/health"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+      start_period: 10s
+    networks:
+      - midi-test-network
+
+  # ============================================================================
+  # Test Runner Container
+  # ============================================================================
+  test-runner:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: midi-test-runner
+    restart: "no"
+    depends_on:
+      postgres-test:
+        condition: service_healthy
+      meilisearch-test:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: "postgresql://midiuser:145278963@postgres-test:5432/midi_library_test"
+      MEILISEARCH_URL: "http://meilisearch-test:7700"
+      RUST_LOG: "warn,midi_pipeline=info"
+      RUST_BACKTRACE: "1"
+      SQLX_OFFLINE: "true"
+      CARGO_TERM_COLOR: "always"
+    volumes:
+      - .:/app:ro
+      - cargo_test_cache:/usr/local/cargo/registry
+    working_dir: /app
+    command: >
+      sh -c "
+        echo 'Waiting for services...' &&
+        sleep 5 &&
+        echo 'Running tests...' &&
+        cargo test --workspace --lib -- --test-threads=1 &&
+        echo 'Tests complete!'
+      "
+    networks:
+      - midi-test-network
+    profiles:
+      - ci
+
+# ============================================================================
+# Networks
+# ============================================================================
+networks:
+  midi-test-network:
+    driver: bridge
+    name: midi-test
+
+# ============================================================================
+# Volumes
+# ============================================================================
+volumes:
+  cargo_test_cache:
+    name: midi-cargo-test-cache

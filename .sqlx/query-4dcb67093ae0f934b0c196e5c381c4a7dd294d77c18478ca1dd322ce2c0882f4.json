@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "SELECT EXISTS(SELECT 1 FROM favorites WHERE file_id = $1) as is_fav",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "is_fav",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      null
+    ]
+  },
+  "hash": "4dcb67093ae0f934b0c196e5c381c4a7dd294d77c18478ca1dd322ce2c0882f4"
+}

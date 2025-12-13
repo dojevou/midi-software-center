@@ -1,4 +1,3 @@
-
 /// Auto-Tagging System for MIDI Files (Enhanced - v2.0)
 ///
 /// Based on real-world analysis of 1,566,480 MIDI files from production archives.
@@ -284,7 +283,7 @@ impl AutoTagger {
                 ));
             } else if self.style_keywords.contains(&word_lower) {
                 // Detect category based on style keyword
-                let (category, priority) = if [
+                let (category, priority): (Option<&str>, i32) = if [
                     "intro",
                     "outro",
                     "verse",
@@ -305,7 +304,8 @@ impl AutoTagger {
                 {
                     (Some("structure"), 80) // Song structure priority
                 } else {
-                    (Some("mood"), 60) // Mood/style priority
+                    // Mood/style keywords like "deep", "dark", "heavy" have no category prefix
+                    (None, 60) // Mood/style priority, no category
                 };
 
                 tags.push(Tag::with_metadata(
@@ -348,9 +348,10 @@ impl AutoTagger {
                 ));
             } else if let Some(matched_style) = self.fuzzy_match(&word_lower, &self.style_keywords)
             {
+                // Mood/style keywords have no category prefix (same as exact match behavior)
                 tags.push(Tag::with_metadata(
                     matched_style,
-                    Some("mood"),
+                    None::<&str>,
                     0.85,
                     60,
                     "filename_fuzzy",
@@ -359,9 +360,10 @@ impl AutoTagger {
             // PRIORITY 3: Generic tags as fallback
             else if word.len() > 3 && word.chars().all(|c| c.is_alphanumeric()) {
                 // Add as generic tag if it's meaningful (>3 chars, alphanumeric)
+                // No category prefix for generic/unknown words
                 tags.push(Tag::with_metadata(
                     word_lower,
-                    Some("element"),
+                    None::<&str>,
                     0.70, // Low confidence for generic
                     70,   // Technical/generic priority
                     "filename_generic",
@@ -403,9 +405,10 @@ impl AutoTagger {
             } else if let Some(matched_instrument) =
                 self.fuzzy_match(&part_lower, &self.instrument_keywords)
             {
+                // Instruments in path get "category:" prefix to distinguish from filename-detected instruments
                 tags.push(Tag::with_metadata(
                     matched_instrument,
-                    Some("instrument"),
+                    Some("category"),
                     confidence,
                     20,
                     method,
@@ -1265,7 +1268,7 @@ mod tests {
         println!("Extracted tags: {:?}", tag_names);
 
         assert!(tag_names.contains(&"genre:house".to_string()));
-        assert!(tag_names.contains(&"deep".to_string()));
+        assert!(tag_names.contains(&"deep".to_string())); // mood keywords have no category prefix
         assert!(tag_names.contains(&"instrument:kick".to_string()));
 
         // Test 2: Underscore-separated naming (CamelCase not supported - see line 64)

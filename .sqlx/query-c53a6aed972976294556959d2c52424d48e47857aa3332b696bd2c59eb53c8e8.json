@@ -1,0 +1,19 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE files\n            SET\n                format = $2,\n                num_tracks = $3,\n                ticks_per_quarter_note = $4,\n                duration_seconds = $5,\n                duration_ticks = $6,\n                updated_at = NOW()\n            WHERE id = $1\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int2",
+        "Int2",
+        "Int4",
+        "Numeric",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "c53a6aed972976294556959d2c52424d48e47857aa3332b696bd2c59eb53c8e8"
+}

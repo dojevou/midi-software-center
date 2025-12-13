@@ -1,4 +1,3 @@
-
 /// TestDatabase - Thread-safe test database wrapper with automatic cleanup
 ///
 /// Provides:

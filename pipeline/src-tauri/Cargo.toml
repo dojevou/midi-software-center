@@ -24,11 +24,12 @@ serde = { workspace = true }
 serde_json = { workspace = true }
 
 # Shared library (common code)
-midi-library-shared = { path = "../../shared/rust" }
+midi-library-shared = { path = "../../shared/rust", features = ["database"] }
 
 # MIDI processing
 midly = "0.5"                    # Fast MIDI parser, zero-copy
 rimd = "0.0.1"                   # MIDI manipulation and generation
+rust-music-theory = "0.3"        # Music theory (chords, scales, intervals)
 
 # Async runtime
 tokio = { workspace = true }
@@ -37,6 +38,7 @@ tokio-util = "0.7"
 # Parallel processing
 rayon = "1.8"                    # Data parallelism
 crossbeam-channel = "0.5"        # Multi-producer multi-consumer channels
+crossbeam-queue = "0.3"          # Lock-free MPMC queues for pipeline
 num_cpus = "1.16"                # Detect CPU count
 
 # File handling
@@ -44,10 +46,13 @@ walkdir = "2"                    # Recursive directory traversal
 jwalk = "0.8"                    # Parallel directory walking
 glob = "0.3"                     # File pattern matching
 
-# Archive handling
-zip = { version = "0.6", default-features = false, features = ["deflate"] }
+# Archive handling - ULTRA-FAST parallel extraction
+zip = { version = "0.6", default-features = false, features = ["deflate", "bzip2"] }
 unrar = "0.5"                    # RAR extraction
 sevenz-rust = "0.5"              # 7z extraction
+flate2 = { version = "1.0", features = ["zlib-ng"] }  # 2x faster zlib decompression
+async-compression = { version = "0.4", features = ["tokio", "gzip", "bzip2", "xz", "zstd"] }  # Async multi-format decompression
+bzip2 = "0.4"                    # Multi-threaded bzip2
 
 # Hashing and deduplication
 blake3 = "1.5"                   # Fast cryptographic hash
@@ -89,14 +94,106 @@ indicatif = "0.17"
 futures = "0.3"
 hex = "0.4.3"
 
+# Performance optimizations
+memmap2 = "0.9"                  # Memory-mapped files (zero-copy I/O)
+tikv-jemallocator = "0.5"        # High-performance allocator
+once_cell = "1.19"               # Lazy static initialization
+parking_lot = "0.12"             # Faster mutexes/rwlocks
+flume = "0.11"                   # Fast MPMC channels (faster than crossbeam)
+typed-arena = "2.0"              # Arena allocators for cache-friendly memory layouts
+ahash = "0.8.12"
+mimalloc = "0.1.48"
+dashmap = "6.1.0"
+nom = "8.0.0"
+winnow = "0.7.13"
+bumpalo = "3.19.0"
+memchr = "2.7.6"
+simdutf8 = "0.1.5"
+highway = "1.3.0"
+wyhash = "0.6.0"
+zune-inflate = "0.2.54"
+askama = "0.14.0"
+zstd = "0.13.3"
+lz4 = "1.28.1"
+snap = "1.1.1"
+ultraviolet = "0.10.0"
+rustfft = "6.4.1"
+realfft = "3.5.0"
+monoio = "0.2.4"
+simdeez = "2.0.0"
+snmalloc-rs = "0.3.8"
+tokio-postgres = "0.7.15"
+wide = "0.8.3"
+nalgebra = "0.33.2"
+ndarray = "0.17.1"
+aho-corasick = "1.1.4"
+smartstring = "1.0.1"
+compact_str = "0.9.0"
+itoa = "1.0.15"
+ryu = "1.0.20"
+dtoa = "1.0.10"
+crossbeam = "0.8.4"
+lockfree = "0.5.1"
+atomic-counter = "1.0.1"
+libdeflater = "1.25.0"
+lzma = "0.2.2"
+miniz_oxide = "0.8.9"
+# Note: portable_simd feature requires Rust 1.75+ stable
+
 [dev-dependencies]
 tokio-test = "0.4"
 tempfile = "3"
 criterion = "0.5"                # Benchmarking
 proptest = "1.4"                 # Property-based testing
 rand = "0.8"                     # Random data generation for tests
+pprof = "0.15.0"
+tracy-client = "0.18.3"
+dhat = "0.3.3"
 
 # Binary targets
 [[bin]]
 name = "import_unified"
 path = "src/bin/import_unified.rs"
+
+[[bin]]
+name = "orchestrator"
+path = "src/bin/orchestrator.rs"
+
+[[bin]]
+name = "parallel_extract"
+path = "src/bin/parallel_extract.rs"
+
+[[bin]]
+name = "normalize_filenames"
+path = "src/bin/normalize_filenames.rs"
+
+[[bin]]
+name = "pipeline-orchestrator"
+path = "src/bin/pipeline-orchestrator.rs"
+
+[[bin]]
+name = "midi_to_mpcpattern"
+path = "src/bin/midi_to_mpcpattern.rs"
+
+[[bin]]
+name = "midi_to_mpcpattern_parallel"
+path = "src/bin/midi_to_mpcpattern_parallel.rs"
+
+# Aggressive optimization profile
+[profile.release]
+opt-level = 3                # Maximum optimizations
+codegen-units = 1            # Better optimization (slower compile)
+lto = "fat"                  # Full link-time optimization
+panic = "abort"              # Smaller binary, faster execution
+strip = true                 # Remove debug symbols
+
+# MAXIMUM SPEED profile for batch converters
+[profile.ultra-fast]
+inherits = "release"
+opt-level = 3
+codegen-units = 1
+lto = "fat"
+panic = "abort"
+strip = true
+overflow-checks = false      # Disable integer overflow checks (unsafe but faster)
+debug-assertions = false     # Disable debug assertions

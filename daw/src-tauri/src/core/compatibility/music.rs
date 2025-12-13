@@ -81,14 +81,18 @@ pub fn is_relative_key(ks1: &KeySignature, ks2: &KeySignature) -> bool {
 /// - 40: Semitone apart
 /// - 20: Tritone (augmented fourth)
 pub fn key_compatibility_score(ks1: &KeySignature, ks2: &KeySignature) -> f32 {
-    // Perfect match
-    if ks1.key == ks2.key && ks1.mode == ks2.mode {
-        return 100.0;
-    }
-
-    // Relative keys (share notes)
-    if is_relative_key(ks1, ks2) {
-        return 95.0;
+    // Use keys_compatible for quick high-compatibility check
+    if keys_compatible(ks1, ks2) {
+        // Perfect match
+        if ks1.key == ks2.key && ks1.mode == ks2.mode {
+            return 100.0;
+        }
+        // Relative keys (share notes)
+        if is_relative_key(ks1, ks2) {
+            return 95.0;
+        }
+        // Perfect fifth apart
+        return 85.0;
     }
 
     let distance = key_distance(ks1.key, ks2.key);

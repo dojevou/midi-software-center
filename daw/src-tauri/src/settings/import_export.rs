@@ -1,14 +1,12 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub enum DuplicateHandling {
     KeepFirst,
     KeepLast,
     #[default]
     Skip,
 }
-
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct ImportExportSettings {

@@ -1,8 +1,10 @@
-/// Search Tauri commands
-///
-/// Thin wrappers that expose search functionality to the frontend.
-/// Queries the PostgreSQL database for MIDI files with filtering and sorting.
-/// Updated to use proper JOINs with actual database schema.
+//! Search Tauri commands
+//!
+//! Thin wrappers that expose search functionality to the frontend.
+//! Queries the PostgreSQL database for MIDI files with filtering and sorting.
+//! Updated to use proper JOINs with actual database schema.
+#![allow(dead_code)] // Commands are called externally via Tauri IPC
+
 use crate::commands::AppState;
 use crate::models::midi_file::FileDetails;
 use crate::models::search::{SearchFilters, SearchResponse, Suggestion};

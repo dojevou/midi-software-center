@@ -16,7 +16,9 @@ pub mod commands;
 /// - `pipeline_state`: Pipeline window-specific state (processing, progress)
 pub mod manager;
 pub mod state;
-// TODO: Fix Tauri 2.x API compatibility
+// NOTE: Menu and shortcuts modules disabled pending Tauri 2.x migration
+// These modules use Tauri 1.x APIs that changed in Tauri 2.x
+// Once migrated to Tauri 2.x menu/shortcuts APIs, uncomment:
 // pub mod menu;
 // pub mod shortcuts;
 pub mod layout;
@@ -28,6 +30,7 @@ pub use manager::WindowManager;
 #[cfg(test)]
 mod tests {
     use super::*;
+    use crate::windows::state::{WindowInfo, WindowType};
 
     #[test]
     fn test_window_manager_creation() {

@@ -60,6 +60,7 @@ use midi_pipeline::core::analysis::auto_tagger::AutoTagger;
 use midi_pipeline::core::analysis::bpm_detector::detect_bpm;
 use midi_pipeline::core::analysis::key_detector::detect_key;
 use midi_pipeline::core::hash::calculate_file_hash;
+use midi_pipeline::core::normalization::normalize_directory;
 use midi_pipeline::database::Database;
 use midi_pipeline::io::decompressor::extractor::{extract_archive, ExtractionConfig};
 
@@ -338,6 +339,39 @@ async fn process_archive_with_stats(
         return Ok(());
     }
 
+    // Step 1.5: Normalize filenames (extensions, spaces, UTF-8, MPC-compatible characters)
+    println!("  🧹 Normalizing filenames...");
+    let norm_start = Instant::now();
+    match normalize_directory(&temp_dir, workers) {
+        Ok(norm_stats) => {
+            let norm_elapsed = norm_start.elapsed().as_secs_f64();
+            norm_stats.print_summary(norm_elapsed);
+        },
+        Err(e) => {
+            eprintln!("  ⚠️  Warning: Normalization error: {}", e);
+        },
+    }
+
+    // Step 1.6: Re-scan for MIDI files after normalization (paths have changed!)
+    use walkdir::WalkDir;
+    let midi_files: Vec<PathBuf> = WalkDir::new(&temp_dir)
+        .follow_links(false)
+        .into_iter()
+        .filter_map(|e| e.ok())
+        .filter(|e| e.file_type().is_file())
+        .filter(|e| {
+            let name = e.file_name().to_string_lossy().to_lowercase();
+            name.ends_with(".mid") || name.ends_with(".midi")
+        })
+        .map(|e| e.path().to_path_buf())
+        .collect();
+
+    let midi_count = midi_files.len();
+    println!(
+        "  ✓ Re-scanned: {} MIDI files after normalization",
+        midi_count
+    );
+
     // Extract category from archive name
     let category = archive_path.file_stem().and_then(|s| s.to_str()).map(|s| s.to_string());
 
@@ -609,8 +643,11 @@ async fn insert_batch(pool: &sqlx::PgPool, files: &[AnalyzedMidiFile]) -> anyhow
             INSERT INTO files (
                 filename, original_filename, filepath, parent_folder,
                 content_hash, file_size_bytes, num_tracks,
-                format, is_multi_track, created_at
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, NOW())
+                format, is_multi_track,
+                duration_seconds, duration_ticks,
+                instrument_names_text,
+                created_at
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, NOW())
             ON CONFLICT (content_hash) DO NOTHING
             RETURNING id
             "#,
@@ -624,6 +661,9 @@ async fn insert_batch(pool: &sqlx::PgPool, files: &[AnalyzedMidiFile]) -> anyhow
         .bind(file.num_tracks)
         .bind(file.format)
         .bind(file.is_multi_track)
+        .bind(file.duration_seconds)
+        .bind(file.duration_ticks.map(|t| t as i64))
+        .bind(&file.instruments)
         .fetch_optional(&mut *tx)
         .await?;
 
@@ -636,46 +676,48 @@ async fn insert_batch(pool: &sqlx::PgPool, files: &[AnalyzedMidiFile]) -> anyhow
             },
         };
 
-        // Insert musical metadata
-        sqlx::query(
-            r#"
-            INSERT INTO musical_metadata (
-                file_id, tempo_bpm, bpm_confidence, has_tempo_variation,
-                key_signature, key_confidence, scale_type,
-                time_signature_num, time_signature_den,
-                duration_seconds, duration_ticks,
-                note_count, pitch_range_low, pitch_range_high, pitch_range_semitones,
-                avg_velocity, velocity_range_low, velocity_range_high,
-                polyphony_max, complexity_score,
-                instruments, has_pitch_bend, has_cc_messages
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23)
-            "#
-        )
-        .bind(file_id)
-        .bind(file.tempo_bpm)
-        .bind(file.bpm_confidence)
-        .bind(file.has_tempo_variation)
-        .bind(&file.key_signature)
-        .bind(file.key_confidence)
-        .bind(&file.scale_type)
-        .bind(file.time_signature_num)
-        .bind(file.time_signature_den)
-        .bind(file.duration_seconds)
-        .bind(file.duration_ticks)
-        .bind(file.note_count)
-        .bind(file.pitch_range_low)
-        .bind(file.pitch_range_high)
-        .bind(file.pitch_range_semitones)
-        .bind(file.avg_velocity)
-        .bind(file.velocity_range_low)
-        .bind(file.velocity_range_high)
-        .bind(file.polyphony_max)
-        .bind(file.complexity_score)
-        .bind(&file.instruments)
-        .bind(file.has_pitch_bend)
-        .bind(file.has_cc_messages)
-        .execute(&mut *tx)
-        .await?;
+        // Insert musical metadata (only if we have analysis data)
+        if file.tempo_bpm.is_some() || file.key_signature.is_some() {
+            sqlx::query(
+                r#"
+                INSERT INTO musical_metadata (
+                    file_id,
+                    bpm,
+                    bpm_confidence,
+                    has_tempo_changes,
+                    key_signature,
+                    key_confidence,
+                    time_signature_numerator,
+                    time_signature_denominator,
+                    total_notes,
+                    pitch_range_min,
+                    pitch_range_max,
+                    avg_velocity,
+                    polyphony_max
+                ) VALUES ($1, $2, $3, $4, $5::musical_key, $6, $7, $8, $9, $10, $11, $12, $13)
+                ON CONFLICT (file_id) DO UPDATE SET
+                    bpm = EXCLUDED.bpm,
+                    bpm_confidence = EXCLUDED.bpm_confidence,
+                    key_signature = EXCLUDED.key_signature,
+                    key_confidence = EXCLUDED.key_confidence
+                "#,
+            )
+            .bind(file_id)
+            .bind(file.tempo_bpm)
+            .bind(file.bpm_confidence.map(|c| c as f32))
+            .bind(file.has_tempo_variation)
+            .bind(file.key_signature.as_deref())
+            .bind(file.key_confidence.map(|c| c as f32))
+            .bind(file.time_signature_num.unwrap_or(4))
+            .bind(file.time_signature_den.unwrap_or(4))
+            .bind(file.note_count)
+            .bind(file.pitch_range_low)
+            .bind(file.pitch_range_high)
+            .bind(file.avg_velocity)
+            .bind(file.polyphony_max)
+            .execute(&mut *tx)
+            .await?;
+        }
 
         // Update analyzed_at timestamp
         sqlx::query("UPDATE files SET analyzed_at = NOW() WHERE id = $1")
@@ -827,7 +869,8 @@ fn extract_instrument_names(midi_file: &MidiFile) -> Vec<String> {
             match &timed_event.event {
                 Event::Text { text_type, text } => {
                     if matches!(text_type, TextType::InstrumentName | TextType::TrackName)
-                        && !instruments.contains(text) {
+                        && !instruments.contains(text)
+                    {
                         instruments.push(text.clone());
                     }
                 },

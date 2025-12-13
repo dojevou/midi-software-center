@@ -1,4 +1,3 @@
-
 use crate::AppState;
 /// System command handlers - GROWN-UP SCRIPT ARCHETYPE
 ///

@@ -1,4 +1,3 @@
-
 /// Tauri commands for memory profiling
 ///
 /// Provides frontend access to memory metrics, cache management,

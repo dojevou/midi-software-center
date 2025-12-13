@@ -1,0 +1,15 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO file_tags (file_id, tag_id, added_by)\n            SELECT DISTINCT\n                f.id,\n                $1::bigint,\n                'sequential_tagger'\n            FROM files f\n            WHERE (\n                LOWER(f.filename) LIKE '%' || LOWER($2) || '%'\n                OR LOWER(f.filepath) LIKE '%' || LOWER($2) || '%'\n            )\n            ON CONFLICT (file_id, tag_id) DO NOTHING\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "b49f47246c862e84784c3c23685cb5ed6e458345b551f3a6d914b137a7098a74"
+}

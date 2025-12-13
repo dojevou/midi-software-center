@@ -12,11 +12,15 @@ export default defineConfig({
     }
   },
 
+  // CRITICAL: Base path for Tauri
+  base: './',
+
   clearScreen: false,
 
   server: {
     port: 5173,
     strictPort: true,
+    host: '0.0.0.0', // Allow access from Tauri webview
   },
 
   envPrefix: ['VITE_', 'TAURI_'],

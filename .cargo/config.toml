@@ -1,0 +1,78 @@
+# MIDI Software Center - Cargo Build Configuration
+# This file codifies build optimizations for development and LUDICROUS mode
+
+[build]
+# Use all available CPU cores for compilation
+jobs = 16
+
+# Faster incremental compilation
+incremental = true
+
+# Target native CPU for maximum performance
+[target.x86_64-unknown-linux-gnu]
+rustflags = [
+    # Native CPU optimizations (only for local builds!)
+    "-C", "target-cpu=native",
+
+    # Enable SIMD for audio/MIDI processing
+    "-C", "target-feature=+sse4.2,+avx,+avx2",
+
+    # Better inlining for hot paths
+    "-C", "inline-threshold=275",
+
+    # Link-time optimization hint
+    "-C", "linker-plugin-lto",
+]
+
+# Use mold linker if available (10x faster linking)
+# Uncomment if mold is installed: sudo apt install mold
+# linker = "clang"
+# rustflags = ["-C", "link-arg=-fuse-ld=mold"]
+
+[alias]
+# Quick development commands
+b = "build"
+c = "check"
+t = "test"
+r = "run"
+br = "build --release"
+
+# Workspace-wide commands
+ta = "test --workspace"
+ca = "check --workspace"
+ba = "build --workspace"
+
+# Pipeline-specific
+pipeline = "run -p midi-pipeline"
+pipeline-release = "run -p midi-pipeline --release"
+
+# DAW-specific
+daw = "run -p midi-daw"
+daw-release = "run -p midi-daw --release"
+
+# Fast check (no codegen)
+fc = "check --all-targets"
+
+# LUDICROUS mode - maximum import speed (use for batch imports only!)
+ludicrous = "build --release -p midi-pipeline --features ludicrous"
+
+[env]
+# Database connection for sqlx compile-time checks
+DATABASE_URL = "postgresql://midiuser:145278963@localhost:5433/midi_library"
+
+# Faster compilation with less debug info in dev
+CARGO_PROFILE_DEV_DEBUG = "line-tables-only"
+
+[net]
+# Faster dependency fetching
+git-fetch-with-cli = true
+
+[registries.crates-io]
+protocol = "sparse"
+
+# Profile overrides for specific scenarios
+[profile.dev.build-override]
+opt-level = 3
+
+[profile.release.build-override]
+opt-level = 3

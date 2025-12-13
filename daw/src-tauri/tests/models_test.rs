@@ -1,23 +1,22 @@
-   /// Comprehensive tests for DAW model layer (Phase 4 + Phase 6)
-   ///
-   /// Tests all model files in daw/src-tauri/src/models/:
-   /// - analysis.rs: CompatibleFile, Key, Mode
-   /// - error.rs: AppError variants and conversions
-   /// - midi_file.rs: MidiFile, FileDetails
-   /// - midi.rs: MidiDevice, MidiEvent, MidiNote, MidiPattern, ConnectionStatus
-   /// - search.rs: SearchFilters, SearchResponse, Suggestion, FilterOption
-   /// - sequencer.rs: Track, TrackProperties, PlaybackPosition, SequencerState
-   ///
-   /// **PHASE 4: Error Path Testing (21 new tests)**
-   /// - SECTION 7: Constraint validation, boundary testing, error scenarios
-   /// - Covers MIDI spec compliance (pitch 0-127, velocity 0-127, channels 0-15)
-   /// - Tests for field validation gaps and invalid state combinations
-   /// - Error coverage: ~22% for DAW models layer
-   ///
-   /// Coverage target: 90%+ error path testing across all models
-   /// Test count: 73 → 94 tests (baseline + error paths)
-
-use midi_daw::models::*;
+/// Comprehensive tests for DAW model layer (Phase 4 + Phase 6)
+///
+/// Tests all model files in daw/src-tauri/src/models/:
+/// - analysis.rs: CompatibleFile, Key, Mode
+/// - error.rs: AppError variants and conversions
+/// - midi_file.rs: MidiFile, FileDetails
+/// - midi.rs: MidiDevice, MidiEvent, MidiNote, MidiPattern, ConnectionStatus
+/// - search.rs: SearchFilters, SearchResponse, Suggestion, FilterOption
+/// - sequencer.rs: Track, TrackProperties, PlaybackPosition, SequencerState
+///
+/// **PHASE 4: Error Path Testing (21 new tests)**
+/// - SECTION 7: Constraint validation, boundary testing, error scenarios
+/// - Covers MIDI spec compliance (pitch 0-127, velocity 0-127, channels 0-15)
+/// - Tests for field validation gaps and invalid state combinations
+/// - Error coverage: ~22% for DAW models layer
+///
+/// Coverage target: 90%+ error path testing across all models
+/// Test count: 73 → 94 tests (baseline + error paths)
+use midi_software_center_daw::models::*;
 use serde_json;
 use std::str::FromStr;
 
@@ -112,12 +111,25 @@ fn test_compatible_file_serialization() {
 #[test]
 fn test_key_enum_all_variants() {
     let keys = vec![
-        Key::C, Key::CSharp, Key::D, Key::DSharp,
-        Key::E, Key::F, Key::FSharp, Key::G,
-        Key::GSharp, Key::A, Key::ASharp, Key::B,
+        Key::C,
+        Key::CSharp,
+        Key::D,
+        Key::DSharp,
+        Key::E,
+        Key::F,
+        Key::FSharp,
+        Key::G,
+        Key::GSharp,
+        Key::A,
+        Key::ASharp,
+        Key::B,
     ];
 
-    assert_eq!(keys.len(), 12, "Should have 12 chromatic keys - one semitone per key");
+    assert_eq!(
+        keys.len(),
+        12,
+        "Should have 12 chromatic keys - one semitone per key"
+    );
 
     // Verify semitone values are 0-11
     for (i, key) in keys.iter().enumerate() {
@@ -169,8 +181,8 @@ fn test_key_distance_circle_of_fifths() {
     let c = Key::C;
 
     // Adjacent keys
-    assert_eq!(c.distance(&Key::G), 5);      // Perfect fifth up
-    assert_eq!(c.distance(&Key::F), 5);      // Perfect fourth up (5 down)
+    assert_eq!(c.distance(&Key::G), 5); // Perfect fifth up
+    assert_eq!(c.distance(&Key::F), 5); // Perfect fourth up (5 down)
 
     // Same key
     assert_eq!(c.distance(&c), 0);
@@ -282,13 +294,19 @@ fn test_app_error_invalid_input_variant() {
 #[test]
 fn test_app_error_sequencer_variant() {
     let err = AppError::Sequencer("Playback engine failed".to_string());
-    assert_eq!(format!("{}", err), "Sequencer error: Playback engine failed");
+    assert_eq!(
+        format!("{}", err),
+        "Sequencer error: Playback engine failed"
+    );
 }
 
 #[test]
 fn test_app_error_connection_variant() {
     let err = AppError::Connection("MIDI device not connected".to_string());
-    assert_eq!(format!("{}", err), "Connection error: MIDI device not connected");
+    assert_eq!(
+        format!("{}", err),
+        "Connection error: MIDI device not connected"
+    );
 }
 
 #[test]
@@ -344,7 +362,10 @@ fn test_midi_file_struct_creation() {
     };
 
     assert_eq!(midi_file.id, 1, "File ID should be set correctly");
-    assert_eq!(midi_file.filename, "test.mid", "Filename should be preserved");
+    assert_eq!(
+        midi_file.filename, "test.mid",
+        "Filename should be preserved"
+    );
     assert_eq!(midi_file.file_size_bytes, 4096, "File size should match");
     assert_eq!(midi_file.bpm, Some(128.0));
     assert_eq!(midi_file.total_notes, 256);
@@ -492,10 +513,22 @@ fn test_midi_file_clone() {
 #[test]
 fn test_midi_file_format_time_signature() {
     // Valid time signatures
-    assert_eq!(MidiFile::format_time_signature(Some(4), Some(4)), Some("4/4".to_string()));
-    assert_eq!(MidiFile::format_time_signature(Some(3), Some(4)), Some("3/4".to_string()));
-    assert_eq!(MidiFile::format_time_signature(Some(6), Some(8)), Some("6/8".to_string()));
-    assert_eq!(MidiFile::format_time_signature(Some(7), Some(8)), Some("7/8".to_string()));
+    assert_eq!(
+        MidiFile::format_time_signature(Some(4), Some(4)),
+        Some("4/4".to_string())
+    );
+    assert_eq!(
+        MidiFile::format_time_signature(Some(3), Some(4)),
+        Some("3/4".to_string())
+    );
+    assert_eq!(
+        MidiFile::format_time_signature(Some(6), Some(8)),
+        Some("6/8".to_string())
+    );
+    assert_eq!(
+        MidiFile::format_time_signature(Some(7), Some(8)),
+        Some("7/8".to_string())
+    );
 
     // Missing components
     assert_eq!(MidiFile::format_time_signature(None, Some(4)), None);
@@ -564,9 +597,9 @@ fn test_file_details_serialization_field_rename() {
     let json = serde_json::to_string(&details).expect("Serialization failed");
 
     // Check field renames in JSON
-    assert!(json.contains("\"file_name\":\"rename_test.mid\""));  // filename -> file_name
-    assert!(json.contains("\"file_path\":\"/test/rename_test.mid\""));  // filepath -> file_path
-    assert!(json.contains("\"file_size\":1024"));  // file_size_bytes -> file_size
+    assert!(json.contains("\"file_name\":\"rename_test.mid\"")); // filename -> file_name
+    assert!(json.contains("\"file_path\":\"/test/rename_test.mid\"")); // filepath -> file_path
+    assert!(json.contains("\"file_size\":1024")); // file_size_bytes -> file_size
 }
 
 #[test]
@@ -631,10 +664,10 @@ fn test_file_details_default_values() {
     let details: FileDetails = serde_json::from_str(json).expect("Deserialization failed");
 
     // Check default values are correctly deserialized
-    assert!(!details.is_favorite);  // false
-    assert!(details.tags.is_empty());  // empty vec
-    assert_eq!(details.track_count, 1);  // 1
-    assert!(!details.has_notes);  // false
+    assert!(!details.is_favorite); // false
+    assert!(details.tags.is_empty()); // empty vec
+    assert_eq!(details.track_count, 1); // 1
+    assert!(!details.has_notes); // false
 }
 
 #[test]
@@ -718,10 +751,8 @@ fn test_midi_device_struct_creation() {
 
 #[test]
 fn test_midi_device_serialization() {
-    let device = MidiDevice {
-        name: "Roland TB-303".to_string(),
-        manufacturer: Some("Roland".to_string()),
-    };
+    let device =
+        MidiDevice { name: "Roland TB-303".to_string(), manufacturer: Some("Roland".to_string()) };
 
     let json = serde_json::to_string(&device).expect("Serialization failed");
     assert!(json.contains("\"name\":\"Roland TB-303\""));
@@ -730,10 +761,8 @@ fn test_midi_device_serialization() {
 
 #[test]
 fn test_midi_device_clone() {
-    let original = MidiDevice {
-        name: "Korg Volca".to_string(),
-        manufacturer: Some("Korg".to_string()),
-    };
+    let original =
+        MidiDevice { name: "Korg Volca".to_string(), manufacturer: Some("Korg".to_string()) };
 
     let cloned = original.clone();
     assert_eq!(original.name, cloned.name);
@@ -775,14 +804,18 @@ fn test_midi_event_note_on() {
         event_type: MidiEventType::NoteOn,
         tick: 960,
         channel: 0,
-        note: Some(60),  // Middle C
+        note: Some(60), // Middle C
         velocity: Some(100),
         controller: None,
         value: None,
         program: None,
     };
 
-    assert_eq!(event.event_type, MidiEventType::NoteOn, "Event type should be NoteOn");
+    assert_eq!(
+        event.event_type,
+        MidiEventType::NoteOn,
+        "Event type should be NoteOn"
+    );
     assert_eq!(event.tick, 960);
     assert_eq!(event.channel, 0);
     assert_eq!(event.note, Some(60), "Note should be Middle C (60)");
@@ -797,7 +830,7 @@ fn test_midi_event_control_change() {
         channel: 1,
         note: None,
         velocity: None,
-        controller: Some(7),  // Volume
+        controller: Some(7), // Volume
         value: Some(127),
         program: None,
     };
@@ -812,12 +845,12 @@ fn test_midi_event_program_change() {
     let event = MidiEvent {
         event_type: MidiEventType::ProgramChange,
         tick: 1920,
-        channel: 9,  // Drum channel
+        channel: 9, // Drum channel
         note: None,
         velocity: None,
         controller: None,
         value: None,
-        program: Some(0),  // Acoustic Grand Piano
+        program: Some(0), // Acoustic Grand Piano
     };
 
     assert_eq!(event.event_type, MidiEventType::ProgramChange);
@@ -853,7 +886,7 @@ fn test_midi_event_serialization_skip_none() {
 #[test]
 fn test_midi_note_struct() {
     let note = MidiNote {
-        pitch: 72,  // C5
+        pitch: 72, // C5
         velocity: 64,
         start_tick: 0,
         duration_ticks: 480,
@@ -869,7 +902,7 @@ fn test_midi_note_struct() {
 fn test_midi_note_pitch_range() {
     // MIDI pitch range is 0-127
     let low_note = MidiNote {
-        pitch: 0,  // C-1
+        pitch: 0, // C-1
         velocity: 64,
         start_tick: 0,
         duration_ticks: 100,
@@ -877,7 +910,7 @@ fn test_midi_note_pitch_range() {
     assert_eq!(low_note.pitch, 0);
 
     let high_note = MidiNote {
-        pitch: 127,  // G9
+        pitch: 127, // G9
         velocity: 64,
         start_tick: 0,
         duration_ticks: 100,
@@ -1047,10 +1080,7 @@ fn test_search_filters_bpm_range() {
 
 #[test]
 fn test_search_response_struct() {
-    let response = SearchResponse {
-        files: vec![],
-        total: 0,
-    };
+    let response = SearchResponse { files: vec![], total: 0 };
 
     assert_eq!(response.files.len(), 0);
     assert_eq!(response.total, 0);
@@ -1081,10 +1111,7 @@ fn test_search_response_with_files() {
         content_hash: vec![],
     };
 
-    let response = SearchResponse {
-        files: vec![file],
-        total: 1,
-    };
+    let response = SearchResponse { files: vec![file], total: 1 };
 
     assert_eq!(response.files.len(), 1);
     assert_eq!(response.total, 1);
@@ -1092,10 +1119,7 @@ fn test_search_response_with_files() {
 
 #[test]
 fn test_search_response_serialization() {
-    let response = SearchResponse {
-        files: vec![],
-        total: 42,
-    };
+    let response = SearchResponse { files: vec![], total: 42 };
 
     let json = serde_json::to_string(&response).expect("Serialization failed");
     assert!(json.contains("\"total\":42"));
@@ -1104,18 +1128,14 @@ fn test_search_response_serialization() {
 
 #[test]
 fn test_suggestion_struct() {
-    let suggestion = Suggestion {
-        value: "techno beat".to_string(),
-    };
+    let suggestion = Suggestion { value: "techno beat".to_string() };
 
     assert_eq!(suggestion.value, "techno beat");
 }
 
 #[test]
 fn test_suggestion_serialization() {
-    let suggestion = Suggestion {
-        value: "acid bass".to_string(),
-    };
+    let suggestion = Suggestion { value: "acid bass".to_string() };
 
     let json = serde_json::to_string(&suggestion).expect("Serialization failed");
     assert!(json.contains("\"value\":\"acid bass\""));
@@ -1123,11 +1143,8 @@ fn test_suggestion_serialization() {
 
 #[test]
 fn test_filter_option_struct() {
-    let option = FilterOption {
-        value: "drums".to_string(),
-        label: "Drums".to_string(),
-        count: 150,
-    };
+    let option =
+        FilterOption { value: "drums".to_string(), label: "Drums".to_string(), count: 150 };
 
     assert_eq!(option.value, "drums");
     assert_eq!(option.label, "Drums");
@@ -1136,11 +1153,8 @@ fn test_filter_option_struct() {
 
 #[test]
 fn test_filter_option_serialization() {
-    let option = FilterOption {
-        value: "bass".to_string(),
-        label: "Bass Lines".to_string(),
-        count: 75,
-    };
+    let option =
+        FilterOption { value: "bass".to_string(), label: "Bass Lines".to_string(), count: 75 };
 
     let json = serde_json::to_string(&option).expect("Serialization failed");
     assert!(json.contains("\"value\":\"bass\""));
@@ -1162,7 +1176,7 @@ fn test_track_struct_creation() {
         muted: false,
         solo: false,
         volume: 100,
-        pan: 64,  // Center
+        pan: 64, // Center
         color: "#FF5733".to_string(),
         events: vec![],
     };
@@ -1302,12 +1316,8 @@ fn test_track_clone() {
 
 #[test]
 fn test_track_properties_partial_update() {
-    let props = TrackProperties {
-        muted: Some(true),
-        solo: Some(false),
-        volume: Some(75),
-        pan: Some(80),
-    };
+    let props =
+        TrackProperties { muted: Some(true), solo: Some(false), volume: Some(75), pan: Some(80) };
 
     assert_eq!(props.muted, Some(true));
     assert_eq!(props.volume, Some(75));
@@ -1315,12 +1325,7 @@ fn test_track_properties_partial_update() {
 
 #[test]
 fn test_track_properties_all_none() {
-    let props = TrackProperties {
-        muted: None,
-        solo: None,
-        volume: None,
-        pan: None,
-    };
+    let props = TrackProperties { muted: None, solo: None, volume: None, pan: None };
 
     assert!(props.muted.is_none());
     assert!(props.solo.is_none());
@@ -1345,11 +1350,7 @@ fn test_track_properties_deserialization() {
 
 #[test]
 fn test_playback_position_struct() {
-    let position = PlaybackPosition {
-        current_tick: 1920,
-        current_bar: 2,
-        current_beat: 1,
-    };
+    let position = PlaybackPosition { current_tick: 1920, current_bar: 2, current_beat: 1 };
 
     assert_eq!(position.current_tick, 1920);
     assert_eq!(position.current_bar, 2);
@@ -1358,11 +1359,7 @@ fn test_playback_position_struct() {
 
 #[test]
 fn test_playback_position_serialization() {
-    let position = PlaybackPosition {
-        current_tick: 960,
-        current_bar: 1,
-        current_beat: 2,
-    };
+    let position = PlaybackPosition { current_tick: 960, current_bar: 1, current_beat: 2 };
 
     let json = serde_json::to_string(&position).expect("Serialization failed");
     assert!(json.contains("\"current_tick\":960"));
@@ -1482,7 +1479,7 @@ fn test_compatible_file_score_boundary_negative() {
         suggested_bpm_multiplier: None,
         category: None,
     };
-    
+
     // Struct allows negative - this is a validation gap
     assert_eq!(invalid_negative.compatibility_score, -50);
 }
@@ -1500,7 +1497,7 @@ fn test_compatible_file_score_boundary_overflow() {
         suggested_bpm_multiplier: None,
         category: None,
     };
-    
+
     // Struct allows > 100 - this is a validation gap
     assert!(invalid_overflow.compatibility_score > 100);
 }
@@ -1515,19 +1512,19 @@ fn test_compatible_file_bpm_multiplier_negative() {
         key_match: false,
         bpm_difference: Some(-120.0),
         time_signature_match: false,
-        suggested_bpm_multiplier: Some(-0.5),  // Invalid multiplier
+        suggested_bpm_multiplier: Some(-0.5), // Invalid multiplier
         category: None,
     };
-    
+
     assert!(invalid.suggested_bpm_multiplier.unwrap() < 0.0);
 }
 
 #[test]
 fn test_key_from_string_case_sensitivity() {
     // Keys should handle case variations
-    assert_eq!(Key::from_string("c"), None);      // lowercase not handled
-    assert_eq!(Key::from_string("c#"), None);     // lowercase not handled
-    assert_eq!(Key::from_string("CB"), None);     // Invalid notation
+    assert_eq!(Key::from_string("c"), None); // lowercase not handled
+    assert_eq!(Key::from_string("c#"), None); // lowercase not handled
+    assert_eq!(Key::from_string("CB"), None); // Invalid notation
 }
 
 #[test]
@@ -1536,7 +1533,7 @@ fn test_mode_from_string_edge_cases() {
     // But what about very long strings?
     let long_key = "C".to_string() + &"m".repeat(100);
     let result = Mode::from_string(&long_key);
-    assert_eq!(result, Mode::Major);  // Should still default to Major
+    assert_eq!(result, Mode::Major); // Should still default to Major
 }
 
 // SUBSECTION 7.2: midi_file.rs Error Tests (6 tests)
@@ -1548,7 +1545,7 @@ fn test_midi_file_negative_size() {
         id: 100,
         filename: "negative.mid".to_string(),
         filepath: "/test/negative.mid".to_string(),
-        file_size_bytes: -1024,  // Invalid: negative
+        file_size_bytes: -1024, // Invalid: negative
         content_hash: vec![],
         is_multi_track: false,
         parent_file_id: None,
@@ -1568,7 +1565,7 @@ fn test_midi_file_negative_size() {
         created_at: chrono::Utc::now(),
         analyzed_at: None,
     };
-    
+
     assert!(invalid.file_size_bytes < 0);
 }
 
@@ -1583,8 +1580,8 @@ fn test_midi_file_negative_track_count() {
         content_hash: vec![],
         is_multi_track: true,
         parent_file_id: None,
-        track_number: Some(-1),  // Invalid
-        total_tracks: Some(-5),   // Invalid
+        track_number: Some(-1), // Invalid
+        total_tracks: Some(-5), // Invalid
         manufacturer: None,
         collection_name: None,
         folder_tags: vec![],
@@ -1599,7 +1596,7 @@ fn test_midi_file_negative_track_count() {
         created_at: chrono::Utc::now(),
         analyzed_at: None,
     };
-    
+
     assert!(invalid.track_number.unwrap() < 0);
     assert!(invalid.total_tracks.unwrap() < 0);
 }
@@ -1615,8 +1612,8 @@ fn test_midi_file_track_number_exceeds_total() {
         content_hash: vec![],
         is_multi_track: true,
         parent_file_id: Some(1),
-        track_number: Some(10),   // Track 10
-        total_tracks: Some(5),    // But only 5 total - INVALID
+        track_number: Some(10), // Track 10
+        total_tracks: Some(5),  // But only 5 total - INVALID
         manufacturer: None,
         collection_name: None,
         folder_tags: vec![],
@@ -1631,7 +1628,7 @@ fn test_midi_file_track_number_exceeds_total() {
         created_at: chrono::Utc::now(),
         analyzed_at: None,
     };
-    
+
     assert!(invalid.track_number.unwrap() > invalid.total_tracks.unwrap());
 }
 
@@ -1652,17 +1649,17 @@ fn test_midi_file_negative_duration() {
         collection_name: None,
         folder_tags: vec![],
         parent_folder: None,
-        bpm: Some(-120.0),        // Invalid: negative BPM
+        bpm: Some(-120.0), // Invalid: negative BPM
         key_signature: None,
         time_signature: None,
-        duration_seconds: Some(-90.5),  // Invalid: negative duration
+        duration_seconds: Some(-90.5), // Invalid: negative duration
         total_notes: 0,
         num_tracks: 1,
         primary_category: None,
         created_at: chrono::Utc::now(),
         analyzed_at: None,
     };
-    
+
     assert!(invalid.bpm.unwrap() < 0.0);
     assert!(invalid.duration_seconds.unwrap() < 0.0);
 }
@@ -1688,13 +1685,13 @@ fn test_midi_file_negative_note_count() {
         key_signature: None,
         time_signature: None,
         duration_seconds: None,
-        total_notes: -100,  // Invalid
+        total_notes: -100, // Invalid
         num_tracks: 1,
         primary_category: None,
         created_at: chrono::Utc::now(),
         analyzed_at: None,
     };
-    
+
     assert!(invalid.total_notes < 0);
 }
 
@@ -1718,112 +1715,64 @@ fn test_file_details_invalid_track_count() {
         tags: vec![],
         manufacturer: None,
         collection_name: None,
-        track_count: 0,  // Invalid: should be >= 1
+        track_count: 0, // Invalid: should be >= 1
         has_notes: false,
         has_drums: None,
         content_hash: vec![],
     };
-    
+
     assert_eq!(invalid.track_count, 0);
 }
 
 // SUBSECTION 7.3: midi.rs Error Tests (8 tests)
 
-#[test]
-fn test_midi_note_pitch_boundary_negative() {
-    // MIDI pitch must be 0-127
-    let invalid = MidiNote {
-        pitch: -1,  // Invalid
-        velocity: 64,
-        start_tick: 0,
-        duration_ticks: 480,
-    };
-    
-    assert!(invalid.pitch < 0);
-}
+// Note: Negative pitch test removed - u8 type prevents negative values at compile time
+// The type system enforces valid range (0-255), MIDI spec requires 0-127 validation at runtime
 
 #[test]
 fn test_midi_note_pitch_boundary_overflow() {
     // MIDI pitch must be 0-127
     let invalid = MidiNote {
-        pitch: 128,  // Invalid
+        pitch: 128, // Invalid
         velocity: 64,
         start_tick: 0,
         duration_ticks: 480,
     };
-    
+
     assert!(invalid.pitch > 127);
 }
 
-#[test]
-fn test_midi_note_velocity_boundary_negative() {
-    // MIDI velocity should be 0-127
-    let invalid = MidiNote {
-        pitch: 60,
-        velocity: -1,  // Invalid
-        start_tick: 0,
-        duration_ticks: 480,
-    };
-    
-    assert!(invalid.velocity < 0);
-}
+// Note: Negative velocity test removed - u8 type prevents negative values at compile time
 
 #[test]
 fn test_midi_note_velocity_boundary_overflow() {
     // MIDI velocity should be 0-127
     let invalid = MidiNote {
         pitch: 60,
-        velocity: 128,  // Invalid
+        velocity: 128, // Invalid
         start_tick: 0,
         duration_ticks: 480,
     };
-    
+
     assert!(invalid.velocity > 127);
 }
 
-#[test]
-fn test_midi_event_negative_tick() {
-    // Event timing should not be negative
-    let invalid = MidiEvent {
-        event_type: MidiEventType::NoteOn,
-        tick: -100,  // Invalid
-        channel: 0,
-        note: Some(60),
-        velocity: Some(64),
-        controller: None,
-        value: None,
-        program: None,
-    };
-    
-    assert!(invalid.tick < 0);
-}
+// Note: Negative tick test removed - u64 type prevents negative values at compile time
 
 #[test]
 fn test_midi_event_invalid_channel() {
-    // MIDI channels should be 0-15
-    let invalid_low = MidiEvent {
-        event_type: MidiEventType::NoteOn,
-        tick: 0,
-        channel: -1,  // Invalid
-        note: Some(60),
-        velocity: Some(64),
-        controller: None,
-        value: None,
-        program: None,
-    };
-    
+    // MIDI channels should be 0-15, test high boundary only (u8 prevents negative)
     let invalid_high = MidiEvent {
         event_type: MidiEventType::NoteOn,
         tick: 0,
-        channel: 16,  // Invalid (should be 0-15)
+        channel: 16, // Invalid (should be 0-15)
         note: Some(60),
         velocity: Some(64),
         controller: None,
         value: None,
         program: None,
     };
-    
-    assert!(invalid_low.channel < 0);
+
     assert!(invalid_high.channel > 15);
 }
 
@@ -1836,11 +1785,11 @@ fn test_midi_event_controller_out_of_range() {
         channel: 0,
         note: None,
         velocity: None,
-        controller: Some(200),  // Invalid: > 119
+        controller: Some(200), // Invalid: > 119
         value: Some(64),
         program: None,
     };
-    
+
     assert!(invalid.controller.unwrap() > 119);
 }
 
@@ -1855,9 +1804,9 @@ fn test_midi_event_program_out_of_range() {
         velocity: None,
         controller: None,
         value: None,
-        program: Some(200),  // Invalid: > 127
+        program: Some(200), // Invalid: > 127
     };
-    
+
     assert!(invalid.program.unwrap() > 127);
 }
 
@@ -1868,12 +1817,22 @@ fn test_search_filter_invalid_bpm_range() {
     // BPM min should not exceed max
     let invalid = SearchFilters {
         min_bpm: Some(200.0),
-        max_bpm: Some(100.0),  // min > max - INVALID
-        key: None,
+        max_bpm: Some(100.0), // min > max - INVALID
+        key_signature: None,
+        time_signature: None,
         category: None,
-        track_count: None,
+        min_notes: None,
+        max_notes: None,
+        min_duration: None,
+        max_duration: None,
+        instruments: None,
+        search_text: None,
+        sort_by: None,
+        sort_desc: None,
+        limit: None,
+        offset: None,
     };
-    
+
     assert!(invalid.min_bpm.unwrap() > invalid.max_bpm.unwrap());
 }
 
@@ -1886,53 +1845,57 @@ fn test_connection_status_all_variants() {
         ConnectionStatus::Disconnected,
         ConnectionStatus::Error,
     ];
-    
-    assert_eq!(statuses.len(), 4, "Should have all connection status variants");
+
+    assert_eq!(
+        statuses.len(),
+        4,
+        "Should have all connection status variants"
+    );
 }
 
 // ============================================================================
 // SECTION 9: COMPREHENSIVE ERROR PATH TESTING (118 TESTS)
 // ============================================================================
-   /// Phase 9 Enhancement: Complete error coverage for 100% quality
-   ///
-   /// **analysis.rs Error Tests (22 tests)**
-   /// - CompatibleFile score validation (0-100 range)
-   /// - BPM difference boundary testing (-inf to +inf, NaN, infinity)
-   /// - BPM multiplier edge cases (zero, negative, overflow)
-   /// - Key signature parsing validation (empty, case sensitivity, invalid combinations)
-   /// - Mode parsing edge cases (misleading suffixes, long strings)
-   ///
-   /// **midi_file.rs Error Tests (26 tests)**
-   /// - File size boundaries (0, negative, overflow)
-   /// - Track count validation (0, negative, overflow)
-   /// - Duration violations (0, negative, NaN, infinity)
-   /// - BPM violations (0, negative, unrealistic ranges, NaN)
-   /// - Note count boundaries
-   /// - FileDetails consistency checks
-   ///
-   /// **midi.rs Error Tests (48 tests - CRITICAL MIDI SPEC COMPLIANCE)**
-   /// - Pitch validation (MIDI spec: 0-127)
-   /// - Velocity validation (MIDI spec: 0-127)
-   /// - Channel validation (MIDI spec: 0-15)
-   /// - Controller validation (CC: 0-119, reserved: 120-127)
-   /// - Program number validation (0-127)
-   /// - Timing validation (negative ticks, overflow)
-   /// - Pattern violations (zero TPQN, timing inconsistencies)
-   /// - Device validation (empty name, length limits)
-   ///
-   /// **search.rs Error Tests (12 tests)**
-   /// - BPM range validation (min > max, NaN)
-   /// - Note range validation (inverted, negative)
-   /// - Duration range validation (negative, inverted)
-   /// - Pagination validation (negative limit/offset, zero limit)
-   /// - Response consistency checks
-   ///
-   /// **sequencer.rs Error Tests (10 tests)**
-   /// - Track channel validation (0-15)
-   /// - Track volume validation (0-127)
-   /// - Track pan validation (0-127)
-   /// - SequencerState validation (zero/negative tempo)
-   /// - PlaybackPosition validation (negative values)
+/// Phase 9 Enhancement: Complete error coverage for 100% quality
+///
+/// **analysis.rs Error Tests (22 tests)**
+/// - CompatibleFile score validation (0-100 range)
+/// - BPM difference boundary testing (-inf to +inf, NaN, infinity)
+/// - BPM multiplier edge cases (zero, negative, overflow)
+/// - Key signature parsing validation (empty, case sensitivity, invalid combinations)
+/// - Mode parsing edge cases (misleading suffixes, long strings)
+///
+/// **midi_file.rs Error Tests (26 tests)**
+/// - File size boundaries (0, negative, overflow)
+/// - Track count validation (0, negative, overflow)
+/// - Duration violations (0, negative, NaN, infinity)
+/// - BPM violations (0, negative, unrealistic ranges, NaN)
+/// - Note count boundaries
+/// - FileDetails consistency checks
+///
+/// **midi.rs Error Tests (48 tests - CRITICAL MIDI SPEC COMPLIANCE)**
+/// - Pitch validation (MIDI spec: 0-127)
+/// - Velocity validation (MIDI spec: 0-127)
+/// - Channel validation (MIDI spec: 0-15)
+/// - Controller validation (CC: 0-119, reserved: 120-127)
+/// - Program number validation (0-127)
+/// - Timing validation (negative ticks, overflow)
+/// - Pattern violations (zero TPQN, timing inconsistencies)
+/// - Device validation (empty name, length limits)
+///
+/// **search.rs Error Tests (12 tests)**
+/// - BPM range validation (min > max, NaN)
+/// - Note range validation (inverted, negative)
+/// - Duration range validation (negative, inverted)
+/// - Pagination validation (negative limit/offset, zero limit)
+/// - Response consistency checks
+///
+/// **sequencer.rs Error Tests (10 tests)**
+/// - Track channel validation (0-15)
+/// - Track volume validation (0-127)
+/// - Track pan validation (0-127)
+/// - SequencerState validation (zero/negative tempo)
+/// - PlaybackPosition validation (negative values)
 
 // SUBSECTION 9.1: analysis.rs Error Tests (22 tests)
 #[test]
@@ -1947,7 +1910,11 @@ fn test_compatible_file_score_extreme_negative() {
         suggested_bpm_multiplier: None,
         category: None,
     };
-    assert_eq!(compatible.compatibility_score, i32::MIN, "Extreme negative score should be stored");
+    assert_eq!(
+        compatible.compatibility_score,
+        i32::MIN,
+        "Extreme negative score should be stored"
+    );
 }
 
 #[test]
@@ -1962,7 +1929,11 @@ fn test_compatible_file_score_extreme_positive() {
         suggested_bpm_multiplier: None,
         category: None,
     };
-    assert_eq!(compatible.compatibility_score, i32::MAX, "Extreme positive score should be stored");
+    assert_eq!(
+        compatible.compatibility_score,
+        i32::MAX,
+        "Extreme positive score should be stored"
+    );
 }
 
 #[test]
@@ -1977,7 +1948,10 @@ fn test_compatible_file_score_boundary_101() {
         suggested_bpm_multiplier: None,
         category: None,
     };
-    assert!(compatible.compatibility_score > 100, "Score > 100 violates expected range");
+    assert!(
+        compatible.compatibility_score > 100,
+        "Score > 100 violates expected range"
+    );
 }
 
 #[test]
@@ -1992,7 +1966,10 @@ fn test_compatible_file_bpm_difference_extreme_negative() {
         suggested_bpm_multiplier: None,
         category: None,
     };
-    assert!(compatible.bpm_difference.unwrap() < -500.0, "Unrealistic negative BPM delta should be detectable");
+    assert!(
+        compatible.bpm_difference.unwrap() < -500.0,
+        "Unrealistic negative BPM delta should be detectable"
+    );
 }
 
 #[test]
@@ -2007,7 +1984,10 @@ fn test_compatible_file_bpm_difference_extreme_positive() {
         suggested_bpm_multiplier: None,
         category: None,
     };
-    assert!(compatible.bpm_difference.unwrap() > 500.0, "Unrealistic positive BPM delta should be detectable");
+    assert!(
+        compatible.bpm_difference.unwrap() > 500.0,
+        "Unrealistic positive BPM delta should be detectable"
+    );
 }
 
 #[test]
@@ -2022,7 +2002,10 @@ fn test_compatible_file_bpm_difference_nan() {
         suggested_bpm_multiplier: None,
         category: None,
     };
-    assert!(compatible.bpm_difference.unwrap().is_nan(), "NaN BPM difference should be detectable");
+    assert!(
+        compatible.bpm_difference.unwrap().is_nan(),
+        "NaN BPM difference should be detectable"
+    );
 }
 
 #[test]
@@ -2037,7 +2020,11 @@ fn test_compatible_file_bpm_multiplier_zero() {
         suggested_bpm_multiplier: Some(0.0),
         category: None,
     };
-    assert_eq!(compatible.suggested_bpm_multiplier.unwrap(), 0.0, "Zero multiplier should be detectable as invalid");
+    assert_eq!(
+        compatible.suggested_bpm_multiplier.unwrap(),
+        0.0,
+        "Zero multiplier should be detectable as invalid"
+    );
 }
 
 #[test]
@@ -2052,7 +2039,10 @@ fn test_compatible_file_bpm_multiplier_extreme_negative() {
         suggested_bpm_multiplier: Some(-100.0),
         category: None,
     };
-    assert!(compatible.suggested_bpm_multiplier.unwrap() < 0.0, "Negative multiplier should be detectable");
+    assert!(
+        compatible.suggested_bpm_multiplier.unwrap() < 0.0,
+        "Negative multiplier should be detectable"
+    );
 }
 
 #[test]
@@ -2067,7 +2057,10 @@ fn test_compatible_file_bpm_multiplier_extreme_overflow() {
         suggested_bpm_multiplier: Some(1000.0),
         category: None,
     };
-    assert!(compatible.suggested_bpm_multiplier.unwrap() > 10.0, "Unrealistic multiplier should be detectable");
+    assert!(
+        compatible.suggested_bpm_multiplier.unwrap() > 10.0,
+        "Unrealistic multiplier should be detectable"
+    );
 }
 
 #[test]
@@ -2082,7 +2075,10 @@ fn test_compatible_file_bpm_multiplier_nan() {
         suggested_bpm_multiplier: Some(f32::NAN),
         category: None,
     };
-    assert!(compatible.suggested_bpm_multiplier.unwrap().is_nan(), "NaN multiplier should be detectable");
+    assert!(
+        compatible.suggested_bpm_multiplier.unwrap().is_nan(),
+        "NaN multiplier should be detectable"
+    );
 }
 
 // SUBSECTION 9.2: midi_file.rs Error Tests (26 tests)
@@ -2097,8 +2093,12 @@ fn test_midi_file_size_zero() {
         bpm: Some(120.0),
         total_notes: 0,
         parent_file_id: None,
+        ..Default::default()
     };
-    assert_eq!(file.file_size_bytes, 0, "Zero-size file should be detectable");
+    assert_eq!(
+        file.file_size_bytes, 0,
+        "Zero-size file should be detectable"
+    );
 }
 
 #[test]
@@ -2112,8 +2112,12 @@ fn test_midi_file_size_extreme_negative() {
         bpm: Some(120.0),
         total_notes: 0,
         parent_file_id: None,
+        ..Default::default()
     };
-    assert!(file.file_size_bytes < 0, "Negative file size should be detectable");
+    assert!(
+        file.file_size_bytes < 0,
+        "Negative file size should be detectable"
+    );
 }
 
 #[test]
@@ -2127,8 +2131,12 @@ fn test_midi_file_num_tracks_zero() {
         bpm: Some(120.0),
         total_notes: 0,
         parent_file_id: None,
+        ..Default::default()
     };
-    assert_eq!(file.num_tracks, 0, "Zero track count should be detectable as invalid");
+    assert_eq!(
+        file.num_tracks, 0,
+        "Zero track count should be detectable as invalid"
+    );
 }
 
 #[test]
@@ -2142,8 +2150,12 @@ fn test_midi_file_num_tracks_negative() {
         bpm: Some(120.0),
         total_notes: 0,
         parent_file_id: None,
+        ..Default::default()
     };
-    assert!(file.num_tracks < 0, "Negative track count should be detectable");
+    assert!(
+        file.num_tracks < 0,
+        "Negative track count should be detectable"
+    );
 }
 
 #[test]
@@ -2157,8 +2169,13 @@ fn test_midi_file_duration_zero() {
         bpm: Some(120.0),
         total_notes: 0,
         parent_file_id: None,
+        ..Default::default()
     };
-    assert_eq!(file.duration_seconds, Some(0.0), "Zero duration should be detectable");
+    assert_eq!(
+        file.duration_seconds,
+        Some(0.0),
+        "Zero duration should be detectable"
+    );
 }
 
 #[test]
@@ -2172,8 +2189,12 @@ fn test_midi_file_duration_extreme_negative() {
         bpm: Some(120.0),
         total_notes: 0,
         parent_file_id: None,
+        ..Default::default()
     };
-    assert!(file.duration_seconds.unwrap() < 0.0, "Negative duration should be detectable");
+    assert!(
+        file.duration_seconds.unwrap() < 0.0,
+        "Negative duration should be detectable"
+    );
 }
 
 #[test]
@@ -2187,8 +2208,12 @@ fn test_midi_file_duration_nan() {
         bpm: Some(120.0),
         total_notes: 0,
         parent_file_id: None,
+        ..Default::default()
     };
-    assert!(file.duration_seconds.unwrap().is_nan(), "NaN duration should be detectable");
+    assert!(
+        file.duration_seconds.unwrap().is_nan(),
+        "NaN duration should be detectable"
+    );
 }
 
 #[test]
@@ -2202,8 +2227,13 @@ fn test_midi_file_bpm_zero() {
         bpm: Some(0.0),
         total_notes: 0,
         parent_file_id: None,
+        ..Default::default()
     };
-    assert_eq!(file.bpm, Some(0.0), "Zero BPM should be detectable as invalid");
+    assert_eq!(
+        file.bpm,
+        Some(0.0),
+        "Zero BPM should be detectable as invalid"
+    );
 }
 
 #[test]
@@ -2217,6 +2247,7 @@ fn test_midi_file_bpm_extreme_negative() {
         bpm: Some(-999.0),
         total_notes: 0,
         parent_file_id: None,
+        ..Default::default()
     };
     assert!(file.bpm.unwrap() < 0.0, "Negative BPM should be detectable");
 }
@@ -2232,8 +2263,12 @@ fn test_midi_file_bpm_unrealistic_low() {
         bpm: Some(0.1),
         total_notes: 0,
         parent_file_id: None,
+        ..Default::default()
     };
-    assert!(file.bpm.unwrap() < 20.0, "Unrealistically slow BPM should be detectable");
+    assert!(
+        file.bpm.unwrap() < 20.0,
+        "Unrealistically slow BPM should be detectable"
+    );
 }
 
 #[test]
@@ -2247,8 +2282,12 @@ fn test_midi_file_bpm_unrealistic_high() {
         bpm: Some(10000.0),
         total_notes: 0,
         parent_file_id: None,
+        ..Default::default()
     };
-    assert!(file.bpm.unwrap() > 500.0, "Unrealistically fast BPM should be detectable");
+    assert!(
+        file.bpm.unwrap() > 500.0,
+        "Unrealistically fast BPM should be detectable"
+    );
 }
 
 #[test]
@@ -2262,6 +2301,7 @@ fn test_midi_file_bpm_nan() {
         bpm: Some(f64::NAN),
         total_notes: 0,
         parent_file_id: None,
+        ..Default::default()
     };
     assert!(file.bpm.unwrap().is_nan(), "NaN BPM should be detectable");
 }
@@ -2277,124 +2317,71 @@ fn test_midi_file_total_notes_extreme_negative() {
         bpm: Some(120.0),
         total_notes: i32::MIN,
         parent_file_id: None,
+        ..Default::default()
     };
-    assert!(file.total_notes < 0, "Negative note count should be detectable");
+    assert!(
+        file.total_notes < 0,
+        "Negative note count should be detectable"
+    );
 }
 
 // SUBSECTION 9.3: midi.rs Error Tests (48 tests - MIDI SPEC COMPLIANCE)
-#[test]
-fn test_midi_note_pitch_boundary_negative_1() {
-    let note = MidiNote {
-        pitch: -1,
-        velocity: 80,
-        start_tick: 0,
-        duration_ticks: 480,
-    };
-    assert!(note.pitch < 0, "MIDI pitch -1 violates spec (0-127)");
-}
+// NOTE: test_midi_note_pitch_boundary_negative_1 was removed because Rust's type system
+// prevents negative values on u8 at compile time. pitch is u8 and cannot hold -1.
 
 #[test]
 fn test_midi_note_pitch_boundary_128() {
-    let note = MidiNote {
-        pitch: 128,
-        velocity: 80,
-        start_tick: 0,
-        duration_ticks: 480,
-    };
+    let note = MidiNote { pitch: 128, velocity: 80, start_tick: 0, duration_ticks: 480 };
     assert!(note.pitch > 127, "MIDI pitch 128 violates spec (0-127)");
 }
 
 #[test]
 fn test_midi_note_pitch_valid_0() {
-    let note = MidiNote {
-        pitch: 0,
-        velocity: 80,
-        start_tick: 0,
-        duration_ticks: 480,
-    };
+    let note = MidiNote { pitch: 0, velocity: 80, start_tick: 0, duration_ticks: 480 };
     assert_eq!(note.pitch, 0, "MIDI pitch 0 (C-1) is valid");
 }
 
 #[test]
 fn test_midi_note_pitch_valid_127() {
-    let note = MidiNote {
-        pitch: 127,
-        velocity: 80,
-        start_tick: 0,
-        duration_ticks: 480,
-    };
+    let note = MidiNote { pitch: 127, velocity: 80, start_tick: 0, duration_ticks: 480 };
     assert_eq!(note.pitch, 127, "MIDI pitch 127 (G9) is valid");
 }
 
-#[test]
-fn test_midi_note_velocity_boundary_negative_1() {
-    let note = MidiNote {
-        pitch: 60,
-        velocity: -1,
-        start_tick: 0,
-        duration_ticks: 480,
-    };
-    assert!(note.velocity < 0, "MIDI velocity -1 violates spec (0-127)");
-}
+// NOTE: test_midi_note_velocity_boundary_negative_1 was removed because Rust's type system
+// prevents negative values on u8 at compile time. velocity is u8 and cannot hold -1.
 
 #[test]
 fn test_midi_note_velocity_boundary_128() {
-    let note = MidiNote {
-        pitch: 60,
-        velocity: 128,
-        start_tick: 0,
-        duration_ticks: 480,
-    };
-    assert!(note.velocity > 127, "MIDI velocity 128 violates spec (0-127)");
+    let note = MidiNote { pitch: 60, velocity: 128, start_tick: 0, duration_ticks: 480 };
+    assert!(
+        note.velocity > 127,
+        "MIDI velocity 128 violates spec (0-127)"
+    );
 }
 
 #[test]
 fn test_midi_note_velocity_valid_0() {
-    let note = MidiNote {
-        pitch: 60,
-        velocity: 0,
-        start_tick: 0,
-        duration_ticks: 480,
-    };
+    let note = MidiNote { pitch: 60, velocity: 0, start_tick: 0, duration_ticks: 480 };
     assert_eq!(note.velocity, 0, "MIDI velocity 0 (note-off) is valid");
 }
 
 #[test]
 fn test_midi_note_velocity_valid_127() {
-    let note = MidiNote {
-        pitch: 60,
-        velocity: 127,
-        start_tick: 0,
-        duration_ticks: 480,
-    };
+    let note = MidiNote { pitch: 60, velocity: 127, start_tick: 0, duration_ticks: 480 };
     assert_eq!(note.velocity, 127, "MIDI velocity 127 (max) is valid");
 }
 
 #[test]
 fn test_midi_note_duration_zero() {
-    let note = MidiNote {
-        pitch: 60,
-        velocity: 80,
-        start_tick: 0,
-        duration_ticks: 0,
-    };
-    assert_eq!(note.duration_ticks, 0, "Zero-length note should be detectable");
+    let note = MidiNote { pitch: 60, velocity: 80, start_tick: 0, duration_ticks: 0 };
+    assert_eq!(
+        note.duration_ticks, 0,
+        "Zero-length note should be detectable"
+    );
 }
 
-#[test]
-fn test_midi_event_channel_boundary_negative_1() {
-    let event = MidiEvent {
-        event_type: MidiEventType::NoteOn,
-        tick: 0,
-        channel: -1,
-        note: Some(60),
-        velocity: Some(80),
-        controller: None,
-        value: None,
-        program: None,
-    };
-    assert!(event.channel < 0, "MIDI channel -1 violates spec (0-15)");
-}
+// NOTE: test_midi_event_channel_boundary_negative_1 was removed because Rust's type system
+// prevents negative values on u8 at compile time. channel is u8 and cannot hold -1.
 
 #[test]
 fn test_midi_event_channel_boundary_16() {
@@ -2441,20 +2428,8 @@ fn test_midi_event_channel_valid_15() {
     assert_eq!(event.channel, 15, "MIDI channel 15 is valid");
 }
 
-#[test]
-fn test_midi_event_note_negative() {
-    let event = MidiEvent {
-        event_type: MidiEventType::NoteOn,
-        tick: 0,
-        channel: 0,
-        note: Some(-1),
-        velocity: Some(80),
-        controller: None,
-        value: None,
-        program: None,
-    };
-    assert!(event.note.unwrap() < 0, "Negative note violates MIDI spec");
-}
+// NOTE: test_midi_event_note_negative was removed because Rust's type system
+// prevents negative values on Option<u8> at compile time. note is Option<u8> and cannot hold -1.
 
 #[test]
 fn test_midi_event_note_overflow_128() {
@@ -2468,23 +2443,14 @@ fn test_midi_event_note_overflow_128() {
         value: None,
         program: None,
     };
-    assert!(event.note.unwrap() > 127, "Note 128 violates MIDI spec (0-127)");
+    assert!(
+        event.note.unwrap() > 127,
+        "Note 128 violates MIDI spec (0-127)"
+    );
 }
 
-#[test]
-fn test_midi_event_velocity_negative() {
-    let event = MidiEvent {
-        event_type: MidiEventType::NoteOn,
-        tick: 0,
-        channel: 0,
-        note: Some(60),
-        velocity: Some(-1),
-        controller: None,
-        value: None,
-        program: None,
-    };
-    assert!(event.velocity.unwrap() < 0, "Negative velocity violates MIDI spec");
-}
+// NOTE: test_midi_event_velocity_negative was removed because Rust's type system
+// prevents negative values on Option<u8> at compile time. velocity is Option<u8> and cannot hold -1.
 
 #[test]
 fn test_midi_event_velocity_overflow_128() {
@@ -2498,7 +2464,10 @@ fn test_midi_event_velocity_overflow_128() {
         value: None,
         program: None,
     };
-    assert!(event.velocity.unwrap() > 127, "Velocity 128 violates MIDI spec (0-127)");
+    assert!(
+        event.velocity.unwrap() > 127,
+        "Velocity 128 violates MIDI spec (0-127)"
+    );
 }
 
 #[test]
@@ -2513,7 +2482,10 @@ fn test_midi_event_controller_reserved_120() {
         value: Some(0),
         program: None,
     };
-    assert!(event.controller.unwrap() >= 120, "CC 120 is reserved (channel mode messages)");
+    assert!(
+        event.controller.unwrap() >= 120,
+        "CC 120 is reserved (channel mode messages)"
+    );
 }
 
 #[test]
@@ -2528,23 +2500,16 @@ fn test_midi_event_controller_reserved_127() {
         value: Some(0),
         program: None,
     };
-    assert_eq!(event.controller.unwrap(), 127, "CC 127 is Poly Mode On (reserved)");
+    assert_eq!(
+        event.controller.unwrap(),
+        127,
+        "CC 127 is Poly Mode On (reserved)"
+    );
 }
 
-#[test]
-fn test_midi_event_controller_negative() {
-    let event = MidiEvent {
-        event_type: MidiEventType::ControlChange,
-        tick: 0,
-        channel: 0,
-        note: None,
-        velocity: None,
-        controller: Some(-1),
-        value: Some(0),
-        program: None,
-    };
-    assert!(event.controller.unwrap() < 0, "Negative controller violates MIDI spec");
-}
+// REMOVED: test_midi_event_controller_negative
+// Rust's type system prevents negative values on Option<u8> at compile time.
+// controller: Option<u8> cannot hold -1. This test was creating an impossible state.
 
 #[test]
 fn test_midi_event_controller_overflow_255() {
@@ -2561,20 +2526,9 @@ fn test_midi_event_controller_overflow_255() {
     assert!(event.controller.unwrap() > 127, "CC 255 exceeds MIDI spec");
 }
 
-#[test]
-fn test_midi_event_program_negative() {
-    let event = MidiEvent {
-        event_type: MidiEventType::ProgramChange,
-        tick: 0,
-        channel: 0,
-        note: None,
-        velocity: None,
-        controller: None,
-        value: None,
-        program: Some(-1),
-    };
-    assert!(event.program.unwrap() < 0, "Negative program violates MIDI spec");
-}
+// REMOVED: test_midi_event_program_negative
+// Rust's type system prevents negative values on Option<u8> at compile time.
+// program: Option<u8> cannot hold -1. This test was creating an impossible state.
 
 #[test]
 fn test_midi_event_program_overflow_128() {
@@ -2588,7 +2542,10 @@ fn test_midi_event_program_overflow_128() {
         value: None,
         program: Some(128),
     };
-    assert!(event.program.unwrap() > 127, "Program 128 violates MIDI spec (0-127)");
+    assert!(
+        event.program.unwrap() > 127,
+        "Program 128 violates MIDI spec (0-127)"
+    );
 }
 
 #[test]
@@ -2603,23 +2560,15 @@ fn test_midi_event_program_overflow_255() {
         value: None,
         program: Some(255),
     };
-    assert!(event.program.unwrap() > 127, "Program 255 exceeds MIDI spec");
+    assert!(
+        event.program.unwrap() > 127,
+        "Program 255 exceeds MIDI spec"
+    );
 }
 
-#[test]
-fn test_midi_event_tick_negative() {
-    let event = MidiEvent {
-        event_type: MidiEventType::NoteOn,
-        tick: -1,
-        channel: 0,
-        note: Some(60),
-        velocity: Some(80),
-        controller: None,
-        value: None,
-        program: None,
-    };
-    assert!(event.tick < 0, "Negative tick violates timing spec");
-}
+// REMOVED: test_midi_event_tick_negative
+// Rust's type system prevents negative values on u64 at compile time.
+// tick: u64 cannot hold -1. This test was creating an impossible state.
 
 #[test]
 fn test_midi_event_tick_zero_valid() {
@@ -2638,39 +2587,39 @@ fn test_midi_event_tick_zero_valid() {
 
 #[test]
 fn test_midi_pattern_ticks_per_quarter_zero() {
-    let pattern = MidiPattern {
-        ticks_per_quarter_note: 0,
-        total_ticks: 1000,
-        events: vec![],
-    };
-    assert_eq!(pattern.ticks_per_quarter_note, 0, "Zero TPQN should be detectable as invalid");
+    let pattern = MidiPattern { ticks_per_quarter_note: 0, total_ticks: 1000, events: vec![] };
+    assert_eq!(
+        pattern.ticks_per_quarter_note, 0,
+        "Zero TPQN should be detectable as invalid"
+    );
 }
 
 #[test]
 fn test_midi_pattern_total_ticks_zero() {
-    let pattern = MidiPattern {
-        ticks_per_quarter_note: 480,
-        total_ticks: 0,
-        events: vec![],
-    };
-    assert_eq!(pattern.total_ticks, 0, "Zero-length pattern should be detectable");
+    let pattern = MidiPattern { ticks_per_quarter_note: 480, total_ticks: 0, events: vec![] };
+    assert_eq!(
+        pattern.total_ticks, 0,
+        "Zero-length pattern should be detectable"
+    );
 }
 
 #[test]
 fn test_midi_device_empty_name() {
-    let device = MidiDevice {
-        name: "".to_string(),
-    };
-    assert!(device.name.is_empty(), "Empty device name should be detectable");
+    let device = MidiDevice { name: "".to_string(), manufacturer: None };
+    assert!(
+        device.name.is_empty(),
+        "Empty device name should be detectable"
+    );
 }
 
 #[test]
 fn test_midi_device_very_long_name() {
     let long_name = "A".repeat(10000);
-    let device = MidiDevice {
-        name: long_name,
-    };
-    assert!(device.name.len() > 255, "Very long device name should be detectable as potential issue");
+    let device = MidiDevice { name: long_name, manufacturer: None };
+    assert!(
+        device.name.len() > 255,
+        "Very long device name should be detectable as potential issue"
+    );
 }
 
 // SUBSECTION 9.4: search.rs Error Tests (12 tests)
@@ -2679,16 +2628,24 @@ fn test_search_filters_bpm_min_exceeds_max() {
     let filters = SearchFilters {
         min_bpm: Some(180.0),
         max_bpm: Some(100.0),
-        min_duration: None,
-        max_duration: None,
+        key_signature: None,
+        time_signature: None,
+        category: None,
         min_notes: None,
         max_notes: None,
-        key_signatures: vec![],
-        time_signatures: vec![],
+        min_duration: None,
+        max_duration: None,
+        instruments: None,
+        search_text: None,
+        sort_by: None,
+        sort_desc: None,
         limit: None,
         offset: None,
     };
-    assert!(filters.min_bpm > filters.max_bpm, "min_bpm > max_bpm should be detectable");
+    assert!(
+        filters.min_bpm > filters.max_bpm,
+        "min_bpm > max_bpm should be detectable"
+    );
 }
 
 #[test]
@@ -2696,16 +2653,24 @@ fn test_search_filters_bpm_negative_range() {
     let filters = SearchFilters {
         min_bpm: Some(-50.0),
         max_bpm: Some(-10.0),
-        min_duration: None,
-        max_duration: None,
+        key_signature: None,
+        time_signature: None,
+        category: None,
         min_notes: None,
         max_notes: None,
-        key_signatures: vec![],
-        time_signatures: vec![],
+        min_duration: None,
+        max_duration: None,
+        instruments: None,
+        search_text: None,
+        sort_by: None,
+        sort_desc: None,
         limit: None,
         offset: None,
     };
-    assert!(filters.min_bpm.unwrap() < 0.0, "Negative BPM range should be detectable");
+    assert!(
+        filters.min_bpm.unwrap() < 0.0,
+        "Negative BPM range should be detectable"
+    );
 }
 
 #[test]
@@ -2713,16 +2678,24 @@ fn test_search_filters_bpm_nan() {
     let filters = SearchFilters {
         min_bpm: Some(f32::NAN),
         max_bpm: None,
-        min_duration: None,
-        max_duration: None,
+        key_signature: None,
+        time_signature: None,
+        category: None,
         min_notes: None,
         max_notes: None,
-        key_signatures: vec![],
-        time_signatures: vec![],
+        min_duration: None,
+        max_duration: None,
+        instruments: None,
+        search_text: None,
+        sort_by: None,
+        sort_desc: None,
         limit: None,
         offset: None,
     };
-    assert!(filters.min_bpm.unwrap().is_nan(), "NaN BPM filter should be detectable");
+    assert!(
+        filters.min_bpm.unwrap().is_nan(),
+        "NaN BPM filter should be detectable"
+    );
 }
 
 #[test]
@@ -2730,16 +2703,24 @@ fn test_search_filters_notes_min_exceeds_max() {
     let filters = SearchFilters {
         min_bpm: None,
         max_bpm: None,
-        min_duration: None,
-        max_duration: None,
+        key_signature: None,
+        time_signature: None,
+        category: None,
         min_notes: Some(1000),
         max_notes: Some(100),
-        key_signatures: vec![],
-        time_signatures: vec![],
+        min_duration: None,
+        max_duration: None,
+        instruments: None,
+        search_text: None,
+        sort_by: None,
+        sort_desc: None,
         limit: None,
         offset: None,
     };
-    assert!(filters.min_notes > filters.max_notes, "min_notes > max_notes should be detectable");
+    assert!(
+        filters.min_notes > filters.max_notes,
+        "min_notes > max_notes should be detectable"
+    );
 }
 
 #[test]
@@ -2747,16 +2728,24 @@ fn test_search_filters_duration_min_exceeds_max() {
     let filters = SearchFilters {
         min_bpm: None,
         max_bpm: None,
-        min_duration: Some(300.0),
-        max_duration: Some(60.0),
+        key_signature: None,
+        time_signature: None,
+        category: None,
         min_notes: None,
         max_notes: None,
-        key_signatures: vec![],
-        time_signatures: vec![],
+        min_duration: Some(300.0),
+        max_duration: Some(60.0),
+        instruments: None,
+        search_text: None,
+        sort_by: None,
+        sort_desc: None,
         limit: None,
         offset: None,
     };
-    assert!(filters.min_duration > filters.max_duration, "min_duration > max_duration should be detectable");
+    assert!(
+        filters.min_duration > filters.max_duration,
+        "min_duration > max_duration should be detectable"
+    );
 }
 
 #[test]
@@ -2764,16 +2753,24 @@ fn test_search_filters_duration_negative() {
     let filters = SearchFilters {
         min_bpm: None,
         max_bpm: None,
-        min_duration: Some(-30.0),
-        max_duration: None,
+        key_signature: None,
+        time_signature: None,
+        category: None,
         min_notes: None,
         max_notes: None,
-        key_signatures: vec![],
-        time_signatures: vec![],
+        min_duration: Some(-30.0),
+        max_duration: None,
+        instruments: None,
+        search_text: None,
+        sort_by: None,
+        sort_desc: None,
         limit: None,
         offset: None,
     };
-    assert!(filters.min_duration.unwrap() < 0.0, "Negative duration filter should be detectable");
+    assert!(
+        filters.min_duration.unwrap() < 0.0,
+        "Negative duration filter should be detectable"
+    );
 }
 
 #[test]
@@ -2781,16 +2778,24 @@ fn test_search_filters_limit_negative() {
     let filters = SearchFilters {
         min_bpm: None,
         max_bpm: None,
-        min_duration: None,
-        max_duration: None,
+        key_signature: None,
+        time_signature: None,
+        category: None,
         min_notes: None,
         max_notes: None,
-        key_signatures: vec![],
-        time_signatures: vec![],
+        min_duration: None,
+        max_duration: None,
+        instruments: None,
+        search_text: None,
+        sort_by: None,
+        sort_desc: None,
         limit: Some(-10),
         offset: None,
     };
-    assert!(filters.limit.unwrap() < 0, "Negative limit should be detectable");
+    assert!(
+        filters.limit.unwrap() < 0,
+        "Negative limit should be detectable"
+    );
 }
 
 #[test]
@@ -2798,16 +2803,25 @@ fn test_search_filters_limit_zero() {
     let filters = SearchFilters {
         min_bpm: None,
         max_bpm: None,
-        min_duration: None,
-        max_duration: None,
+        key_signature: None,
+        time_signature: None,
+        category: None,
         min_notes: None,
         max_notes: None,
-        key_signatures: vec![],
-        time_signatures: vec![],
+        min_duration: None,
+        max_duration: None,
+        instruments: None,
+        search_text: None,
+        sort_by: None,
+        sort_desc: None,
         limit: Some(0),
         offset: None,
     };
-    assert_eq!(filters.limit, Some(0), "Zero limit should be detectable as requesting zero results");
+    assert_eq!(
+        filters.limit,
+        Some(0),
+        "Zero limit should be detectable as requesting zero results"
+    );
 }
 
 #[test]
@@ -2815,44 +2829,43 @@ fn test_search_filters_offset_negative() {
     let filters = SearchFilters {
         min_bpm: None,
         max_bpm: None,
-        min_duration: None,
-        max_duration: None,
+        key_signature: None,
+        time_signature: None,
+        category: None,
         min_notes: None,
         max_notes: None,
-        key_signatures: vec![],
-        time_signatures: vec![],
+        min_duration: None,
+        max_duration: None,
+        instruments: None,
+        search_text: None,
+        sort_by: None,
+        sort_desc: None,
         limit: None,
         offset: Some(-100),
     };
-    assert!(filters.offset.unwrap() < 0, "Negative offset should be detectable");
+    assert!(
+        filters.offset.unwrap() < 0,
+        "Negative offset should be detectable"
+    );
 }
 
 // SUBSECTION 9.5: sequencer.rs Error Tests (10 tests)
-#[test]
-fn test_track_channel_negative() {
-    let track = Track {
-        id: 1,
-        file_id: 1,
-        channel: -1,
-        muted: false,
-        solo: false,
-        volume: 100,
-        pan: 64,
-        events: vec![],
-    };
-    assert!(track.channel < 0, "Negative MIDI channel violates spec (0-15)");
-}
+// NOTE: test_track_channel_negative was removed because Rust's type system
+// prevents negative values on u8 at compile time. This is a fundamentally
+// broken test - u8 cannot hold -1.
 
 #[test]
 fn test_track_channel_overflow_16() {
     let track = Track {
         id: 1,
+        name: "Channel Test".to_string(),
         file_id: 1,
         channel: 16,
         muted: false,
         solo: false,
         volume: 100,
         pan: 64,
+        color: "#FF0000".to_string(),
         events: vec![],
     };
     assert!(track.channel > 15, "Channel 16 violates MIDI spec (0-15)");
@@ -2862,74 +2875,55 @@ fn test_track_channel_overflow_16() {
 fn test_track_volume_overflow_128() {
     let track = Track {
         id: 1,
+        name: "Volume Test".to_string(),
         file_id: 1,
         channel: 0,
         muted: false,
         solo: false,
         volume: 128,
         pan: 64,
+        color: "#FF0000".to_string(),
         events: vec![],
     };
     assert!(track.volume > 127, "Volume 128 violates MIDI spec (0-127)");
 }
 
-#[test]
-fn test_track_volume_negative() {
-    let track = Track {
-        id: 1,
-        file_id: 1,
-        channel: 0,
-        muted: false,
-        solo: false,
-        volume: -1,
-        pan: 64,
-        events: vec![],
-    };
-    assert!(track.volume < 0, "Negative volume should be detectable");
-}
+// NOTE: test_track_volume_negative was removed because Rust's type system
+// prevents negative values on u8 at compile time. u8 cannot hold -1.
 
 #[test]
 fn test_track_pan_overflow_128() {
     let track = Track {
         id: 1,
+        name: "Pan Test".to_string(),
         file_id: 1,
         channel: 0,
         muted: false,
         solo: false,
         volume: 100,
         pan: 128,
+        color: "#FF0000".to_string(),
+        events: vec![],
     };
     assert!(track.pan > 127, "Pan 128 violates MIDI spec (0-127)");
 }
 
-#[test]
-fn test_track_pan_negative() {
-    let track = Track {
-        id: 1,
-        file_id: 1,
-        channel: 0,
-        muted: false,
-        solo: false,
-        volume: 100,
-        pan: -1,
-    };
-    assert!(track.pan < 0, "Negative pan should be detectable");
-}
+// NOTE: test_track_pan_negative was removed because Rust's type system
+// prevents negative values on u8 at compile time. u8 cannot hold -1.
 
 #[test]
 fn test_sequencer_state_tempo_zero() {
     let state = SequencerState {
         is_playing: false,
         tempo: 0.0,
-        position: PlaybackPosition {
-            current_tick: 0,
-            current_bar: 0,
-            current_beat: 0,
-            total_bars: 0,
-        },
-        tracks_active: 0,
+        position: 0,
+        tracks: vec![],
+        next_track_id: 1,
     };
-    assert_eq!(state.tempo, 0.0, "Zero tempo should be detectable as invalid");
+    assert_eq!(
+        state.tempo, 0.0,
+        "Zero tempo should be detectable as invalid"
+    );
 }
 
 #[test]
@@ -2937,40 +2931,29 @@ fn test_sequencer_state_tempo_negative() {
     let state = SequencerState {
         is_playing: false,
         tempo: -120.0,
-        position: PlaybackPosition {
-            current_tick: 0,
-            current_bar: 0,
-            current_beat: 0,
-            total_bars: 0,
-        },
-        tracks_active: 0,
+        position: 0,
+        tracks: vec![],
+        next_track_id: 1,
     };
     assert!(state.tempo < 0.0, "Negative tempo should be detectable");
 }
 
-#[test]
-fn test_playback_position_negative_values() {
-    let position = PlaybackPosition {
-        current_tick: -1,
-        current_bar: -1,
-        current_beat: -1,
-        total_bars: -1,
-    };
-    assert!(position.current_tick < 0, "Negative current_tick should be detectable");
-    assert!(position.current_bar < 0, "Negative current_bar should be detectable");
-    assert!(position.current_beat < 0, "Negative current_beat should be detectable");
-}
+// NOTE: test_playback_position_negative_values was removed because Rust's type system
+// prevents negative values on unsigned types at compile time:
+// - current_tick is u64 (cannot hold -1)
+// - current_bar is u32 (cannot hold -1)
+// - current_beat is u32 (cannot hold -1)
+// - total_bars field does not exist in PlaybackPosition struct
 
 // ============================================================================
 // SECTION 8: Module Documentation Update
 // ============================================================================
-   ///
-   /// **Phase 9: Complete Error Path Testing & 100% Quality Achievement**
-   /// - Section 9 adds 118 comprehensive error path tests
-   /// - CRITICAL: Phase 4 error coverage: 22% → 100%
-   /// - Total tests: 94 → 212 (+118 new error tests)
-   /// - All MIDI spec compliance validated (pitch 0-127, velocity 0-127, channels 0-15, CC 0-119)
-   /// - All boundary conditions tested (negative, zero, overflow, NaN, infinity)
-   /// - All cross-field constraint violations validated
-   /// - Error coverage: 22% → 95%+ for DAW models layer
-   ///
+//
+// **Phase 9: Complete Error Path Testing & 100% Quality Achievement**
+// - Section 9 adds 118 comprehensive error path tests
+// - CRITICAL: Phase 4 error coverage: 22% → 100%
+// - Total tests: 94 → 212 (+118 new error tests)
+// - All MIDI spec compliance validated (pitch 0-127, velocity 0-127, channels 0-15, CC 0-119)
+// - All boundary conditions tested (negative, zero, overflow, NaN, infinity)
+// - All cross-field constraint violations validated
+// - Error coverage: 22% → 95%+ for DAW models layer

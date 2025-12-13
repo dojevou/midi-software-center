@@ -1,4 +1,3 @@
-
 /// Piano Roll Undo/Redo Commands - Trusty Module
 ///
 /// Commands for piano roll operations: add/delete/move notes, set velocity, quantize, transpose.

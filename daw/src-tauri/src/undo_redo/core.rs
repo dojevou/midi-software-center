@@ -1,4 +1,3 @@
-
 /// Core Undo/Redo System - Trusty Module
 ///
 /// Pure command pattern implementation with no I/O or side effects.

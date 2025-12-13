@@ -1,4 +1,3 @@
-
 /// Velocity Editor Undo/Redo Commands - Trusty Module
 ///
 /// Commands for velocity editor operations: set range, interpolate, reset velocities.

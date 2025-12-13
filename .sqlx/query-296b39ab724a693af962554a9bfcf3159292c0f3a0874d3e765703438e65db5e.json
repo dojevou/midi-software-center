@@ -1,0 +1,58 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT f.id, f.filename, f.original_filename, f.filepath, f.parent_folder,\n               m.bpm, m.key_signature::text as \"key_signature?\"\n        FROM files f\n        LEFT JOIN musical_metadata m ON f.id = m.file_id\n        WHERE f.id = $1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "filename",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "original_filename",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "filepath",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 4,
+        "name": "parent_folder",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "bpm",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 6,
+        "name": "key_signature?",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      null
+    ]
+  },
+  "hash": "296b39ab724a693af962554a9bfcf3159292c0f3a0874d3e765703438e65db5e"
+}

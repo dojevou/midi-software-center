@@ -1,4 +1,3 @@
-
 /// Tauri Command Handlers - Task-O-Matic
 ///
 /// Entry points for undo/redo operations exposed to frontend.

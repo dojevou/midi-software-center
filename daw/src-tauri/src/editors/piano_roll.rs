@@ -257,8 +257,11 @@ pub async fn select_note(
         .map_err(|e| e.to_string())
 }
 
+// Note: add_note command moved to commands/piano_roll.rs to avoid duplicate command definitions
+// This editor version uses add_note_simple for direct parameter passing
+
 #[tauri::command]
-pub async fn add_note(
+pub async fn add_note_simple(
     state: State<'_, Mutex<PianoRollState>>,
     pitch: u8,
     velocity: u8,

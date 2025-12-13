@@ -17,8 +17,8 @@
 pub mod state;
 
 pub use state::{
-    DAWWindowState, MixerWindowState, PlaybackPosition, PlaybackState,
-    TrackInfo,
+    DAWWindowState, MixerChannel, MixerWindowState, PlaybackPosition, PlaybackState, TrackInfo,
+    TransportInfo,
 };
 
 #[cfg(test)]

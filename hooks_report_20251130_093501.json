@@ -1,0 +1,172 @@
+{
+  "timestamp": "20251130_093501",
+  "component": "hooks",
+  "project": {
+    "name": "hooks",
+    "path": "/home/dojevou/projects/midi-software-center/temp_hooks_report",
+    "total_files": 2,
+    "total_lines": 248,
+    "total_loc": 217,
+    "total_functions": 0,
+    "total_classes": 0,
+    "avg_pylint_score": 0,
+    "avg_complexity": 0,
+    "avg_maintainability": 0,
+    "docstring_coverage": 0,
+    "files_by_extension": {
+      ".ts": {
+        "count": 2,
+        "lines": 248
+      }
+    },
+    "top_imports": [],
+    "security_issues": [],
+    "all_todos": []
+  },
+  "files": [
+    {
+      "path": "hooks.client.ts",
+      "name": "hooks.client.ts",
+      "extension": ".ts",
+      "lines": 24,
+      "lines_of_code": 20,
+      "blank_lines": 4,
+      "comment_lines": 0,
+      "imports": [],
+      "functions": [],
+      "classes": [],
+      "todos": [],
+      "pylint_score": null,
+      "complexity": null,
+      "maintainability": null,
+      "has_docstring": false,
+      "docstring_coverage": 0.0,
+      "issues": []
+    },
+    {
+      "path": "profiling_hooks.ts",
+      "name": "profiling_hooks.ts",
+      "extension": ".ts",
+      "lines": 224,
+      "lines_of_code": 197,
+      "blank_lines": 27,
+      "comment_lines": 0,
+      "imports": [],
+      "functions": [],
+      "classes": [],
+      "todos": [],
+      "pylint_score": null,
+      "complexity": null,
+      "maintainability": null,
+      "has_docstring": false,
+      "docstring_coverage": 0.0,
+      "issues": []
+    }
+  ],
+  "git": {
+    "is_git_repo": true,
+    "current_branch": "main",
+    "total_commits": 126,
+    "contributors": [
+      {
+        "commits": 126,
+        "name": "dojevou"
+      }
+    ],
+    "recent_commits": [
+      {
+        "hash": "bc06830",
+        "message": "docs(CLAUDE.md): comprehensive update with Nov 19-21 feature",
+        "when": "9 days ago"
+      },
+      {
+        "hash": "26d60bf",
+        "message": "fix(pipeline): resolve database schema mismatch in Phase 4 o",
+        "when": "3 weeks ago"
+      },
+      {
+        "hash": "5483fe7",
+        "message": "fix(gui): Add comprehensive webview debugging guide",
+        "when": "3 weeks ago"
+      },
+      {
+        "hash": "62bee00",
+        "message": "debug(gui): Add GUI launch debugging and session summary",
+        "when": "3 weeks ago"
+      },
+      {
+        "hash": "9b24207",
+        "message": "fix(drum-analyzer): resolve Phase 6 real-world validation te",
+        "when": "3 weeks ago"
+      },
+      {
+        "hash": "114ee96",
+        "message": "docs(drum-analyzer): Phase 6 session summary - production va",
+        "when": "3 weeks ago"
+      },
+      {
+        "hash": "dd9f250",
+        "message": "docs(drum-analyzer): Phase 6 real-world validation findings",
+        "when": "3 weeks ago"
+      },
+      {
+        "hash": "239f0b0",
+        "message": "test(drum-analyzer): add Phase 6 real-world validation test ",
+        "when": "3 weeks ago"
+      },
+      {
+        "hash": "fe32245",
+        "message": "fix(auto-tagging): Phase 5 integration tests - all 70 tests ",
+        "when": "3 weeks ago"
+      },
+      {
+        "hash": "0613ae2",
+        "message": "feat(auto-tagging): integrate drum analyzer with auto_tagger",
+        "when": "3 weeks ago"
+      }
+    ],
+    "high_churn_files": [
+      {
+        "file": "derive_injector.py",
+        "changes": 1
+      },
+      {
+        "file": "error_parser.py",
+        "changes": 1
+      },
+      {
+        "file": "format_string_fixer.py",
+        "changes": 1
+      },
+      {
+        "file": "fix_list_files.py",
+        "changes": 1
+      },
+      {
+        "file": "fix_e0308_appstate.py",
+        "changes": 1
+      },
+      {
+        "file": "fix_e0308_pool.py",
+        "changes": 1
+      },
+      {
+        "file": "fix_add_tags_calls.py",
+        "changes": 1
+      },
+      {
+        "file": "ultra_supercharged_grok_reviewer.py",
+        "changes": 1
+      },
+      {
+        "file": "grok4_project_reviewer.py",
+        "changes": 1
+      },
+      {
+        "file": "midi_grok_reviewer.py",
+        "changes": 1
+      }
+    ]
+  },
+  "backup": "/home/dojevou/projects/midi-software-center/backups/project_backup_20251130_093501.zip"
+}

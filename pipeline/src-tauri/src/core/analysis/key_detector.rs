@@ -1,4 +1,3 @@
-
 /// Key Detection Module
 ///
 /// Implements the Krumhansl-Schmuckler key-finding algorithm to detect

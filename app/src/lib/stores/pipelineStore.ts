@@ -1,79 +1,43 @@
-import { writable, type Writable } from 'svelte/store';
+import { writable } from 'svelte/store';
 import type { ImportProgress, ImportSummary } from '../types';
 
 export interface PipelineState {
-  operation: 'import' | 'analysis' | null;
-  isRunning: boolean;
-  isPaused: boolean;
-  progress: number;
-  currentFile: string;
-  processed: number;
-  totalFiles: number;
+  operation: 'idle' | 'importing' | 'analyzing' | 'archiving';
+  progress: ImportProgress;
   errors: string[];
-  lastResult: ImportSummary | null;
 }
 
-const initialState: PipelineState = {
-  operation: null,
-  isRunning: false,
-  isPaused: false,
-  progress: 0,
-  currentFile: '',
-  processed: 0,
-  totalFiles: 0,
+// Store
+const { subscribe, set, update } = writable<PipelineState>({
+  operation: 'idle',
+  progress: { current: 0, total: 0, rate: 0, eta: 0 },
   errors: [],
-  lastResult: null
-};
+});
 
-const { subscribe, set, update }: Writable<PipelineState> = writable(initialState);
+export const pipelineStore = { subscribe };
 
-const pipelineActions = {
-  startOperation: (operation: 'import' | 'analysis') => {
-    update((state: PipelineState) => ({
+// Actions (separate export)
+export const pipelineActions = {
+  startOperation: async (operation: 'import' | 'analyze' | 'archive') => {
+    update((state) => ({
       ...state,
-      operation,
-      isRunning: true,
-      isPaused: false,
-      progress: 0,
-      currentFile: '',
-      processed: 0,
-      totalFiles: 0,
-      errors: [],
-      lastResult: null
+      operation:
+        operation === 'import' ? 'importing' : operation === 'analyze' ? 'analyzing' : 'archiving',
     }));
   },
-
   pauseOperation: () => {
-    update((state: PipelineState) => ({ ...state, isPaused: true }));
+    update((state) => ({ ...state, operation: 'idle' }));
   },
-
   stopOperation: () => {
-    set(initialState);
+    update((state) => ({ ...state, operation: 'idle' }));
   },
-
   updateProgress: (progress: ImportProgress) => {
-    update((state: PipelineState) => ({
-      ...state,
-      progress: (progress.current / progress.total) * 100,
-      currentFile: progress.current_file,
-      processed: progress.current,
-      totalFiles: progress.total
-    }));
+    update((state) => ({ ...state, progress }));
   },
-
-  setComplete: (result: ImportSummary) => {
-    update((state: PipelineState) => ({
-      ...state,
-      isRunning: false,
-      isPaused: false,
-      lastResult: result
-    }));
+  setComplete: (result: ImportSummary, progress?: ImportProgress) => {
+    update((state) => ({ ...state, operation: 'idle', errors: result.errors || [] }));
   },
-
   clearErrors: () => {
-    update((state: PipelineState) => ({ ...state, errors: [] }));
-  }
+    update((state) => ({ ...state, errors: [] }));
+  },
 };
-
-export const pipelineStore = { subscribe, ...pipelineActions };
-export { pipelineActions };

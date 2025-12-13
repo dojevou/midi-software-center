@@ -12,13 +12,40 @@ export const DEFAULT_BPM = 120;
 export const NOTE_NAMES = ['C', 'C#', 'D', 'D#', 'E', 'F', 'F#', 'G', 'G#', 'A', 'A#', 'B'];
 
 export const MUSICAL_KEYS = [
-  'C', 'Cm', 'C#', 'C#m', 'D', 'Dm', 'D#', 'D#m',
-  'E', 'Em', 'F', 'Fm', 'F#', 'F#m', 'G', 'Gm',
-  'G#', 'G#m', 'A', 'Am', 'A#', 'A#m', 'B', 'Bm'
+  'C',
+  'Cm',
+  'C#',
+  'C#m',
+  'D',
+  'Dm',
+  'D#',
+  'D#m',
+  'E',
+  'Em',
+  'F',
+  'Fm',
+  'F#',
+  'F#m',
+  'G',
+  'Gm',
+  'G#',
+  'G#m',
+  'A',
+  'Am',
+  'A#',
+  'A#m',
+  'B',
+  'Bm',
 ];
 
 export const TIME_SIGNATURES = [
-  [4, 4], [3, 4], [6, 8], [5, 4], [7, 8], [2, 4], [12, 8]
+  [4, 4],
+  [3, 4],
+  [6, 8],
+  [5, 4],
+  [7, 8],
+  [2, 4],
+  [12, 8],
 ];
 
 // ============================================================================
@@ -26,8 +53,19 @@ export const TIME_SIGNATURES = [
 // ============================================================================
 
 export const FILE_CATEGORIES = [
-  'KICK', 'SNARE', 'HIHAT', 'PERCUSSION', 'BASS', 'LEAD',
-  'PAD', 'CHORD', 'ARP', 'FX', 'VOCAL', 'LOOP', 'UNKNOWN'
+  'KICK',
+  'SNARE',
+  'HIHAT',
+  'PERCUSSION',
+  'BASS',
+  'LEAD',
+  'PAD',
+  'CHORD',
+  'ARP',
+  'FX',
+  'VOCAL',
+  'LOOP',
+  'UNKNOWN',
 ] as const;
 
 // ============================================================================

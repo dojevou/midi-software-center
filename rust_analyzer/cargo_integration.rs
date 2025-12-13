@@ -241,6 +241,7 @@ impl CargoAnalyzer {
     fn analyze_features(&self) -> FeatureAnalysis {
         let mut unused_features = Vec::new();
         let mut optional_always_used = Vec::new();
+        let circular_features = self.detect_circular_features();
 
         for package in &self.metadata.packages {
             // Check for unused features
@@ -260,9 +261,75 @@ impl CargoAnalyzer {
 
         FeatureAnalysis {
             unused_features,
-            circular_features: vec![], // TODO: Implement circular feature detection
+            circular_features,
             optional_always_used,
         }
+    }
+
+    fn detect_circular_features(&self) -> Vec<String> {
+        // SAFETY: This function builds a dependency graph for feature detection.
+        // We use HashMap for cycle detection, which is a standard algorithm with no unsafe operations.
+        // The graph construction safely borrows metadata packages and iterates through dependencies.
+        let mut feature_graph: HashMap<String, HashSet<String>> = HashMap::new();
+        let mut circular_features = Vec::new();
+
+        // Build feature dependency graph
+        for package in &self.metadata.packages {
+            for (feature_name, feature_deps) in &package.features {
+                let full_name = format!("{}/{}", package.name, feature_name);
+                feature_graph.entry(full_name.clone()).or_insert_with(HashSet::new);
+
+                // Parse feature dependencies (simple extraction of feature names)
+                for dep in feature_deps {
+                    if let Some(dep_name) = dep.split('/').next() {
+                        feature_graph
+                            .entry(full_name.clone())
+                            .or_insert_with(HashSet::new)
+                            .insert(dep_name.to_string());
+                    }
+                }
+            }
+        }
+
+        // Detect cycles using DFS with recursion stack tracking
+        let mut visited = HashSet::new();
+        let mut rec_stack = HashSet::new();
+
+        for feature in feature_graph.keys() {
+            if !visited.contains(feature) {
+                if self.has_cycle_dfs(feature, &feature_graph, &mut visited, &mut rec_stack) {
+                    circular_features.push(feature.clone());
+                }
+            }
+        }
+
+        circular_features
+    }
+
+    fn has_cycle_dfs(
+        &self,
+        node: &str,
+        graph: &HashMap<String, HashSet<String>>,
+        visited: &mut HashSet<String>,
+        rec_stack: &mut HashSet<String>,
+    ) -> bool {
+        visited.insert(node.to_string());
+        rec_stack.insert(node.to_string());
+
+        if let Some(neighbors) = graph.get(node) {
+            for neighbor in neighbors {
+                if !visited.contains(neighbor) {
+                    if self.has_cycle_dfs(neighbor, graph, visited, rec_stack) {
+                        return true;
+                    }
+                } else if rec_stack.contains(neighbor) {
+                    return true;
+                }
+            }
+        }
+
+        rec_stack.remove(node);
+        false
     }
 
     fn is_feature_used(&self, _package: &Package, _feature: &str) -> bool {

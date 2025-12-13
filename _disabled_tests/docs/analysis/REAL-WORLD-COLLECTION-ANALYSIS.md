@@ -1,0 +1,687 @@
+# Real-World MIDI Collection Analysis
+
+**Source:** /home/dojevou/projects/midi-software-center/midi-library/archives
+**Total Files:** 9,302,142 MIDI files
+**Date Analyzed:** 2025-11-19 21:12:06
+
+---
+
+## 📁 GENRE & STYLE TAGS (from Folder Names)
+
+000003@THE_METAL_FOUNDRY
+000006@THE_METAL_FOUNDRY
+000011@SUPERIOR_DRUMMER_3
+00003@THE_METAL_FOUNDRY
+000041@EZD_POP#ROCK
+000043@EZX_DRUMKIT_FROM_HELL
+000044@EZX_VINTAGE_ROCK
+000045@EZX_LATIN_PERCUSSION
+000046@EZXDRUMKIT_FROM_HELL
+000048@EZXFUNKMASTERS
+000049@EZX_FUNKMASTERS
+000050@EZX_JAZZ
+000050@EZXJAZZ
+000051@EZXLATIN_PERCUSSION
+000052@EZXMETAL!
+000053@EZXMETAL_MACHINE
+000054@EZXMETALHEADS
+000057@EZXPOP!
+000058@EZXROCK!
+000059@EZXROCK_SOLID
+000060@EZXTHE_BLUES
+000063@EZXVINTAGE_ROCK
+000084@THE_ROCK_FOUNDRY
+000089@BLUES
+000100@ROCK_SONGS
+000110@METAL
+000110@MIDIPACK - HipHop
+000110@MIDIPACK - METAL
+000110@ROCK
+000210@BLUES
+000210@FUNK_HIP_HOP_RB
+000210@JAZZ
+000210@METAL
+000210@ROCK
+000210@WORLDBEATS
+000300@SONGWRITERS_DRUM_PACK
+000301@SONGWRITERS_DRUM_PACK_2
+000302@SONGWRITERS_DRUM_PACK_3
+000310@ODDGROOVES_BASIC_DRUMMING
+000320@ADVANCED_DRUMMING
+000320@ROCK_SONGS
+000329@ALT-ROCK_GROOVES
+000329@AMERICAN_ROCK
+000330@BASIC_ROCK
+000330@BASIC_ROCK_2
+000330@BASIC_ROCK_FILLS
+000330@BLACK_METAL
+000330@BLUES
+000330@CRAZY_DRUMMING
+000332@DRUM_RIFFS
+000336@HIP-HOP_GROOVES
+000343@METAL_FUSION
+000343@METAL_MACHINERY
+000351@SESSION_DRUMS
+000352@THE_ROCK_WAREHOUSE
+000353@UK_POP_GROOVES
+000370@Westcoast_Drumming
+000410@BLUES
+000410@DRUMS & BASS
+000410@FUNK
+000410@HIP HOP
+000410@JAZZ
+000410@LATIN
+000410@METAL
+000410@POP
+000410@ROCK
+000510@RETROFUNK
+000600@_PLATINUM_SAMPLES
+000603@JOE_BARESI_EVIL DRUMS
+000610@Drum_Kits
+000610@Pop_Drums
+000610@Synthetic_Drums_1
+000610@Synthetic_Drums_2
+000701@ADVANCED_DRUMMING
+000702@BASIC_DRUMMING
+000703@CRAZY_DRUMMING
+000708@WEST_COAST_DRUMMING
+00091@Metal Simple
+00091@Rock Compound
+00091@Rock Simple
+00102@Paul Kodish Dangerous Drums
+00105@Vol, 4 - Drums and Percussion
+001_BASS_LOOP_G__splits
+001_Midi_174bpm_C_-_SUBLIMEDNB_Zenhiser_splits
+00201@Best Service Artist Drums MidiFiles
+00201@BREAKBEAT HOUSE
+00201@CAKEWALK DRUM STYLES
+00201@DRUM CLIPS
+00201@DRUMS MISC
+00201@DRUMTRAX
+00201@east west StormDrum 2 Midi Performances
+00201@ETHNIC
+00201@FREAKY JAZZY FUNKY
+00201@FREE MIDI DRUMS MIX
+00201@HEAVENLY HITSHOT DRUMS
+00201@HOUSE GARAGE
+00201@HYPERGROOVE DANCE II
+00201@IEMUG BBS DRUM PATTERNS
+00201@INDIVIDUAL DRUMS
+00201@LA DRUM STUDIO
+00201@LATIN RHYTHMS
+00201@MIDI DRUMS
+00201@Nice Beats - 1000 Drum Grooves Midi Loops
+00201@REELFEEL DRUMS
+00201@STAGE 1 DRUMS
+00201@TUB O'DRUMBEATS
+00201@X-FILEZ BACKING DRUMS
+002_BASS_LOOP_F_splits
+002_Bass_Loops_Cmin_125_splits
+002_Midi_172bpm_G_-_SUBLIMEDNB_Zenhiser_splits
+003_BASS_LOOP_G__splits
+003_Midi_174bpm_C_-_SUBLIMEDNB_Zenhiser_splits
+004_BASS_LOOP_A_splits
+004_Bass_Loops_F_min_125_splits
+004_Midi_174bpm_C_-_SUBLIMEDNB_Zenhiser_splits
+005_BASS_LOOP_A_splits
+005_Midi_174bpm_F_-_SUBLIMEDNB_Zenhiser_splits
+006_BASS_LOOP_D__splits
+006_Midi_174bpm_F_-_SUBLIMEDNB_Zenhiser_splits
+007_BASS_LOOP_A__splits
+007_Midi_174bpm_A_-_SUBLIMEDNB_Zenhiser_splits
+008_BASS_LOOP_C_splits
+008_Midi_172bpm_D_-_SUBLIMEDNB_Zenhiser_splits
+009_BASS_LOOP_D__splits
+009_Midi_174bpm_A__-_SUBLIMEDNB_Zenhiser_splits
+00@_EZDRUMMER_LIBRARIES
+010_BASS_LOOP_G__splits
+010_Midi_174bpm_B_-_SUBLIMEDNB_Zenhiser_splits
+011_BASS_LOOP_D__splits
+011_Midi_174bpm_D__-_SUBLIMEDNB_Zenhiser_splits
+012_BASS_LOOP_A_splits
+012_Midi_174bpm_C__-_SUBLIMEDNB_Zenhiser_splits
+013_BASS_LOOP_E_splits
+013_Midi_174bpm_D_-_SUBLIMEDNB_Zenhiser_splits
+014_BASS_LOOP_G_splits
+014_Midi_174bpm_C_-_SUBLIMEDNB_Zenhiser_splits
+015_BASS_LOOP_B_splits
+015_Midi_174bpm_A_-_SUBLIMEDNB_Zenhiser_splits
+016_BASS_LOOP_G_splits
+016_Midi_174bpm_D_-_SUBLIMEDNB_Zenhiser_splits
+017_BASS_LOOPE_splits
+017_Midi_174bpm_C__-_SUBLIMEDNB_Zenhiser_splits
+018_BASS_LOOP_C__splits
+018_Midi_174bpm_D__-_SUBLIMEDNB_Zenhiser_splits
+019_BASS_LOOP_G__splits
+019_Midi_174bpm_D_-_SUBLIMEDNB_Zenhiser_splits
+01_Bass_splits
+01_DH_Bass_Loop_124_F__splits
+01_DH_Synth_Loop_125_Dm_splits
+01_Drum_Rolls_splits
+01@EZD_POP#ROCK
+01. Future_Bass_Cm
+01. Future_Bass_Gm
+01. Future_Bass_I_Wanna_Know_Gm
+01. Future_RNB_&_Hip-Hop_Em
+01_Piano_splits
+01_Synth_1_splits
+01_Synth_2_splits
+020_BASS_LOOP_G__splits
+020_Midi_174bpm_C_-_SUBLIMEDNB_Zenhiser_splits
+020_Midi_174bpm_G_-_SUBLIMEDNB_Zenhiser_splits
+021_Midi_174bpm_B_-_SUBLIMEDNB_Zenhiser_splits
+022_Midi_172bpm_A__-_SUBLIMEDNB_Zenhiser_splits
+022_Midi_174bpm_B_-_SUBLIMEDNB_Zenhiser_splits
+022_Midi_174bpm_C__-_SUBLIMEDNB_Zenhiser_splits
+022_Midi_174bpm_F__-_SUBLIMEDNB_Zenhiser_splits
+023_Midi_174bpm_D_-_SUBLIMEDNB_Zenhiser_splits
+024_Midi_174bpm_D_-_SUBLIMEDNB_Zenhiser_splits
+024_Midi_176bm_G_-_SUBLIMEDNB_Zenhiser_splits
+025_Midi_174bpm_G_-_SUBLIMEDNB_Zenhiser_splits
+026_Bass_Loops_Cmin_125_splits
+02_DH_Bass_Loop_122_C_splits
+02_DH_Synth_Loop_124_Cm_splits
+02_@EZDRUMMER_2_MODERN#VINTAGE
+02_@EZDRUMMER_2_PERCUSSION
+02. Future_Bass_A#m
+02. Future_Bass_Diamonds_F#m
+02. Future_Bass_D#m
+02. Future_RNB_&_Hip-Hop_Am
+02_Synth_1_splits
+02_Synth_2_splits
+02_Synth_splits
+031_Bass_Loops_F_min_125_splits
+033_Bass_Loops_D_maj_125_splits
+035_Bass_Loops_Amin_125_splits
+03_Bass_splits
+03_DH_Bass_Loop_122_A_splits
+03_DH_Synth_Loop_125_Bm_splits
+03_Drums_splits
+03. Future_Bass_A#m
+03. Future_Bass_C
+03. Future_Bass_Put_Me_Back_Together_Am
+03. Future_RNB_&_Hip-Hop_F#m
+03_Piano_1_splits
+03_Piano_2_splits
+03_Piano_3_splits
+03_Piano_splits
+03_Synth_1_splits
+03_Synth_2_splits
+03_Synth_Pad_splits
+
+---
+
+## 🎵 BPM RANGES (from Folder Names)
+
+000
+01
+02
+03
+04
+05
+06
+07
+08
+09
+10
+11
+12
+13
+14
+15
+16
+17
+18
+19
+20
+21
+22
+23
+24
+25
+26
+27
+28
+29
+30
+31
+32
+33
+34
+035
+36
+37
+038
+39
+040
+041
+42
+43
+044
+45
+46
+47
+48
+49
+50
+51
+52
+53
+54
+055
+56
+57
+58
+059
+060
+61
+62
+63
+64
+065
+66
+67
+68
+069
+70
+71
+072
+73
+74
+75
+076
+077
+78
+79
+080
+81
+082
+83
+84
+85
+086
+87
+88
+089
+90
+91
+92
+93
+94
+95
+96
+97
+98
+99
+
+---
+
+## 🎹 INSTRUMENT CATEGORIES (from Folder Structure)
+
+000003@CUSTOM#VINTAGE
+000004@CUSTOM#VINTAGE
+000_008_KICK_HAT_100_splits
+000_008_KICK_HAT_102_splits
+000_008_KICK_HAT_104_splits
+000_008_KICK_HAT_123_splits
+000_008_KICK_HAT_124_splits
+000_008_KICK_HAT_125_splits
+000_008_KICK_HAT_154_splits
+000_008_KICK_HAT_156_splits
+000_008_KICK_HAT_159_splits
+000_008_KICK_HAT_160_splits
+000_008_KICK_HAT_182_splits
+000_008_KICK_HAT_184_splits
+000_008_KICK_HAT_185_splits
+000_008_KICK_HAT_210_splits
+000_008_KICK_HAT_212_splits
+000_008_KICK_HAT_214_splits
+000_008_KICK_HAT_216_splits
+000_008_KICK_HAT_27_splits
+000_008_KICK_HAT_28_splits
+000_008_KICK_HAT_29_splits
+000_008_KICK_HAT_30_splits
+000_008_KICK_HAT_32_splits
+000_008_KICK_HAT_33_splits
+000_008_KICK_HAT_75_splits
+000_008_KICK_HAT_76_splits
+000_008_KICK_HAT_77_splits
+000_008_KICK_HAT_98_splits
+000_008_KICK_RIDE_0_splits
+000_008_KICK_RIDE_100_splits
+000_008_KICK_RIDE_101_splits
+000_008_KICK_RIDE_126_splits
+000_008_KICK_RIDE_127_splits
+000_008_KICK_RIDE_130_splits
+000_008_KICK_RIDE_131_splits
+000_008_KICK_RIDE_147_splits
+000_008_KICK_RIDE_148_splits
+000_008_KICK_RIDE_149_splits
+000_008_KICK_RIDE_182_splits
+000_008_KICK_RIDE_184_splits
+000_008_KICK_RIDE_186_splits
+000_008_KICK_RIDE_188_splits
+000_008_KICK_RIDE_2_splits
+000_008_KICK_RIDE_3_splits
+000_008_KICK_RIDE_4_splits
+000_008_KICK_RIDE_51_splits
+000_008_KICK_RIDE_52_splits
+000_008_KICK_RIDE_53_splits
+000_008_KICK_RIDE_5_splits
+000_008_KICK_RIDE_6_splits
+000_008_KICK_RIDE_70_splits
+000_008_KICK_RIDE_73_splits
+000_008_KICK_RIDE_75_splits
+000_008_KICK_RIDE_76_splits
+000_008_KICK_RIDE_99_splits
+000_010_KICK_HAT_42_splits
+000_010_KICK_HAT_45_splits
+000_010_KICK_HAT_46_splits
+000_010_KICK_HAT_48_splits
+000_010_KICK_RIDE_0_splits
+000_010_KICK_RIDE_2_splits
+000_010_KICK_RIDE_4_splits
+000_010_KICK_RIDE_6_splits
+000_011_KICK_HAT_56_splits
+000_011_KICK_HAT_58_splits
+000_011_KICK_HAT_60_splits
+000_011_KICK_HAT_62_splits
+000_011_KICK_HAT_63_splits
+000_011_KICK_HAT_64_splits
+000_011_KICK_HAT_65_splits
+000_011_KICK_RIDE_100_splits
+000_011_KICK_RIDE_101_splits
+000_011_KICK_RIDE_103_splits
+000_011_KICK_RIDE_104_splits
+000_011_KICK_RIDE_98_splits
+000_011_KICK_RIDE_99_splits
+000_012_KICK_HAT_100_splits
+000_012_KICK_HAT_102_splits
+000_012_KICK_HAT_104_splits
+000_012_KICK_HAT_154_splits
+000_012_KICK_HAT_156_splits
+000_012_KICK_HAT_158_splits
+000_012_KICK_HAT_160_splits
+000_012_KICK_HAT_224_splits
+000_012_KICK_HAT_225_splits
+000_012_KICK_HAT_228_splits
+000_012_KICK_HAT_230_splits
+000_012_KICK_HAT_56_splits
+000_012_KICK_HAT_58_splits
+000_012_KICK_HAT_60_splits
+000_012_KICK_HAT_62_splits
+000_012_KICK_HAT_98_splits
+000_012_KICK_RIDE_126_splits
+000_012_KICK_RIDE_128_splits
+000_012_KICK_RIDE_130_splits
+000_012_KICK_RIDE_132_splits
+000_012_KICK_RIDE_182_splits
+000_012_KICK_RIDE_184_splits
+000_012_KICK_RIDE_186_splits
+000_012_KICK_RIDE_188_splits
+000_012_KICK_RIDE_70_splits
+000_012_KICK_RIDE_72_splits
+000_012_KICK_RIDE_75_splits
+000_012_KICK_RIDE_76_splits
+000_012_KICK_RIDE_84_splits
+000_012_KICK_RIDE_87_splits
+000_012_KICK_RIDE_88_splits
+000_012_KICK_RIDE_90_splits
+000_013_KICK_HAT_135_splits
+000_013_KICK_HAT_136_splits
+000_013_KICK_HAT_137_splits
+000_013_KICK_HAT_168_splits
+000_013_KICK_HAT_170_splits
+000_013_KICK_HAT_172_splits
+000_013_KICK_HAT_174_splits
+000_013_KICK_HAT_195_splits
+000_013_KICK_HAT_196_splits
+000_013_KICK_HAT_197_splits
+000_013_KICK_HAT_224_splits
+000_013_KICK_HAT_226_splits
+000_013_KICK_HAT_228_splits
+000_013_KICK_HAT_229_splits
+000_013_KICK_HAT_28_splits
+000_013_KICK_HAT_29_splits
+000_013_KICK_HAT_33_splits
+000_013_KICK_HAT_34_splits
+000_013_KICK_HAT_39_splits
+000_013_KICK_HAT_40_splits
+000_013_KICK_HAT_41_splits
+000_013_KICK_HAT_84_splits
+000_013_KICK_HAT_86_splits
+000_013_KICK_HAT_87_splits
+000_013_KICK_HAT_88_splits
+000_013_KICK_HAT_89_splits
+000_013_KICK_HAT_90_splits
+000_013_KICK_RIDE_111_splits
+000_013_KICK_RIDE_112_splits
+000_013_KICK_RIDE_113_splits
+000_013_KICK_RIDE_126_splits
+000_013_KICK_RIDE_128_splits
+000_013_KICK_RIDE_130_splits
+000_013_KICK_RIDE_132_splits
+000_013_KICK_RIDE_171_splits
+000_013_KICK_RIDE_172_splits
+000_013_KICK_RIDE_173_splits
+000_013_KICK_RIDE_196_splits
+000_013_KICK_RIDE_198_splits
+000_013_KICK_RIDE_1_splits
+000_013_KICK_RIDE_200_splits
+
+---
+
+## 🥁 DRUM CATEGORIES
+
+000011@SUPERIOR_DRUMMER_3
+000043@EZX_DRUMKIT_FROM_HELL
+000046@EZXDRUMKIT_FROM_HELL
+000300@SONGWRITERS_DRUM_PACK
+000301@SONGWRITERS_DRUM_PACK_2
+000302@SONGWRITERS_DRUM_PACK_3
+000310@ODDGROOVES_BASIC_DRUMMING
+000320@ADVANCED_DRUMMING
+000329@ACTION_DRUMS
+000330@CRAZY_DRUMMING
+000332@DRUM_RIFFS
+000351@SESSION_DRUMS
+000370@Westcoast_Drumming
+000410@DRUMS & BASS
+000603@JOE_BARESI_EVIL DRUMS
+000610@Drum_Kits
+000610@Pop_Drums
+000610@Synthetic_Drums_1
+000610@Synthetic_Drums_2
+000701@ADVANCED_DRUMMING
+000702@BASIC_DRUMMING
+000703@CRAZY_DRUMMING
+000708@WEST_COAST_DRUMMING
+00102@Paul Kodish Dangerous Drums
+00105@Vol, 4 - Drums and Percussion
+001@_DRUMS_OF_DESTRUCTION
+00201@Best Service Artist Drums MidiFiles
+00201@CAKEWALK DRUM STYLES
+00201@DRUM CLIPS
+00201@DRUMS MISC
+00201@DRUMTRAX
+00201@east west StormDrum 2 Midi Performances
+00201@FREE MIDI DRUMS MIX
+00201@HEAVENLY HITSHOT DRUMS
+00201@IEMUG BBS DRUM PATTERNS
+00201@INDIVIDUAL DRUMS
+00201@LA DRUM STUDIO
+00201@MIDI DRUMS
+00201@Nice Beats - 1000 Drum Grooves Midi Loops
+00201@REELFEEL DRUMS
+00201@STAGE 1 DRUMS
+00201@TUB O'DRUMBEATS
+00201@X-FILEZ BACKING DRUMS
+00@_EZDRUMMER_LIBRARIES
+01_Drum_Rolls_splits
+01_Drums_splits
+01 - Max BDrums
+02_D_93BPM+Drums
+02_Drums_splits
+02_@EZDRUMMER_2_MODERN#VINTAGE
+02_@EZDRUMMER_2_PERCUSSION
+03_Drums_splits
+03_F#_95BPM+Drums
+04_C_85BPM+Drums
+04_Drums_splits
+05 Drum n Bass
+05_Drums_splits
+05@EZX_DRUMKIT_FROM_HELL
+05@EZX_DRUMKIT_FROM_HELL_GUESTS
+05_G_100BPM+Drums
+066-S060@_BASS_DRUM_SNARE_132_BPM
+066-S110@_BASS_DRUM_TOMS_132_BPM
+089_Monkee_Drummer__13__splits
+089_Monkee_Drummer__5__splits
+089_Monkee_Drummer__6__splits
+089_Monkee_Drummer_A__20__splits
+089_Monkee_Drummer_A__21__splits
+089_Monkee_Drummer_A__28__splits
+089_Monkee_Drummer_A_splits
+089_Monkee_Drummer_B__35__splits
+089_Monkee_Drummer_B__36__splits
+089_Monkee_Drummer_B__43__splits
+089_Monkee_Drummer_B_splits
+089_Monkee_Drummer_C__50__splits
+089_Monkee_Drummer_C__51__splits
+089_Monkee_Drummer_C__58__splits
+089_Monkee_Drummer_Crash__65__splits
+089_Monkee_Drummer_Crash__66__splits
+089_Monkee_Drummer_Crash__73__splits
+089_Monkee_Drummer_Crash_splits
+089_Monkee_Drummer_C_splits
+089_Monkee_Drummer_D__80__splits
+089_Monkee_Drummer_D__81__splits
+089_Monkee_Drummer_D__88__splits
+089_Monkee_Drummer_D_splits
+089_Monkee_Drummer_F1__103__splits
+089_Monkee_Drummer_F1__95__splits
+089_Monkee_Drummer_F1__96__splits
+089_Monkee_Drummer_F1_splits
+089_Monkee_Drummer_F2__110__splits
+089_Monkee_Drummer_F2__111__splits
+089_Monkee_Drummer_F2__118__splits
+089_Monkee_Drummer_F2_splits
+089_Monkee_Drummer_F3__125__splits
+089_Monkee_Drummer_F3__126__splits
+089_Monkee_Drummer_F3__133__splits
+089_Monkee_Drummer_F3_splits
+089_Monkee_Drummer_Ride__140__splits
+089_Monkee_Drummer_Ride__141__splits
+089_Monkee_Drummer_Ride__148__splits
+
+---
+
+## ⏱️ TIME SIGNATURES (from Folder Names)
+
+00@_3-4 FILLS
+00@_3-4 GROOVES
+00@_3-4_METAL
+00@_4-4 FILLS
+00@_4-4 GROOVES
+00@_6-8 FILLS
+00@_6-8 GROOVES
+010@_6-8 SWING FEEL
+011@076 Song 03 6-8 Swing
+011@3-4 Cymbals
+011@ThreeFourTime
+012@3-4 Endings
+012@3-4 Fills
+013@3-4 Grooves
+01@3-4 FILLS
+014@3-4 Intros
+01@4-4
+01 Groove 100BPM 3-4
+01 Groove 90BPM 6-8
+01 Troy 202BPM 5-4
+020@_4-4_METAL
+020@_4-4 STRAIGHT FEEL
+021@4-4 Cymbals
+021@ThreeFourTime
+022@4-4 Endings
+02@3-4
+023@4-4 Fills
+02@3-4 FILLS
+02@3-4 GROOVES
+02@4-4
+024@4-4 Grooves
+02@4-4 FILLS
+025@4-4 Intros
+02 Groove 130BPM 3-4
+02 Groove 90BPM 6-8
+02@SONG 01 090 6-8
+02@SONG 01 3-4 090 BPM
+030@_4-4 SWING FEEL
+03 080 6-8 Ballad.sng
+030@Song1_C84_3-4t
+031@3-4 Metal Preview Files
+032@4-4 Metal Preview Files
+032@Song3_D95_3-4t
+03@3-4 FILLS
+03@3-4 GROOVES
+03@4-4_FAST
+03@4-4 FILLS
+03@4-4 GROOVES
+03@6-8 FILLS
+03 Ballad 6-8 080
+
+---
+
+## 🌍 WORLD/ETHNIC CATEGORIES
+
+000045@EZX_LATIN_PERCUSSION
+000051@EZXLATIN_PERCUSSION
+000210@WORLDBEATS
+000410@LATIN
+000600@_PLATINUM_SAMPLES
+00201@east west StormDrum 2 Midi Performances
+00201@LATIN RHYTHMS
+00@_LATINO_110_BPM
+01 Hardcore Hip Hop Beast 2 80bpm Amin
+01 Hardcore Hip Hop Beast 3 80bpm Amin
+01_Platinum_Life_D_123BPM
+02 Hardcore Hip Hop Beast 2 85bpm Cmin
+02 Hardcore Hip Hop Beast 3 85bpm Cmin
+02_Platinum_Life_E_119BPM
+03@ETHNO
+03 Hardcore Hip Hop Beast 2 80bpm Ebmin
+03 Hardcore Hip Hop Beast 3 80bpm Ebmin
+03_Platinum_Life_D#_123BPM
+04 Hardcore Hip Hop Beast 2 85bpm Fmin
+04 Hardcore Hip Hop Beast 3 85bpm Gbmin
+04_Platinum_Life_D#_119BPM
+04@WORLD GROOVES
+05 Hardcore Hip Hop Beast 2 85bpm Abmin
+05 Hardcore Hip Hop Beast 3 85bpm Fmin
+05 Latin Jazz
+05 Latino 144BPM
+05_Platinum_Life_B_118BPM
+05@THE REDBEAST 100BPM
+067-S070@_MALLETS_LIGHT_LATIN_67_BPM
+06 World Gm
+070-Back Beast
+07@EZX_LATIN_PERCUSSION
+07@LATIN
+088_East_Coast_11a_Fill_splits
+088_East_Coast_11a_splits
+088_East_Coast_11_Fill_splits
+088_East_Coast_11_Ride_Fill_splits
+088_East_Coast_11_Ride_splits
+088_East_Coast_11_splits
+089_East_Coast_01a_splits
+089_East_Coast_01_Fill_splits
+089_East_Coast_01_Ride_splits
+089_East_Coast_01_splits
+089_East_Coast_04a_splits
+089_East_Coast_04_Fill_splits
+089_East_Coast_04_Ride_splits
+089_East_Coast_04_splits
+093_East_Coast_07a_splits
+093_East_Coast_07_Fill_splits
+093_East_Coast_07_Ride_splits
+
+Analysis complete!

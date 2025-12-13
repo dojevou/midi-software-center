@@ -1,14 +1,12 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub enum DataRetentionPolicy {
     Days7,
     #[default]
     Days30,
     Days90,
 }
-
 
 impl DataRetentionPolicy {
     pub fn as_days(&self) -> u32 {

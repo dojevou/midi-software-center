@@ -1,0 +1,604 @@
+{
+  "metadata": {
+    "project_name": "MIDI Software Center",
+    "generated_date": "2025-11-11",
+    "total_rust_files": 189,
+    "description": "Comprehensive terminology mapping for MIDI Software Center Rust codebase"
+  },
+
+  "naming_conventions": {
+    "functions": "snake_case",
+    "types": "PascalCase",
+    "constants": "SCREAMING_SNAKE_CASE",
+    "modules": "snake_case",
+    "type_aliases": "PascalCase",
+    "enum_variants": "PascalCase"
+  },
+
+  "function_definitions": {
+    "extract_bpm_from_filename": {
+      "implementations": [
+        {
+          "location": "pipeline/src-tauri/src/core/analysis/filename_metadata.rs:87",
+          "signature": "pub fn extract_bpm_from_filename(filename: &str) -> Option<f32>",
+          "return_type": "Option<f32>",
+          "parameters": ["filename: &str"],
+          "description": "Extract BPM from filename using pattern matching (returns f32)",
+          "module": "filename_metadata"
+        },
+        {
+          "location": "pipeline/src-tauri/src/core/analysis/drum_analyzer.rs:465",
+          "signature": "pub fn extract_bpm_from_filename(file_name: &str) -> Option<f64>",
+          "return_type": "Option<f64>",
+          "parameters": ["file_name: &str"],
+          "description": "Extract BPM from drum file names (returns f64)",
+          "module": "drum_analyzer",
+          "note": "INCONSISTENCY: Different return type from filename_metadata version"
+        }
+      ],
+      "status": "DUPLICATE_FUNCTION",
+      "recommended_action": "Consolidate into single function with consistent return type (Option<f64>)"
+    },
+
+    "detect_bpm": {
+      "implementations": [
+        {
+          "location": "shared/rust/src/core/analysis/bpm_detector.rs:24",
+          "signature": "pub fn detect_bpm(midi_file: &MidiFile) -> BpmDetectionResult",
+          "return_type": "BpmDetectionResult",
+          "parameters": ["midi_file: &MidiFile"],
+          "description": "Primary BPM detection using tempo events",
+          "module": "shared::core::analysis::bpm_detector"
+        },
+        {
+          "location": "pipeline/src-tauri/src/core/analysis/bpm_detector.rs:110",
+          "signature": "pub fn detect_bpm(midi_file: &MidiFile) -> BpmDetectionResult",
+          "return_type": "BpmDetectionResult",
+          "parameters": ["midi_file: &MidiFile"],
+          "description": "Pipeline-specific BPM detection",
+          "module": "pipeline::core::analysis::bpm_detector"
+        }
+      ],
+      "status": "DUPLICATE_FUNCTION",
+      "recommended_action": "Keep shared version as canonical, pipeline should use shared::detect_bpm"
+    },
+
+    "detect_bpm_with_onsets": {
+      "location": "pipeline/src-tauri/src/core/analysis/bpm_detector.rs:194",
+      "signature": "pub fn detect_bpm_with_onsets(midi_file: &MidiFile) -> Option<BpmDetectionResult>",
+      "return_type": "Option<BpmDetectionResult>",
+      "parameters": ["midi_file: &MidiFile"],
+      "description": "Detect BPM using onset detection for percussion",
+      "module": "pipeline::core::analysis::bpm_detector"
+    },
+
+    "detect_bpm_hybrid": {
+      "location": "pipeline/src-tauri/src/core/analysis/bpm_detector.rs:239",
+      "signature": "pub fn detect_bpm_hybrid(midi_file: &MidiFile) -> BpmDetectionResult",
+      "return_type": "BpmDetectionResult",
+      "parameters": ["midi_file: &MidiFile"],
+      "description": "Hybrid BPM detection combining tempo events and onset detection",
+      "module": "pipeline::core::analysis::bpm_detector"
+    },
+
+    "detect_key": {
+      "implementations": [
+        {
+          "location": "shared/rust/src/core/analysis/key_detector.rs",
+          "signature": "pub fn detect_key(midi_file: &MidiFile) -> KeyDetectionResult",
+          "return_type": "KeyDetectionResult",
+          "parameters": ["midi_file: &MidiFile"],
+          "description": "Detect musical key using Krumhansl-Schmuckler algorithm (shared)",
+          "module": "shared::core::analysis::key_detector"
+        },
+        {
+          "location": "pipeline/src-tauri/src/core/analysis/key_detector.rs:82",
+          "signature": "pub fn detect_key(midi_file: &MidiFile) -> KeyDetectionResult",
+          "return_type": "KeyDetectionResult",
+          "parameters": ["midi_file: &MidiFile"],
+          "description": "Detect musical key using Krumhansl-Schmuckler algorithm (pipeline)",
+          "module": "pipeline::core::analysis::key_detector"
+        }
+      ],
+      "status": "DUPLICATE_FUNCTION",
+      "recommended_action": "Consolidate into shared version, remove pipeline duplicate"
+    },
+
+    "sanitize_filename": {
+      "implementations": [
+        {
+          "location": "pipeline/src-tauri/src/core/naming/sanitizer.rs:26",
+          "signature": "pub fn sanitize_filename(input: &str) -> String",
+          "return_type": "String",
+          "parameters": ["input: &str"],
+          "description": "Sanitize filename for filesystem safety",
+          "module": "pipeline::core::naming::sanitizer"
+        },
+        {
+          "location": "pipeline/src-tauri/src/commands/split_file.rs",
+          "signature": "pub fn sanitize_filename(name: &str) -> String",
+          "return_type": "String",
+          "parameters": ["name: &str"],
+          "description": "Sanitize filename in split_file command",
+          "module": "pipeline::commands::split_file",
+          "note": "Should use sanitizer module instead"
+        }
+      ],
+      "status": "DUPLICATE_FUNCTION",
+      "recommended_action": "Use pipeline::core::naming::sanitizer::sanitize_filename everywhere"
+    },
+
+    "extract_time_signature_from_meta": {
+      "location": "pipeline/src-tauri/src/core/analysis/drum_analyzer.rs:338",
+      "signature": "pub fn extract_time_signature_from_meta(midi_file: &MidiFile) -> Option<TimeSignature>",
+      "return_type": "Option<TimeSignature>",
+      "parameters": ["midi_file: &MidiFile"],
+      "description": "Extract time signature from MIDI meta events",
+      "module": "drum_analyzer"
+    },
+
+    "extract_time_signature_from_path": {
+      "location": "pipeline/src-tauri/src/core/analysis/drum_analyzer.rs:418",
+      "signature": "pub fn extract_time_signature_from_path(file_path: &str, file_name: &str) -> Option<TimeSignature>",
+      "return_type": "Option<TimeSignature>",
+      "parameters": ["file_path: &str", "file_name: &str"],
+      "description": "Extract time signature from file path and filename patterns",
+      "module": "drum_analyzer"
+    },
+
+    "generate_filename": {
+      "location": "pipeline/src-tauri/src/core/naming/generator.rs:59",
+      "signature": "pub fn generate_filename(metadata: &FileMetadata, config: &NamingConfig) -> String",
+      "return_type": "String",
+      "parameters": ["metadata: &FileMetadata", "config: &NamingConfig"],
+      "description": "Generates a new filename from metadata using configured template",
+      "module": "naming::generator"
+    },
+
+    "generate_production_filename": {
+      "location": "pipeline/src-tauri/src/core/naming/generator.rs:174",
+      "signature": "pub fn generate_production_filename(category: &str, bpm: f64, key: &str, file_id: &str, timesig: &str, pack_name: &str, original_name: &str) -> String",
+      "return_type": "String",
+      "parameters": [
+        "category: &str",
+        "bpm: f64",
+        "key: &str",
+        "file_id: &str",
+        "timesig: &str",
+        "pack_name: &str",
+        "original_name: &str"
+      ],
+      "description": "Generates production filename with pack name and original filename. Format: {CATEGORY}_{TIMESIG}_{BPM}BPM_{KEY}_{ID}_{PACK}_{ORIGINAL}.mid",
+      "module": "naming::generator"
+    },
+
+    "generate_production_layer_filename": {
+      "location": "pipeline/src-tauri/src/core/naming/generator.rs:235",
+      "signature": "pub fn generate_production_layer_filename(category: &str, bpm: f64, key: &str, file_id: &str, timesig: &str, pack_name: &str, layer_name: &str, layer_number: usize) -> String",
+      "return_type": "String",
+      "parameters": [
+        "category: &str",
+        "bpm: f64",
+        "key: &str",
+        "file_id: &str",
+        "timesig: &str",
+        "pack_name: &str",
+        "layer_name: &str",
+        "layer_number: usize"
+      ],
+      "description": "Generates production filename for split/layer files. Format: {CATEGORY}_{TIMESIG}_{BPM}BPM_{KEY}_{ID}_{PACK}_{LAYER}_L{NUM}.mid",
+      "module": "naming::generator"
+    },
+
+    "analyze_drum_midi": {
+      "location": "pipeline/src-tauri/src/core/analysis/drum_analyzer.rs:179",
+      "signature": "pub fn analyze_drum_midi(midi_file: &MidiFile) -> DrumAnalysis",
+      "return_type": "DrumAnalysis",
+      "parameters": ["midi_file: &MidiFile"],
+      "description": "Comprehensive drum MIDI analysis including drum detection, cymbal classification, and technique detection",
+      "module": "drum_analyzer"
+    },
+
+    "generate_drum_tags": {
+      "location": "pipeline/src-tauri/src/core/analysis/drum_analyzer.rs:695",
+      "signature": "pub fn generate_drum_tags(analysis: &DrumAnalysis, file_path: &str, file_name: &str) -> Vec<Tag>",
+      "return_type": "Vec<Tag>",
+      "parameters": ["analysis: &DrumAnalysis", "file_path: &str", "file_name: &str"],
+      "description": "Generate comprehensive drum-specific tags from analysis results",
+      "module": "drum_analyzer"
+    },
+
+    "split_tracks": {
+      "location": "pipeline/src-tauri/src/core/splitting/track_splitter.rs:90",
+      "signature": "pub fn split_tracks(original_midi_bytes: &[u8]) -> Result<Vec<SplitTrack>, SplitError>",
+      "return_type": "Result<Vec<SplitTrack>, SplitError>",
+      "parameters": ["original_midi_bytes: &[u8]"],
+      "description": "Split MIDI file into individual tracks",
+      "module": "splitting::track_splitter"
+    },
+
+    "calculate_content_hash": {
+      "location": "pipeline/src-tauri/src/core/hash/blake3.rs:77",
+      "signature": "pub fn calculate_content_hash(data: &[u8]) -> [u8; 32]",
+      "return_type": "[u8; 32]",
+      "parameters": ["data: &[u8]"],
+      "description": "Calculate BLAKE3 hash of byte data",
+      "module": "hash::blake3"
+    },
+
+    "normalize_key_signature": {
+      "location": "pipeline/src-tauri/src/core/analysis/filename_metadata.rs:194",
+      "signature": "pub fn normalize_key_signature(raw_key: &str) -> Option<String>",
+      "return_type": "Option<String>",
+      "parameters": ["raw_key: &str"],
+      "description": "Normalize key signature to standard format (C, Am, F#, etc.)",
+      "module": "filename_metadata"
+    },
+
+    "extract_key_from_filename": {
+      "location": "pipeline/src-tauri/src/core/analysis/filename_metadata.rs:208",
+      "signature": "pub fn extract_key_from_filename(filename: &str) -> Option<String>",
+      "return_type": "Option<String>",
+      "parameters": ["filename: &str"],
+      "description": "Extract musical key from filename patterns",
+      "module": "filename_metadata"
+    }
+  },
+
+  "data_types": {
+    "MidiFile": {
+      "location": "shared/rust/src/core/midi/types.rs:5",
+      "kind": "struct",
+      "description": "Core MIDI file representation with header and tracks",
+      "fields": {
+        "header": "Header",
+        "tracks": "Vec<Track>"
+      }
+    },
+
+    "Header": {
+      "location": "shared/rust/src/core/midi/types.rs:12",
+      "kind": "struct",
+      "description": "MIDI file header with format and timing information",
+      "fields": {
+        "format": "u16",
+        "num_tracks": "u16",
+        "ticks_per_quarter_note": "u16"
+      }
+    },
+
+    "Track": {
+      "location": "shared/rust/src/core/midi/types.rs:20",
+      "kind": "struct",
+      "description": "MIDI track containing timed events",
+      "fields": {
+        "events": "Vec<TimedEvent>"
+      }
+    },
+
+    "TimedEvent": {
+      "location": "shared/rust/src/core/midi/types.rs:26",
+      "kind": "struct",
+      "description": "MIDI event with delta time",
+      "fields": {
+        "delta_ticks": "u32",
+        "event": "Event"
+      }
+    },
+
+    "Event": {
+      "location": "shared/rust/src/core/midi/types.rs:33",
+      "kind": "enum",
+      "description": "MIDI event types (NoteOn, NoteOff, Control Change, etc.)",
+      "variants": [
+        "NoteOn { channel: u8, note: u8, velocity: u8 }",
+        "NoteOff { channel: u8, note: u8, velocity: u8 }",
+        "ControlChange { channel: u8, controller: u8, value: u8 }",
+        "ProgramChange { channel: u8, program: u8 }",
+        "TimeSignature { numerator: u8, denominator: u8, clocks_per_click: u8, thirty_seconds_per_quarter: u8 }",
+        "KeySignature { sharps_flats: i8, is_minor: bool }",
+        "TempoChange { microseconds_per_quarter: u32 }",
+        "Text { text_type: TextType, text: String }",
+        "EndOfTrack"
+      ]
+    },
+
+    "BpmDetectionResult": {
+      "location": "shared/rust/src/core/analysis/bpm_detector.rs:24",
+      "kind": "struct",
+      "description": "Result of BPM detection analysis",
+      "fields": {
+        "bpm": "f64",
+        "confidence": "f64",
+        "method": "BpmDetectionMethod",
+        "metadata": "Option<BpmMetadata>"
+      }
+    },
+
+    "BpmDetectionMethod": {
+      "location": "shared/rust/src/core/analysis/bpm_detector.rs:39",
+      "kind": "enum",
+      "description": "Method used for BPM detection",
+      "variants": [
+        "TempoEvent",
+        "OnsetDetection",
+        "Hybrid"
+      ]
+    },
+
+    "KeyDetectionResult": {
+      "location": "pipeline/src-tauri/src/core/analysis/key_detector.rs",
+      "kind": "struct",
+      "description": "Result of musical key detection",
+      "fields": {
+        "key": "String",
+        "scale_type": "ScaleType",
+        "confidence": "f64",
+        "alternatives": "Vec<KeyAlternative>"
+      }
+    },
+
+    "ScaleType": {
+      "location": "pipeline/src-tauri/src/core/analysis/key_detector.rs:16",
+      "kind": "enum",
+      "description": "Musical scale type",
+      "variants": [
+        "Major",
+        "Minor",
+        "Unknown"
+      ]
+    },
+
+    "NamingTemplate": {
+      "location": "pipeline/src-tauri/src/core/naming/templates.rs:6",
+      "kind": "enum",
+      "description": "Filename generation template formats",
+      "variants": [
+        "Standard",
+        "Compact",
+        "BpmFirst",
+        "Production",
+        "Custom(String)"
+      ],
+      "templates": {
+        "Standard": "{CATEGORY}_{KEY}_{BPM}BPM_{DESCRIPTION}_{ID}",
+        "Compact": "{CATEGORY}_{KEY}_{BPM}BPM_{ID}",
+        "BpmFirst": "{BPM}BPM_{KEY}_{CATEGORY}_{DESCRIPTION}",
+        "Production": "{CATEGORY}_{TIMESIG}_{BPM}BPM_{KEY}_{ID}_{PACK}_{ORIGINAL}"
+      }
+    },
+
+    "DrumNote": {
+      "location": "pipeline/src-tauri/src/core/analysis/drum_analyzer.rs:26",
+      "kind": "enum",
+      "description": "General MIDI drum note mappings (48 types)",
+      "note": "Maps MIDI note numbers to drum instrument types (kick, snare, hihat, etc.)"
+    },
+
+    "DrumAnalysis": {
+      "location": "pipeline/src-tauri/src/core/analysis/drum_analyzer.rs",
+      "kind": "struct",
+      "description": "Comprehensive drum MIDI analysis results",
+      "fields": {
+        "is_drum_file": "bool",
+        "drum_notes": "HashMap<DrumNote, usize>",
+        "cymbal_types": "Vec<CymbalType>",
+        "time_signature": "Option<TimeSignature>",
+        "techniques": "Vec<DrumTechnique>"
+      }
+    },
+
+    "TimeSignature": {
+      "location": "pipeline/src-tauri/src/core/analysis/drum_analyzer.rs",
+      "kind": "struct",
+      "description": "Musical time signature",
+      "fields": {
+        "numerator": "u8",
+        "denominator": "u8"
+      }
+    },
+
+    "SplitError": {
+      "location": "pipeline/src-tauri/src/core/splitting/track_splitter.rs:22",
+      "kind": "enum",
+      "description": "Errors that can occur during track splitting",
+      "variants": [
+        "ParseError(String)",
+        "NoTracks",
+        "WriteError(String)"
+      ]
+    },
+
+    "HashError": {
+      "location": "pipeline/src-tauri/src/core/hash/blake3.rs:38",
+      "kind": "enum",
+      "description": "Errors in hash calculation",
+      "variants": [
+        "IoError(std::io::Error)",
+        "InvalidHexFormat",
+        "InvalidHashLength"
+      ]
+    },
+
+    "AppError": {
+      "location": "pipeline/src-tauri/src/error.rs:35",
+      "kind": "enum",
+      "description": "Application-level errors",
+      "note": "Central error type for pipeline application"
+    }
+  },
+
+  "domain_concepts": {
+    "bpm": {
+      "full_name": "Beats Per Minute",
+      "type": "f64",
+      "description": "Musical tempo measurement",
+      "typical_range": "30.0 - 300.0",
+      "usage": "Detected from MIDI tempo events or onset analysis"
+    },
+
+    "key_signature": {
+      "full_name": "Musical Key Signature",
+      "type": "String",
+      "description": "Tonal center of a musical piece",
+      "format": "Examples: C, Am, F#, Dm",
+      "detection": "Krumhansl-Schmuckler algorithm"
+    },
+
+    "time_signature": {
+      "full_name": "Musical Time Signature",
+      "type": "(u8, u8)",
+      "description": "Meter of a musical piece (numerator/denominator)",
+      "format": "Examples: 4/4, 3/4, 6/8, 7/8",
+      "common_values": ["4-4", "3-4", "6-8", "7-8", "5-4", "9-8"]
+    },
+
+    "ticks_per_quarter_note": {
+      "full_name": "MIDI Ticks Per Quarter Note",
+      "type": "u16",
+      "description": "MIDI timing resolution",
+      "usage": "Determines timing precision for MIDI events"
+    },
+
+    "channel_10": {
+      "full_name": "MIDI Channel 10 (Drum Channel)",
+      "type": "u8",
+      "value": 9,
+      "description": "Standard General MIDI drum channel (0-indexed as 9)",
+      "usage": "Used for drum/percussion instruments in GM"
+    },
+
+    "production_naming": {
+      "description": "Naming convention for production-ready MIDI files",
+      "format": "{CATEGORY}_{TIMESIG}_{BPM}BPM_{KEY}_{ID}_{PACK}_{ORIGINAL}.mid",
+      "example": "KICK_4-4_120BPM_C_000001_DrumPack2024_Heavy_Boom.mid",
+      "components": {
+        "CATEGORY": "Instrument category (KICK, SNARE, HIHAT, etc.)",
+        "TIMESIG": "Time signature (4-4, 6-8, etc.)",
+        "BPM": "Beats per minute (rounded)",
+        "KEY": "Musical key (C, Am, etc.)",
+        "ID": "Zero-padded file ID",
+        "PACK": "Pack/collection name",
+        "ORIGINAL": "Original filename (sanitized)"
+      }
+    },
+
+    "category_tags": {
+      "description": "MIDI file categorization tags",
+      "examples": [
+        "BASS", "KICK", "SNARE", "HIHAT", "CLAP", "TOM", "CYMBAL",
+        "CHORD", "ARP", "LEAD", "PAD", "FX", "VOCAL", "DRUMS"
+      ]
+    }
+  },
+
+  "inconsistencies_found": [
+    {
+      "type": "DUPLICATE_FUNCTION_DIFFERENT_RETURN_TYPE",
+      "function": "extract_bpm_from_filename",
+      "locations": [
+        "pipeline/src-tauri/src/core/analysis/filename_metadata.rs:87 (returns Option<f32>)",
+        "pipeline/src-tauri/src/core/analysis/drum_analyzer.rs:465 (returns Option<f64>)"
+      ],
+      "severity": "HIGH",
+      "description": "Same function name with different return types (f32 vs f64)",
+      "recommended_fix": "Standardize on Option<f64> for consistency, update filename_metadata.rs"
+    },
+    {
+      "type": "DUPLICATE_FUNCTION",
+      "function": "detect_bpm",
+      "locations": [
+        "shared/rust/src/core/analysis/bpm_detector.rs:24",
+        "pipeline/src-tauri/src/core/analysis/bpm_detector.rs:110"
+      ],
+      "severity": "MEDIUM",
+      "description": "BPM detection implemented in both shared and pipeline",
+      "recommended_fix": "Use shared version as canonical, remove or re-export from pipeline"
+    },
+    {
+      "type": "DUPLICATE_FUNCTION",
+      "function": "detect_key",
+      "locations": [
+        "shared/rust/src/core/analysis/key_detector.rs",
+        "pipeline/src-tauri/src/core/analysis/key_detector.rs:82"
+      ],
+      "severity": "MEDIUM",
+      "description": "Key detection implemented in both shared and pipeline",
+      "recommended_fix": "Use shared version as canonical"
+    },
+    {
+      "type": "DUPLICATE_FUNCTION",
+      "function": "sanitize_filename",
+      "count": 4,
+      "severity": "MEDIUM",
+      "description": "Filename sanitization appears in multiple locations",
+      "recommended_fix": "Consolidate all uses to pipeline::core::naming::sanitizer::sanitize_filename"
+    },
+    {
+      "type": "BACKUP_FILES_PRESENT",
+      "files_with_backups": [
+        "pipeline/src-tauri/src/core/naming/sanitizer.rs.backup",
+        "pipeline/src-tauri/src/core/naming/templates.rs.backup",
+        "pipeline/src-tauri/src/core/naming/generator.rs.backup",
+        "pipeline/src-tauri/src/core/performance/concurrency.rs.backup",
+        "pipeline/src-tauri/src/core/analysis/bpm_detector.rs.backup",
+        "pipeline/src-tauri/src/core/analysis/key_detector.rs.backup",
+        "pipeline/src-tauri/src/core/splitting/track_splitter.rs.backup"
+      ],
+      "severity": "LOW",
+      "description": "Backup files present in source tree",
+      "recommended_fix": "Remove .backup files or move to separate backup directory"
+    }
+  ],
+
+  "recommended_fixes": {
+    "immediate_actions": [
+      {
+        "priority": 1,
+        "action": "Standardize extract_bpm_from_filename return type to Option<f64>",
+        "file": "pipeline/src-tauri/src/core/analysis/filename_metadata.rs:87",
+        "change": "Change return type from Option<f32> to Option<f64>"
+      },
+      {
+        "priority": 2,
+        "action": "Consolidate BPM detection to shared module",
+        "description": "Pipeline should import and use shared::core::analysis::bpm_detector::detect_bpm"
+      },
+      {
+        "priority": 3,
+        "action": "Consolidate key detection to shared module",
+        "description": "Pipeline should import and use shared::core::analysis::key_detector::detect_key"
+      },
+      {
+        "priority": 4,
+        "action": "Remove or archive .backup files",
+        "description": "Clean up source tree by removing backup files"
+      }
+    ],
+    "long_term_refactoring": [
+      {
+        "action": "Establish clear module boundaries",
+        "description": "Core analysis functions belong in shared/, pipeline-specific logic in pipeline/"
+      },
+      {
+        "action": "Create canonical function registry",
+        "description": "Document which version of each function is canonical for the project"
+      },
+      {
+        "action": "Add function deprecation warnings",
+        "description": "Use #[deprecated] attribute for old versions to guide migration"
+      }
+    ]
+  },
+
+  "audit_summary": {
+    "total_files_scanned": 189,
+    "total_public_functions": "100+",
+    "total_type_definitions": "50+",
+    "duplicate_functions_found": 4,
+    "inconsistencies_found": 5,
+    "backup_files_found": 7,
+    "overall_status": "GOOD with minor inconsistencies",
+    "recommendations": "Address duplicate functions and standardize return types for better maintainability"
+  }
+}

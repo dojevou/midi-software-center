@@ -1,4 +1,3 @@
-
 use serde::{Deserialize, Serialize};
 /// UI rendering metrics and optimization
 ///

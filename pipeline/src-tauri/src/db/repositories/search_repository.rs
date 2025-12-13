@@ -1,4 +1,3 @@
-
 /// Search operations repository
 /// Aligned with actual schema from 001_initial_schema.sql
 use crate::db::models::File;
@@ -64,7 +63,18 @@ impl SearchRepository {
                 f.created_at as "created_at!",
                 f.updated_at as "updated_at!",
                 f.analyzed_at,
-                f.import_batch_id
+                f.import_batch_id,
+                f.parent_folder,
+                f.filename_bpm,
+                f.filename_key,
+                f.filename_genres,
+                f.structure_tags,
+                f.metadata_source,
+                f.track_names,
+                f.copyright,
+                f.instrument_names_text,
+                f.markers,
+                f.lyrics
             FROM files f
             LEFT JOIN musical_metadata mm ON f.id = mm.file_id
             WHERE
@@ -162,7 +172,18 @@ impl SearchRepository {
                 created_at as "created_at!",
                 updated_at as "updated_at!",
                 analyzed_at,
-                import_batch_id
+                import_batch_id,
+                parent_folder,
+                filename_bpm,
+                filename_key,
+                filename_genres,
+                structure_tags,
+                metadata_source,
+                track_names,
+                copyright,
+                instrument_names_text,
+                markers,
+                lyrics
             FROM files
             WHERE manufacturer = $1
             ORDER BY created_at DESC
@@ -208,7 +229,18 @@ impl SearchRepository {
                 created_at as "created_at!",
                 updated_at as "updated_at!",
                 analyzed_at,
-                import_batch_id
+                import_batch_id,
+                parent_folder,
+                filename_bpm,
+                filename_key,
+                filename_genres,
+                structure_tags,
+                metadata_source,
+                track_names,
+                copyright,
+                instrument_names_text,
+                markers,
+                lyrics
             FROM files
             WHERE collection_name = $1
             ORDER BY created_at DESC

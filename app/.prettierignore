@@ -1,0 +1,25 @@
+# Build outputs
+dist/
+build/
+.svelte-kit/
+
+# Dependencies
+node_modules/
+
+# Tauri backend (formatted by rustfmt)
+src-tauri/
+
+# Generated files
+*.generated.ts
+*.d.ts
+
+# Config files
+*.config.js
+*.config.ts
+vite.config.ts
+postcss.config.js
+tailwind.config.js
+
+# Lock files
+pnpm-lock.yaml
+package-lock.json

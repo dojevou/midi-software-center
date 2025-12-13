@@ -217,14 +217,42 @@ impl Analyzer {
 
         impl<'ast, 'a> Visit<'ast> for SecurityVisitor<'a> {
             fn visit_expr_unsafe(&mut self, node: &'ast syn::ExprUnsafe) {
+                let has_safety_comment = self.check_safety_comment(node);
                 self.unsafe_blocks.push(UnsafeBlock {
                     file: self.file.to_path_buf(),
                     line: node.unsafe_token.span.start().line,
-                    has_safety_comment: false, // TODO: Check for SAFETY comment
+                    has_safety_comment,
                     operations: vec!["unsafe block".to_string()],
-                    suggestion: Some("Add SAFETY comment explaining why this is safe".to_string()),
+                    suggestion: if !has_safety_comment {
+                        Some("Add SAFETY comment explaining why this is safe".to_string())
+                    } else {
+                        None
+                    },
                 });
                 syn::visit::visit_expr_unsafe(self, node);
+            }
+
+            fn check_safety_comment(&self, _node: &syn::ExprUnsafe) -> bool {
+                // SAFETY: This function performs a simple heuristic check for SAFETY comments
+                // in the source code by examining the file at the unsafe block location.
+                // We read the source file to check for a preceding SAFETY comment, which is
+                // a standard Rust convention for documenting unsafe blocks. No actual unsafe
+                // operations are performed here - it's purely file I/O and string matching.
+                if let Ok(content) = std::fs::read_to_string(self.file) {
+                    let lines: Vec<&str> = content.lines().collect();
+                    let unsafe_line = _node.unsafe_token.span.start().line;
+
+                    // Check the line before the unsafe block (with bounds checking)
+                    if unsafe_line > 0 && unsafe_line <= lines.len() {
+                        let prev_line = lines[unsafe_line - 2]; // line is 1-indexed
+                        if prev_line.trim().starts_with("// SAFETY:")
+                            || prev_line.trim().starts_with("/* SAFETY:")
+                        {
+                            return true;
+                        }
+                    }
+                }
+                false
             }
 
             fn visit_expr_call(&mut self, node: &'ast syn::ExprCall) {

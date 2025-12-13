@@ -1,0 +1,1081 @@
+================================================================================
+MIDI SOFTWARE CENTER - COMPLETE DATABASE SCHEMA & SAMPLE DATA
+Generated: $(date)
+Database: midi_library (PostgreSQL 16)
+================================================================================
+
+================================================================================
+SECTION 1: ALL TABLES IN DATABASE
+================================================================================
+        table_name        | table_type 
+--------------------------+------------
+ _sqlx_migrations         | BASE TABLE
+ auto_tagging_rules       | BASE TABLE
+ duplicate_files          | BASE TABLE
+ duplicate_groups         | BASE TABLE
+ duplicate_summary        | VIEW
+ favorites                | BASE TABLE
+ file_categories          | BASE TABLE
+ file_compatibility       | BASE TABLE
+ file_embeddings          | BASE TABLE
+ file_instruments         | BASE TABLE
+ file_tags                | BASE TABLE
+ files                    | BASE TABLE
+ files_with_metadata      | VIEW
+ files_with_tags          | VIEW
+ files_with_text_metadata | VIEW
+ harmonic_patterns        | BASE TABLE
+ melodic_patterns         | BASE TABLE
+ musical_metadata         | BASE TABLE
+ pending_tag_suggestions  | VIEW
+ popular_tags_by_category | VIEW
+ processing_errors        | BASE TABLE
+ processing_jobs          | BASE TABLE
+ rhythm_patterns          | BASE TABLE
+ schema_migrations        | BASE TABLE
+ tag_aliases              | BASE TABLE
+ tag_categories           | BASE TABLE
+ tag_suggestions          | BASE TABLE
+ tags                     | BASE TABLE
+ tags_with_categories     | VIEW
+ track_splits             | BASE TABLE
+(30 rows)
+
+
+================================================================================
+SECTION 2: ALL COLUMNS WITH DATA TYPES (BY TABLE)
+================================================================================
+        table_name        |        column_name         |          data_type          | character_maximum_length | is_nullable |                 column_default                 
+--------------------------+----------------------------+-----------------------------+--------------------------+-------------+------------------------------------------------
+ _sqlx_migrations         | version                    | bigint                      |                          | NO          | 
+ _sqlx_migrations         | description                | text                        |                          | NO          | 
+ _sqlx_migrations         | installed_on               | timestamp with time zone    |                          | NO          | now()
+ _sqlx_migrations         | success                    | boolean                     |                          | NO          | 
+ _sqlx_migrations         | checksum                   | bytea                       |                          | NO          | 
+ _sqlx_migrations         | execution_time             | bigint                      |                          | NO          | 
+ auto_tagging_rules       | id                         | integer                     |                          | NO          | nextval('auto_tagging_rules_id_seq'::regclass)
+ auto_tagging_rules       | rule_name                  | character varying           |                      100 | NO          | 
+ auto_tagging_rules       | rule_type                  | character varying           |                       50 | NO          | 
+ auto_tagging_rules       | pattern                    | character varying           |                      500 | NO          | 
+ auto_tagging_rules       | tags_to_add                | ARRAY                       |                          | NO          | 
+ auto_tagging_rules       | confidence                 | numeric                     |                          | YES         | 0.85
+ auto_tagging_rules       | priority                   | integer                     |                          | YES         | 50
+ auto_tagging_rules       | is_active                  | boolean                     |                          | YES         | true
+ auto_tagging_rules       | created_at                 | timestamp with time zone    |                          | YES         | now()
+ auto_tagging_rules       | updated_at                 | timestamp with time zone    |                          | YES         | now()
+ duplicate_files          | id                         | bigint                      |                          | NO          | nextval('duplicate_files_id_seq'::regclass)
+ duplicate_files          | group_id                   | integer                     |                          | NO          | 
+ duplicate_files          | file_id                    | bigint                      |                          | NO          | 
+ duplicate_files          | is_canonical               | boolean                     |                          | YES         | false
+ duplicate_files          | added_at                   | timestamp with time zone    |                          | YES         | now()
+ duplicate_groups         | id                         | integer                     |                          | NO          | nextval('duplicate_groups_id_seq'::regclass)
+ duplicate_groups         | content_hash               | bytea                       |                          | NO          | 
+ duplicate_groups         | canonical_file_id          | bigint                      |                          | YES         | 
+ duplicate_groups         | duplicate_count            | integer                     |                          | YES         | 1
+ duplicate_groups         | total_size_bytes           | bigint                      |                          | YES         | 
+ duplicate_groups         | created_at                 | timestamp with time zone    |                          | YES         | now()
+ duplicate_summary        | group_id                   | integer                     |                          | YES         | 
+ duplicate_summary        | duplicate_count            | integer                     |                          | YES         | 
+ duplicate_summary        | total_size_bytes           | bigint                      |                          | YES         | 
+ duplicate_summary        | filepaths                  | ARRAY                       |                          | YES         | 
+ favorites                | id                         | bigint                      |                          | NO          | nextval('favorites_id_seq'::regclass)
+ favorites                | file_id                    | bigint                      |                          | NO          | 
+ favorites                | created_at                 | timestamp with time zone    |                          | YES         | now()
+ file_categories          | file_id                    | bigint                      |                          | NO          | 
+ file_categories          | primary_category           | USER-DEFINED                |                          | NO          | 
+ file_categories          | secondary_category         | USER-DEFINED                |                          | YES         | 
+ file_categories          | tertiary_category          | USER-DEFINED                |                          | YES         | 
+ file_categories          | confidence_score           | real                        |                          | YES         | 
+ file_categories          | is_manual                  | boolean                     |                          | YES         | false
+ file_categories          | detected_from              | text                        |                          | YES         | 
+ file_categories          | created_at                 | timestamp with time zone    |                          | YES         | now()
+ file_compatibility       | file_id_a                  | bigint                      |                          | NO          | 
+ file_compatibility       | file_id_b                  | bigint                      |                          | NO          | 
+ file_compatibility       | overall_score              | numeric                     |                          | YES         | 
+ file_compatibility       | rhythmic_score             | numeric                     |                          | YES         | 
+ file_compatibility       | harmonic_score             | numeric                     |                          | YES         | 
+ file_compatibility       | melodic_score              | numeric                     |                          | YES         | 
+ file_compatibility       | timbral_score              | numeric                     |                          | YES         | 
+ file_compatibility       | key_compatible             | boolean                     |                          | YES         | 
+ file_compatibility       | bpm_compatible             | boolean                     |                          | YES         | 
+ file_compatibility       | time_signature_compatible  | boolean                     |                          | YES         | 
+ file_compatibility       | computed_at                | timestamp with time zone    |                          | YES         | now()
+ file_embeddings          | file_id                    | bigint                      |                          | NO          | 
+ file_embeddings          | overall_embedding          | USER-DEFINED                |                          | YES         | 
+ file_embeddings          | rhythmic_embedding         | USER-DEFINED                |                          | YES         | 
+ file_embeddings          | harmonic_embedding         | USER-DEFINED                |                          | YES         | 
+ file_embeddings          | melodic_embedding          | USER-DEFINED                |                          | YES         | 
+ file_embeddings          | model_version              | text                        |                          | YES         | 
+ file_embeddings          | generated_at               | timestamp with time zone    |                          | YES         | now()
+ file_embeddings          | embedding_quality          | real                        |                          | YES         | 
+ file_instruments         | id                         | bigint                      |                          | NO          | nextval('file_instruments_id_seq'::regclass)
+ file_instruments         | file_id                    | bigint                      |                          | NO          | 
+ file_instruments         | channel                    | smallint                    |                          | NO          | 
+ file_instruments         | program_number             | smallint                    |                          | NO          | 
+ file_instruments         | program_name               | text                        |                          | YES         | 
+ file_instruments         | instrument_family          | text                        |                          | YES         | 
+ file_instruments         | instrument_type            | text                        |                          | YES         | 
+ file_instruments         | note_count                 | integer                     |                          | YES         | 0
+ file_instruments         | is_primary                 | boolean                     |                          | YES         | false
+ file_instruments         | avg_velocity               | numeric                     |                          | YES         | 
+ file_instruments         | pitch_range_low            | smallint                    |                          | YES         | 
+ file_instruments         | pitch_range_high           | smallint                    |                          | YES         | 
+ file_instruments         | created_at                 | timestamp with time zone    |                          | YES         | now()
+ file_tags                | file_id                    | bigint                      |                          | NO          | 
+ file_tags                | tag_id                     | integer                     |                          | NO          | 
+ file_tags                | added_at                   | timestamp with time zone    |                          | YES         | now()
+ file_tags                | added_by                   | text                        |                          | YES         | 'system'::text
+ files                    | id                         | bigint                      |                          | NO          | nextval('files_id_seq'::regclass)
+ files                    | filename                   | text                        |                          | NO          | 
+ files                    | filepath                   | text                        |                          | NO          | 
+ files                    | original_filename          | text                        |                          | NO          | 
+ files                    | content_hash               | bytea                       |                          | NO          | 
+ files                    | file_size_bytes            | bigint                      |                          | NO          | 
+ files                    | format                     | smallint                    |                          | YES         | 
+ files                    | num_tracks                 | smallint                    |                          | NO          | 1
+ files                    | ticks_per_quarter_note     | integer                     |                          | YES         | 
+ files                    | duration_seconds           | numeric                     |                          | YES         | 
+ files                    | duration_ticks             | bigint                      |                          | YES         | 
+ files                    | is_multi_track             | boolean                     |                          | YES         | false
+ files                    | parent_file_id             | bigint                      |                          | YES         | 
+ files                    | track_number               | smallint                    |                          | YES         | 
+ files                    | total_tracks               | smallint                    |                          | YES         | 
+ files                    | manufacturer               | text                        |                          | YES         | 
+ files                    | collection_name            | text                        |                          | YES         | 
+ files                    | folder_tags                | ARRAY                       |                          | YES         | 
+ files                    | search_vector              | tsvector                    |                          | YES         | 
+ files                    | created_at                 | timestamp with time zone    |                          | YES         | now()
+ files                    | updated_at                 | timestamp with time zone    |                          | YES         | now()
+ files                    | analyzed_at                | timestamp with time zone    |                          | YES         | 
+ files                    | import_batch_id            | uuid                        |                          | YES         | 
+ files                    | parent_folder              | text                        |                          | YES         | 
+ files                    | filename_bpm               | real                        |                          | YES         | 
+ files                    | filename_key               | text                        |                          | YES         | 
+ files                    | filename_genres            | ARRAY                       |                          | YES         | 
+ files                    | structure_tags             | ARRAY                       |                          | YES         | 
+ files                    | metadata_source            | text                        |                          | YES         | 'none'::text
+ files                    | track_names                | ARRAY                       |                          | YES         | '{}'::text[]
+ files                    | copyright                  | text                        |                          | YES         | 
+ files                    | instrument_names_text      | ARRAY                       |                          | YES         | '{}'::text[]
+ files                    | markers                    | ARRAY                       |                          | YES         | '{}'::text[]
+ files                    | lyrics                     | ARRAY                       |                          | YES         | '{}'::text[]
+ files_with_metadata      | id                         | bigint                      |                          | YES         | 
+ files_with_metadata      | filename                   | text                        |                          | YES         | 
+ files_with_metadata      | filepath                   | text                        |                          | YES         | 
+ files_with_metadata      | manufacturer               | text                        |                          | YES         | 
+ files_with_metadata      | collection_name            | text                        |                          | YES         | 
+ files_with_metadata      | duration_seconds           | numeric                     |                          | YES         | 
+ files_with_metadata      | bpm                        | numeric                     |                          | YES         | 
+ files_with_metadata      | key_signature              | USER-DEFINED                |                          | YES         | 
+ files_with_metadata      | time_signature_numerator   | smallint                    |                          | YES         | 
+ files_with_metadata      | time_signature_denominator | smallint                    |                          | YES         | 
+ files_with_metadata      | total_notes                | integer                     |                          | YES         | 
+ files_with_metadata      | is_percussive              | boolean                     |                          | YES         | 
+ files_with_metadata      | has_chords                 | boolean                     |                          | YES         | 
+ files_with_metadata      | has_melody                 | boolean                     |                          | YES         | 
+ files_with_metadata      | primary_category           | USER-DEFINED                |                          | YES         | 
+ files_with_metadata      | secondary_category         | USER-DEFINED                |                          | YES         | 
+ files_with_metadata      | created_at                 | timestamp with time zone    |                          | YES         | 
+ files_with_tags          | id                         | bigint                      |                          | YES         | 
+ files_with_tags          | filename                   | text                        |                          | YES         | 
+ files_with_tags          | filepath                   | text                        |                          | YES         | 
+ files_with_tags          | tag_names                  | ARRAY                       |                          | YES         | 
+ files_with_text_metadata | id                         | bigint                      |                          | YES         | 
+ files_with_text_metadata | filename                   | text                        |                          | YES         | 
+ files_with_text_metadata | path                       | text                        |                          | YES         | 
+ files_with_text_metadata | track_names                | ARRAY                       |                          | YES         | 
+ files_with_text_metadata | copyright                  | text                        |                          | YES         | 
+ files_with_text_metadata | instrument_names_text      | ARRAY                       |                          | YES         | 
+ files_with_text_metadata | markers                    | ARRAY                       |                          | YES         | 
+ files_with_text_metadata | lyrics                     | ARRAY                       |                          | YES         | 
+ files_with_text_metadata | track_count                | integer                     |                          | YES         | 
+ files_with_text_metadata | instrument_count           | integer                     |                          | YES         | 
+ files_with_text_metadata | marker_count               | integer                     |                          | YES         | 
+ files_with_text_metadata | lyric_line_count           | integer                     |                          | YES         | 
+ files_with_text_metadata | created_at                 | timestamp with time zone    |                          | YES         | 
+ harmonic_patterns        | id                         | bigint                      |                          | NO          | nextval('harmonic_patterns_id_seq'::regclass)
+ harmonic_patterns        | file_id                    | bigint                      |                          | NO          | 
+ harmonic_patterns        | chord_sequence             | ARRAY                       |                          | YES         | 
+ harmonic_patterns        | chord_types                | ARRAY                       |                          | YES         | 
+ harmonic_patterns        | chord_roots                | ARRAY                       |                          | YES         | 
+ harmonic_patterns        | roman_numerals             | ARRAY                       |                          | YES         | 
+ harmonic_patterns        | harmonic_rhythm            | ARRAY                       |                          | YES         | 
+ harmonic_patterns        | progression_length         | integer                     |                          | YES         | 
+ harmonic_patterns        | harmonic_complexity        | real                        |                          | YES         | 
+ harmonic_patterns        | uses_seventh_chords        | boolean                     |                          | YES         | false
+ harmonic_patterns        | uses_extended_chords       | boolean                     |                          | YES         | false
+ harmonic_patterns        | progression_hash           | bytea                       |                          | YES         | 
+ harmonic_patterns        | created_at                 | timestamp with time zone    |                          | YES         | now()
+ melodic_patterns         | id                         | bigint                      |                          | NO          | nextval('melodic_patterns_id_seq'::regclass)
+ melodic_patterns         | file_id                    | bigint                      |                          | NO          | 
+ melodic_patterns         | pitch_sequence             | ARRAY                       |                          | YES         | 
+ melodic_patterns         | interval_sequence          | ARRAY                       |                          | YES         | 
+ melodic_patterns         | contour_direction          | ARRAY                       |                          | YES         | 
+ melodic_patterns         | note_durations             | ARRAY                       |                          | YES         | 
+ melodic_patterns         | rhythmic_motif             | text                        |                          | YES         | 
+ melodic_patterns         | motif_count                | integer                     |                          | YES         | 
+ melodic_patterns         | sequence_count             | integer                     |                          | YES         | 
+ melodic_patterns         | repetition_score           | real                        |                          | YES         | 
+ melodic_patterns         | melodic_range              | smallint                    |                          | YES         | 
+ melodic_patterns         | avg_interval_size          | numeric                     |                          | YES         | 
+ melodic_patterns         | stepwise_motion_ratio      | numeric                     |                          | YES         | 
+ melodic_patterns         | melodic_hash               | bytea                       |                          | YES         | 
+ melodic_patterns         | created_at                 | timestamp with time zone    |                          | YES         | now()
+ musical_metadata         | file_id                    | bigint                      |                          | NO          | 
+ musical_metadata         | bpm                        | numeric                     |                          | YES         | 
+ musical_metadata         | bpm_confidence             | real                        |                          | YES         | 
+ musical_metadata         | has_tempo_changes          | boolean                     |                          | YES         | false
+ musical_metadata         | tempo_changes              | jsonb                       |                          | YES         | 
+ musical_metadata         | key_signature              | USER-DEFINED                |                          | YES         | 
+ musical_metadata         | key_confidence             | real                        |                          | YES         | 
+ musical_metadata         | has_key_changes            | boolean                     |                          | YES         | false
+ musical_metadata         | key_changes                | jsonb                       |                          | YES         | 
+ musical_metadata         | time_signature_numerator   | smallint                    |                          | YES         | 4
+ musical_metadata         | time_signature_denominator | smallint                    |                          | YES         | 4
+ musical_metadata         | has_time_signature_changes | boolean                     |                          | YES         | false
+ musical_metadata         | time_signature_changes     | jsonb                       |                          | YES         | 
+ musical_metadata         | total_notes                | integer                     |                          | NO          | 0
+ musical_metadata         | unique_pitches             | integer                     |                          | YES         | 
+ musical_metadata         | pitch_range_min            | smallint                    |                          | YES         | 
+ musical_metadata         | pitch_range_max            | smallint                    |                          | YES         | 
+ musical_metadata         | avg_velocity               | numeric                     |                          | YES         | 
+ musical_metadata         | note_density               | numeric                     |                          | YES         | 
+ musical_metadata         | polyphony_max              | smallint                    |                          | YES         | 
+ musical_metadata         | polyphony_avg              | numeric                     |                          | YES         | 
+ musical_metadata         | is_monophonic              | boolean                     |                          | YES         | false
+ musical_metadata         | is_polyphonic              | boolean                     |                          | YES         | true
+ musical_metadata         | is_percussive              | boolean                     |                          | YES         | false
+ musical_metadata         | has_chords                 | boolean                     |                          | YES         | false
+ musical_metadata         | chord_complexity           | real                        |                          | YES         | 
+ musical_metadata         | has_melody                 | boolean                     |                          | YES         | false
+ musical_metadata         | melodic_range              | smallint                    |                          | YES         | 
+ musical_metadata         | created_at                 | timestamp with time zone    |                          | YES         | now()
+ musical_metadata         | chord_progression          | jsonb                       |                          | YES         | 
+ musical_metadata         | chord_types                | ARRAY                       |                          | YES         | 
+ musical_metadata         | has_seventh_chords         | boolean                     |                          | YES         | false
+ musical_metadata         | has_extended_chords        | boolean                     |                          | YES         | false
+ musical_metadata         | chord_change_rate          | numeric                     |                          | YES         | 
+ musical_metadata         | chord_complexity_score     | numeric                     |                          | YES         | 
+ musical_metadata         | controller_data            | jsonb                       |                          | YES         | 
+ musical_metadata         | articulation_data          | jsonb                       |                          | YES         | 
+ musical_metadata         | structure_data             | jsonb                       |                          | YES         | 
+ pending_tag_suggestions  | id                         | integer                     |                          | YES         | 
+ pending_tag_suggestions  | file_id                    | bigint                      |                          | YES         | 
+ pending_tag_suggestions  | filename                   | text                        |                          | YES         | 
+ pending_tag_suggestions  | suggested_tag              | text                        |                          | YES         | 
+ pending_tag_suggestions  | tag_category               | character varying           |                       50 | YES         | 
+ pending_tag_suggestions  | confidence                 | numeric                     |                          | YES         | 
+ pending_tag_suggestions  | source                     | character varying           |                       50 | YES         | 
+ pending_tag_suggestions  | created_at                 | timestamp with time zone    |                          | YES         | 
+ popular_tags_by_category | category                   | character varying           |                       50 | YES         | 
+ popular_tags_by_category | category_color             | character varying           |                        7 | YES         | 
+ popular_tags_by_category | tag_name                   | text                        |                          | YES         | 
+ popular_tags_by_category | usage_count                | integer                     |                          | YES         | 
+ popular_tags_by_category | auto_detected              | boolean                     |                          | YES         | 
+ popular_tags_by_category | confidence_score           | numeric                     |                          | YES         | 
+ processing_errors        | id                         | bigint                      |                          | NO          | nextval('processing_errors_id_seq'::regclass)
+ processing_errors        | job_id                     | uuid                        |                          | NO          | 
+ processing_errors        | filepath                   | text                        |                          | NO          | 
+ processing_errors        | error_type                 | text                        |                          | YES         | 
+ processing_errors        | error_message              | text                        |                          | YES         | 
+ processing_errors        | stack_trace                | text                        |                          | YES         | 
+ processing_errors        | occurred_at                | timestamp with time zone    |                          | YES         | now()
+ processing_jobs          | id                         | uuid                        |                          | NO          | gen_random_uuid()
+ processing_jobs          | job_type                   | text                        |                          | NO          | 
+ processing_jobs          | source_directory           | text                        |                          | NO          | 
+ processing_jobs          | total_files                | integer                     |                          | NO          | 0
+ processing_jobs          | processed_files            | integer                     |                          | NO          | 0
+ processing_jobs          | failed_files               | integer                     |                          | NO          | 0
+ processing_jobs          | skipped_files              | integer                     |                          | NO          | 0
+ processing_jobs          | status                     | text                        |                          | YES         | 'pending'::text
+ processing_jobs          | error_message              | text                        |                          | YES         | 
+ processing_jobs          | started_at                 | timestamp with time zone    |                          | YES         | 
+ processing_jobs          | completed_at               | timestamp with time zone    |                          | YES         | 
+ processing_jobs          | estimated_completion       | timestamp with time zone    |                          | YES         | 
+ processing_jobs          | settings                   | jsonb                       |                          | YES         | '{}'::jsonb
+ processing_jobs          | created_at                 | timestamp with time zone    |                          | YES         | now()
+ rhythm_patterns          | id                         | bigint                      |                          | NO          | nextval('rhythm_patterns_id_seq'::regclass)
+ rhythm_patterns          | file_id                    | bigint                      |                          | NO          | 
+ rhythm_patterns          | pattern_type               | text                        |                          | YES         | 
+ rhythm_patterns          | pattern_signature          | bytea                       |                          | YES         | 
+ rhythm_patterns          | onset_times                | ARRAY                       |                          | YES         | 
+ rhythm_patterns          | inter_onset_intervals      | ARRAY                       |                          | YES         | 
+ rhythm_patterns          | swing_factor               | numeric                     |                          | YES         | 
+ rhythm_patterns          | groove_template            | USER-DEFINED                |                          | YES         | 
+ rhythm_patterns          | syncopation_score          | numeric                     |                          | YES         | 
+ rhythm_patterns          | pattern_length_beats       | integer                     |                          | YES         | 
+ rhythm_patterns          | pattern_complexity         | real                        |                          | YES         | 
+ rhythm_patterns          | created_at                 | timestamp with time zone    |                          | YES         | now()
+ schema_migrations        | id                         | integer                     |                          | NO          | nextval('schema_migrations_id_seq'::regclass)
+ schema_migrations        | version                    | text                        |                          | NO          | 
+ schema_migrations        | description                | text                        |                          | YES         | 
+ schema_migrations        | applied_at                 | timestamp with time zone    |                          | YES         | now()
+ tag_aliases              | id                         | integer                     |                          | NO          | nextval('tag_aliases_id_seq'::regclass)
+ tag_aliases              | tag_id                     | integer                     |                          | NO          | 
+ tag_aliases              | alias                      | character varying           |                      100 | NO          | 
+ tag_aliases              | created_at                 | timestamp with time zone    |                          | YES         | now()
+ tag_categories           | id                         | integer                     |                          | NO          | nextval('tag_categories_id_seq'::regclass)
+ tag_categories           | name                       | character varying           |                       50 | NO          | 
+ tag_categories           | description                | text                        |                          | YES         | 
+ tag_categories           | priority                   | integer                     |                          | YES         | 50
+ tag_categories           | color                      | character varying           |                        7 | YES         | 
+ tag_categories           | created_at                 | timestamp with time zone    |                          | YES         | now()
+ tag_suggestions          | id                         | integer                     |                          | NO          | nextval('tag_suggestions_id_seq'::regclass)
+ tag_suggestions          | file_id                    | bigint                      |                          | NO          | 
+ tag_suggestions          | suggested_tag_id           | integer                     |                          | NO          | 
+ tag_suggestions          | confidence                 | numeric                     |                          | NO          | 
+ tag_suggestions          | source                     | character varying           |                       50 | NO          | 
+ tag_suggestions          | is_accepted                | boolean                     |                          | YES         | 
+ tag_suggestions          | accepted_at                | timestamp with time zone    |                          | YES         | 
+ tag_suggestions          | created_at                 | timestamp with time zone    |                          | YES         | now()
+ tags                     | id                         | integer                     |                          | NO          | nextval('tags_id_seq'::regclass)
+ tags                     | name                       | text                        |                          | NO          | 
+ tags                     | category                   | text                        |                          | YES         | 
+ tags                     | usage_count                | integer                     |                          | YES         | 0
+ tags                     | created_at                 | timestamp with time zone    |                          | YES         | now()
+ tags                     | category_id                | integer                     |                          | YES         | 
+ tags                     | priority                   | integer                     |                          | YES         | 50
+ tags                     | auto_detected              | boolean                     |                          | YES         | false
+ tags                     | confidence_score           | numeric                     |                          | YES         | 0.00
+ tags                     | detection_method           | character varying           |                       50 | YES         | 
+ tags                     | parent_tag_id              | integer                     |                          | YES         | 
+ tags                     | is_active                  | boolean                     |                          | YES         | true
+ tags_with_categories     | id                         | integer                     |                          | YES         | 
+ tags_with_categories     | name                       | text                        |                          | YES         | 
+ tags_with_categories     | usage_count                | integer                     |                          | YES         | 
+ tags_with_categories     | category                   | character varying           |                       50 | YES         | 
+ tags_with_categories     | category_color             | character varying           |                        7 | YES         | 
+ tags_with_categories     | priority                   | integer                     |                          | YES         | 
+ tags_with_categories     | auto_detected              | boolean                     |                          | YES         | 
+ tags_with_categories     | confidence_score           | numeric                     |                          | YES         | 
+ tags_with_categories     | detection_method           | character varying           |                       50 | YES         | 
+ tags_with_categories     | is_active                  | boolean                     |                          | YES         | 
+ tags_with_categories     | created_at                 | timestamp with time zone    |                          | YES         | 
+ track_splits             | id                         | bigint                      |                          | NO          | nextval('track_splits_id_seq'::regclass)
+ track_splits             | parent_file_id             | bigint                      |                          | NO          | 
+ track_splits             | split_file_id              | bigint                      |                          | NO          | 
+ track_splits             | track_number               | integer                     |                          | NO          | 
+ track_splits             | track_name                 | text                        |                          | YES         | 
+ track_splits             | instrument                 | text                        |                          | YES         | 
+ track_splits             | note_count                 | integer                     |                          | YES         | 
+ track_splits             | created_at                 | timestamp without time zone |                          | YES         | now()
+(312 rows)
+
+
+================================================================================
+SECTION 3: PRIMARY KEYS
+================================================================================
+     table_name     | column_name |     constraint_name     
+--------------------+-------------+-------------------------
+ _sqlx_migrations   | version     | _sqlx_migrations_pkey
+ auto_tagging_rules | id          | auto_tagging_rules_pkey
+ duplicate_files    | id          | duplicate_files_pkey
+ duplicate_groups   | id          | duplicate_groups_pkey
+ favorites          | id          | favorites_pkey
+ file_categories    | file_id     | file_categories_pkey
+ file_compatibility | file_id_a   | file_compatibility_pkey
+ file_compatibility | file_id_b   | file_compatibility_pkey
+ file_embeddings    | file_id     | file_embeddings_pkey
+ file_instruments   | id          | file_instruments_pkey
+ file_tags          | file_id     | file_tags_pkey
+ file_tags          | tag_id      | file_tags_pkey
+ files              | id          | files_pkey
+ harmonic_patterns  | id          | harmonic_patterns_pkey
+ melodic_patterns   | id          | melodic_patterns_pkey
+ musical_metadata   | file_id     | musical_metadata_pkey
+ processing_errors  | id          | processing_errors_pkey
+ processing_jobs    | id          | processing_jobs_pkey
+ rhythm_patterns    | id          | rhythm_patterns_pkey
+ schema_migrations  | id          | schema_migrations_pkey
+ tag_aliases        | id          | tag_aliases_pkey
+ tag_categories     | id          | tag_categories_pkey
+ tag_suggestions    | id          | tag_suggestions_pkey
+ tags               | id          | tags_pkey
+ track_splits       | id          | track_splits_pkey
+(25 rows)
+
+
+================================================================================
+SECTION 4: FOREIGN KEYS (TABLE RELATIONSHIPS)
+================================================================================
+     from_table     |    from_column    |     to_table     | to_column |             constraint_name             
+--------------------+-------------------+------------------+-----------+-----------------------------------------
+ duplicate_files    | file_id           | files            | id        | duplicate_files_file_id_fkey
+ duplicate_files    | group_id          | duplicate_groups | id        | duplicate_files_group_id_fkey
+ duplicate_groups   | canonical_file_id | files            | id        | duplicate_groups_canonical_file_id_fkey
+ favorites          | file_id           | files            | id        | favorites_file_id_fkey
+ file_categories    | file_id           | files            | id        | file_categories_file_id_fkey
+ file_compatibility | file_id_b         | files            | id        | file_compatibility_file_id_b_fkey
+ file_compatibility | file_id_a         | files            | id        | file_compatibility_file_id_a_fkey
+ file_embeddings    | file_id           | files            | id        | file_embeddings_file_id_fkey
+ file_instruments   | file_id           | files            | id        | file_instruments_file_id_fkey
+ file_tags          | file_id           | files            | id        | file_tags_file_id_fkey
+ file_tags          | tag_id            | tags             | id        | file_tags_tag_id_fkey
+ files              | parent_file_id    | files            | id        | files_parent_file_id_fkey
+ harmonic_patterns  | file_id           | files            | id        | harmonic_patterns_file_id_fkey
+ melodic_patterns   | file_id           | files            | id        | melodic_patterns_file_id_fkey
+ musical_metadata   | file_id           | files            | id        | musical_metadata_file_id_fkey
+ processing_errors  | job_id            | processing_jobs  | id        | processing_errors_job_id_fkey
+ rhythm_patterns    | file_id           | files            | id        | rhythm_patterns_file_id_fkey
+ tag_aliases        | tag_id            | tags             | id        | tag_aliases_tag_id_fkey
+ tag_suggestions    | file_id           | files            | id        | tag_suggestions_file_id_fkey
+ tag_suggestions    | suggested_tag_id  | tags             | id        | tag_suggestions_suggested_tag_id_fkey
+ tags               | parent_tag_id     | tags             | id        | tags_parent_tag_id_fkey
+ tags               | category_id       | tag_categories   | id        | tags_category_id_fkey
+ track_splits       | parent_file_id    | files            | id        | track_splits_parent_file_id_fkey
+ track_splits       | split_file_id     | files            | id        | track_splits_split_file_id_fkey
+(24 rows)
+
+
+================================================================================
+SECTION 5: ALL INDEXES
+================================================================================
+     tablename      |                      indexname                      |                                                                                          indexdef                                                                                           
+--------------------+-----------------------------------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ _sqlx_migrations   | _sqlx_migrations_pkey                               | CREATE UNIQUE INDEX _sqlx_migrations_pkey ON public._sqlx_migrations USING btree (version)
+ auto_tagging_rules | auto_tagging_rules_pkey                             | CREATE UNIQUE INDEX auto_tagging_rules_pkey ON public.auto_tagging_rules USING btree (id)
+ auto_tagging_rules | idx_auto_tagging_rules_active                       | CREATE INDEX idx_auto_tagging_rules_active ON public.auto_tagging_rules USING btree (is_active)
+ auto_tagging_rules | idx_auto_tagging_rules_type                         | CREATE INDEX idx_auto_tagging_rules_type ON public.auto_tagging_rules USING btree (rule_type)
+ duplicate_files    | duplicate_files_file_id_key                         | CREATE UNIQUE INDEX duplicate_files_file_id_key ON public.duplicate_files USING btree (file_id)
+ duplicate_files    | duplicate_files_pkey                                | CREATE UNIQUE INDEX duplicate_files_pkey ON public.duplicate_files USING btree (id)
+ duplicate_files    | idx_dup_files_canonical                             | CREATE INDEX idx_dup_files_canonical ON public.duplicate_files USING btree (is_canonical) WHERE (is_canonical = true)
+ duplicate_files    | idx_dup_files_file                                  | CREATE INDEX idx_dup_files_file ON public.duplicate_files USING btree (file_id)
+ duplicate_files    | idx_dup_files_group                                 | CREATE INDEX idx_dup_files_group ON public.duplicate_files USING btree (group_id)
+ duplicate_groups   | duplicate_groups_content_hash_key                   | CREATE UNIQUE INDEX duplicate_groups_content_hash_key ON public.duplicate_groups USING btree (content_hash)
+ duplicate_groups   | duplicate_groups_pkey                               | CREATE UNIQUE INDEX duplicate_groups_pkey ON public.duplicate_groups USING btree (id)
+ duplicate_groups   | idx_dup_groups_canonical                            | CREATE INDEX idx_dup_groups_canonical ON public.duplicate_groups USING btree (canonical_file_id) WHERE (canonical_file_id IS NOT NULL)
+ duplicate_groups   | idx_dup_groups_count                                | CREATE INDEX idx_dup_groups_count ON public.duplicate_groups USING btree (duplicate_count DESC)
+ duplicate_groups   | idx_dup_groups_hash                                 | CREATE INDEX idx_dup_groups_hash ON public.duplicate_groups USING btree (content_hash)
+ favorites          | favorites_file_id_key                               | CREATE UNIQUE INDEX favorites_file_id_key ON public.favorites USING btree (file_id)
+ favorites          | favorites_pkey                                      | CREATE UNIQUE INDEX favorites_pkey ON public.favorites USING btree (id)
+ favorites          | idx_favorites_created_at                            | CREATE INDEX idx_favorites_created_at ON public.favorites USING btree (created_at DESC)
+ favorites          | idx_favorites_file_id                               | CREATE INDEX idx_favorites_file_id ON public.favorites USING btree (file_id)
+ file_categories    | file_categories_pkey                                | CREATE UNIQUE INDEX file_categories_pkey ON public.file_categories USING btree (file_id)
+ file_categories    | idx_categories_confidence                           | CREATE INDEX idx_categories_confidence ON public.file_categories USING btree (confidence_score DESC)
+ file_categories    | idx_categories_manual                               | CREATE INDEX idx_categories_manual ON public.file_categories USING btree (is_manual) WHERE (is_manual = true)
+ file_categories    | idx_categories_primary                              | CREATE INDEX idx_categories_primary ON public.file_categories USING btree (primary_category)
+ file_categories    | idx_categories_secondary                            | CREATE INDEX idx_categories_secondary ON public.file_categories USING btree (secondary_category) WHERE (secondary_category IS NOT NULL)
+ file_categories    | idx_categories_tertiary                             | CREATE INDEX idx_categories_tertiary ON public.file_categories USING btree (tertiary_category) WHERE (tertiary_category IS NOT NULL)
+ file_compatibility | file_compatibility_pkey                             | CREATE UNIQUE INDEX file_compatibility_pkey ON public.file_compatibility USING btree (file_id_a, file_id_b)
+ file_compatibility | idx_compat_bpm                                      | CREATE INDEX idx_compat_bpm ON public.file_compatibility USING btree (bpm_compatible) WHERE (bpm_compatible = true)
+ file_compatibility | idx_compat_file_a                                   | CREATE INDEX idx_compat_file_a ON public.file_compatibility USING btree (file_id_a)
+ file_compatibility | idx_compat_file_b                                   | CREATE INDEX idx_compat_file_b ON public.file_compatibility USING btree (file_id_b)
+ file_compatibility | idx_compat_key                                      | CREATE INDEX idx_compat_key ON public.file_compatibility USING btree (key_compatible) WHERE (key_compatible = true)
+ file_compatibility | idx_compat_overall                                  | CREATE INDEX idx_compat_overall ON public.file_compatibility USING btree (overall_score DESC)
+ file_embeddings    | file_embeddings_pkey                                | CREATE UNIQUE INDEX file_embeddings_pkey ON public.file_embeddings USING btree (file_id)
+ file_embeddings    | idx_embeddings_harmonic                             | CREATE INDEX idx_embeddings_harmonic ON public.file_embeddings USING ivfflat (harmonic_embedding vector_cosine_ops) WITH (lists='100')
+ file_embeddings    | idx_embeddings_melodic                              | CREATE INDEX idx_embeddings_melodic ON public.file_embeddings USING ivfflat (melodic_embedding vector_cosine_ops) WITH (lists='100')
+ file_embeddings    | idx_embeddings_overall                              | CREATE INDEX idx_embeddings_overall ON public.file_embeddings USING ivfflat (overall_embedding vector_cosine_ops) WITH (lists='100')
+ file_embeddings    | idx_embeddings_rhythmic                             | CREATE INDEX idx_embeddings_rhythmic ON public.file_embeddings USING ivfflat (rhythmic_embedding vector_cosine_ops) WITH (lists='100')
+ file_instruments   | file_instruments_file_id_channel_program_number_key | CREATE UNIQUE INDEX file_instruments_file_id_channel_program_number_key ON public.file_instruments USING btree (file_id, channel, program_number)
+ file_instruments   | file_instruments_pkey                               | CREATE UNIQUE INDEX file_instruments_pkey ON public.file_instruments USING btree (id)
+ file_instruments   | idx_instruments_channel                             | CREATE INDEX idx_instruments_channel ON public.file_instruments USING btree (channel)
+ file_instruments   | idx_instruments_family                              | CREATE INDEX idx_instruments_family ON public.file_instruments USING btree (instrument_family) WHERE (instrument_family IS NOT NULL)
+ file_instruments   | idx_instruments_file                                | CREATE INDEX idx_instruments_file ON public.file_instruments USING btree (file_id)
+ file_instruments   | idx_instruments_primary                             | CREATE INDEX idx_instruments_primary ON public.file_instruments USING btree (file_id, is_primary) WHERE (is_primary = true)
+ file_instruments   | idx_instruments_program                             | CREATE INDEX idx_instruments_program ON public.file_instruments USING btree (program_number)
+ file_instruments   | idx_instruments_type                                | CREATE INDEX idx_instruments_type ON public.file_instruments USING btree (instrument_type) WHERE (instrument_type IS NOT NULL)
+ file_tags          | file_tags_pkey                                      | CREATE UNIQUE INDEX file_tags_pkey ON public.file_tags USING btree (file_id, tag_id)
+ file_tags          | idx_file_tags_added_at                              | CREATE INDEX idx_file_tags_added_at ON public.file_tags USING btree (added_at DESC)
+ file_tags          | idx_file_tags_composite                             | CREATE INDEX idx_file_tags_composite ON public.file_tags USING btree (file_id, tag_id)
+ file_tags          | idx_file_tags_file                                  | CREATE INDEX idx_file_tags_file ON public.file_tags USING btree (file_id)
+ file_tags          | idx_file_tags_tag                                   | CREATE INDEX idx_file_tags_tag ON public.file_tags USING btree (tag_id)
+ file_tags          | idx_file_tags_tag_id_file_id                        | CREATE INDEX idx_file_tags_tag_id_file_id ON public.file_tags USING btree (tag_id, file_id)
+ file_tags          | idx_file_tags_unique                                | CREATE UNIQUE INDEX idx_file_tags_unique ON public.file_tags USING btree (file_id, tag_id)
+ files              | files_filepath_key                                  | CREATE UNIQUE INDEX files_filepath_key ON public.files USING btree (filepath)
+ files              | files_pkey                                          | CREATE UNIQUE INDEX files_pkey ON public.files USING btree (id)
+ files              | idx_files_batch                                     | CREATE INDEX idx_files_batch ON public.files USING btree (import_batch_id) WHERE (import_batch_id IS NOT NULL)
+ files              | idx_files_collection                                | CREATE INDEX idx_files_collection ON public.files USING btree (collection_name) WHERE (collection_name IS NOT NULL)
+ files              | idx_files_content_hash                              | CREATE INDEX idx_files_content_hash ON public.files USING btree (content_hash)
+ files              | idx_files_copyright                                 | CREATE INDEX idx_files_copyright ON public.files USING btree (copyright) WHERE (copyright IS NOT NULL)
+ files              | idx_files_copyright_trgm                            | CREATE INDEX idx_files_copyright_trgm ON public.files USING gin (copyright gin_trgm_ops) WHERE (copyright IS NOT NULL)
+ files              | idx_files_created                                   | CREATE INDEX idx_files_created ON public.files USING btree (created_at DESC)
+ files              | idx_files_duration                                  | CREATE INDEX idx_files_duration ON public.files USING btree (duration_seconds) WHERE (duration_seconds IS NOT NULL)
+ files              | idx_files_filename_bpm                              | CREATE INDEX idx_files_filename_bpm ON public.files USING btree (filename_bpm) WHERE (filename_bpm IS NOT NULL)
+ files              | idx_files_filename_genres                           | CREATE INDEX idx_files_filename_genres ON public.files USING gin (filename_genres) WHERE ((filename_genres IS NOT NULL) AND (array_length(filename_genres, 1) > 0))
+ files              | idx_files_filename_key                              | CREATE INDEX idx_files_filename_key ON public.files USING btree (filename_key) WHERE (filename_key IS NOT NULL)
+ files              | idx_files_filename_lower                            | CREATE INDEX idx_files_filename_lower ON public.files USING btree (lower(filename))
+ files              | idx_files_filepath                                  | CREATE INDEX idx_files_filepath ON public.files USING btree (filepath)
+ files              | idx_files_filepath_lower                            | CREATE INDEX idx_files_filepath_lower ON public.files USING btree (lower(filepath))
+ files              | idx_files_folder_tags                               | CREATE INDEX idx_files_folder_tags ON public.files USING gin (folder_tags)
+ files              | idx_files_format                                    | CREATE INDEX idx_files_format ON public.files USING btree (format)
+ files              | idx_files_instrument_names_text                     | CREATE INDEX idx_files_instrument_names_text ON public.files USING gin (instrument_names_text) WHERE ((instrument_names_text IS NOT NULL) AND (array_length(instrument_names_text, 1) > 0))
+ files              | idx_files_manufacturer                              | CREATE INDEX idx_files_manufacturer ON public.files USING btree (manufacturer) WHERE (manufacturer IS NOT NULL)
+ files              | idx_files_markers                                   | CREATE INDEX idx_files_markers ON public.files USING gin (markers) WHERE ((markers IS NOT NULL) AND (array_length(markers, 1) > 0))
+ files              | idx_files_metadata_source                           | CREATE INDEX idx_files_metadata_source ON public.files USING btree (metadata_source)
+ files              | idx_files_num_tracks                                | CREATE INDEX idx_files_num_tracks ON public.files USING btree (num_tracks)
+ files              | idx_files_parent                                    | CREATE INDEX idx_files_parent ON public.files USING btree (parent_file_id) WHERE (parent_file_id IS NOT NULL)
+ files              | idx_files_parent_folder                             | CREATE INDEX idx_files_parent_folder ON public.files USING btree (parent_folder) WHERE (parent_folder IS NOT NULL)
+ files              | idx_files_search                                    | CREATE INDEX idx_files_search ON public.files USING gin (search_vector)
+ files              | idx_files_structure_tags                            | CREATE INDEX idx_files_structure_tags ON public.files USING gin (structure_tags) WHERE ((structure_tags IS NOT NULL) AND (array_length(structure_tags, 1) > 0))
+ files              | idx_files_track_names                               | CREATE INDEX idx_files_track_names ON public.files USING gin (track_names) WHERE ((track_names IS NOT NULL) AND (array_length(track_names, 1) > 0))
+ harmonic_patterns  | harmonic_patterns_pkey                              | CREATE UNIQUE INDEX harmonic_patterns_pkey ON public.harmonic_patterns USING btree (id)
+ harmonic_patterns  | idx_harmonic_complexity                             | CREATE INDEX idx_harmonic_complexity ON public.harmonic_patterns USING btree (harmonic_complexity) WHERE (harmonic_complexity IS NOT NULL)
+ harmonic_patterns  | idx_harmonic_file                                   | CREATE INDEX idx_harmonic_file ON public.harmonic_patterns USING btree (file_id)
+ harmonic_patterns  | idx_harmonic_hash                                   | CREATE INDEX idx_harmonic_hash ON public.harmonic_patterns USING hash (progression_hash)
+ harmonic_patterns  | idx_harmonic_length                                 | CREATE INDEX idx_harmonic_length ON public.harmonic_patterns USING btree (progression_length)
+ melodic_patterns   | idx_melodic_file                                    | CREATE INDEX idx_melodic_file ON public.melodic_patterns USING btree (file_id)
+ melodic_patterns   | idx_melodic_hash                                    | CREATE INDEX idx_melodic_hash ON public.melodic_patterns USING hash (melodic_hash)
+ melodic_patterns   | idx_melodic_motion                                  | CREATE INDEX idx_melodic_motion ON public.melodic_patterns USING btree (stepwise_motion_ratio)
+ melodic_patterns   | idx_melodic_range                                   | CREATE INDEX idx_melodic_range ON public.melodic_patterns USING btree (melodic_range) WHERE (melodic_range IS NOT NULL)
+ melodic_patterns   | melodic_patterns_pkey                               | CREATE UNIQUE INDEX melodic_patterns_pkey ON public.melodic_patterns USING btree (id)
+ musical_metadata   | idx_chord_complexity                                | CREATE INDEX idx_chord_complexity ON public.musical_metadata USING btree (chord_complexity_score) WHERE (chord_complexity_score IS NOT NULL)
+ musical_metadata   | idx_chord_progression                               | CREATE INDEX idx_chord_progression ON public.musical_metadata USING gin (chord_progression)
+ musical_metadata   | idx_chord_types                                     | CREATE INDEX idx_chord_types ON public.musical_metadata USING gin (chord_types)
+ musical_metadata   | idx_has_extended_chords                             | CREATE INDEX idx_has_extended_chords ON public.musical_metadata USING btree (has_extended_chords) WHERE (has_extended_chords = true)
+ musical_metadata   | idx_has_seventh_chords                              | CREATE INDEX idx_has_seventh_chords ON public.musical_metadata USING btree (has_seventh_chords) WHERE (has_seventh_chords = true)
+ musical_metadata   | idx_metadata_bpm                                    | CREATE INDEX idx_metadata_bpm ON public.musical_metadata USING btree (bpm) WHERE (bpm IS NOT NULL)
+ musical_metadata   | idx_metadata_characteristics                        | CREATE INDEX idx_metadata_characteristics ON public.musical_metadata USING btree (is_percussive, is_monophonic, has_chords)
+ musical_metadata   | idx_metadata_density                                | CREATE INDEX idx_metadata_density ON public.musical_metadata USING btree (note_density DESC)
+ musical_metadata   | idx_metadata_has_melody                             | CREATE INDEX idx_metadata_has_melody ON public.musical_metadata USING btree (has_melody) WHERE (has_melody = true)
+ musical_metadata   | idx_metadata_key                                    | CREATE INDEX idx_metadata_key ON public.musical_metadata USING btree (key_signature) WHERE (key_signature <> 'UNKNOWN'::musical_key)
+ musical_metadata   | idx_metadata_notes                                  | CREATE INDEX idx_metadata_notes ON public.musical_metadata USING btree (total_notes DESC)
+ musical_metadata   | idx_metadata_pitch_range                            | CREATE INDEX idx_metadata_pitch_range ON public.musical_metadata USING btree (pitch_range_min, pitch_range_max)
+ musical_metadata   | idx_metadata_polyphony                              | CREATE INDEX idx_metadata_polyphony ON public.musical_metadata USING btree (polyphony_max) WHERE (polyphony_max IS NOT NULL)
+ musical_metadata   | idx_metadata_time_sig                               | CREATE INDEX idx_metadata_time_sig ON public.musical_metadata USING btree (time_signature_numerator, time_signature_denominator)
+ musical_metadata   | idx_musical_metadata_articulation_data              | CREATE INDEX idx_musical_metadata_articulation_data ON public.musical_metadata USING gin (articulation_data)
+ musical_metadata   | idx_musical_metadata_controller_data                | CREATE INDEX idx_musical_metadata_controller_data ON public.musical_metadata USING gin (controller_data)
+ musical_metadata   | idx_musical_metadata_structure_data                 | CREATE INDEX idx_musical_metadata_structure_data ON public.musical_metadata USING gin (structure_data)
+ musical_metadata   | musical_metadata_pkey                               | CREATE UNIQUE INDEX musical_metadata_pkey ON public.musical_metadata USING btree (file_id)
+ processing_errors  | idx_errors_job                                      | CREATE INDEX idx_errors_job ON public.processing_errors USING btree (job_id)
+ processing_errors  | idx_errors_occurred                                 | CREATE INDEX idx_errors_occurred ON public.processing_errors USING btree (occurred_at DESC)
+ processing_errors  | idx_errors_type                                     | CREATE INDEX idx_errors_type ON public.processing_errors USING btree (error_type)
+ processing_errors  | processing_errors_pkey                              | CREATE UNIQUE INDEX processing_errors_pkey ON public.processing_errors USING btree (id)
+ processing_jobs    | idx_jobs_created                                    | CREATE INDEX idx_jobs_created ON public.processing_jobs USING btree (created_at DESC)
+ processing_jobs    | idx_jobs_started                                    | CREATE INDEX idx_jobs_started ON public.processing_jobs USING btree (started_at DESC) WHERE (started_at IS NOT NULL)
+ processing_jobs    | idx_jobs_status                                     | CREATE INDEX idx_jobs_status ON public.processing_jobs USING btree (status)
+ processing_jobs    | idx_jobs_type                                       | CREATE INDEX idx_jobs_type ON public.processing_jobs USING btree (job_type)
+ processing_jobs    | processing_jobs_pkey                                | CREATE UNIQUE INDEX processing_jobs_pkey ON public.processing_jobs USING btree (id)
+ rhythm_patterns    | idx_rhythm_file                                     | CREATE INDEX idx_rhythm_file ON public.rhythm_patterns USING btree (file_id)
+ rhythm_patterns    | idx_rhythm_groove                                   | CREATE INDEX idx_rhythm_groove ON public.rhythm_patterns USING ivfflat (groove_template vector_cosine_ops) WITH (lists='50')
+ rhythm_patterns    | idx_rhythm_signature                                | CREATE INDEX idx_rhythm_signature ON public.rhythm_patterns USING hash (pattern_signature)
+ rhythm_patterns    | idx_rhythm_type                                     | CREATE INDEX idx_rhythm_type ON public.rhythm_patterns USING btree (pattern_type) WHERE (pattern_type IS NOT NULL)
+ rhythm_patterns    | rhythm_patterns_file_id_pattern_type_key            | CREATE UNIQUE INDEX rhythm_patterns_file_id_pattern_type_key ON public.rhythm_patterns USING btree (file_id, pattern_type)
+ rhythm_patterns    | rhythm_patterns_pkey                                | CREATE UNIQUE INDEX rhythm_patterns_pkey ON public.rhythm_patterns USING btree (id)
+ schema_migrations  | schema_migrations_pkey                              | CREATE UNIQUE INDEX schema_migrations_pkey ON public.schema_migrations USING btree (id)
+ schema_migrations  | schema_migrations_version_key                       | CREATE UNIQUE INDEX schema_migrations_version_key ON public.schema_migrations USING btree (version)
+ tag_aliases        | idx_tag_aliases_alias                               | CREATE INDEX idx_tag_aliases_alias ON public.tag_aliases USING btree (alias)
+ tag_aliases        | idx_tag_aliases_tag_id                              | CREATE INDEX idx_tag_aliases_tag_id ON public.tag_aliases USING btree (tag_id)
+ tag_aliases        | tag_aliases_pkey                                    | CREATE UNIQUE INDEX tag_aliases_pkey ON public.tag_aliases USING btree (id)
+ tag_aliases        | tag_aliases_tag_id_alias_key                        | CREATE UNIQUE INDEX tag_aliases_tag_id_alias_key ON public.tag_aliases USING btree (tag_id, alias)
+ tag_categories     | tag_categories_name_key                             | CREATE UNIQUE INDEX tag_categories_name_key ON public.tag_categories USING btree (name)
+ tag_categories     | tag_categories_pkey                                 | CREATE UNIQUE INDEX tag_categories_pkey ON public.tag_categories USING btree (id)
+ tag_suggestions    | idx_tag_suggestions_accepted                        | CREATE INDEX idx_tag_suggestions_accepted ON public.tag_suggestions USING btree (is_accepted)
+ tag_suggestions    | idx_tag_suggestions_confidence                      | CREATE INDEX idx_tag_suggestions_confidence ON public.tag_suggestions USING btree (confidence DESC)
+ tag_suggestions    | idx_tag_suggestions_file_id                         | CREATE INDEX idx_tag_suggestions_file_id ON public.tag_suggestions USING btree (file_id)
+ tag_suggestions    | tag_suggestions_file_id_suggested_tag_id_key        | CREATE UNIQUE INDEX tag_suggestions_file_id_suggested_tag_id_key ON public.tag_suggestions USING btree (file_id, suggested_tag_id)
+ tag_suggestions    | tag_suggestions_pkey                                | CREATE UNIQUE INDEX tag_suggestions_pkey ON public.tag_suggestions USING btree (id)
+ tags               | idx_tags_auto_detected                              | CREATE INDEX idx_tags_auto_detected ON public.tags USING btree (auto_detected)
+ tags               | idx_tags_category                                   | CREATE INDEX idx_tags_category ON public.tags USING btree (category) WHERE (category IS NOT NULL)
+ tags               | idx_tags_category_id                                | CREATE INDEX idx_tags_category_id ON public.tags USING btree (category_id)
+ tags               | idx_tags_name_lower                                 | CREATE INDEX idx_tags_name_lower ON public.tags USING btree (lower(name))
+ tags               | idx_tags_name_trgm                                  | CREATE INDEX idx_tags_name_trgm ON public.tags USING gin (name gin_trgm_ops)
+ tags               | idx_tags_priority                                   | CREATE INDEX idx_tags_priority ON public.tags USING btree (priority)
+ tags               | idx_tags_usage                                      | CREATE INDEX idx_tags_usage ON public.tags USING btree (usage_count DESC)
+ tags               | tags_name_key                                       | CREATE UNIQUE INDEX tags_name_key ON public.tags USING btree (name)
+ tags               | tags_pkey                                           | CREATE UNIQUE INDEX tags_pkey ON public.tags USING btree (id)
+ track_splits       | idx_track_splits_instrument                         | CREATE INDEX idx_track_splits_instrument ON public.track_splits USING btree (instrument) WHERE (instrument IS NOT NULL)
+ track_splits       | idx_track_splits_parent_file_id                     | CREATE INDEX idx_track_splits_parent_file_id ON public.track_splits USING btree (parent_file_id)
+ track_splits       | idx_track_splits_parent_track_number                | CREATE INDEX idx_track_splits_parent_track_number ON public.track_splits USING btree (parent_file_id, track_number)
+ track_splits       | idx_track_splits_split_file_id                      | CREATE INDEX idx_track_splits_split_file_id ON public.track_splits USING btree (split_file_id)
+ track_splits       | track_splits_pkey                                   | CREATE UNIQUE INDEX track_splits_pkey ON public.track_splits USING btree (id)
+ track_splits       | uq_parent_split_pair                                | CREATE UNIQUE INDEX uq_parent_split_pair ON public.track_splits USING btree (parent_file_id, split_file_id)
+(148 rows)
+
+
+================================================================================
+SECTION 6: CUSTOM TYPES (ENUMS)
+================================================================================
+   enum_name   |  enum_value  
+---------------+--------------
+ file_category | KICK
+ file_category | SNARE
+ file_category | HIHAT
+ file_category | CLAP
+ file_category | PERC
+ file_category | TOM
+ file_category | CYMBAL
+ file_category | DRUM_LOOP
+ file_category | DRUM_PATTERN
+ file_category | BASS
+ file_category | SUB_BASS
+ file_category | BASS_LOOP
+ file_category | CHORD
+ file_category | PROGRESSION
+ file_category | STAB
+ file_category | PAD
+ file_category | TEXTURE
+ file_category | ATMOSPHERE
+ file_category | LEAD
+ file_category | MELODY
+ file_category | HOOK
+ file_category | RIFF
+ file_category | ARP
+ file_category | SEQUENCE
+ file_category | PIANO
+ file_category | KEYS
+ file_category | ORGAN
+ file_category | STRING
+ file_category | BRASS
+ file_category | WOODWIND
+ file_category | FX
+ file_category | RISER
+ file_category | IMPACT
+ file_category | SWEEP
+ file_category | TRANSITION
+ file_category | VOCAL
+ file_category | VOX
+ file_category | SAMPLE
+ file_category | MOTIF
+ file_category | THEME
+ file_category | FULL_MIX
+ file_category | STEM
+ file_category | UNKNOWN
+ musical_key   | C
+ musical_key   | Cm
+ musical_key   | C#
+ musical_key   | C#m
+ musical_key   | Db
+ musical_key   | Dbm
+ musical_key   | D
+ musical_key   | Dm
+ musical_key   | D#
+ musical_key   | D#m
+ musical_key   | Eb
+ musical_key   | Ebm
+ musical_key   | E
+ musical_key   | Em
+ musical_key   | F
+ musical_key   | Fm
+ musical_key   | F#
+ musical_key   | F#m
+ musical_key   | Gb
+ musical_key   | Gbm
+ musical_key   | G
+ musical_key   | Gm
+ musical_key   | G#
+ musical_key   | G#m
+ musical_key   | Ab
+ musical_key   | Abm
+ musical_key   | A
+ musical_key   | Am
+ musical_key   | A#
+ musical_key   | A#m
+ musical_key   | Bb
+ musical_key   | Bbm
+ musical_key   | B
+ musical_key   | Bm
+ musical_key   | UNKNOWN
+(78 rows)
+
+
+================================================================================
+SECTION 7: TABLE ROW COUNTS
+================================================================================
+ schemaname |     table_name     | row_count 
+------------+--------------------+-----------
+ public     | tag_suggestions    |         0
+ public     | processing_errors  |         0
+ public     | duplicate_files    |         0
+ public     | auto_tagging_rules |         0
+ public     | _sqlx_migrations   |         0
+ public     | tags               |         0
+ public     | file_categories    |         0
+ public     | tag_categories     |         0
+ public     | file_tags          |         0
+ public     | processing_jobs    |         0
+ public     | duplicate_groups   |         0
+ public     | tag_aliases        |         0
+ public     | rhythm_patterns    |         0
+ public     | schema_migrations  |         0
+ public     | favorites          |         0
+ public     | file_embeddings    |         0
+ public     | track_splits       |         0
+ public     | files              |         0
+ public     | file_instruments   |         0
+ public     | file_compatibility |         0
+ public     | harmonic_patterns  |         0
+ public     | melodic_patterns   |         0
+ public     | musical_metadata   |         0
+(23 rows)
+
+
+================================================================================
+SECTION 8: SAMPLE DATA FROM EACH TABLE
+================================================================================
+
+--- files (first 5 rows) ---
+   id    |                    filename                    |                                         filepath                                          |               original_filename                |                            content_hash                            | file_size_bytes | format | num_tracks | ticks_per_quarter_note | duration_seconds | duration_ticks | is_multi_track | parent_file_id | track_number | total_tracks | manufacturer | collection_name | folder_tags |                                              search_vector                                               |          created_at           |          updated_at           | analyzed_at | import_batch_id | parent_folder | filename_bpm | filename_key | filename_genres | structure_tags | metadata_source | track_names | copyright | instrument_names_text | markers | lyrics 
+---------+------------------------------------------------+-------------------------------------------------------------------------------------------+------------------------------------------------+--------------------------------------------------------------------+-----------------+--------+------------+------------------------+------------------+----------------+----------------+----------------+--------------+--------------+--------------+-----------------+-------------+----------------------------------------------------------------------------------------------------------+-------------------------------+-------------------------------+-------------+-----------------+---------------+--------------+--------------+-----------------+----------------+-----------------+-------------+-----------+-----------------------+---------+--------
+ 9021494 | 075 6-8 02 Stick F1_04_Side Stick.mid          | /home/dojevou/tmp/midi_splits_fast/7789144_075 6-8 02 Stick F1_04_Side Stick.mid          | 075 6-8 02 Stick F1_04_Side Stick.mid          | \x2358ff0811959c4223a61f388d4edd12138296929faad42d461cb3a46346eb39 |              78 |        |          1 |                        |                  |                | f              |                |              |              |              |                 |             | '-8':3A '02':4A '04':7A '075':1A '6':2A 'f1':6A 'side':8A 'stick':5A 'stick.mid':9A                      | 2025-11-22 16:13:07.04607+00  | 2025-11-22 16:13:07.04607+00  |             |                 |               |              |              |                 |                | none            | {}          |           | {}                    | {}      | {}
+ 9021550 | 075 6-8 05 Stick Ride F6_05_Acoustic Snare.mid | /home/dojevou/tmp/midi_splits_fast/7789160_075 6-8 05 Stick Ride F6_05_Acoustic Snare.mid | 075 6-8 05 Stick Ride F6_05_Acoustic Snare.mid | \x875c95de734e6994247ed8ef5aa901d11531bda60af0df080e623fc443c32025 |             115 |        |          1 |                        |                  |                | f              |                |              |              |              |                 |             | '-8':3A '05':4A,8A '075':1A '6':2A 'acoust':9A 'f6':7A 'ride':6A 'snare.mid':10A 'stick':5A              | 2025-11-22 16:13:07.057919+00 | 2025-11-22 16:13:07.057919+00 |             |                 |               |              |              |                 |                | none            | {}          |           | {}                    | {}      | {}
+ 9021677 | 075 6-8 01 Stick Ride F2_05_High Floor Tom.mid | /home/dojevou/tmp/midi_splits_fast/7789183_075 6-8 01 Stick Ride F2_05_High Floor Tom.mid | 075 6-8 01 Stick Ride F2_05_High Floor Tom.mid | \x5a260309288ed2ffd4ab9b5f6183af86de267a0d36d8cd5137aca0f00d39fa4d |              67 |        |          1 |                        |                  |                | f              |                |              |              |              |                 |             | '-8':3A '01':4A '05':8A '075':1A '6':2A 'f2':7A 'floor':10A 'high':9A 'ride':6A 'stick':5A 'tom.mid':11A | 2025-11-22 16:13:07.085114+00 | 2025-11-22 16:13:07.085114+00 |             |                 |               |              |              |                 |                | none            | {}          |           | {}                    | {}      | {}
+ 9021736 | 075 6-8 05 Stick A_05_Closed High-Hat.mid      | /home/dojevou/tmp/midi_splits_fast/7789205_075 6-8 05 Stick A_05_Closed High-Hat.mid      | 075 6-8 05 Stick A_05_Closed High-Hat.mid      | \xc866e5c8ac048af8bdc9f0127cd5bd9308d54f030771128498838e60a81649f9 |             199 |        |          1 |                        |                  |                | f              |                |              |              |              |                 |             | '-8':3A '05':4A,7A '075':1A '6':2A 'close':8A 'high-hat.mid':9A 'stick':5A                               | 2025-11-22 16:13:07.095883+00 | 2025-11-22 16:13:07.095883+00 |             |                 |               |              |              |                 |                | none            | {}          |           | {}                    | {}      | {}
+ 9021767 | 075 6-8 01 Stick Ride F1_07_Ride Cymbal 1.mid  | /home/dojevou/tmp/midi_splits_fast/7789186_075 6-8 01 Stick Ride F1_07_Ride Cymbal 1.mid  | 075 6-8 01 Stick Ride F1_07_Ride Cymbal 1.mid  | \x91b54105c07e944df6f7b9702b309b9021e549f045b5947198013f9005ac4d88 |             192 |        |          1 |                        |                  |                | f              |                |              |              |              |                 |             | '-8':3A '01':4A '07':8A '075':1A '1.mid':11A '6':2A 'cymbal':10A 'f1':7A 'ride':6A,9A 'stick':5A         | 2025-11-22 16:13:07.102132+00 | 2025-11-22 16:13:07.102132+00 |             |                 |               |              |              |                 |                | none            | {}          |           | {}                    | {}      | {}
+(5 rows)
+
+
+--- musical_metadata (first 5 rows) ---
+ file_id |  bpm   | bpm_confidence | has_tempo_changes | tempo_changes | key_signature | key_confidence | has_key_changes | key_changes | time_signature_numerator | time_signature_denominator | has_time_signature_changes | time_signature_changes | total_notes | unique_pitches | pitch_range_min | pitch_range_max | avg_velocity | note_density | polyphony_max | polyphony_avg | is_monophonic | is_polyphonic | is_percussive | has_chords | chord_complexity | has_melody | melodic_range |          created_at           | chord_progression | chord_types | has_seventh_chords | has_extended_chords | chord_change_rate | chord_complexity_score | controller_data | articulation_data | structure_data 
+---------+--------+----------------+-------------------+---------------+---------------+----------------+-----------------+-------------+--------------------------+----------------------------+----------------------------+------------------------+-------------+----------------+-----------------+-----------------+--------------+--------------+---------------+---------------+---------------+---------------+---------------+------------+------------------+------------+---------------+-------------------------------+-------------------+-------------+--------------------+---------------------+-------------------+------------------------+-----------------+-------------------+----------------
+ 6613711 | 128.00 |              1 | f                 |               | D#            |      0.7627823 | f               |             |                        4 |                          4 | f                          |                        |          10 |              7 |              65 |              77 |       100.00 |              |             1 |               | f             | t             |               | f          |                  | f          |               | 2025-11-22 04:28:00.767784+00 |                   |             |                    |                     |                   |                        |                 |                   | 
+ 6613717 | 128.00 |              1 | f                 |               | F             |      0.7666337 | f               |             |                        4 |                          4 | f                          |                        |           4 |              3 |              53 |              65 |       100.00 |              |             1 |               | f             | t             |               | f          |                  | f          |               | 2025-11-22 04:28:00.770809+00 |                   |             |                    |                     |                   |                        |                 |                   | 
+ 6613726 | 128.00 |              1 | f                 |               | A#            |      0.6504097 | f               |             |                        4 |                          4 | f                          |                        |          44 |              7 |              55 |              67 |       100.00 |              |             2 |               | f             | t             |               | f          |                  | f          |               | 2025-11-22 04:28:00.776641+00 |                   |             |                    |                     |                   |                        |                 |                   | 
+ 6613748 | 128.00 |              1 | f                 |               | A#            |      0.6504097 | f               |             |                        4 |                          4 | f                          |                        |          44 |              7 |              55 |              67 |       100.00 |              |             2 |               | f             | t             |               | f          |                  | f          |               | 2025-11-22 04:28:00.787972+00 |                   |             |                    |                     |                   |                        |                 |                   | 
+ 6613752 | 128.00 |              1 | f                 |               | Gm            |              1 | f               |             |                        4 |                          4 | f                          |                        |          88 |              8 |              51 |              74 |        98.00 |              |             2 |               | f             | t             |               | f          |                  | f          |               | 2025-11-22 04:28:00.793385+00 |                   |             |                    |                     |                   |                        |                 |                   | 
+(5 rows)
+
+
+--- tags (first 10 rows) ---
+ id  | name | category | usage_count |          created_at           | category_id | priority | auto_detected | confidence_score | detection_method | parent_tag_id | is_active 
+-----+------+----------+-------------+-------------------------------+-------------+----------+---------------+------------------+------------------+---------------+-----------
+ 779 | 000  | keyword  |           0 | 2025-11-22 17:21:12.359351+00 |             |       50 | f             |             0.00 |                  |               | t
+ 780 | 001  | keyword  |           0 | 2025-11-22 17:21:12.359351+00 |             |       50 | f             |             0.00 |                  |               | t
+ 781 | 002  | keyword  |           0 | 2025-11-22 17:21:12.359351+00 |             |       50 | f             |             0.00 |                  |               | t
+ 782 | 003  | keyword  |           0 | 2025-11-22 17:21:12.359351+00 |             |       50 | f             |             0.00 |                  |               | t
+ 783 | 004  | keyword  |           0 | 2025-11-22 17:21:12.359351+00 |             |       50 | f             |             0.00 |                  |               | t
+ 784 | 005  | keyword  |           0 | 2025-11-22 17:21:12.359351+00 |             |       50 | f             |             0.00 |                  |               | t
+ 785 | 006  | keyword  |           0 | 2025-11-22 17:21:12.359351+00 |             |       50 | f             |             0.00 |                  |               | t
+ 786 | 007  | keyword  |           0 | 2025-11-22 17:21:12.359351+00 |             |       50 | f             |             0.00 |                  |               | t
+ 787 | 008  | keyword  |           0 | 2025-11-22 17:21:12.359351+00 |             |       50 | f             |             0.00 |                  |               | t
+ 788 | 009  | keyword  |           0 | 2025-11-22 17:21:12.359351+00 |             |       50 | f             |             0.00 |                  |               | t
+(10 rows)
+
+
+--- file_tags (first 10 rows) ---
+ file_id | tag_id |           added_at            | added_by 
+---------+--------+-------------------------------+----------
+ 6612699 |   1665 | 2025-11-22 17:21:12.935877+00 | system
+ 6612700 |   1665 | 2025-11-22 17:21:12.935877+00 | system
+ 6612701 |   1665 | 2025-11-22 17:21:12.935877+00 | system
+ 6612702 |   1665 | 2025-11-22 17:21:12.935877+00 | system
+ 6612703 |   1665 | 2025-11-22 17:21:12.935877+00 | system
+ 6612704 |   1665 | 2025-11-22 17:21:12.935877+00 | system
+ 6612705 |   1665 | 2025-11-22 17:21:12.935877+00 | system
+ 6612706 |   1665 | 2025-11-22 17:21:12.935877+00 | system
+ 6612707 |   1665 | 2025-11-22 17:21:12.935877+00 | system
+ 6612708 |   1665 | 2025-11-22 17:21:12.935877+00 | system
+(10 rows)
+
+
+--- midi_tracks (first 5 rows) ---
+ERROR:  relation "midi_tracks" does not exist
+LINE 1: SELECT * FROM midi_tracks LIMIT 5;
+                      ^
+
+--- split_files (first 5 rows) ---
+ERROR:  relation "split_files" does not exist
+LINE 1: SELECT * FROM split_files LIMIT 5;
+                      ^
+
+--- analysis_results (first 5 rows) ---
+ERROR:  relation "analysis_results" does not exist
+LINE 1: SELECT * FROM analysis_results LIMIT 5;
+                      ^
+
+--- drum_patterns (first 5 rows) ---
+ERROR:  relation "drum_patterns" does not exist
+LINE 1: SELECT * FROM drum_patterns LIMIT 5;
+                      ^
+
+--- import_jobs (first 5 rows) ---
+ERROR:  relation "import_jobs" does not exist
+LINE 1: SELECT * FROM import_jobs LIMIT 5;
+                      ^
+
+================================================================================
+SECTION 9: DATABASE SIZE STATISTICS
+================================================================================
+ database_size 
+---------------
+ 9881 MB
+(1 row)
+
+     table_name     | total_size | data_size  | index_size 
+--------------------+------------+------------+------------
+ files              | 5168 MB    | 1974 MB    | 3193 MB
+ file_tags          | 2976 MB    | 730 MB     | 2246 MB
+ musical_metadata   | 1211 MB    | 774 MB     | 428 MB
+ file_instruments   | 260 MB     | 105 MB     | 156 MB
+ track_splits       | 163 MB     | 58 MB      | 106 MB
+ tags               | 89 MB      | 19 MB      | 70 MB
+ file_embeddings    | 4008 kB    | 0 bytes    | 4000 kB
+ rhythm_patterns    | 488 kB     | 0 bytes    | 480 kB
+ harmonic_patterns  | 72 kB      | 0 bytes    | 64 kB
+ melodic_patterns   | 72 kB      | 0 bytes    | 64 kB
+ file_categories    | 56 kB      | 0 bytes    | 48 kB
+ duplicate_groups   | 48 kB      | 0 bytes    | 40 kB
+ tag_categories     | 48 kB      | 8192 bytes | 32 kB
+ schema_migrations  | 48 kB      | 8192 bytes | 32 kB
+ file_compatibility | 48 kB      | 0 bytes    | 48 kB
+(15 rows)
+
+
+================================================================================
+SECTION 10: VIEWS
+================================================================================
+        view_name         |                                                                                       view_definition                                                                                       
+--------------------------+---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------
+ files_with_metadata      |  SELECT f.id,                                                                                                                                                                              +
+                          |     f.filename,                                                                                                                                                                            +
+                          |     f.filepath,                                                                                                                                                                            +
+                          |     f.manufacturer,                                                                                                                                                                        +
+                          |     f.collection_name,                                                                                                                                                                     +
+                          |     f.duration_seconds,                                                                                                                                                                    +
+                          |     m.bpm,                                                                                                                                                                                 +
+                          |     m.key_signature,                                                                                                                                                                       +
+                          |     m.time_signature_numerator,                                                                                                                                                            +
+                          |     m.time_signature_denominator,                                                                                                                                                          +
+                          |     m.total_notes,                                                                                                                                                                         +
+                          |     m.is_percussive,                                                                                                                                                                       +
+                          |     m.has_chords,                                                                                                                                                                          +
+                          |     m.has_melody,                                                                                                                                                                          +
+                          |     c.primary_category,                                                                                                                                                                    +
+                          |     c.secondary_category,                                                                                                                                                                  +
+                          |     f.created_at                                                                                                                                                                           +
+                          |    FROM ((files f                                                                                                                                                                          +
+                          |      LEFT JOIN musical_metadata m ON ((f.id = m.file_id)))                                                                                                                                 +
+                          |      LEFT JOIN file_categories c ON ((f.id = c.file_id)));
+ files_with_tags          |  SELECT f.id,                                                                                                                                                                              +
+                          |     f.filename,                                                                                                                                                                            +
+                          |     f.filepath,                                                                                                                                                                            +
+                          |     array_agg(t.name) FILTER (WHERE (t.name IS NOT NULL)) AS tag_names                                                                                                                     +
+                          |    FROM ((files f                                                                                                                                                                          +
+                          |      LEFT JOIN file_tags ft ON ((f.id = ft.file_id)))                                                                                                                                      +
+                          |      LEFT JOIN tags t ON ((ft.tag_id = t.id)))                                                                                                                                             +
+                          |   GROUP BY f.id, f.filename, f.filepath;
+ duplicate_summary        |  SELECT dg.id AS group_id,                                                                                                                                                                 +
+                          |     dg.duplicate_count,                                                                                                                                                                    +
+                          |     dg.total_size_bytes,                                                                                                                                                                   +
+                          |     array_agg(f.filepath) AS filepaths                                                                                                                                                     +
+                          |    FROM ((duplicate_groups dg                                                                                                                                                              +
+                          |      JOIN duplicate_files df ON ((dg.id = df.group_id)))                                                                                                                                   +
+                          |      JOIN files f ON ((df.file_id = f.id)))                                                                                                                                                +
+                          |   GROUP BY dg.id, dg.duplicate_count, dg.total_size_bytes;
+ tags_with_categories     |  SELECT t.id,                                                                                                                                                                              +
+                          |     t.name,                                                                                                                                                                                +
+                          |     t.usage_count,                                                                                                                                                                         +
+                          |     tc.name AS category,                                                                                                                                                                   +
+                          |     tc.color AS category_color,                                                                                                                                                            +
+                          |     t.priority,                                                                                                                                                                            +
+                          |     t.auto_detected,                                                                                                                                                                       +
+                          |     t.confidence_score,                                                                                                                                                                    +
+                          |     t.detection_method,                                                                                                                                                                    +
+                          |     t.is_active,                                                                                                                                                                           +
+                          |     t.created_at                                                                                                                                                                           +
+                          |    FROM (tags t                                                                                                                                                                            +
+                          |      LEFT JOIN tag_categories tc ON ((t.category_id = tc.id)))                                                                                                                             +
+                          |   WHERE (t.is_active = true)                                                                                                                                                               +
+                          |   ORDER BY tc.priority, t.priority, t.usage_count DESC;
+ popular_tags_by_category |  SELECT tc.name AS category,                                                                                                                                                               +
+                          |     tc.color AS category_color,                                                                                                                                                            +
+                          |     t.name AS tag_name,                                                                                                                                                                    +
+                          |     t.usage_count,                                                                                                                                                                         +
+                          |     t.auto_detected,                                                                                                                                                                       +
+                          |     t.confidence_score                                                                                                                                                                     +
+                          |    FROM (tags t                                                                                                                                                                            +
+                          |      JOIN tag_categories tc ON ((t.category_id = tc.id)))                                                                                                                                  +
+                          |   WHERE ((t.is_active = true) AND (t.usage_count > 0))                                                                                                                                     +
+                          |   ORDER BY tc.priority, t.usage_count DESC;
+ pending_tag_suggestions  |  SELECT ts.id,                                                                                                                                                                             +
+                          |     ts.file_id,                                                                                                                                                                            +
+                          |     f.filename,                                                                                                                                                                            +
+                          |     t.name AS suggested_tag,                                                                                                                                                               +
+                          |     tc.name AS tag_category,                                                                                                                                                               +
+                          |     ts.confidence,                                                                                                                                                                         +
+                          |     ts.source,                                                                                                                                                                             +
+                          |     ts.created_at                                                                                                                                                                          +
+                          |    FROM (((tag_suggestions ts                                                                                                                                                              +
+                          |      JOIN files f ON ((ts.file_id = f.id)))                                                                                                                                                +
+                          |      JOIN tags t ON ((ts.suggested_tag_id = t.id)))                                                                                                                                        +
+                          |      LEFT JOIN tag_categories tc ON ((t.category_id = tc.id)))                                                                                                                             +
+                          |   WHERE (ts.is_accepted IS NULL)                                                                                                                                                           +
+                          |   ORDER BY ts.confidence DESC, ts.created_at DESC;
+ files_with_text_metadata |  SELECT id,                                                                                                                                                                                +
+                          |     filename,                                                                                                                                                                              +
+                          |     filepath AS path,                                                                                                                                                                      +
+                          |     track_names,                                                                                                                                                                           +
+                          |     copyright,                                                                                                                                                                             +
+                          |     instrument_names_text,                                                                                                                                                                 +
+                          |     markers,                                                                                                                                                                               +
+                          |     lyrics,                                                                                                                                                                                +
+                          |     array_length(track_names, 1) AS track_count,                                                                                                                                           +
+                          |     array_length(instrument_names_text, 1) AS instrument_count,                                                                                                                            +
+                          |     array_length(markers, 1) AS marker_count,                                                                                                                                              +
+                          |     array_length(lyrics, 1) AS lyric_line_count,                                                                                                                                           +
+                          |     created_at                                                                                                                                                                             +
+                          |    FROM files f                                                                                                                                                                            +
+                          |   WHERE ((array_length(track_names, 1) > 0) OR (copyright IS NOT NULL) OR (array_length(instrument_names_text, 1) > 0) OR (array_length(markers, 1) > 0) OR (array_length(lyrics, 1) > 0));
+(7 rows)
+
+
+================================================================================
+SECTION 11: FUNCTIONS
+================================================================================
+               routine_name                | routine_type |   return_type    
+-------------------------------------------+--------------+------------------
+ array_to_halfvec                          | FUNCTION     | USER-DEFINED
+ array_to_halfvec                          | FUNCTION     | USER-DEFINED
+ array_to_halfvec                          | FUNCTION     | USER-DEFINED
+ array_to_halfvec                          | FUNCTION     | USER-DEFINED
+ array_to_sparsevec                        | FUNCTION     | USER-DEFINED
+ array_to_sparsevec                        | FUNCTION     | USER-DEFINED
+ array_to_sparsevec                        | FUNCTION     | USER-DEFINED
+ array_to_sparsevec                        | FUNCTION     | USER-DEFINED
+ array_to_vector                           | FUNCTION     | USER-DEFINED
+ array_to_vector                           | FUNCTION     | USER-DEFINED
+ array_to_vector                           | FUNCTION     | USER-DEFINED
+ array_to_vector                           | FUNCTION     | USER-DEFINED
+ avg                                       |              | USER-DEFINED
+ avg                                       |              | USER-DEFINED
+ binary_quantize                           | FUNCTION     | bit
+ binary_quantize                           | FUNCTION     | bit
+ cosine_distance                           | FUNCTION     | double precision
+ cosine_distance                           | FUNCTION     | double precision
+ cosine_distance                           | FUNCTION     | double precision
+ file_exists                               | FUNCTION     | boolean
+ files_search_vector_update                | FUNCTION     | trigger
+ get_tags_by_category                      | FUNCTION     | record
+ get_text_metadata_stats                   | FUNCTION     | record
+ gin_extract_query_trgm                    | FUNCTION     | internal
+ gin_extract_value_trgm                    | FUNCTION     | internal
+ gin_trgm_consistent                       | FUNCTION     | boolean
+ gin_trgm_triconsistent                    | FUNCTION     | "char"
+ gtrgm_compress                            | FUNCTION     | internal
+ gtrgm_consistent                          | FUNCTION     | boolean
+ gtrgm_decompress                          | FUNCTION     | internal
+ gtrgm_distance                            | FUNCTION     | double precision
+ gtrgm_in                                  | FUNCTION     | USER-DEFINED
+ gtrgm_options                             | FUNCTION     | void
+ gtrgm_out                                 | FUNCTION     | cstring
+ gtrgm_penalty                             | FUNCTION     | internal
+ gtrgm_picksplit                           | FUNCTION     | internal
+ gtrgm_same                                | FUNCTION     | internal
+ gtrgm_union                               | FUNCTION     | USER-DEFINED
+ halfvec                                   | FUNCTION     | USER-DEFINED
+ halfvec_accum                             | FUNCTION     | ARRAY
+ halfvec_add                               | FUNCTION     | USER-DEFINED
+ halfvec_avg                               | FUNCTION     | USER-DEFINED
+ halfvec_cmp                               | FUNCTION     | integer
+ halfvec_combine                           | FUNCTION     | ARRAY
+ halfvec_concat                            | FUNCTION     | USER-DEFINED
+ halfvec_eq                                | FUNCTION     | boolean
+ halfvec_ge                                | FUNCTION     | boolean
+ halfvec_gt                                | FUNCTION     | boolean
+ halfvec_in                                | FUNCTION     | USER-DEFINED
+ halfvec_l2_squared_distance               | FUNCTION     | double precision
+ halfvec_le                                | FUNCTION     | boolean
+ halfvec_lt                                | FUNCTION     | boolean
+ halfvec_mul                               | FUNCTION     | USER-DEFINED
+ halfvec_ne                                | FUNCTION     | boolean
+ halfvec_negative_inner_product            | FUNCTION     | double precision
+ halfvec_out                               | FUNCTION     | cstring
+ halfvec_recv                              | FUNCTION     | USER-DEFINED
+ halfvec_send                              | FUNCTION     | bytea
+ halfvec_spherical_distance                | FUNCTION     | double precision
+ halfvec_sub                               | FUNCTION     | USER-DEFINED
+ halfvec_to_float4                         | FUNCTION     | ARRAY
+ halfvec_to_sparsevec                      | FUNCTION     | USER-DEFINED
+ halfvec_to_vector                         | FUNCTION     | USER-DEFINED
+ halfvec_typmod_in                         | FUNCTION     | integer
+ hamming_distance                          | FUNCTION     | double precision
+ hnsw_bit_support                          | FUNCTION     | internal
+ hnsw_halfvec_support                      | FUNCTION     | internal
+ hnsw_sparsevec_support                    | FUNCTION     | internal
+ hnswhandler                               | FUNCTION     | index_am_handler
+ inner_product                             | FUNCTION     | double precision
+ inner_product                             | FUNCTION     | double precision
+ inner_product                             | FUNCTION     | double precision
+ ivfflat_bit_support                       | FUNCTION     | internal
+ ivfflat_halfvec_support                   | FUNCTION     | internal
+ ivfflathandler                            | FUNCTION     | index_am_handler
+ jaccard_distance                          | FUNCTION     | double precision
+ l1_distance                               | FUNCTION     | double precision
+ l1_distance                               | FUNCTION     | double precision
+ l1_distance                               | FUNCTION     | double precision
+ l2_distance                               | FUNCTION     | double precision
+ l2_distance                               | FUNCTION     | double precision
+ l2_distance                               | FUNCTION     | double precision
+ l2_norm                                   | FUNCTION     | double precision
+ l2_norm                                   | FUNCTION     | double precision
+ l2_normalize                              | FUNCTION     | USER-DEFINED
+ l2_normalize                              | FUNCTION     | USER-DEFINED
+ l2_normalize                              | FUNCTION     | USER-DEFINED
+ search_files_by_text_metadata             | FUNCTION     | record
+ set_limit                                 | FUNCTION     | real
+ show_limit                                | FUNCTION     | real
+ show_trgm                                 | FUNCTION     | ARRAY
+ similarity                                | FUNCTION     | real
+ similarity_dist                           | FUNCTION     | real
+ similarity_op                             | FUNCTION     | boolean
+ sparsevec                                 | FUNCTION     | USER-DEFINED
+ sparsevec_cmp                             | FUNCTION     | integer
+ sparsevec_eq                              | FUNCTION     | boolean
+ sparsevec_ge                              | FUNCTION     | boolean
+ sparsevec_gt                              | FUNCTION     | boolean
+ sparsevec_in                              | FUNCTION     | USER-DEFINED
+ sparsevec_l2_squared_distance             | FUNCTION     | double precision
+ sparsevec_le                              | FUNCTION     | boolean
+ sparsevec_lt                              | FUNCTION     | boolean
+ sparsevec_ne                              | FUNCTION     | boolean
+ sparsevec_negative_inner_product          | FUNCTION     | double precision
+ sparsevec_out                             | FUNCTION     | cstring
+ sparsevec_recv                            | FUNCTION     | USER-DEFINED
+ sparsevec_send                            | FUNCTION     | bytea
+ sparsevec_to_halfvec                      | FUNCTION     | USER-DEFINED
+ sparsevec_to_vector                       | FUNCTION     | USER-DEFINED
+ sparsevec_typmod_in                       | FUNCTION     | integer
+ strict_word_similarity                    | FUNCTION     | real
+ strict_word_similarity_commutator_op      | FUNCTION     | boolean
+ strict_word_similarity_dist_commutator_op | FUNCTION     | real
+ strict_word_similarity_dist_op            | FUNCTION     | real
+ strict_word_similarity_op                 | FUNCTION     | boolean
+ subvector                                 | FUNCTION     | USER-DEFINED
+ subvector                                 | FUNCTION     | USER-DEFINED
+ suggest_tags_from_similar_files           | FUNCTION     | record
+ sum                                       |              | USER-DEFINED
+ sum                                       |              | USER-DEFINED
+ update_duplicate_group_count              | FUNCTION     | trigger
+ update_job_progress                       | FUNCTION     | trigger
+ update_tag_usage_count                    | FUNCTION     | trigger
+ update_updated_at_column                  | FUNCTION     | trigger
+ vector                                    | FUNCTION     | USER-DEFINED
+ vector_accum                              | FUNCTION     | ARRAY
+ vector_add                                | FUNCTION     | USER-DEFINED
+ vector_avg                                | FUNCTION     | USER-DEFINED
+ vector_cmp                                | FUNCTION     | integer
+ vector_combine                            | FUNCTION     | ARRAY
+ vector_concat                             | FUNCTION     | USER-DEFINED
+ vector_dims                               | FUNCTION     | integer
+ vector_dims                               | FUNCTION     | integer
+ vector_eq                                 | FUNCTION     | boolean
+ vector_ge                                 | FUNCTION     | boolean
+ vector_gt                                 | FUNCTION     | boolean
+ vector_in                                 | FUNCTION     | USER-DEFINED
+ vector_l2_squared_distance                | FUNCTION     | double precision
+ vector_le                                 | FUNCTION     | boolean
+ vector_lt                                 | FUNCTION     | boolean
+ vector_mul                                | FUNCTION     | USER-DEFINED
+ vector_ne                                 | FUNCTION     | boolean
+ vector_negative_inner_product             | FUNCTION     | double precision
+ vector_norm                               | FUNCTION     | double precision
+ vector_out                                | FUNCTION     | cstring
+ vector_recv                               | FUNCTION     | USER-DEFINED
+ vector_send                               | FUNCTION     | bytea
+ vector_spherical_distance                 | FUNCTION     | double precision
+ vector_sub                                | FUNCTION     | USER-DEFINED
+ vector_to_float4                          | FUNCTION     | ARRAY
+ vector_to_halfvec                         | FUNCTION     | USER-DEFINED
+ vector_to_sparsevec                       | FUNCTION     | USER-DEFINED
+ vector_typmod_in                          | FUNCTION     | integer
+ word_similarity                           | FUNCTION     | real
+ word_similarity_commutator_op             | FUNCTION     | boolean
+ word_similarity_dist_commutator_op        | FUNCTION     | real
+ word_similarity_dist_op                   | FUNCTION     | real
+ word_similarity_op                        | FUNCTION     | boolean
+(159 rows)
+
+
+================================================================================
+END OF DATABASE SCHEMA OUTPUT
+================================================================================

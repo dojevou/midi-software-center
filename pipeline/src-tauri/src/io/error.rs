@@ -1,4 +1,3 @@
-
 /// I/O Error Types
 ///
 /// Defines error types for the I/O layer using thiserror.

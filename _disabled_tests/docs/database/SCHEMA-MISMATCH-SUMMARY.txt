@@ -1,0 +1,161 @@
+================================================================================
+SCHEMA MISMATCH SUMMARY - MIDI Software Center
+================================================================================
+Date: 2025-11-11
+Database: PostgreSQL (migrations 001-010)
+Code: Rust (sqlx + FromRow derives)
+
+================================================================================
+CRITICAL FINDINGS
+================================================================================
+
+Total Mismatches: 15 columns across 3 tables
+Severity: MEDIUM-HIGH (queries will fail or lose data)
+
+The Rust models and repositories do NOT implement columns added in:
+- Migration 002: parent_folder
+- Migration 008: filename_bpm, filename_key, filename_genres, structure_tags, metadata_source
+- Migration 009: track_names, copyright, instrument_names_text, markers, lyrics
+- Migration 010: chord_progression, chord_types, has_seventh_chords, has_extended_chords, chord_change_rate, chord_complexity_score
+
+================================================================================
+TABLE: files (11 missing columns)
+================================================================================
+
+MISSING FROM RUST:
+  parent_folder TEXT                     [Migration 002]
+  filename_bpm REAL (30-300)            [Migration 008]
+  filename_key TEXT (1-3 chars)         [Migration 008]
+  filename_genres TEXT[]                [Migration 008]
+  structure_tags TEXT[]                 [Migration 008]
+  metadata_source TEXT (enum)           [Migration 008]
+  track_names TEXT[] DEFAULT '{}'       [Migration 009]
+  copyright TEXT                        [Migration 009]
+  instrument_names_text TEXT[]          [Migration 009]
+  markers TEXT[]                        [Migration 009]
+  lyrics TEXT[]                         [Migration 009]
+
+FILES AFFECTED:
+  - pipeline/src-tauri/src/db/models.rs (File struct, NewFile struct)
+  - pipeline/src-tauri/src/db/repositories/file_repository.rs (INSERT, 4x SELECT)
+
+IMPACT:
+  - Cannot store/retrieve filename-extracted metadata (BPM, key, genres)
+  - Cannot store/retrieve MIDI text metadata (track names, copyright, markers)
+  - Data is lost when analysis runs
+  - Searches cannot filter by these fields
+
+================================================================================
+TABLE: musical_metadata (6 missing columns)
+================================================================================
+
+MISSING FROM RUST:
+  chord_progression JSONB               [Migration 010]
+  chord_types TEXT[]                    [Migration 010]
+  has_seventh_chords BOOLEAN            [Migration 010]
+  has_extended_chords BOOLEAN           [Migration 010]
+  chord_change_rate NUMERIC(5,2)        [Migration 010]
+  chord_complexity_score NUMERIC(4,3)   [Migration 010]
+
+FILES AFFECTED:
+  - pipeline/src-tauri/src/db/models.rs (MusicalMetadata struct, NewMusicalMetadata struct)
+  - pipeline/src-tauri/src/db/repositories/metadata_repository.rs (INSERT, find_by_file_id SELECT)
+
+IMPACT:
+  - Harmonic analysis completely non-functional
+  - Chord progressions are computed but never persisted
+  - No chord complexity scoring or analysis available
+
+================================================================================
+TABLE: tags & related (migration 007 - NOT IMPLEMENTED)
+================================================================================
+
+NEW TABLES (not in Rust code):
+  - tag_categories
+  - tag_aliases
+  - auto_tagging_rules
+  - tag_suggestions
+
+NEW COLUMNS on tags table (not in Rust code):
+  - category_id INTEGER
+  - priority INTEGER
+  - auto_detected BOOLEAN
+  - confidence_score DECIMAL(3,2)
+  - detection_method VARCHAR(50)
+  - parent_tag_id INTEGER
+  - is_active BOOLEAN
+
+IMPACT:
+  - Auto-tagging system not functional
+  - Tag categories not accessible
+  - Tag confidence/priority system not implemented
+  - Tag hierarchy (parent tags) not supported
+  - No tag suggestions feature
+  - Cannot filter by detection method
+
+================================================================================
+ROOT CAUSE
+================================================================================
+
+Migrations 007-010 were created recently (2025-11-08 to 2025-11-11) but:
+1. Database schema is updated
+2. Rust models are not updated to match
+3. Repositories don't read/write new columns
+4. Data inserted via direct SQL is orphaned (not accessible via app)
+
+This is a CLASSIC schema-code mismatch where schema changes outpaced code.
+
+================================================================================
+IMMEDIATE ACTIONS REQUIRED
+================================================================================
+
+Priority 1 (BLOCKS FUNCTIONALITY):
+  1. Add 11 fields to File struct
+  2. Add 11 fields to NewFile struct
+  3. Update FileRepository::insert() with 11 columns
+  4. Update FileRepository::find_by_id() SELECT
+  5. Update FileRepository::find_by_hash() SELECT
+  6. Update FileRepository::find_by_path() SELECT
+  7. Add 6 fields to MusicalMetadata struct
+  8. Add 6 fields to NewMusicalMetadata struct
+  9. Update MetadataRepository::insert() with 6 columns
+ 10. Update MetadataRepository::find_by_file_id() SELECT
+
+Priority 2 (FEATURE CRITICAL):
+ 11. Create Tag models (5 structs)
+ 12. Implement TagRepository
+ 13. Create TagCategory, TagAlias, AutoTaggingRule, TagSuggestion models
+
+Priority 3 (VERIFY):
+ 14. Check TrackSplit table (migration 006) support
+ 15. Check Favorites table (migration 003) support
+
+================================================================================
+FILES TO MODIFY
+================================================================================
+
+REQUIRED:
+  /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/db/models.rs
+  /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/db/repositories/file_repository.rs
+  /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/db/repositories/metadata_repository.rs
+
+NEW:
+  /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/db/repositories/tag_models.rs
+  /home/dojevou/projects/midi-software-center/pipeline/src-tauri/src/db/repositories/tag_repository_impl.rs
+
+VALIDATION:
+  Run: sqlx prepare --database-url postgres://... -- pipeline/src-tauri/src
+  Test: cargo build && cargo test --workspace
+
+================================================================================
+DETAILED ANALYSIS
+================================================================================
+
+See SCHEMA-MISMATCH-REPORT.md for:
+  - Complete column mapping table
+  - Exact query impact analysis
+  - Line-by-line fix recommendations
+  - Quick fix checklist
+  - Testing recommendations
+
+================================================================================

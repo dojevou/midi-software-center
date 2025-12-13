@@ -1,0 +1,226 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            SELECT\n                file_id,\n                bpm,\n                bpm_confidence,\n                has_tempo_changes,\n                tempo_changes,\n                key_signature::text as key_signature,\n                key_confidence,\n                has_key_changes,\n                key_changes,\n                time_signature_numerator,\n                time_signature_denominator,\n                has_time_signature_changes,\n                time_signature_changes,\n                total_notes,\n                unique_pitches,\n                pitch_range_min,\n                pitch_range_max,\n                avg_velocity,\n                note_density,\n                polyphony_max,\n                polyphony_avg,\n                is_monophonic,\n                is_polyphonic,\n                is_percussive,\n                has_chords,\n                chord_complexity,\n                has_melody,\n                melodic_range,\n                created_at as \"created_at!\",\n                chord_progression,\n                chord_types,\n                has_seventh_chords,\n                has_extended_chords,\n                chord_change_rate,\n                chord_complexity_score\n            FROM musical_metadata WHERE file_id = $1\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "file_id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "bpm",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 2,
+        "name": "bpm_confidence",
+        "type_info": "Float4"
+      },
+      {
+        "ordinal": 3,
+        "name": "has_tempo_changes",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 4,
+        "name": "tempo_changes",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 5,
+        "name": "key_signature",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 6,
+        "name": "key_confidence",
+        "type_info": "Float4"
+      },
+      {
+        "ordinal": 7,
+        "name": "has_key_changes",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 8,
+        "name": "key_changes",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 9,
+        "name": "time_signature_numerator",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 10,
+        "name": "time_signature_denominator",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 11,
+        "name": "has_time_signature_changes",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 12,
+        "name": "time_signature_changes",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 13,
+        "name": "total_notes",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 14,
+        "name": "unique_pitches",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 15,
+        "name": "pitch_range_min",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 16,
+        "name": "pitch_range_max",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 17,
+        "name": "avg_velocity",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 18,
+        "name": "note_density",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 19,
+        "name": "polyphony_max",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 20,
+        "name": "polyphony_avg",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 21,
+        "name": "is_monophonic",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 22,
+        "name": "is_polyphonic",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 23,
+        "name": "is_percussive",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 24,
+        "name": "has_chords",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 25,
+        "name": "chord_complexity",
+        "type_info": "Float4"
+      },
+      {
+        "ordinal": 26,
+        "name": "has_melody",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 27,
+        "name": "melodic_range",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 28,
+        "name": "created_at!",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 29,
+        "name": "chord_progression",
+        "type_info": "Jsonb"
+      },
+      {
+        "ordinal": 30,
+        "name": "chord_types",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 31,
+        "name": "has_seventh_chords",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 32,
+        "name": "has_extended_chords",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 33,
+        "name": "chord_change_rate",
+        "type_info": "Numeric"
+      },
+      {
+        "ordinal": 34,
+        "name": "chord_complexity_score",
+        "type_info": "Numeric"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      true,
+      true,
+      true,
+      true,
+      null,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true
+    ]
+  },
+  "hash": "75936ba43bf1da9b0e34c0b709ea58613b52e78ad1249228e569023498cbb778"
+}

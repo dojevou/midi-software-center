@@ -1,4 +1,3 @@
-
 /// Performance optimization modules
 ///
 /// This module contains pure logic for optimizing file processing performance

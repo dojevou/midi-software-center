@@ -1,4 +1,3 @@
-
 /// Temporary File Management
 use std::fs;
 use std::path::{Path, PathBuf};

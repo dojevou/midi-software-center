@@ -1,4 +1,3 @@
-
 /// Tag Repository - Database operations for tags
 ///
 /// This module handles all database operations related to tags:

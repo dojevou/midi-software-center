@@ -235,6 +235,12 @@ impl MetadataBuilder {
             polyphony_max: self.polyphony_max,
             polyphony_avg: self.polyphony_avg,
             is_percussive: self.is_percussive,
+            chord_progression: None,
+            chord_types: None,
+            has_seventh_chords: None,
+            has_extended_chords: None,
+            chord_change_rate: None,
+            chord_complexity_score: None,
         }
     }
 
@@ -1370,6 +1376,12 @@ async fn test_all_fields_populated() {
         polyphony_max: Some(8),
         polyphony_avg: Some(BigDecimal::from_str("4.3").unwrap()),
         is_percussive: Some(false),
+        chord_progression: None,
+        chord_types: None,
+        has_seventh_chords: None,
+        has_extended_chords: None,
+        chord_change_rate: None,
+        chord_complexity_score: None,
     };
 
     MetadataRepository::insert(&pool, metadata).await.expect("Insert failed");
@@ -1505,6 +1517,12 @@ async fn test_bpm_overflow_exceeds_numeric_precision() {
         polyphony_max: None,
         polyphony_avg: None,
         is_percussive: None,
+        chord_progression: None,
+        chord_types: None,
+        has_seventh_chords: None,
+        has_extended_chords: None,
+        chord_change_rate: None,
+        chord_complexity_score: None,
     };
 
     let result = MetadataRepository::insert(&pool, metadata).await;
@@ -1560,6 +1578,12 @@ async fn test_bpm_confidence_exceeds_bounds() {
         polyphony_max: None,
         polyphony_avg: None,
         is_percussive: None,
+        chord_progression: None,
+        chord_types: None,
+        has_seventh_chords: None,
+        has_extended_chords: None,
+        chord_change_rate: None,
+        chord_complexity_score: None,
     };
 
     let result = MetadataRepository::insert(&pool, metadata).await;
@@ -1596,6 +1620,12 @@ async fn test_key_confidence_negative_rejected() {
         polyphony_max: None,
         polyphony_avg: None,
         is_percussive: None,
+        chord_progression: None,
+        chord_types: None,
+        has_seventh_chords: None,
+        has_extended_chords: None,
+        chord_change_rate: None,
+        chord_complexity_score: None,
     };
 
     let result = MetadataRepository::insert(&pool, metadata).await;
@@ -1937,6 +1967,12 @@ async fn test_polyphony_max_exceeds_midi_voices() {
         polyphony_max: Some(129), // > 128
         polyphony_avg: Some(BigDecimal::from_str("64.0").unwrap()),
         is_percussive: None,
+        chord_progression: None,
+        chord_types: None,
+        has_seventh_chords: None,
+        has_extended_chords: None,
+        chord_change_rate: None,
+        chord_complexity_score: None,
     };
 
     let result = MetadataRepository::insert(&pool, metadata).await;
@@ -1973,6 +2009,12 @@ async fn test_polyphony_avg_exceeds_max() {
         polyphony_max: Some(4),
         polyphony_avg: Some(BigDecimal::from_str("5.0").unwrap()), // > polyphony_max
         is_percussive: None,
+        chord_progression: None,
+        chord_types: None,
+        has_seventh_chords: None,
+        has_extended_chords: None,
+        chord_change_rate: None,
+        chord_complexity_score: None,
     };
 
     let result = MetadataRepository::insert(&pool, metadata).await;

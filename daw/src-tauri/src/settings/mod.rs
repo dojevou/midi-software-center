@@ -1,5 +1,6 @@
-// Settings modules for DAW configuration
-// All settings are persisted to ~/.midi-software-center/config.json
+//! Settings modules for DAW configuration
+//! All settings are persisted to ~/.midi-software-center/config.json
+#![allow(dead_code)] // Settings structs are serialized/deserialized at runtime
 
 pub mod advanced;
 pub mod audio;
@@ -18,29 +19,28 @@ pub mod sync;
 pub mod track;
 
 // Re-export all settings types
-pub use advanced::{AdvancedSettings, LogLevel};
+pub use advanced::AdvancedSettings;
 pub use audio::{AudioSettings, BufferSize, SampleRate};
-pub use display::{DisplaySettings, FontSize, GridSnapOption};
-pub use general::{GeneralSettings, Language, StartupBehavior, Theme};
-pub use import_export::{DuplicateHandling, ImportExportSettings};
-pub use keyboard::{KeybindingProfile, KeyboardSettings};
-pub use library::{LibrarySettings, WatchMode};
-pub use midi::{MidiSettings, SyncMode};
-pub use mixer::{FaderType, MeteringMode, MixerSettings};
-pub use performance::{PerformanceSettings, VirtualScrollingThreshold};
-pub use playback::{ClickSound, PlaybackSettings};
-pub use privacy::{DataRetentionPolicy, PrivacySettings};
-pub use recording::{RecordingFormat, RecordingSettings};
-pub use sync::{SyncInterval, SyncSettings};
-pub use track::{TrackColor, TrackSettings};
+pub use display::DisplaySettings;
+pub use general::GeneralSettings;
+pub use import_export::ImportExportSettings;
+pub use keyboard::KeyboardSettings;
+pub use library::LibrarySettings;
+pub use midi::MidiSettings;
+pub use mixer::MixerSettings;
+pub use performance::PerformanceSettings;
+pub use playback::PlaybackSettings;
+pub use privacy::PrivacySettings;
+pub use recording::RecordingSettings;
+pub use sync::SyncSettings;
+pub use track::TrackSettings;
 
 use serde::{Deserialize, Serialize};
 use std::fs;
 use std::path::PathBuf;
 
 /// Master settings container
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct AppSettings {
     pub general: GeneralSettings,
     pub audio: AudioSettings,
@@ -58,7 +58,6 @@ pub struct AppSettings {
     pub privacy: PrivacySettings,
     pub advanced: AdvancedSettings,
 }
-
 
 impl AppSettings {
     /// Get the path to the config file

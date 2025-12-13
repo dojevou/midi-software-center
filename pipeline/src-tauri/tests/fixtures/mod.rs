@@ -157,6 +157,17 @@ impl NewFileBuilder {
             collection_name: self.collection_name,
             folder_tags: self.folder_tags,
             import_batch_id: self.import_batch_id,
+            parent_folder: None,
+            filename_bpm: None,
+            filename_key: None,
+            filename_genres: None,
+            structure_tags: None,
+            metadata_source: None,
+            track_names: None,
+            copyright: None,
+            instrument_names_text: None,
+            markers: None,
+            lyrics: None,
         }
     }
 }

@@ -1,0 +1,13 @@
+[Desktop Entry]
+Name=MIDI Software Center
+Comment=Professional MIDI library management and analysis
+GenericName=MIDI Library Manager
+Exec=midi-software-center %U
+Icon=midi-software-center
+Terminal=false
+Type=Application
+Categories=Audio;AudioVideo;Music;Sequencer;
+Keywords=MIDI;Music;DAW;Library;Sequencer;Audio;
+MimeType=audio/midi;audio/x-midi;
+StartupNotify=true
+StartupWMClass=midi-software-center

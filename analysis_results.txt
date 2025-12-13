@@ -1,0 +1,575 @@
+================================================================================
+MIDI SOFTWARE CENTER - COMPLETE ANALYSIS REPORT
+Generated: Sat Nov 29 06:25:02 PM PST 2025
+Project: /home/dojevou/projects/midi-software-center
+================================================================================
+
+--------------------------------------------------------------------------------
+1. COMPILATION STATUS - Workspace Errors
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+2. COMPILATION STATUS - DAW Package Errors
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+3. TEST FAILURES - All Failures with Panic Info
+--------------------------------------------------------------------------------
+test commands::analyze::tests::test_get_key_name ... FAILED
+test core::analysis::auto_tagger::tests::test_extract_from_path ... FAILED
+test core::analysis::auto_tagger::tests::test_filename_dot_splitting ... FAILED
+test core::analysis::auto_tagger::tests::test_filename_generic_tags_alphanumeric ... FAILED
+test core::analysis::auto_tagger::tests::test_filename_mixed_separators ... FAILED
+test core::analysis::auto_tagger::tests::test_filename_no_matches ... FAILED
+test core::analysis::auto_tagger::tests::test_filename_space_splitting ... FAILED
+test core::analysis::auto_tagger::tests::test_filename_underscore_splitting ... FAILED
+test core::analysis::auto_tagger::tests::test_integration_comprehensive_file ... FAILED
+test core::analysis::auto_tagger::tests::test_integration_splice_style ... FAILED
+test core::analysis::auto_tagger::tests::test_integration_vengeance_style ... FAILED
+test core::analysis::auto_tagger::tests::test_path_instrument_category ... FAILED
+test core::analysis::filename_metadata::tests::test_number_classification ... FAILED
+test core::analysis::tests::chord_analyzer_extended_test::test_rapid_chord_changes ... FAILED
+test database::window_state::tests::test_database_window_pagination ... FAILED
+thread 'commands::analyze::tests::test_get_key_name' (1745099) panicked at pipeline/src-tauri/src/commands/analyze.rs:1748:9:
+thread 'core::analysis::auto_tagger::tests::test_extract_from_path' (1745147) panicked at pipeline/src-tauri/src/core/analysis/auto_tagger.rs:1287:9:
+assertion failed: tag_names.contains(&"category:drums".to_string())
+thread 'core::analysis::auto_tagger::tests::test_filename_dot_splitting' (1745149) panicked at pipeline/src-tauri/src/core/analysis/auto_tagger.rs:1106:9:
+assertion failed: tag_names.contains(&"heavy".to_string())
+thread 'core::analysis::auto_tagger::tests::test_filename_generic_tags_alphanumeric' (1745152) panicked at pipeline/src-tauri/src/core/analysis/auto_tagger.rs:1178:9:
+assertion failed: tag_names.contains(&"unusual".to_string())
+thread 'core::analysis::auto_tagger::tests::test_filename_mixed_separators' (1745154) panicked at pipeline/src-tauri/src/core/analysis/auto_tagger.rs:1116:9:
+assertion failed: tag_names.contains(&"deep".to_string())
+thread 'core::analysis::auto_tagger::tests::test_filename_no_matches' (1745156) panicked at pipeline/src-tauri/src/core/analysis/auto_tagger.rs:1249:9:
+assertion failed: tag_names.contains(&"qwerty".to_string())
+thread 'core::analysis::auto_tagger::tests::test_filename_space_splitting' (1745160) panicked at pipeline/src-tauri/src/core/analysis/auto_tagger.rs:1093:9:
+assertion failed: tag_names.contains(&"dark".to_string())
+thread 'core::analysis::auto_tagger::tests::test_filename_underscore_splitting' (1745162) panicked at pipeline/src-tauri/src/core/analysis/auto_tagger.rs:1069:9:
+assertion failed: tag_names.contains(&"deep".to_string())
+thread 'core::analysis::auto_tagger::tests::test_integration_comprehensive_file' (1745184) panicked at pipeline/src-tauri/src/core/analysis/auto_tagger.rs:1924:9:
+assertion failed: tag_names.contains(&"heavy".to_string())
+thread 'core::analysis::auto_tagger::tests::test_integration_splice_style' (1745190) panicked at pipeline/src-tauri/src/core/analysis/auto_tagger.rs:1865:9:
+assertion failed: tag_names.contains(&"dark".to_string())
+thread 'core::analysis::auto_tagger::tests::test_integration_vengeance_style' (1745192) panicked at pipeline/src-tauri/src/core/analysis/auto_tagger.rs:1842:9:
+assertion failed: tag_names.contains(&"deep".to_string())
+thread 'core::analysis::auto_tagger::tests::test_path_instrument_category' (1745205) panicked at pipeline/src-tauri/src/core/analysis/auto_tagger.rs:1366:9:
+assertion failed: tag_names.contains(&"category:drums".to_string())
+thread 'core::analysis::filename_metadata::tests::test_number_classification' (1745232) panicked at pipeline/src-tauri/src/core/analysis/filename_metadata.rs:550:9:
+thread 'core::analysis::tests::chord_analyzer_extended_test::test_rapid_chord_changes' (1745362) panicked at pipeline/src-tauri/src/core/analysis/tests/chord_analyzer_extended_test.rs:408:5:
+assertion failed: analysis.change_rate.is_some()
+thread 'database::window_state::tests::test_database_window_pagination' (1745718) panicked at pipeline/src-tauri/src/database/window_state.rs:437:9:
+assertion failed: state.previous_page()
+test result: FAILED. 557 passed; 15 failed; 7 ignored; 0 measured; 0 filtered out; finished in 1.65s
+
+--------------------------------------------------------------------------------
+4. TEST FAILURES - Count
+--------------------------------------------------------------------------------
+Total FAILED tests: 16
+
+--------------------------------------------------------------------------------
+5. AUTO-TAGGER - tag_names.contains assertions
+--------------------------------------------------------------------------------
+1069:        assert!(tag_names.contains(&"deep".to_string()));
+1070:        assert!(tag_names.contains(&"genre:house".to_string()));
+1071:        assert!(tag_names.contains(&"instrument:kick".to_string()));
+1081:        assert!(tag_names.contains(&"genre:techno".to_string()));
+1082:        assert!(tag_names.contains(&"instrument:lead".to_string()));
+1083:        assert!(tag_names.contains(&"instrument:synth".to_string()));
+1093:        assert!(tag_names.contains(&"dark".to_string()));
+1094:        assert!(tag_names.contains(&"genre:ambient".to_string())); // ambient is in genre_keywords
+1095:        assert!(tag_names.contains(&"instrument:pad".to_string()));
+1105:        assert!(tag_names.contains(&"instrument:kick".to_string()));
+1106:        assert!(tag_names.contains(&"heavy".to_string()));
+1116:        assert!(tag_names.contains(&"deep".to_string()));
+1117:        assert!(tag_names.contains(&"genre:house".to_string()));
+1118:        assert!(tag_names.contains(&"instrument:kick".to_string()));
+1144:        assert!(!tag_names.contains(&"the".to_string()));
+1145:        assert!(!tag_names.contains(&"new".to_string()));
+1146:        assert!(!tag_names.contains(&"for".to_string()));
+1147:        assert!(!tag_names.contains(&"track".to_string()));
+1148:        assert!(!tag_names.contains(&"mix".to_string()));
+1151:        assert!(tag_names.contains(&"kick".to_string()));
+
+--------------------------------------------------------------------------------
+6. AUTO-TAGGER - Failing Lines Context
+--------------------------------------------------------------------------------
+Line 1069 (test_filename_underscore_splitting):
+
+        let tags = tagger.extract_from_filename("Deep_House_Kick.mid");
+        let tag_names: Vec<String> = tags.iter().map(|t| t.full_name()).collect();
+
+        assert!(tag_names.contains(&"deep".to_string()));
+        assert!(tag_names.contains(&"genre:house".to_string()));
+        assert!(tag_names.contains(&"instrument:kick".to_string()));
+    }
+
+Line 1093 (test_filename_space_splitting):
+
+        let tags = tagger.extract_from_filename("Dark Ambient Pad.mid");
+        let tag_names: Vec<String> = tags.iter().map(|t| t.full_name()).collect();
+
+        assert!(tag_names.contains(&"dark".to_string()));
+        assert!(tag_names.contains(&"genre:ambient".to_string())); // ambient is in genre_keywords
+        assert!(tag_names.contains(&"instrument:pad".to_string()));
+    }
+
+Line 1106 (test_filename_dot_splitting):
+        let tags = tagger.extract_from_filename("kick.heavy.128.mid");
+        let tag_names: Vec<String> = tags.iter().map(|t| t.full_name()).collect();
+
+        assert!(tag_names.contains(&"instrument:kick".to_string()));
+        assert!(tag_names.contains(&"heavy".to_string()));
+    }
+
+    #[test]
+
+Line 1116 (test_filename_mixed_separators):
+
+        let tags = tagger.extract_from_filename("VEC_Deep-House Kick.128.mid");
+        let tag_names: Vec<String> = tags.iter().map(|t| t.full_name()).collect();
+
+        assert!(tag_names.contains(&"deep".to_string()));
+        assert!(tag_names.contains(&"genre:house".to_string()));
+        assert!(tag_names.contains(&"instrument:kick".to_string()));
+    }
+
+Line 1178 (test_filename_generic_tags_alphanumeric):
+        let tags = tagger.extract_from_filename("CustomSample_Unusual.mid");
+        let tag_names: Vec<String> = tags.iter().map(|t| t.full_name()).collect();
+
+        // "unusual" is alphanumeric, >3 chars, not in dictionaries → generic tag
+        assert!(tag_names.contains(&"unusual".to_string()));
+    }
+
+    #[test]
+
+Line 1249 (test_filename_no_matches):
+        let tags = tagger.extract_from_filename("xyz_qwerty_abc.mid");
+
+        // "qwerty" is >3 chars, alphanumeric → should become generic tag
+        let tag_names: Vec<String> = tags.iter().map(|t| t.full_name()).collect();
+        assert!(tag_names.contains(&"qwerty".to_string()));
+    }
+
+    // =============================================================================
+
+Line 1287 (test_extract_from_path):
+        let tags = tagger.extract_from_path("/Vengeance/DeepHouse/Drums/Kicks/file.mid");
+        let tag_names: Vec<String> = tags.iter().map(|t| t.full_name()).collect();
+
+        assert!(tag_names.contains(&"brand:vengeance".to_string()));
+        assert!(tag_names.contains(&"category:drums".to_string()));
+    }
+
+    #[test]
+
+Line 1366 (test_path_instrument_category):
+        let tags = tagger.extract_from_path("/Samples/Drums/Kicks/01A Kick.mid");
+        let tag_names: Vec<String> = tags.iter().map(|t| t.full_name()).collect();
+
+        // Instruments in path get "category:" prefix
+        assert!(tag_names.contains(&"category:drums".to_string()));
+    }
+
+    #[test]
+
+Line 1842 (test_integration_vengeance_style):
+
+        // Should extract: brand, genre, style, instrument, bpm, key
+        assert!(tag_names.contains(&"brand:vengeance".to_string()));
+        assert!(tag_names.iter().any(|t| t.contains("house"))); // deephouse or house
+        assert!(tag_names.contains(&"deep".to_string())); // Style tag
+        assert!(tag_names.iter().any(|t| t.contains("kick")));
+        assert!(tag_names.contains(&"tempo:128".to_string()));
+        assert!(tag_names.contains(&"key:c".to_string()));
+
+Line 1865 (test_integration_splice_style):
+        let tag_names: Vec<String> = tags.iter().map(|t| t.full_name()).collect();
+
+        assert!(tag_names.contains(&"brand:splice".to_string()));
+        assert!(tag_names.contains(&"genre:techno".to_string()));
+        assert!(tag_names.contains(&"dark".to_string()));
+        assert!(tag_names.contains(&"instrument:bass".to_string()));
+        assert!(tag_names.contains(&"tempo:125".to_string()));
+        assert!(tag_names.contains(&"key:am".to_string()));
+
+Line 1924 (test_integration_comprehensive_file):
+
+        // Should have many tags from all sources
+        assert!(tag_names.len() >= 5); // brand, genre, style, instrument, bpm, key
+        assert!(tag_names.contains(&"brand:cymatics".to_string()));
+        assert!(tag_names.contains(&"heavy".to_string()));
+        assert!(tag_names.contains(&"instrument:snare".to_string()));
+        assert!(tag_names.contains(&"tempo:140".to_string()));
+        assert!(tag_names.contains(&"key:e".to_string()));
+
+--------------------------------------------------------------------------------
+7. CHORD ANALYZER - test_rapid_chord_changes (line 408)
+--------------------------------------------------------------------------------
+                TimedEvent { delta_ticks: 0, event: Event::NoteOn { channel: 0, note: 71, velocity: 100 } },
+                TimedEvent { delta_ticks: 0, event: Event::NoteOn { channel: 0, note: 74, velocity: 100 } },
+            ],
+        }],
+    };
+
+    let analysis = analyze_chords(&midi, 480);
+
+    assert!(analysis.change_rate.is_some());
+    let rate = analysis.change_rate.unwrap();
+    assert!(rate > 1.0, "Rapid changes should have high change rate");
+}
+
+--------------------------------------------------------------------------------
+8. WINDOW STATE - test_database_window_pagination (line 437)
+--------------------------------------------------------------------------------
+    }
+
+    #[test]
+    fn test_database_window_pagination() {
+        let mut state = DatabaseWindowState::new();
+        state.set_results(vec![], 100);
+
+        assert_eq!(state.pagination.current_page, 0);
+
+        assert!(state.next_page());
+        assert_eq!(state.filters.page, 1);
+
+        assert!(state.previous_page());
+        assert_eq!(state.filters.page, 0);
+
+        assert!(!state.previous_page());
+    }
+
+    #[test]
+    fn test_search_result_matches_query() {
+        let result = SearchResult {
+
+--------------------------------------------------------------------------------
+9. ANALYZE COMMAND - test_get_key_name (line 1748)
+--------------------------------------------------------------------------------
+    #[test]
+    fn test_get_key_name() {
+        // Major keys with sharps
+        assert_eq!(get_key_name(0, false), "C");
+        assert_eq!(get_key_name(1, false), "G");
+        assert_eq!(get_key_name(2, false), "D");
+
+        // Major keys with flats
+        assert_eq!(get_key_name(-1, false), "F");
+        assert_eq!(get_key_name(-2, false), "Bb");
+
+        // Minor keys
+        assert_eq!(get_key_name(0, true), "Am");
+        assert_eq!(get_key_name(1, true), "Em");
+        assert_eq!(get_key_name(-1, true), "Dm");
+    }
+
+    #[test]
+    fn test_analyze_controllers() {
+        use midi_library_shared::core::midi::types::{Event, TimedEvent, Track};
+
+
+--------------------------------------------------------------------------------
+10. FILENAME METADATA - test_number_classification (line 550)
+--------------------------------------------------------------------------------
+    #[test]
+    fn test_leading_number() {
+        assert_eq!(extract_leading_number("01_kick.mid"), Some(1));
+        assert_eq!(extract_leading_number("125_melody.mid"), Some(125));
+        assert_eq!(extract_leading_number("kick_01.mid"), None);
+    }
+
+    #[test]
+    fn test_number_classification() {
+        assert_eq!(classify_leading_number(1), NumberType::TrackNumber);
+        assert_eq!(classify_leading_number(42), NumberType::TrackNumber);
+        assert_eq!(classify_leading_number(120), NumberType::PossibleBPM);
+        assert_eq!(classify_leading_number(500), NumberType::Unknown);
+    }
+
+    #[test]
+    fn test_full_extraction() {
+        let meta = FilenameMetadata::extract_from_filename("01_120_bpm_Cm_house_fill.mid");
+        assert_eq!(meta.track_number, Some(1));
+        assert_eq!(meta.bpm, Some(120.0));
+        assert_eq!(meta.key, Some("Cm".to_string()));
+
+--------------------------------------------------------------------------------
+11. STRUCT DEFINITIONS - Track
+--------------------------------------------------------------------------------
+pub struct Track {
+    pub id: i32,
+    pub name: String,
+    pub file_id: i32,
+    pub channel: u8,
+    pub muted: bool,
+    pub solo: bool,
+    pub volume: u8,    // 0-127
+    pub pan: u8,       // 0-127 (64 = center)
+    pub color: String, // Hex color
+
+    // Internal data (not serialized to frontend)
+    #[serde(skip)]
+    pub events: Vec<MidiEvent>,
+}
+
+
+--------------------------------------------------------------------------------
+12. STRUCT DEFINITIONS - SequencerState
+--------------------------------------------------------------------------------
+pub struct SequencerState {
+    pub is_playing: bool,
+    pub tempo: f32,
+    pub position: u64,
+    pub tracks: Vec<Track>,
+    pub next_track_id: i32,
+}
+
+impl SequencerState {
+    /// Create new sequencer state with defaults
+    pub fn new() -> Self {
+        Self {
+            is_playing: false,
+
+--------------------------------------------------------------------------------
+13. STRUCT DEFINITIONS - MidiDevice
+--------------------------------------------------------------------------------
+pub struct MidiDevice {
+    pub name: String,
+    pub manufacturer: Option<String>,
+}
+
+/**
+ * MIDI event type
+
+--------------------------------------------------------------------------------
+14. STRUCT DEFINITIONS - MidiEvent
+--------------------------------------------------------------------------------
+pub struct MidiEvent {
+    pub event_type: MidiEventType,
+    pub tick: u64,
+    pub channel: u8,
+
+    // Optional fields depending on event type
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub note: Option<u8>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub velocity: Option<u8>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub controller: Option<u8>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub value: Option<u8>,
+    #[serde(skip_serializing_if = "Option::is_none")]
+    pub program: Option<u8>,
+}
+
+/**
+ * MIDI note (simplified for piano roll)
+ *
+
+--------------------------------------------------------------------------------
+15. STRUCT DEFINITIONS - SearchFilters
+--------------------------------------------------------------------------------
+pub struct SearchFilters {
+    // BPM range filtering
+    pub min_bpm: Option<f32>,
+    pub max_bpm: Option<f32>,
+
+    // Key and time signature
+    pub key_signature: Option<String>,
+    pub time_signature: Option<String>,
+
+    // Category
+    pub category: Option<String>,
+
+    // Note count range
+    pub min_notes: Option<i32>,
+    pub max_notes: Option<i32>,
+
+    // Duration range (seconds)
+    pub min_duration: Option<f64>,
+    pub max_duration: Option<f64>,
+
+    // Instruments (array match)
+
+--------------------------------------------------------------------------------
+16. ERROR SUMMARY - Count by Type
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+17. ERROR SUMMARY - All Error Locations
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+18. MODELS_TEST.RS - Compilation Check
+--------------------------------------------------------------------------------
+    Finished `dev` profile [unoptimized + debuginfo] target(s) in 4.74s
+
+--------------------------------------------------------------------------------
+19. MISSING FIELD ERRORS - Count
+--------------------------------------------------------------------------------
+Missing field errors: 0
+
+--------------------------------------------------------------------------------
+20. LARGEST SOURCE FILES
+--------------------------------------------------------------------------------
+ 123529 total
+   3965 ./pipeline/src-tauri/tests/analyze_test.rs
+   3199 ./_disabled_tests/analyze_test.rs
+   2871 ./daw/src-tauri/tests/models_test.rs
+   2463 ./pipeline/src-tauri/tests/file_import_test.rs
+   2461 ./_disabled_tests/file_import_test.rs
+   2416 ./pipeline/src-tauri/tests/file_repository_test.rs
+   2229 ./pipeline/src-tauri/src/core/analysis/auto_tagger.rs
+   2043 ./pipeline/src-tauri/src/commands/analyze.rs
+   2042 ./pipeline/src-tauri/tests/metadata_repository_test.rs
+   1904 ./_disabled_tests/models_test.rs
+   1819 ./pipeline/src-tauri/tests/tag_repository_test.rs
+   1812 ./pipeline/src-tauri/tests/search_repository_test.rs
+   1702 ./shared/rust/src/core/analysis/bpm_detector.rs
+   1646 ./_disabled_tests/split_file_test.rs
+
+--------------------------------------------------------------------------------
+21. TEST FILE SIZES
+--------------------------------------------------------------------------------
+  43464 total
+   3965 ./pipeline/src-tauri/tests/analyze_test.rs
+   3199 ./_disabled_tests/analyze_test.rs
+   2871 ./daw/src-tauri/tests/models_test.rs
+   2463 ./pipeline/src-tauri/tests/file_import_test.rs
+   2461 ./_disabled_tests/file_import_test.rs
+   2416 ./pipeline/src-tauri/tests/file_repository_test.rs
+   2042 ./pipeline/src-tauri/tests/metadata_repository_test.rs
+   1904 ./_disabled_tests/models_test.rs
+   1819 ./pipeline/src-tauri/tests/tag_repository_test.rs
+
+--------------------------------------------------------------------------------
+22. AUTO-TAGGER FUNCTION - extract_from_filename
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+23. AUTO-TAGGER FUNCTION - extract_from_path
+--------------------------------------------------------------------------------
+
+--------------------------------------------------------------------------------
+24. CHORD ANALYZER - analyze_chords function
+--------------------------------------------------------------------------------
+32:pub fn analyze_chords(midi_file: &MidiFile, ticks_per_quarter: u32) -> ChordAnalysis {
+pipeline/src-tauri/src/core/analysis/chord_analyzer.rs:32:pub fn analyze_chords(midi_file: &MidiFile, ticks_per_quarter: u32) -> ChordAnalysis {
+
+--------------------------------------------------------------------------------
+25. WINDOW STATE - previous_page function
+--------------------------------------------------------------------------------
+341:    pub fn previous_page(&mut self) -> bool {
+    pub fn previous_page(&mut self) -> bool {
+        if self.pagination.has_previous {
+            self.filters.page -= 1;
+            true
+        } else {
+            false
+        }
+    }
+
+    /// Go to specific page
+    pub fn go_to_page(&mut self, page: usize) -> bool {
+
+--------------------------------------------------------------------------------
+26. ANALYZE COMMAND - get_key_name function
+--------------------------------------------------------------------------------
+1160:fn get_key_name(sharps_flats: i8, is_minor: bool) -> String {
+fn get_key_name(sharps_flats: i8, is_minor: bool) -> String {
+    let major_keys = ["C", "G", "D", "A", "E", "B", "F#", "C#", "F", "Bb", "Eb", "Ab", "Db", "Gb", "Cb"];
+    let minor_keys = ["Am", "Em", "Bm", "F#m", "C#m", "G#m", "D#m", "A#m", "Dm", "Gm", "Cm", "Fm", "Bbm", "Ebm", "Abm"];
+
+    let index = if sharps_flats >= 0 {
+        sharps_flats as usize
+    } else {
+        (7 + sharps_flats) as usize + 1
+    };
+
+    if is_minor {
+        minor_keys.get(index).unwrap_or(&"Unknown").to_string()
+    } else {
+        major_keys.get(index).unwrap_or(&"Unknown").to_string()
+    }
+}
+
+/// Controller statistics for a single CC number
+#[derive(Debug, Clone)]
+struct ControllerStats {
+    cc_number: u8,
+
+--------------------------------------------------------------------------------
+27. FILENAME METADATA - classify_leading_number function
+--------------------------------------------------------------------------------
+362:pub fn classify_leading_number(num: u32) -> NumberType {
+pub fn classify_leading_number(num: u32) -> NumberType {
+    match num {
+        40..=220 => NumberType::PossibleBPM,
+        1..=29 => NumberType::TrackNumber,
+        _ => NumberType::Unknown,
+    }
+}
+
+// ============================================================================
+// Cross-Validation
+// ============================================================================
+
+/// Result of cross-validating analyzed metadata with filename metadata
+#[derive(Debug, Clone, PartialEq)]
+pub enum KeyValidationResult {
+    /// Both sources agree (high confidence)
+
+--------------------------------------------------------------------------------
+28. FILENAME METADATA - NumberType enum
+--------------------------------------------------------------------------------
+/// Type of leading number (track number vs possible BPM)
+#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+pub enum NumberType {
+    /// Track number (1-99)
+    TrackNumber,
+    /// Could be BPM value (40-220)
+    PossibleBPM,
+    /// Unknown purpose
+    Unknown,
+}
+
+/// Classifies the purpose of a leading number
+///
+
+--------------------------------------------------------------------------------
+29. TOKIO TEST ANNOTATION CHECK
+--------------------------------------------------------------------------------
+Tests using #[test] that may need #[tokio::test]:
+pipeline/src-tauri/src/core/pipeline/orchestrator.rs:468:        let pool = PgPool::connect_lazy("postgresql://test").unwrap();
+pipeline/src-tauri/src/core/pipeline/orchestrator.rs:479:        let pool = PgPool::connect_lazy("postgresql://test").unwrap();
+pipeline/src-tauri/src/core/pipeline/orchestrator.rs:488:        let pool = PgPool::connect_lazy("postgresql://test").unwrap();
+daw/src-tauri/src/profiling/query_analyzer.rs:1280:            PgPool::connect_lazy("postgresql://localhost/test").unwrap(),
+daw/src-tauri/src/profiling/query_analyzer.rs:1305:            QueryAnalyzer::new(PgPool::connect_lazy("postgresql://localhost/test").unwrap());
+
+--------------------------------------------------------------------------------
+30. FULL TEST RESULTS SUMMARY
+--------------------------------------------------------------------------------
+failures:
+    commands::analyze::tests::test_get_key_name
+    core::analysis::auto_tagger::tests::test_extract_from_path
+    core::analysis::auto_tagger::tests::test_filename_dot_splitting
+    core::analysis::auto_tagger::tests::test_filename_generic_tags_alphanumeric
+    core::analysis::auto_tagger::tests::test_filename_mixed_separators
+    core::analysis::auto_tagger::tests::test_filename_no_matches
+    core::analysis::auto_tagger::tests::test_filename_space_splitting
+    core::analysis::auto_tagger::tests::test_filename_underscore_splitting
+    core::analysis::auto_tagger::tests::test_integration_comprehensive_file
+    core::analysis::auto_tagger::tests::test_integration_splice_style
+    core::analysis::auto_tagger::tests::test_integration_vengeance_style
+    core::analysis::auto_tagger::tests::test_path_instrument_category
+    core::analysis::filename_metadata::tests::test_number_classification
+    core::analysis::tests::chord_analyzer_extended_test::test_rapid_chord_changes
+    database::window_state::tests::test_database_window_pagination
+
+test result: FAILED. 557 passed; 15 failed; 7 ignored; 0 measured; 0 filtered out; finished in 1.67s
+
+error: test failed, to rerun pass `-p midi-pipeline --lib`
+
+================================================================================
+END OF ANALYSIS REPORT
+================================================================================

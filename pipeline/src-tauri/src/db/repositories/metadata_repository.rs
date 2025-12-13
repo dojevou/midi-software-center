@@ -1,4 +1,3 @@
-
 /// Musical metadata repository
 /// Aligned with actual schema from 001_initial_schema.sql
 use crate::db::models::{MusicalMetadata, NewMusicalMetadata};
@@ -27,9 +26,16 @@ impl MetadataRepository {
                 note_density,
                 polyphony_max,
                 polyphony_avg,
-                is_percussive
+                is_percussive,
+                chord_progression,
+                chord_types,
+                has_seventh_chords,
+                has_extended_chords,
+                chord_change_rate,
+                chord_complexity_score
             ) VALUES (
-                $1, $2, $3, $4::text::musical_key, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16
+                $1, $2, $3, $4::text::musical_key, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16,
+                $17, $18, $19, $20, $21, $22
             )
             ON CONFLICT (file_id) DO UPDATE SET
                 bpm = EXCLUDED.bpm,
@@ -46,7 +52,13 @@ impl MetadataRepository {
                 note_density = EXCLUDED.note_density,
                 polyphony_max = EXCLUDED.polyphony_max,
                 polyphony_avg = EXCLUDED.polyphony_avg,
-                is_percussive = EXCLUDED.is_percussive
+                is_percussive = EXCLUDED.is_percussive,
+                chord_progression = EXCLUDED.chord_progression,
+                chord_types = EXCLUDED.chord_types,
+                has_seventh_chords = EXCLUDED.has_seventh_chords,
+                has_extended_chords = EXCLUDED.has_extended_chords,
+                chord_change_rate = EXCLUDED.chord_change_rate,
+                chord_complexity_score = EXCLUDED.chord_complexity_score
             "#,
             metadata.file_id,
             metadata.bpm,
@@ -64,6 +76,12 @@ impl MetadataRepository {
             metadata.polyphony_max,
             metadata.polyphony_avg,
             metadata.is_percussive,
+            metadata.chord_progression,
+            metadata.chord_types.as_deref(),
+            metadata.has_seventh_chords,
+            metadata.has_extended_chords,
+            metadata.chord_change_rate,
+            metadata.chord_complexity_score,
         )
         .execute(pool)
         .await?;
@@ -108,7 +126,13 @@ impl MetadataRepository {
                 chord_complexity,
                 has_melody,
                 melodic_range,
-                created_at as "created_at!"
+                created_at as "created_at!",
+                chord_progression,
+                chord_types,
+                has_seventh_chords,
+                has_extended_chords,
+                chord_change_rate,
+                chord_complexity_score
             FROM musical_metadata WHERE file_id = $1
             "#,
             file_id
@@ -200,6 +224,42 @@ impl MetadataRepository {
         Ok(())
     }
 
+    /// Updates harmonic analysis data
+    pub async fn update_chords(
+        pool: &PgPool,
+        file_id: i64,
+        chord_progression: Option<serde_json::Value>,
+        chord_types: Option<Vec<String>>,
+        has_seventh_chords: Option<bool>,
+        has_extended_chords: Option<bool>,
+        chord_change_rate: Option<sqlx::types::BigDecimal>,
+        chord_complexity_score: Option<sqlx::types::BigDecimal>,
+    ) -> Result<(), sqlx::Error> {
+        sqlx::query!(
+            r#"
+            UPDATE musical_metadata
+            SET chord_progression = $1,
+                chord_types = $2,
+                has_seventh_chords = $3,
+                has_extended_chords = $4,
+                chord_change_rate = $5,
+                chord_complexity_score = $6
+            WHERE file_id = $7
+            "#,
+            chord_progression,
+            chord_types.as_deref(),
+            has_seventh_chords,
+            has_extended_chords,
+            chord_change_rate,
+            chord_complexity_score,
+            file_id
+        )
+        .execute(pool)
+        .await?;
+
+        Ok(())
+    }
+
     /// Deletes metadata by file ID
     pub async fn delete(pool: &PgPool, file_id: i64) -> Result<(), sqlx::Error> {
         sqlx::query!("DELETE FROM musical_metadata WHERE file_id = $1", file_id)
@@ -259,6 +319,12 @@ mod tests {
             polyphony_max: Some(4),
             polyphony_avg: sqlx::types::BigDecimal::from_f64(2.5),
             is_percussive: Some(false),
+            chord_progression: None,
+            chord_types: None,
+            has_seventh_chords: None,
+            has_extended_chords: None,
+            chord_change_rate: None,
+            chord_complexity_score: None,
         };
 
         MetadataRepository::insert(&pool, metadata).await.unwrap();

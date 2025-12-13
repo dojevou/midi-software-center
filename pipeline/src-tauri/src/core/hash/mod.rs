@@ -1,4 +1,3 @@
-
 /// Hash calculation module for file content deduplication.
 ///
 /// This module provides BLAKE3 hashing functionality for calculating

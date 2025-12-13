@@ -83,10 +83,15 @@ fn analyze_file(file_path: &Path) -> Result<TestResult> {
         println!("  ⚠️  BPM: Not detected");
     }
 
-    // Detect key (not implemented yet in shared library)
-    // TODO: Will be available after Phase 5 migration
-    let key = None; // detect_key is not yet implemented
-    println!("  ⚠️  Key: Not implemented in shared library yet");
+    // Detect key using the shared library implementation
+    use midi_library_shared::core::analysis::key_detector::detect_key;
+
+    let key = detect_key(&midi_file);
+    if let Some(ref key_str) = key {
+        println!("  🎹 Key: {}", key_str);
+    } else {
+        println!("  ⚠️  Key: Unable to detect (low confidence or insufficient notes)");
+    }
 
     let parse_time = start.elapsed();
     println!("  ⏱️  Processing time: {}ms", parse_time.as_millis());

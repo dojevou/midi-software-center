@@ -114,14 +114,7 @@ impl MidiRoute {
         to_destination: RouteDestination,
         name: String,
     ) -> Self {
-        Self {
-            id,
-            from_device,
-            to_destination,
-            filter: MidiFilter::new(),
-            enabled: true,
-            name,
-        }
+        Self { id, from_device, to_destination, filter: MidiFilter::new(), enabled: true, name }
     }
 
     /// Enable route
@@ -150,10 +143,7 @@ pub struct MidiRouterState {
 impl MidiRouterState {
     /// Create new router state
     pub fn new() -> Self {
-        Self {
-            routes: HashMap::new(),
-            next_route_id: 1,
-        }
+        Self { routes: HashMap::new(), next_route_id: 1 }
     }
 
     /// Create a new route
@@ -265,26 +255,21 @@ pub async fn create_route(
     to: String,
     state: State<'_, Arc<RwLock<MidiRouterState>>>,
 ) -> Result<i32, String> {
-    create_route_impl(&from, &to, &state)
-        .await
-        .map_err(|e| e.to_string())
+    create_route_impl(&from, &to, &*state).await.map_err(|e| e.to_string())
 }
 
-async fn create_route_impl(
+pub async fn create_route_impl(
     from: &str,
     to: &str,
-    state: &State<'_, Arc<RwLock<MidiRouterState>>>,
+    state: &Arc<RwLock<MidiRouterState>>,
 ) -> Result<i32> {
     let mut router_state = state.write().await;
 
     // Parse destination
     let destination = parse_destination(to)?;
 
-    let route_id = router_state.create_route(
-        from.to_string(),
-        destination,
-        format!("{} → {}", from, to),
-    );
+    let route_id =
+        router_state.create_route(from.to_string(), destination, format!("{} → {}", from, to));
 
     Ok(route_id)
 }
@@ -294,9 +279,7 @@ fn parse_destination(dest: &str) -> Result<RouteDestination> {
     if let Some(device_id) = dest.strip_prefix("device:") {
         Ok(RouteDestination::Device(device_id.to_string()))
     } else if let Some(track_id) = dest.strip_prefix("track:") {
-        let track_num = track_id
-            .parse::<i32>()
-            .context("Invalid track number")?;
+        let track_num = track_id.parse::<i32>().context("Invalid track number")?;
         Ok(RouteDestination::Track(track_num))
     } else if let Some(virtual_id) = dest.strip_prefix("virtual:") {
         Ok(RouteDestination::Virtual(virtual_id.to_string()))
@@ -312,19 +295,15 @@ pub async fn delete_route(
     route_id: i32,
     state: State<'_, Arc<RwLock<MidiRouterState>>>,
 ) -> Result<(), String> {
-    delete_route_impl(route_id, &state)
-        .await
-        .map_err(|e| e.to_string())
+    delete_route_impl(route_id, &*state).await.map_err(|e| e.to_string())
 }
 
-async fn delete_route_impl(
+pub async fn delete_route_impl(
     route_id: i32,
-    state: &State<'_, Arc<RwLock<MidiRouterState>>>,
+    state: &Arc<RwLock<MidiRouterState>>,
 ) -> Result<()> {
     let mut router_state = state.write().await;
-    router_state
-        .delete_route(route_id)
-        .context("Failed to delete route")?;
+    router_state.delete_route(route_id).context("Failed to delete route")?;
     Ok(())
 }
 
@@ -334,19 +313,15 @@ pub async fn enable_route(
     route_id: i32,
     state: State<'_, Arc<RwLock<MidiRouterState>>>,
 ) -> Result<(), String> {
-    enable_route_impl(route_id, &state)
-        .await
-        .map_err(|e| e.to_string())
+    enable_route_impl(route_id, &*state).await.map_err(|e| e.to_string())
 }
 
-async fn enable_route_impl(
+pub async fn enable_route_impl(
     route_id: i32,
-    state: &State<'_, Arc<RwLock<MidiRouterState>>>,
+    state: &Arc<RwLock<MidiRouterState>>,
 ) -> Result<()> {
     let mut router_state = state.write().await;
-    router_state
-        .enable_route(route_id)
-        .context("Failed to enable route")?;
+    router_state.enable_route(route_id).context("Failed to enable route")?;
     Ok(())
 }
 
@@ -356,19 +331,15 @@ pub async fn disable_route(
     route_id: i32,
     state: State<'_, Arc<RwLock<MidiRouterState>>>,
 ) -> Result<(), String> {
-    disable_route_impl(route_id, &state)
-        .await
-        .map_err(|e| e.to_string())
+    disable_route_impl(route_id, &*state).await.map_err(|e| e.to_string())
 }
 
-async fn disable_route_impl(
+pub async fn disable_route_impl(
     route_id: i32,
-    state: &State<'_, Arc<RwLock<MidiRouterState>>>,
+    state: &Arc<RwLock<MidiRouterState>>,
 ) -> Result<()> {
     let mut router_state = state.write().await;
-    router_state
-        .disable_route(route_id)
-        .context("Failed to disable route")?;
+    router_state.disable_route(route_id).context("Failed to disable route")?;
     Ok(())
 }
 
@@ -377,13 +348,11 @@ async fn disable_route_impl(
 pub async fn get_all_routes(
     state: State<'_, Arc<RwLock<MidiRouterState>>>,
 ) -> Result<Vec<MidiRoute>, String> {
-    get_all_routes_impl(&state)
-        .await
-        .map_err(|e| e.to_string())
+    get_all_routes_impl(&*state).await.map_err(|e| e.to_string())
 }
 
-async fn get_all_routes_impl(
-    state: &State<'_, Arc<RwLock<MidiRouterState>>>,
+pub async fn get_all_routes_impl(
+    state: &Arc<RwLock<MidiRouterState>>,
 ) -> Result<Vec<MidiRoute>> {
     let router_state = state.read().await;
     Ok(router_state.get_all_routes())
@@ -395,19 +364,15 @@ pub async fn test_route(
     route_id: i32,
     state: State<'_, Arc<RwLock<MidiRouterState>>>,
 ) -> Result<bool, String> {
-    test_route_impl(route_id, &state)
-        .await
-        .map_err(|e| e.to_string())
+    test_route_impl(route_id, &*state).await.map_err(|e| e.to_string())
 }
 
-async fn test_route_impl(
+pub async fn test_route_impl(
     route_id: i32,
-    state: &State<'_, Arc<RwLock<MidiRouterState>>>,
+    state: &Arc<RwLock<MidiRouterState>>,
 ) -> Result<bool> {
     let router_state = state.read().await;
-    router_state
-        .test_route(route_id)
-        .context("Failed to test route")
+    router_state.test_route(route_id).context("Failed to test route")
 }
 
 #[cfg(test)]
@@ -712,9 +677,8 @@ mod tests {
     #[tokio::test]
     async fn test_create_route_impl() {
         let state = Arc::new(RwLock::new(MidiRouterState::new()));
-        let tauri_state = State::from(&state);
 
-        let route_id = create_route_impl("midi-1", "track:1", &tauri_state).await;
+        let route_id = create_route_impl("midi-1", "track:1", &state).await;
         assert!(route_id.is_ok());
 
         let s = state.read().await;
@@ -733,8 +697,7 @@ mod tests {
             )
         };
 
-        let tauri_state = State::from(&state);
-        let result = delete_route_impl(route_id, &tauri_state).await;
+        let result = delete_route_impl(route_id, &state).await;
         assert!(result.is_ok());
 
         let s = state.read().await;
@@ -755,8 +718,7 @@ mod tests {
             id
         };
 
-        let tauri_state = State::from(&state);
-        let result = enable_route_impl(route_id, &tauri_state).await;
+        let result = enable_route_impl(route_id, &state).await;
         assert!(result.is_ok());
 
         let s = state.read().await;
@@ -775,8 +737,7 @@ mod tests {
             )
         };
 
-        let tauri_state = State::from(&state);
-        let result = disable_route_impl(route_id, &tauri_state).await;
+        let result = disable_route_impl(route_id, &state).await;
         assert!(result.is_ok());
 
         let s = state.read().await;
@@ -800,8 +761,7 @@ mod tests {
             );
         }
 
-        let tauri_state = State::from(&state);
-        let routes = get_all_routes_impl(&tauri_state).await;
+        let routes = get_all_routes_impl(&state).await;
         assert!(routes.is_ok());
         assert_eq!(routes.unwrap().len(), 2);
     }
@@ -818,8 +778,7 @@ mod tests {
             )
         };
 
-        let tauri_state = State::from(&state);
-        let result = test_route_impl(route_id, &tauri_state).await;
+        let result = test_route_impl(route_id, &state).await;
         assert!(result.is_ok());
         assert!(result.unwrap());
     }

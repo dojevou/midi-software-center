@@ -1,0 +1,22 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n                INSERT INTO tags (name, category)\n                VALUES ($1, 'auto_extracted')\n                ON CONFLICT (name) DO NOTHING\n                RETURNING id\n                ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int4"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "e988f3a4d70afb69e3bef8a79deb751104e9bcd6cb3e22098a28f881c5ce9d23"
+}

@@ -1,4 +1,3 @@
-
 /// Filename Sanitization
 ///
 /// Ensures filenames are valid across all operating systems.
@@ -95,7 +94,7 @@ pub fn clean_description(description: &str) -> String {
     words.join("_")
 }
 
-/// Ensures filename has .mid extension
+/// Ensures filename has .mid extension (converts .midi to .mid)
 ///
 /// # Arguments
 /// * `filename` - Filename to check
@@ -105,9 +104,98 @@ pub fn clean_description(description: &str) -> String {
 pub fn ensure_mid_extension(filename: &str) -> String {
     if filename.to_lowercase().ends_with(".mid") {
         filename.to_string()
+    } else if filename.to_lowercase().ends_with(".midi") {
+        // Replace .midi with .mid
+        let stem = &filename[..filename.len() - 5];
+        format!("{}.mid", stem)
     } else {
         format!("{}.mid", filename)
     }
+}
+
+/// Phase 0 Sanitization: Strict filename cleaning for post-extraction
+///
+/// This is the FIRST renaming phase, applied immediately after archive extraction.
+/// Rules:
+/// - Replace spaces with underscores
+/// - Convert .midi to .mid
+/// - Convert .MID to .mid (force lowercase)
+/// - Keep ONLY: letters, numbers, underscores, hyphens
+/// - Remove all other special characters
+///
+/// # Arguments
+/// * `filename` - Original filename from archive
+///
+/// # Returns
+/// * Sanitized filename safe for filesystem operations
+///
+/// # Examples
+/// ```
+/// use pipeline::core::naming::sanitizer::sanitize_strict;
+///
+/// assert_eq!(sanitize_strict("My Song (2023).midi"), "My_Song_2023.mid");
+/// assert_eq!(sanitize_strict("My Song (2023).MID"), "My_Song_2023.mid");
+/// assert_eq!(sanitize_strict("bass & lead!.mid"), "bass_lead.mid");
+/// assert_eq!(sanitize_strict("file#1@test.mid"), "file1test.mid");
+/// ```
+pub fn sanitize_strict(filename: &str) -> String {
+    // Separate extension from basename
+    let (name, ext) = if let Some(pos) = filename.rfind('.') {
+        (&filename[..pos], &filename[pos..])
+    } else {
+        (filename, "")
+    };
+
+    // Step 1: Replace spaces with underscores
+    let mut sanitized = name.replace(' ', "_");
+
+    // Step 2: Keep ONLY letters, numbers, underscores, hyphens, periods
+    sanitized = sanitized
+        .chars()
+        .filter(|c| c.is_alphanumeric() || *c == '_' || *c == '-' || *c == '.')
+        .collect();
+
+    // Step 3: Remove consecutive special chars and mixed patterns (__,  --, .., -_, _., .-, etc.)
+    loop {
+        let before = sanitized.clone();
+        sanitized = sanitized.replace("__", "_");
+        sanitized = sanitized.replace("--", "-");
+        sanitized = sanitized.replace("..", ".");
+        sanitized = sanitized.replace("_-", "_");
+        sanitized = sanitized.replace("-_", "_");
+        sanitized = sanitized.replace("_.", "_");
+        sanitized = sanitized.replace("._", "_");
+        sanitized = sanitized.replace("-.", "-");
+        sanitized = sanitized.replace(".-", "-");
+        if before == sanitized {
+            break; // No more changes
+        }
+    }
+
+    // Step 4: Remove leading/trailing underscores/hyphens
+    sanitized = sanitized.trim_matches(|c| c == '_' || c == '-').to_string();
+
+    // Step 5: Limit length
+    if sanitized.len() > 250 {
+        sanitized.truncate(250);
+        sanitized = sanitized.trim_matches(|c| c == '_' || c == '-').to_string();
+    }
+
+    // Step 6: Default if empty
+    if sanitized.is_empty() {
+        sanitized = "untitled".to_string();
+    }
+
+    // Step 7: Handle extension (.midi -> .mid, .MID -> .mid, ensure lowercase .mid)
+    let final_ext = if ext.to_lowercase() == ".midi" || ext.to_lowercase() == ".mid" {
+        ".mid" // Always lowercase
+    } else if !ext.is_empty() {
+        ext
+    } else {
+        ".mid"
+    };
+
+    format!("{}{}", sanitized, final_ext)
 }
 
 #[cfg(test)]
@@ -170,6 +258,51 @@ mod tests {
         assert_eq!(ensure_mid_extension("test"), "test.mid");
         assert_eq!(ensure_mid_extension("test.mid"), "test.mid");
         assert_eq!(ensure_mid_extension("test.MID"), "test.MID");
+        assert_eq!(ensure_mid_extension("test.midi"), "test.mid");
+        assert_eq!(ensure_mid_extension("test.MIDI"), "test.mid");
+    }
+
+    #[test]
+    fn test_sanitize_strict_spaces() {
+        assert_eq!(sanitize_strict("my file name.mid"), "my_file_name.mid");
+        assert_eq!(sanitize_strict("bass   lead.mid"), "bass_lead.mid");
+    }
+
+    #[test]
+    fn test_sanitize_strict_midi_extension() {
+        assert_eq!(sanitize_strict("test.midi"), "test.mid");
+        assert_eq!(sanitize_strict("test.MIDI"), "test.mid");
+        assert_eq!(sanitize_strict("test.MID"), "test.mid");
+        assert_eq!(sanitize_strict("test.Mid"), "test.mid");
+    }
+
+    #[test]
+    fn test_sanitize_strict_special_chars() {
+        assert_eq!(sanitize_strict("bass & lead!.mid"), "bass_lead.mid");
+        assert_eq!(sanitize_strict("file#1@test.mid"), "file1test.mid");
+        assert_eq!(sanitize_strict("song (2023).mid"), "song_2023.mid");
+        assert_eq!(sanitize_strict("test[1].mid"), "test1.mid");
+    }
+
+    #[test]
+    fn test_sanitize_strict_keep_valid() {
+        assert_eq!(sanitize_strict("bass-lead_123.mid"), "bass-lead_123.mid");
+        assert_eq!(sanitize_strict("MyFile123.mid"), "MyFile123.mid");
+    }
+
+    #[test]
+    fn test_sanitize_strict_consecutive() {
+        assert_eq!(
+            sanitize_strict("test___file---name.mid"),
+            "test_file-name.mid"
+        ); // Hyphens between words are ok
+        assert_eq!(sanitize_strict("bass_-_lead.mid"), "bass_lead.mid");
+    }
+
+    #[test]
+    fn test_sanitize_strict_empty() {
+        assert_eq!(sanitize_strict("@#$%.mid"), "untitled.mid");
+        assert_eq!(sanitize_strict(".mid"), "untitled.mid");
     }
 
     #[test]

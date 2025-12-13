@@ -1,4 +1,3 @@
-
 /// BPM Detection Module
 ///
 /// This module provides BPM (Beats Per Minute) detection for MIDI files.

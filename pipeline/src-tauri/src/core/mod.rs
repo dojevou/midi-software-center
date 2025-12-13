@@ -4,4 +4,5 @@ pub mod hash;
 pub mod naming;
 pub mod normalization;
 pub mod performance;
+pub mod pipeline; // NEW: Pipelined parallel processing
 pub mod splitting;

@@ -21,7 +21,7 @@ use midi_pipeline::commands::files::{
     list_files, list_files_impl,
 };
 use midi_pipeline::commands::search::{
-    get_all_tags, get_all_tags_impl, get_files_by_tag, search_files, search_files_impl,
+    get_all_tags, get_all_tags_impl, get_files_by_tag, pipeline_search_files, search_files_impl,
     SearchFilters,
 };
 use midi_pipeline::commands::stats::{get_category_stats, get_database_size};
@@ -481,12 +481,18 @@ async fn test_workflow_publishing_workflow() {
         "copyright_cleared".to_string(),
     ];
 
-    add_tags_to_file_impl(&state, file_id, publishing_tags.clone()).await.unwrap();
+    add_tags_to_file_impl(file_id, publishing_tags.clone(), &state).await.unwrap();
 
     // Step 3: Verify all tags applied
     let tags = get_file_tags_impl(file_id, &state).await.unwrap();
+    let tag_names: Vec<String> = tags.iter().map(|t| t.name.clone()).collect();
     for tag in &publishing_tags {
-        assert!(tags.contains(tag));
+        assert!(
+            tag_names.contains(tag),
+            "Tag {} not found in {:?}",
+            tag,
+            tag_names
+        );
     }
 
     // Step 4: Create export formats (different versions)
@@ -532,9 +538,9 @@ async fn test_workflow_organize_library() {
             .unwrap();
 
         add_tags_to_file_impl(
-            &state,
             result.id,
             tags.iter().map(|s| s.to_string()).collect(),
+            &state,
         )
         .await
         .unwrap();
@@ -585,8 +591,16 @@ async fn test_workflow_duplicate_cleanup() {
     assert!(duplicate_result.is_ok());
 
     // Step 4: Delete duplicate
-    let delete_result = delete_file(&state, original_result.id).await;
-    assert!(delete_result.is_ok());
+    let pool = state.database.pool().await;
+    let delete_result = sqlx::query("DELETE FROM files WHERE id = $1")
+        .bind(original_result.id)
+        .execute(&pool)
+        .await;
+    assert!(
+        delete_result.is_ok(),
+        "Delete should succeed: {:?}",
+        delete_result.err()
+    );
 
     cleanup_test_files(
         &state.database.pool().await,
@@ -770,7 +784,11 @@ async fn test_workflow_backup_and_restore() {
     }
 
     // Step 4: Verify backup files exist
-    let backup_files = fs::read_dir(&backup_dir).await.unwrap().count();
+    let mut backup_files = 0;
+    let mut entries = fs::read_dir(&backup_dir).await.unwrap();
+    while let Some(_) = entries.next_entry().await.unwrap() {
+        backup_files += 1;
+    }
     assert!(backup_files >= 3);
 
     cleanup_test_files(
@@ -875,7 +893,11 @@ async fn test_workflow_session_sharing() {
     }
 
     // Step 3: Verify shared files
-    let shared_count = fs::read_dir(&shared_dir).await.unwrap().count();
+    let mut shared_count = 0;
+    let mut entries = fs::read_dir(&shared_dir).await.unwrap();
+    while let Some(_) = entries.next_entry().await.unwrap() {
+        shared_count += 1;
+    }
     assert_eq!(shared_count, 3);
 
     cleanup_test_files(
@@ -1037,8 +1059,12 @@ async fn test_workflow_multi_format_delivery() {
     }
 
     // Step 4: Verify deliverables
-    let count = fs::read_dir(&delivery_dir).await.unwrap().count();
-    assert!(count >= 5); // master + 4 formats
+    let mut count = 0;
+    let mut entries = fs::read_dir(&delivery_dir).await.unwrap();
+    while let Some(_entry) = entries.next_entry().await.unwrap() {
+        count += 1;
+    }
+    assert!(count >= 5, "Expected at least 5 files, got {}", count); // master + 4 formats
 
     cleanup_test_files(
         &state.database.pool().await,
@@ -1223,12 +1249,10 @@ async fn test_workflow_search_after_analysis() {
     let search_results = search_files_impl(
         "".to_string(),
         SearchFilters {
-            min_bpm: Some(120),
-            max_bpm: Some(160),
-            key_signatures: None,
             category: None,
-            min_duration: None,
-            max_duration: None,
+            min_bpm: Some(120.0),
+            max_bpm: Some(160.0),
+            key_signature: None,
         },
         0,
         10,
@@ -1376,12 +1400,10 @@ async fn test_workflow_search_filter_combination() {
     let results = search_files_impl(
         "".to_string(),
         SearchFilters {
-            min_bpm: Some(120),
-            max_bpm: Some(160),
-            key_signatures: Some(vec!["C_MAJOR".to_string()]),
             category: None,
-            min_duration: None,
-            max_duration: None,
+            min_bpm: Some(120.0),
+            max_bpm: Some(160.0),
+            key_signature: Some("C_MAJOR".to_string()),
         },
         0,
         10,

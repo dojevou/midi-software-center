@@ -1,4 +1,3 @@
-
 /// Command Serialization - Trusty Module
 ///
 /// Support for serializing/deserializing commands for persistence across sessions.

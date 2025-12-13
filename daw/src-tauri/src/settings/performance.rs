@@ -1,7 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub enum VirtualScrollingThreshold {
     Items100 = 100,
     Items500 = 500,
@@ -9,7 +8,6 @@ pub enum VirtualScrollingThreshold {
     Items1000 = 1000,
     Items5000 = 5000,
 }
-
 
 impl VirtualScrollingThreshold {
     pub fn as_usize(self) -> usize {

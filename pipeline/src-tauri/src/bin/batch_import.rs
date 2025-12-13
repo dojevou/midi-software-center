@@ -247,6 +247,17 @@ async fn process_file(pool: &sqlx::PgPool, file_path: &Path) -> Result<bool> {
         collection_name: None,
         folder_tags: None,
         import_batch_id: None,
+        parent_folder: None,
+        filename_bpm: None,
+        filename_key: None,
+        filename_genres: None,
+        structure_tags: None,
+        metadata_source: None,
+        track_names: None,
+        copyright: None,
+        instrument_names_text: None,
+        markers: None,
+        lyrics: None,
     };
 
     let file_id = FileRepository::insert(pool, new_file).await?;
@@ -267,6 +278,12 @@ async fn process_file(pool: &sqlx::PgPool, file_path: &Path) -> Result<bool> {
         avg_velocity: note_stats.avg_velocity,
         note_density: None, // Can be calculated later
         polyphony_max: note_stats.polyphony_max,
+        chord_progression: None,
+        chord_types: None,
+        has_seventh_chords: None,
+        has_extended_chords: None,
+        chord_change_rate: None,
+        chord_complexity_score: None,
         polyphony_avg: None,
         is_percussive: None,
     };

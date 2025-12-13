@@ -1,5 +1,4 @@
 #[allow(dead_code, unused_imports, unused_variables)]
-
 pub mod files_test;
 pub mod progress_test;
 pub mod search_test;
@@ -11,3 +10,8 @@ pub mod stats_test;
 /// These tests will be remediated in Phase 9.5
 pub mod system_test;
 pub mod tags_test;
+
+// Error path tests (100% coverage initiative)
+pub mod search_error_test;
+pub mod stats_error_test;
+pub mod tags_error_test;

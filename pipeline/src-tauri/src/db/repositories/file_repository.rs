@@ -1,4 +1,3 @@
-
 /// File repository - CRUD operations for files table
 /// Aligned with actual schema from 001_initial_schema.sql
 use crate::db::models::{File, NewFile};
@@ -25,8 +24,19 @@ impl FileRepository {
                 manufacturer,
                 collection_name,
                 folder_tags,
-                import_batch_id
-            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14)
+                import_batch_id,
+                parent_folder,
+                filename_bpm,
+                filename_key,
+                filename_genres,
+                structure_tags,
+                metadata_source,
+                track_names,
+                copyright,
+                instrument_names_text,
+                markers,
+                lyrics
+            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25)
             RETURNING id
             "#,
             new_file.filename,
@@ -43,6 +53,17 @@ impl FileRepository {
             new_file.collection_name,
             new_file.folder_tags.as_deref(),
             new_file.import_batch_id,
+            new_file.parent_folder,
+            new_file.filename_bpm,
+            new_file.filename_key,
+            new_file.filename_genres.as_deref(),
+            new_file.structure_tags.as_deref(),
+            new_file.metadata_source,
+            new_file.track_names.as_deref(),
+            new_file.copyright,
+            new_file.instrument_names_text.as_deref(),
+            new_file.markers.as_deref(),
+            new_file.lyrics.as_deref(),
         )
         .fetch_one(pool)
         .await?;
@@ -77,7 +98,18 @@ impl FileRepository {
                 created_at as "created_at!",
                 updated_at as "updated_at!",
                 analyzed_at,
-                import_batch_id
+                import_batch_id,
+                parent_folder,
+                filename_bpm,
+                filename_key,
+                filename_genres,
+                structure_tags,
+                metadata_source,
+                track_names,
+                copyright,
+                instrument_names_text,
+                markers,
+                lyrics
             FROM files WHERE id = $1
             "#,
             id
@@ -134,7 +166,18 @@ impl FileRepository {
                 created_at as "created_at!",
                 updated_at as "updated_at!",
                 analyzed_at,
-                import_batch_id
+                import_batch_id,
+                parent_folder,
+                filename_bpm,
+                filename_key,
+                filename_genres,
+                structure_tags,
+                metadata_source,
+                track_names,
+                copyright,
+                instrument_names_text,
+                markers,
+                lyrics
             FROM files WHERE content_hash = $1 LIMIT 1
             "#,
             content_hash
@@ -172,7 +215,18 @@ impl FileRepository {
                 created_at as "created_at!",
                 updated_at as "updated_at!",
                 analyzed_at,
-                import_batch_id
+                import_batch_id,
+                parent_folder,
+                filename_bpm,
+                filename_key,
+                filename_genres,
+                structure_tags,
+                metadata_source,
+                track_names,
+                copyright,
+                instrument_names_text,
+                markers,
+                lyrics
             FROM files WHERE filepath = $1
             "#,
             filepath
@@ -277,7 +331,18 @@ impl FileRepository {
                 created_at as "created_at!",
                 updated_at as "updated_at!",
                 analyzed_at,
-                import_batch_id
+                import_batch_id,
+                parent_folder,
+                filename_bpm,
+                filename_key,
+                filename_genres,
+                structure_tags,
+                metadata_source,
+                track_names,
+                copyright,
+                instrument_names_text,
+                markers,
+                lyrics
             FROM files
             ORDER BY created_at DESC
             LIMIT $1 OFFSET $2
@@ -322,7 +387,18 @@ impl FileRepository {
                 created_at as "created_at!",
                 updated_at as "updated_at!",
                 analyzed_at,
-                import_batch_id
+                import_batch_id,
+                parent_folder,
+                filename_bpm,
+                filename_key,
+                filename_genres,
+                structure_tags,
+                metadata_source,
+                track_names,
+                copyright,
+                instrument_names_text,
+                markers,
+                lyrics
             FROM files
             WHERE manufacturer = $1
             ORDER BY created_at DESC
@@ -368,7 +444,18 @@ impl FileRepository {
                 created_at as "created_at!",
                 updated_at as "updated_at!",
                 analyzed_at,
-                import_batch_id
+                import_batch_id,
+                parent_folder,
+                filename_bpm,
+                filename_key,
+                filename_genres,
+                structure_tags,
+                metadata_source,
+                track_names,
+                copyright,
+                instrument_names_text,
+                markers,
+                lyrics
             FROM files
             WHERE collection_name = $1
             ORDER BY created_at DESC
@@ -421,6 +508,17 @@ mod tests {
             collection_name: None,
             folder_tags: None,
             import_batch_id: None,
+            parent_folder: None,
+            filename_bpm: None,
+            filename_key: None,
+            filename_genres: None,
+            structure_tags: None,
+            metadata_source: None,
+            track_names: None,
+            copyright: None,
+            instrument_names_text: None,
+            markers: None,
+            lyrics: None,
         };
 
         let file_id = FileRepository::insert(&pool, new_file).await.unwrap();
@@ -461,6 +559,17 @@ mod tests {
             collection_name: None,
             folder_tags: None,
             import_batch_id: None,
+            parent_folder: None,
+            filename_bpm: None,
+            filename_key: None,
+            filename_genres: None,
+            structure_tags: None,
+            metadata_source: None,
+            track_names: None,
+            copyright: None,
+            instrument_names_text: None,
+            markers: None,
+            lyrics: None,
         };
 
         FileRepository::insert(&pool, new_file).await.unwrap();

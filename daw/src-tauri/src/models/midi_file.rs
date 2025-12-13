@@ -7,8 +7,9 @@ use sqlx::FromRow;
 
 /// Main file record - matches the actual database schema
 /// Uses proper JOINs to musical_metadata and file_categories tables
-#[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
+#[derive(Debug, Clone, Serialize, Deserialize, FromRow, Default)]
 pub struct MidiFile {
+    #[sqlx(default)]
     pub id: i64,
 
     // File metadata (from files table)
@@ -50,27 +51,29 @@ pub struct MidiFile {
     pub primary_category: Option<String>,
 
     // Timestamps
+    #[serde(default = "default_datetime")]
     pub created_at: chrono::DateTime<chrono::Utc>,
     pub analyzed_at: Option<chrono::DateTime<chrono::Utc>>,
 }
 
+/// Default datetime for struct initialization (Unix epoch)
+fn default_datetime() -> chrono::DateTime<chrono::Utc> {
+    chrono::DateTime::UNIX_EPOCH
+}
+
 /// Lightweight file details for search results
+/// Field names match TypeScript interface in app/src/lib/types.ts exactly
 #[derive(Debug, Clone, Serialize, Deserialize, FromRow)]
 pub struct FileDetails {
     pub id: i64,
-    #[serde(rename = "file_name")]
     pub filename: String,
-    #[serde(rename = "file_path")]
     pub filepath: String,
-    #[serde(rename = "file_size")]
     pub file_size_bytes: i64,
     pub bpm: Option<f64>,
-    #[serde(rename = "key")]
     pub key_signature: Option<String>,
     pub time_signature: Option<String>,
     pub duration_seconds: Option<f64>,
     pub total_notes: Option<i32>,
-    #[serde(rename = "category")]
     pub primary_category: Option<String>,
     pub parent_folder: Option<String>,
     pub created_at: chrono::DateTime<chrono::Utc>,
@@ -81,7 +84,6 @@ pub struct FileDetails {
     #[serde(default)]
     pub tags: Vec<String>,
     pub manufacturer: Option<String>,
-    #[serde(rename = "collection")]
     pub collection_name: Option<String>,
     #[serde(default)]
     pub track_count: i16,

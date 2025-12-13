@@ -1,14 +1,12 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub enum FontSize {
     Small,
     #[default]
     Medium,
     Large,
 }
-
 
 impl FontSize {
     pub fn as_pixels(&self) -> u32 {
@@ -20,8 +18,7 @@ impl FontSize {
     }
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Default)]
 pub enum GridSnapOption {
     Off,
     Bar,
@@ -32,7 +29,6 @@ pub enum GridSnapOption {
     SixteenthNote,
     ThirtySecondNote,
 }
-
 
 impl GridSnapOption {
     pub fn ticks_per_beat(&self, ppq: u32) -> u32 {

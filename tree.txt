@@ -1,0 +1,499 @@
+.
+├── app
+│   ├── dist
+│   │   ├── assets
+│   │   └── index.html
+│   ├── fix-tailwind.sh
+│   ├── index.html
+│   ├── launch-cpu-only.sh
+│   ├── node_modules
+│   │   ├── autoprefixer -> .pnpm/autoprefixer@10.4.22_postcss@8.5.6/node_modules/autoprefixer
+│   │   ├── happy-dom -> .pnpm/happy-dom@12.10.3/node_modules/happy-dom
+│   │   ├── meilisearch -> .pnpm/meilisearch@0.54.0/node_modules/meilisearch
+│   │   ├── @playwright
+│   │   ├── postcss -> .pnpm/postcss@8.5.6/node_modules/postcss
+│   │   ├── svelte -> .pnpm/svelte@4.2.20/node_modules/svelte
+│   │   ├── svelte-check -> .pnpm/svelte-check@3.8.6_postcss-load-config@4.0.2_postcss@8.5.6__postcss@8.5.6_svelte@4.2.20/node_modules/svelte-check
+│   │   ├── @sveltejs
+│   │   ├── tailwindcss -> .pnpm/tailwindcss@3.4.17/node_modules/tailwindcss
+│   │   ├── @tauri-apps
+│   │   ├── @testing-library
+│   │   ├── tone -> .pnpm/tone@15.1.22/node_modules/tone
+│   │   ├── @tsconfig
+│   │   ├── @types
+│   │   ├── typescript -> .pnpm/typescript@5.9.3/node_modules/typescript
+│   │   ├── vite -> .pnpm/vite@5.4.21_@types+node@20.19.24/node_modules/vite
+│   │   ├── @vitest
+│   │   └── vitest -> .pnpm/vitest@1.6.1_@types+node@20.19.24_@vitest+ui@1.6.1_happy-dom@12.10.3/node_modules/vitest
+│   ├── package.json
+│   ├── pnpm-lock.yaml
+│   ├── postcss.config.js
+│   ├── postcss.config.js.backup
+│   ├── src
+│   │   ├── app.css
+│   │   ├── app.css.backup
+│   │   ├── App.svelte
+│   │   ├── App.svelte.backup
+│   │   ├── lib
+│   │   ├── main.ts
+│   │   └── vite-env.d.ts
+│   ├── src-tauri
+│   │   ├── build.rs
+│   │   ├── Cargo.toml
+│   │   ├── gen
+│   │   ├── icons
+│   │   ├── logs
+│   │   ├── src
+│   │   └── tauri.conf.json
+│   ├── svelte.config.js
+│   ├── tailwind.config.js
+│   ├── tsconfig.json
+│   ├── verify-fix.sh
+│   ├── vite.config.ts
+│   └── vitest.config.ts
+├── backups
+│   ├── backup_20251111_074117.sql
+│   ├── database.tar.gz
+│   ├── midi-library-system-refined.tar.gz
+│   ├── newgui.tar.gz
+│   └── old-frontends-20251110
+│       ├── daw-frontend-backup.tar.gz
+│       ├── pipeline
+│       └── pipeline-frontend-backup.tar.gz
+├── build_output
+│   └── debug
+│       ├── build
+│       ├── deps
+│       ├── examples
+│       └── incremental
+├── Cargo.lock
+├── Cargo.toml
+├── CLAUDE.md
+├── config
+│   ├── agents
+│   │   ├── architecture-reviewer-agent.toml
+│   │   ├── database-agent.toml
+│   │   ├── frontend-agent.toml
+│   │   ├── midi-hardware-agent.toml
+│   │   └── rust-backend-agent.toml
+│   └── project_terminology.json
+├── coverage_error
+│   └── tarpaulin-report.html
+├── data
+│   └── analysis
+│       ├── E0308-ANALYSIS.json
+│       ├── grok_analysis_history.json
+│       ├── grok_midi_analysis.json
+│       └── quantum_analysis.json
+├── database
+│   ├── backups
+│   │   └── pre-extension-normalize-20251122.backup
+│   ├── config
+│   │   └── meilisearch-index.json
+│   ├── docker-compose.yml
+│   ├── fix-database.sh
+│   ├── INDEX_BACKUP.sql
+│   ├── METADATA-EXTRACTION-SYSTEM.md
+│   ├── migrations
+│   │   ├── 001_initial_schema.sql
+│   │   ├── 002_add_parent_folder.sql
+│   │   ├── 003_favorites.sql
+│   │   ├── 006_MIGRATION_SUCCESS.md
+│   │   ├── 006_track_splits_README.md
+│   │   ├── 006_track_splits.sql
+│   │   ├── 007_enhanced_tags.sql
+│   │   ├── 008_filename_metadata_fixed.sql
+│   │   ├── 009_text_metadata.sql
+│   │   ├── 010_harmonic_analysis.sql
+│   │   ├── 011_enhanced_analysis_json.sql
+│   │   ├── MIGRATION_SAFETY_AUDIT.md
+│   │   ├── ROLLBACK_IMPLEMENTATION_GUIDE.md
+│   │   └── update_normalized_filenames.sql
+│   ├── optimizations
+│   │   ├── add_tagging_indexes.sql
+│   │   ├── RESTORE_SAFETY.sql
+│   │   └── ULTRA_FAST_CONFIG.sql
+│   ├── organize_by_instruments_enhanced.sql
+│   ├── organize_by_instruments_optimized.sql
+│   ├── organize_by_instruments.sql
+│   ├── queries
+│   │   └── common_queries.sql
+│   └── scripts
+│       ├── insert_sample_data.sql
+│       ├── setup_database.sh
+│       └── setup.sh
+├── daw
+│   ├── dist
+│   │   └── index.html
+│   └── src-tauri
+│       ├── build.rs
+│       ├── Cargo.toml
+│       ├── gen
+│       ├── icons
+│       ├── logs
+│       ├── migrations
+│       ├── src
+│       ├── tauri.conf.json
+│       └── tests
+├── _disabled_tests
+│   ├── analysis_test.rs
+│   ├── analyze_test.rs
+│   ├── archive_import_test.rs
+│   ├── example_repository_test.rs
+│   ├── export_test.rs
+│   ├── file_import_test.rs
+│   ├── file_import_test.rs.bak
+│   ├── file_import_test.rs.pre-fix-backup
+│   ├── integration_test.rs
+│   ├── journey_test.rs
+│   ├── journey_test.rs.bak
+│   ├── journey_test.rs.pre-fix-backup
+│   ├── midi_test.rs
+│   ├── models_test.rs
+│   ├── performance_test.rs
+│   ├── project_test.rs
+│   ├── search_test.rs
+│   ├── sequencer_test.rs
+│   ├── split_file_test.rs
+│   ├── stress_test.rs
+│   ├── workflows_extended_test.rs
+│   ├── workflows_extended_test.rs.bak
+│   ├── workflows_extended_test.rs.pre-fix-backup
+│   ├── workflows_test.rs
+│   ├── workflows_test.rs.bak
+│   └── workflows_test.rs.pre-fix-backup
+├── e2e
+│   └── app.spec.ts
+├── error_reports
+│   ├── errors.csv
+│   ├── errors.json
+│   └── fix_report.md
+├── logs
+│   ├── deletion_log.txt
+│   ├── errors.txt
+│   ├── import.txt
+│   ├── pipeline.txt
+│   ├── terminaloutputthewub.txt
+│   ├── test-results.log
+│   └── tree.txt
+├── Makefile
+├── pipeline
+│   ├── dist
+│   │   └── index.html
+│   ├── run-pipeline.sh
+│   └── src-tauri
+│       ├── ,
+│       ├── ARENA-ALLOCATOR-SUMMARY.md
+│       ├── build.rs
+│       ├── Cargo_extraction_boost.toml
+│       ├── Cargo.lock
+│       ├── Cargo.toml
+│       ├── CONCURRENCY-MODULE-README.md
+│       ├── CONCURRENCY-QUICKSTART.md
+│       ├── gen
+│       ├── icons
+│       ├── INTEGRATION_TESTS_SUMMARY.md
+│       ├── logs
+│       ├── src
+│       ├── tauri.conf.json
+│       ├── TESTING.md
+│       └── tests
+├── playwright.config.ts
+├── README.md
+├── rust_analyzer
+│   ├── analyzer.rs
+│   ├── ast_analysis.rs
+│   ├── autofix.rs
+│   ├── build.sh
+│   ├── cargo_integration.rs
+│   ├── cargo_plugin.rs
+│   ├── Cargo.toml
+│   ├── COMPARISON.md
+│   ├── create_docs.sh
+│   ├── FIX_INDEX.md
+│   ├── IMPLEMENTATION_DETAILS.md
+│   ├── INDEX.md
+│   ├── main.rs
+│   ├── Makefile
+│   ├── midi_analysis.rs
+│   ├── output.rs
+│   ├── project_analysis.md
+│   ├── QUICK_REFERENCE.md
+│   ├── QUICKSTART.md
+│   ├── README.md
+│   ├── TODO_FIXES_SUMMARY.md
+│   └── types.rs
+├── rustfmt.toml
+├── scripts
+│   ├── analysis
+│   │   ├── analyze_files.py
+│   │   ├── error_parser.py
+│   │   └── __pycache__
+│   ├── analyze_filenames.py
+│   ├── analyze-tool
+│   │   └── src
+│   ├── audit-core-io.sh
+│   ├── audit-missing-imports.ts
+│   ├── benchmark-comparison.sh
+│   ├── BENCHMARK-EXAMPLES.md
+│   ├── BENCHMARK-GUIDE.md
+│   ├── BENCHMARK-QUICKSTART.md
+│   ├── build-all-expansions.sh
+│   ├── build_tag_expansions.py
+│   ├── build-ultra-fast-converter.sh
+│   ├── check-progress.sh
+│   ├── clean-missing-database-files.sh
+│   ├── convert-all-instruments.sh
+│   ├── convert_instruments_python.py
+│   ├── convert_midian_format_5.sh
+│   ├── convert_test_100.sh
+│   ├── convert_test_5_fixed.sh
+│   ├── create_97_instrument_expansions.sh
+│   ├── create-curated-tags.sh
+│   ├── create-structure.sh
+│   ├── derive_injector.py
+│   ├── export-force-midi.py
+│   ├── extract-pattern-types-simple.sql
+│   ├── extract-pattern-types.sql
+│   ├── fast_multi_level_tagger.py
+│   ├── find-unwraps.sh
+│   ├── fixes
+│   │   ├── apply_test_fixes.sh
+│   │   ├── auto_fix.sh
+│   │   ├── fix_add_tags_calls.py
+│   │   ├── fix_e0308_appstate.py
+│   │   ├── fix_e0308_calls.sh
+│   │   ├── fix_e0308_pool.py
+│   │   ├── fix_lint.sh
+│   │   ├── fix_list_files.py
+│   │   ├── fix_workflows_imports.sh
+│   │   ├── fix_workflows_manually.sh
+│   │   ├── format_string_fixer.py
+│   │   ├── master_fixer.sh
+│   │   └── __pycache__
+│   ├── fresh-import.sh
+│   ├── generate_detailed_report.py
+│   ├── grok
+│   │   ├── grok4_project_reviewer.py
+│   │   ├── grok4-review.sh
+│   │   ├── midi_grok_reviewer.py
+│   │   ├── __pycache__
+│   │   ├── supercharged_grok_reviewer.py
+│   │   └── ultra_supercharged_grok_reviewer.py
+│   ├── import
+│   │   └── import-collection.sh
+│   ├── import_and_analyze.sh
+│   ├── import-split-files.py
+│   ├── import-tool
+│   │   ├── Cargo.toml
+│   │   └── src
+│   ├── infer-instruments-enhanced.sql
+│   ├── infer-instruments-from-paths.sql
+│   ├── infer-instruments-parallel.sql
+│   ├── launch
+│   │   ├── frontend.sh
+│   │   ├── launch-all.sh
+│   │   ├── launch-daw.sh
+│   │   ├── launch-midi-center.sh
+│   │   ├── launch-pipeline.sh
+│   │   ├── status.sh
+│   │   └── stop-all.sh
+│   ├── LUDICROUS-SPEED-import.sh
+│   ├── migrate-existing-midi.sh
+│   ├── modules
+│   │   └── database.sh
+│   ├── monitor-and-continue.sh
+│   ├── monitor-dedup.sh
+│   ├── monitor-import.sh
+│   ├── monitor-pipeline.sh
+│   ├── mpcpattern_to_midi.py
+│   ├── normalize-all-temp-dirs.sh
+│   ├── normalize-extensions-only.sh
+│   ├── normalize-files-and-database.py
+│   ├── normalize-midi-filenames.sh
+│   ├── organization
+│   │   ├── cleanup_root.sh
+│   │   ├── organize_docs.sh
+│   │   ├── organize-files.sh
+│   │   └── organize_remaining.sh
+│   ├── organize-batch-optimized.sh
+│   ├── organize-batch.sh
+│   ├── organize-by-instrument.sh
+│   ├── organize-database.sh
+│   ├── parallel-extract-all.sh
+│   ├── pgo-build.sh
+│   ├── populate-codememory.sh
+│   ├── __pycache__
+│   │   └── derive_injector.cpython-310.pyc
+│   ├── README-BENCHMARK.md
+│   ├── rebuild-indexes.sh
+│   ├── reset-and-reimport.sh
+│   ├── restore-original-filenames.py
+│   ├── restore-safety.sh
+│   ├── run-complete-pipeline.sh
+│   ├── run-extract-normalize-import.sh
+│   ├── run-full-pipeline.sh
+│   ├── run-import-only.sh
+│   ├── run-my-collection.sh
+│   ├── run-optimized-pipeline.sh
+│   ├── run-phase4-splitting.sh
+│   ├── run-phases-1-2-3.sh
+│   ├── run-pipeline-batch.sh
+│   ├── run-pipeline-ludicrous-speed.sh
+│   ├── run-pipeline-phases.sh
+│   ├── run-pipeline-ultra-fast.sh
+│   ├── sanitize-library-and-sync-db.sh
+│   ├── setup
+│   │   ├── 00_COMPLETE_RESET_AND_SETUP.sh
+│   │   ├── 01_COMPLETE_MCP_RESET.sh
+│   │   ├── 02_SETUP_MCP_CORRECT.sh
+│   │   ├── 03_FULL_SETUP_ALL_SERVERS.sh
+│   │   ├── complete_setup.sh
+│   │   ├── install-launcher.sh
+│   │   ├── setup-agents.sh
+│   │   ├── setup-project-structure.sh
+│   │   └── uninstall-launcher.sh
+│   ├── strict-sanitize-filenames.py
+│   ├── sync-database-incremental.sh
+│   ├── sync-filesystem-extensions.sh
+│   ├── tag-by-instrument.sql
+│   ├── tasks
+│   │   └── build
+│   ├── test_archive_features.sh
+│   ├── test_archive_import.sh
+│   ├── test-complete-pipeline.sh
+│   ├── test-full-pipeline.sh
+│   ├── test-midi-files
+│   │   ├── Cargo.toml
+│   │   └── src
+│   ├── test-normalization-sample.py
+│   ├── test-phase4-splitting.sh
+│   ├── test_text_metadata.sh
+│   ├── ultra-fast-import.sh
+│   ├── verify
+│   │   ├── integration_test.sh
+│   │   └── quick_check.sh
+│   ├── verify-database-files.sh
+│   ├── verify-phase-7c.sh
+│   ├── verify-split-relationships.sh
+│   └── wait-for-import.sh
+├── shared
+│   └── rust
+│       ├── Cargo.toml
+│       └── src
+├── target
+│   ├── CACHEDIR.TAG
+│   ├── debug
+│   │   ├── analyze
+│   │   ├── analyze_full_collection
+│   │   ├── batch_import
+│   │   ├── batch_split
+│   │   ├── batch_split_optimized
+│   │   ├── build
+│   │   ├── deps
+│   │   ├── examples
+│   │   ├── extract_instruments
+│   │   ├── fast_tagger
+│   │   ├── fast_tagger_full
+│   │   ├── find_duplicates
+│   │   ├── import
+│   │   ├── import_split_files
+│   │   ├── import-tool
+│   │   ├── import_unified
+│   │   ├── incremental
+│   │   ├── infer_instruments
+│   │   ├── libmidi_app.rlib
+│   │   ├── libmidi_library_shared.rlib
+│   │   ├── libmidi_pipeline.rlib
+│   │   ├── libmidi_software_center_daw.rlib
+│   │   ├── midi_doctor
+│   │   ├── midi-pipeline
+│   │   ├── midi-software-center-daw
+│   │   ├── midi_to_mpcpattern
+│   │   ├── midi_to_mpcpattern_parallel
+│   │   ├── mpc_backup
+│   │   ├── normalize_filenames
+│   │   ├── orchestrator
+│   │   ├── organize_files
+│   │   ├── parallel_extract
+│   │   ├── pipeline-cli
+│   │   ├── pipeline-orchestrator
+│   │   ├── profile_queries
+│   │   ├── split
+│   │   ├── tag_files_sequential
+│   │   ├── test-midi-files
+│   │   └── trim_split_tracks
+│   ├── release
+│   │   ├── analyze
+│   │   ├── analyze.d
+│   │   ├── analyze_full_collection
+│   │   ├── analyze_full_collection.d
+│   │   ├── batch_import
+│   │   ├── batch_import.d
+│   │   ├── batch_split
+│   │   ├── batch_split.d
+│   │   ├── batch_split_optimized
+│   │   ├── batch_split_optimized.d
+│   │   ├── build
+│   │   ├── deps
+│   │   ├── examples
+│   │   ├── extract_instruments
+│   │   ├── extract_instruments.d
+│   │   ├── fast_tagger
+│   │   ├── fast_tagger.d
+│   │   ├── fast_tagger_full
+│   │   ├── fast_tagger_full.d
+│   │   ├── find_duplicates
+│   │   ├── find_duplicates.d
+│   │   ├── import
+│   │   ├── import.d
+│   │   ├── import_split_files
+│   │   ├── import_split_files.d
+│   │   ├── import_unified
+│   │   ├── import_unified.d
+│   │   ├── incremental
+│   │   ├── infer_instruments
+│   │   ├── infer_instruments.d
+│   │   ├── libmidi_pipeline.d
+│   │   ├── libmidi_pipeline.rlib
+│   │   ├── midi_doctor
+│   │   ├── midi_doctor.d
+│   │   ├── midi-pipeline
+│   │   ├── midi-pipeline.d
+│   │   ├── midi_to_mpcpattern
+│   │   ├── midi_to_mpcpattern.d
+│   │   ├── midi_to_mpcpattern_parallel
+│   │   ├── midi_to_mpcpattern_parallel.d
+│   │   ├── mpc_backup
+│   │   ├── mpc_backup.d
+│   │   ├── normalize_filenames
+│   │   ├── normalize_filenames.d
+│   │   ├── orchestrator
+│   │   ├── orchestrator.d
+│   │   ├── organize_files
+│   │   ├── organize_files.d
+│   │   ├── parallel_extract
+│   │   ├── parallel_extract.d
+│   │   ├── pipeline-cli
+│   │   ├── pipeline-cli.d
+│   │   ├── pipeline-orchestrator
+│   │   ├── pipeline-orchestrator.d
+│   │   ├── split
+│   │   ├── split.d
+│   │   ├── tag_files_sequential
+│   │   ├── tag_files_sequential.d
+│   │   ├── trim_split_tracks
+│   │   └── trim_split_tracks.d
+│   └── tmp
+├── tests
+│   ├── fixtures
+│   │   ├── config
+│   │   ├── database
+│   │   ├── midi
+│   │   └── midi-files
+│   ├── integration
+│   │   └── fixtures
+│   └── vitest.test.ts
+└── tree.txt
+
+118 directories, 379 files

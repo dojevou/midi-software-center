@@ -1,0 +1,43 @@
+[package]
+name = "verification"
+version = "1.0.0"
+edition = "2021"
+description = "Comprehensive verification suite for MIDI Software Center"
+authors = ["MIDI Software Center Team"]
+license = "MIT"
+
+[lib]
+name = "verification"
+path = "src/lib.rs"
+
+[[bin]]
+name = "midi-verification"
+path = "src/main.rs"
+
+[dependencies]
+# Async runtime
+tokio = { version = "1.35", features = ["full"] }
+
+# Database
+sqlx = { version = "0.7", features = ["runtime-tokio", "postgres", "macros"] }
+
+# CLI
+clap = { version = "4.4", features = ["derive"] }
+
+# JSON parsing
+serde = { version = "1.0", features = ["derive"] }
+serde_json = "1.0"
+
+# System info
+num_cpus = "1.16"
+
+# TOML parsing
+toml = "0.8"
+
+# Date/time
+chrono = { version = "0.4", features = ["serde"] }
+
+[dev-dependencies]
+# Testing
+tokio-test = "0.4"
+tempfile = "3.9"

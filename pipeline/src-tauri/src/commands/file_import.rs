@@ -1,9 +1,9 @@
-
 use crate::core::analysis::auto_tagger::{AutoTagger, Tag};
 use crate::core::analysis::bpm_detector::detect_bpm;
 use crate::core::analysis::key_detector::detect_key;
 use crate::core::analysis::FilenameMetadata;
 use crate::core::hash::calculate_file_hash;
+use crate::core::naming::generator::generate_production_filename;
 use crate::core::performance::concurrency::{
     calculate_optimal_concurrency, detect_system_resources,
 };
@@ -34,6 +34,16 @@ use std::sync::atomic::{AtomicUsize, Ordering};
 use std::sync::Arc;
 use tauri::{Emitter, State, Window};
 use tokio::sync::Mutex;
+
+//=============================================================================
+// CONSTANTS
+//=============================================================================
+
+const HASH_CONCURRENCY: usize = 64;
+const BATCH_INSERT_SIZE: usize = 1000;
+const BATCH_FLUSH_THRESHOLD: usize = 100;
+const DB_QUERY_CHUNK_SIZE: usize = 10000;
+const PROGRESS_EMIT_INTERVAL: usize = 10;
 
 //=============================================================================
 // TYPE DEFINITIONS
@@ -71,6 +81,15 @@ pub struct FileMetadata {
     pub file_size_bytes: i64,
     pub bpm: Option<f64>,
     pub key_signature: Option<String>,
+}
+
+/// Result of the deduplication process
+#[derive(Debug)]
+struct DeduplicationResult {
+    files_to_process: Vec<PathBuf>,
+    duplicates_found: usize,
+    hash_errors: usize,
+    elapsed_secs: f64,
 }
 
 /// Intermediate structure for batch processing
@@ -172,10 +191,13 @@ pub async fn import_single_file(
     let file = import_single_file_impl(file_path, category, &state).await?;
 
     // Emit progress event
-    let _ = window.emit(
+    if let Err(e) = window.emit(
         "import-progress",
         ImportProgress { current: 1, total: 1, current_file: file.filename.clone(), rate: 1.0 },
-    );
+    ) {
+        eprintln!("WARNING: Failed to emit import progress event: {}", e);
+        // Note: Don't fail the operation - emit failure shouldn't stop import
+    }
 
     Ok(file)
 }
@@ -215,6 +237,28 @@ pub async fn import_directory_impl(
         });
     }
 
+    // Deduplicate files (skip those already in database)
+    println!("🔍 Pre-scanning {} files for duplicates...", total);
+    let pool = state.database.pool().await;
+    let dedup = deduplicate_files(&files, &pool).await?;
+
+    println!("✓ Deduplication complete in {:.2}s", dedup.elapsed_secs);
+    println!("  Total files: {}", total);
+    println!("  Duplicates skipped: {}", dedup.duplicates_found);
+    println!("  Hash errors: {}", dedup.hash_errors);
+    println!("  New files to process: {}", dedup.files_to_process.len());
+
+    if dedup.files_to_process.is_empty() {
+        return Ok(ImportSummary {
+            total_files: total,
+            imported: 0,
+            skipped: dedup.duplicates_found,
+            errors: vec![],
+            duration_secs: dedup.elapsed_secs,
+            rate: 0.0,
+        });
+    }
+
     // OPTIMIZATION 1: Dynamic concurrency based on system resources
     let resources = detect_system_resources();
     let concurrency_limit = calculate_optimal_concurrency(&resources);
@@ -229,7 +273,7 @@ pub async fn import_directory_impl(
 
     // Thread-safe counters for parallel processing
     let imported = Arc::new(AtomicUsize::new(0));
-    let skipped = Arc::new(AtomicUsize::new(0));
+    let skipped = Arc::new(AtomicUsize::new(dedup.duplicates_found));
     let errors = Arc::new(Mutex::new(Vec::new()));
     let current_index = Arc::new(AtomicUsize::new(0));
 
@@ -237,15 +281,14 @@ pub async fn import_directory_impl(
     let semaphore = Arc::new(tokio::sync::Semaphore::new(concurrency_limit));
 
     // OPTIMIZATION 2: Batch inserter for database writes
-    let pool = state.database.pool().await;
-    let batch_inserter = Arc::new(BatchInserter::new(pool.clone(), 1000));
+    let batch_inserter = Arc::new(BatchInserter::new(pool.clone(), BATCH_INSERT_SIZE));
     let processed_files = Arc::new(Mutex::new(Vec::new()));
 
     let category_clone = category.clone();
     let _total_clone = total;
 
-    // ⚡ PARALLEL PROCESSING WITH ALL OPTIMIZATIONS
-    stream::iter(files)
+    // Parallel file processing
+    stream::iter(dedup.files_to_process)
         .map(|file_path| {
             // Clone Arc pointers for each concurrent task
             let sem = Arc::clone(&semaphore);
@@ -259,12 +302,18 @@ pub async fn import_directory_impl(
 
             async move {
                 // Acquire semaphore permit (blocks if at limit)
-                // This should never fail unless semaphore is closed, which we never do
                 let _permit = match sem.acquire().await {
                     Ok(permit) => permit,
-                    Err(_) => {
-                        // Semaphore closed - skip this file (should never happen)
-                        eprintln!("Warning: Semaphore closed during file import");
+                    Err(e) => {
+                        // Semaphore closed - this is a fatal error condition
+                        let error_msg = format!("FATAL: Semaphore unavailable during file import: {}", e);
+                        eprintln!("ERROR: {}", error_msg);
+
+                        // Track this as an error
+                        errors.lock().await.push(error_msg);
+
+                        // Mark file as skipped
+                        skipped.fetch_add(1, Ordering::SeqCst);
                         return;
                     }
                 };
@@ -289,7 +338,7 @@ pub async fn import_directory_impl(
 
                         // Flush batch if it reaches threshold
                         let mut files = processed_files.lock().await;
-                        if files.len() >= 100 {
+                        if files.len() >= BATCH_FLUSH_THRESHOLD {
                             let batch: Vec<ProcessedFile> = files.drain(..).collect();
                             drop(files); // Release lock
 
@@ -306,8 +355,16 @@ pub async fn import_directory_impl(
                                 )
                             }).collect();
 
+                            // Batch insert with proper error handling
                             if let Err(e) = batch_inserter.insert_files_batch(file_records).await {
-                                errors.lock().await.push(format!("Batch insert failed: {}", e));
+                                let error_msg = format!("Batch insert failed: {}", e);
+                                eprintln!("ERROR: {}", error_msg);
+
+                                // Record the error
+                                errors.lock().await.push(error_msg);
+
+                                // Mark files as skipped (conservative estimate: entire batch failed)
+                                skipped.fetch_add(batch.len(), Ordering::SeqCst);
                             }
                         }
                     }
@@ -417,7 +474,7 @@ async fn process_single_file(
     let file_bytes = tokio::fs::read(file_path).await?;
 
     // 3. Parse MIDI file (Trusty Module)
-    let midi_data = parse_midi_file(&file_bytes)?;
+    let midi_file = parse_midi_file(&file_bytes)?;
 
     // 4. Extract parent folder name
     let parent_folder = file_path
@@ -427,14 +484,14 @@ async fn process_single_file(
         .map(|s| s.to_string());
 
     // 5. Extract metadata (Trusty Modules)
-    let bpm_result = detect_bpm(&midi_data);
+    let bpm_result = detect_bpm(&midi_file);
     let bpm = if bpm_result.confidence > 0.5 {
         Some(bpm_result.bpm) // Keep as f64 for numeric(6,2)
     } else {
         None
     };
 
-    let key_result = detect_key(&midi_data);
+    let key_result = detect_key(&midi_file);
     let key_signature = if key_result.confidence > 0.5 {
         Some(key_result.key.clone())
     } else {
@@ -442,23 +499,47 @@ async fn process_single_file(
     };
 
     // 5b. Extract text metadata (track names, copyright, lyrics, markers)
-    let text_meta = TextMetadata::extract(&midi_data);
+    let text_meta = TextMetadata::extract(&midi_file);
 
     // 6. Get file info
-    let filename = file_path
+    let original_filename = file_path
         .file_name()
         .and_then(|n| n.to_str())
         .ok_or("Invalid filename")?
         .to_string();
 
-    let original_filename = filename.clone(); // Store original filename
-
     let filepath = file_path.to_str().ok_or("Invalid file path")?.to_string();
+
+    // 6b. Generate Production template filename
+    // Extract pack name from parent folder
+    let pack_name = parent_folder.clone().unwrap_or_else(|| "Unknown".to_string());
+
+    // Extract time signature from MIDI events (default to 4-4 if not found)
+    let time_signature = extract_time_signature(&midi_file).unwrap_or_else(|| "4-4".to_string());
+
+    // Clean original filename (remove extension, sanitize)
+    let original_name_clean =
+        original_filename.trim_end_matches(".mid").trim_end_matches(".MID").to_string();
+
+    // Determine category for filename
+    let detected_category = category.clone().unwrap_or_else(|| "MIDI".to_string());
+
+    // Generate standardized Production filename
+    // Format: {CATEGORY}_{TIMESIG}_{BPM}BPM_{KEY}_{ID}_{PACK}_{ORIGINAL}.mid
+    let filename = generate_production_filename(
+        &detected_category,
+        bpm.unwrap_or(120.0), // Default BPM if not detected
+        &key_signature.clone().unwrap_or_else(|| "C".to_string()), // Default key
+        "000000",             // Placeholder - database assigns real ID
+        &time_signature,
+        &pack_name,
+        &original_name_clean,
+    );
 
     let file_size_bytes = tokio::fs::metadata(file_path).await?.len() as i64;
 
     // 7. Extract MIDI instruments for tag extraction
-    let midi_instruments = extract_instrument_names(&midi_data);
+    let midi_instruments = extract_instrument_names(&midi_file);
 
     // 8. Auto-tag extraction (NEW: intelligently extract tags from filename, path, and MIDI content)
     let auto_tagger =
@@ -469,7 +550,7 @@ async fn process_single_file(
         &midi_instruments,
         bpm,
         key_signature.as_deref(),
-        None, // TODO: Pass parsed MidiFile for drum analysis (v2.1 enhancement)
+        Some(&midi_file), // Pass parsed MidiFile for drum analysis (v2.1 enhancement)
     );
 
     // Phase 2: Extract filename metadata (Auto-Tagger v2.1)
@@ -486,8 +567,8 @@ async fn process_single_file(
         bpm,
         key_signature,
         tags,
-        // Filename-based metadata
-        filename_bpm: filename_meta.bpm,
+        // Filename-based metadata (convert f64 to f32 for database)
+        filename_bpm: filename_meta.bpm.map(|v| v as f32),
         filename_key: filename_meta.key,
         filename_genres: filename_meta.genres,
         structure_tags: filename_meta.structure_tags,
@@ -530,6 +611,27 @@ fn extract_instrument_names(
     }
 
     instruments
+}
+
+/// Extract time signature from MIDI file events
+/// Returns format like "4-4" for 4/4 time, or None if not found
+fn extract_time_signature(
+    midi: &midi_library_shared::core::midi::types::MidiFile,
+) -> Option<String> {
+    use midi_library_shared::core::midi::types::Event;
+
+    // Search all tracks for TimeSignature event
+    for track in &midi.tracks {
+        for timed_event in &track.events {
+            if let Event::TimeSignature { numerator, denominator, .. } = &timed_event.event {
+                // Convert denominator from power-of-2 format (e.g., 2 = quarter note = 4)
+                let denom_value = 2_u8.pow(*denominator as u32);
+                return Some(format!("{}-{}", numerator, denom_value));
+            }
+        }
+    }
+
+    None // No time signature found
 }
 
 /// Map MIDI General MIDI program number to instrument name
@@ -792,6 +894,79 @@ fn is_midi_file(path: &Path) -> bool {
         .and_then(|ext| ext.to_str())
         .map(|ext| ext.eq_ignore_ascii_case("mid") || ext.eq_ignore_ascii_case("midi"))
         .unwrap_or(false)
+}
+
+/// Deduplicate files by checking hashes against the database
+async fn deduplicate_files(
+    files: &[PathBuf],
+    pool: &sqlx::PgPool,
+) -> Result<DeduplicationResult, String> {
+    let total = files.len();
+    let start = std::time::Instant::now();
+
+    // Calculate hashes in parallel
+    let hash_concurrency = std::cmp::min(total, HASH_CONCURRENCY);
+    let semaphore = Arc::new(tokio::sync::Semaphore::new(hash_concurrency));
+
+    let hash_results: Vec<(PathBuf, Option<Vec<u8>>)> = stream::iter(files.iter().cloned())
+        .map(|path| {
+            let sem = Arc::clone(&semaphore);
+            async move {
+                let _permit = sem.acquire().await.ok()?;
+                let hash = calculate_file_hash(&path).ok().map(|h| h.to_vec());
+                Some((path, hash))
+            }
+        })
+        .buffer_unordered(hash_concurrency)
+        .filter_map(|x| async { x })
+        .collect()
+        .await;
+
+    // Separate successful hashes from errors
+    let mut file_to_hash = std::collections::HashMap::new();
+    let mut hash_error_count = 0;
+
+    for (path, hash_opt) in hash_results {
+        match hash_opt {
+            Some(hash) => { file_to_hash.insert(path, hash); },
+            None => { hash_error_count += 1; },
+        }
+    }
+
+    // Query existing hashes from database
+    let hashes: Vec<Vec<u8>> = file_to_hash.values().cloned().collect();
+    let existing: std::collections::HashSet<Vec<u8>> = if !hashes.is_empty() {
+        let mut result = std::collections::HashSet::new();
+        for chunk in hashes.chunks(DB_QUERY_CHUNK_SIZE) {
+            let found: Vec<Vec<u8>> = sqlx::query_scalar(
+                "SELECT content_hash FROM files WHERE content_hash = ANY($1)"
+            )
+            .bind(chunk)
+            .fetch_all(pool)
+            .await
+            .map_err(|e| format!("Database query failed: {}", e))?;
+            result.extend(found);
+        }
+        result
+    } else {
+        std::collections::HashSet::new()
+    };
+
+    // Filter to non-duplicate files
+    let files_to_process: Vec<PathBuf> = file_to_hash
+        .into_iter()
+        .filter(|(_, hash)| !existing.contains(hash))
+        .map(|(path, _)| path)
+        .collect();
+
+    let duplicates_found = total - files_to_process.len() - hash_error_count;
+
+    Ok(DeduplicationResult {
+        files_to_process,
+        duplicates_found,
+        hash_errors: hash_error_count,
+        elapsed_secs: start.elapsed().as_secs_f64(),
+    })
 }
 
 //=============================================================================

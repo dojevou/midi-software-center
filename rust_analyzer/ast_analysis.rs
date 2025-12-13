@@ -258,10 +258,14 @@ impl<'ast, 'a> Visit<'ast> for AstVisitor<'a> {
 
         // Check for unsafe macros
         if macro_name.contains("unsafe") {
+            // SAFETY: The span().start().line method from the syn crate provides the
+            // exact line number from the parsed AST without any unsafe operations.
+            // This is a safe, standard pattern for extracting source location information.
+            let line = node.path.span().start().line;
             self.unsafe_macros.push(UnsafeMacro {
                 name: macro_name,
                 file: self.file.to_path_buf(),
-                line: 0, // TODO: Get actual line number
+                line,
             });
         }
 

@@ -9,10 +9,7 @@ and CI/CD Integration
 import os
 import sys
 import json
-import time
-import re
 import subprocess
-import ast
 from pathlib import Path
 from datetime import datetime
 from collections import defaultdict
@@ -271,7 +268,7 @@ class PredictiveAnalyzer:
                 "dependencies]" not in content and "[[bin]]" in content,  # missing dependencies section
             ]
             return any(issues)
-        except:
+        except Exception as e:
             return False
     
     def will_break_on_strict_mode(self, ts_config):
@@ -279,7 +276,7 @@ class PredictiveAnalyzer:
         try:
             content = ts_config.read_text()
             return "\"strict\": true" in content
-        except:
+        except Exception as e:
             return False
     
     def has_missing_midi_dependencies(self):
@@ -723,9 +720,9 @@ Provide both immediate fixes and long-term prevention strategies.
         # Display results
         self.display_enhanced_results(analysis_results, predictions, historical_issues, applied_fixes, script_path)
         
-        print(f"\n🎉 SUPERCHARGED ANALYSIS COMPLETE!")
+        print("\n🎉 SUPERCHARGED ANALYSIS COMPLETE!")
         print(f"📁 Fix script: {script_path}")
-        print(f"💾 Analysis saved to history for future learning")
+        print("💾 Analysis saved to history for future learning")
 
     def gather_project_context(self):
         """Gather basic project context for analysis"""
@@ -754,7 +751,7 @@ Provide both immediate fixes and long-term prevention strategies.
                 "has_errors": result.returncode != 0,
                 "error_count": len([line for line in result.stderr.split('\n') if 'error[' in line])
             }
-        except:
+        except Exception as e:
             return {"success": False, "has_errors": True, "error_count": "unknown"}
 
     def call_grok(self, prompt: str, model: str = "grok-4-fast-reasoning") -> str:
@@ -801,11 +798,11 @@ Provide both immediate fixes and long-term prevention strategies.
         for fix in applied_fixes:
             print(f"  • {fix}")
         
-        print(f"\n🧠 AI ANALYSIS:")
+        print("\n🧠 AI ANALYSIS:")
         print("-" * 40)
         print(analysis_results)
         
-        print(f"\n📜 GENERATED SCRIPTS:")
+        print("\n📜 GENERATED SCRIPTS:")
         print(f"  • {script_path} - Run this to apply all fixes")
 
     def run_ci_check(self):

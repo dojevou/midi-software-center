@@ -274,7 +274,11 @@ mod tests {
         let tracker = ProgressTracker::new();
 
         // Simulate starting tracking
-        *tracker.start_time.lock().unwrap() = Some(std::time::Instant::now());
+        *tracker
+            .start_time
+            .lock()
+            .expect("start_time mutex panicked in test - indicates logic error") =
+            Some(std::time::Instant::now());
 
         let state = tracker.update_state(|s| {
             s.total_files = 100;
@@ -299,7 +303,11 @@ mod tests {
         assert_eq!(eta, 0.0);
 
         // After start time is set
-        *tracker.start_time.lock().unwrap() = Some(std::time::Instant::now());
+        *tracker
+            .start_time
+            .lock()
+            .expect("start_time mutex panicked in test - indicates logic error") =
+            Some(std::time::Instant::now());
         std::thread::sleep(std::time::Duration::from_millis(100));
 
         let (fps, eta) = tracker.calculate_metrics(10, 100);

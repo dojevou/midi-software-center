@@ -21,7 +21,6 @@ pub enum PlaybackState {
     Recording,
 }
 
-
 impl PlaybackState {
     /// Check if transport is currently playing or recording
     pub fn is_active(&self) -> bool {

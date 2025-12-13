@@ -1,7 +1,6 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub enum SyncInterval {
     #[default]
     Manual,
@@ -9,7 +8,6 @@ pub enum SyncInterval {
     Minutes15,
     Hour1,
 }
-
 
 impl SyncInterval {
     pub fn as_minutes(&self) -> Option<u32> {
@@ -22,14 +20,12 @@ impl SyncInterval {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct SyncSettings {
     pub cloud_sync_enabled: bool,
     pub sync_interval: SyncInterval,
     pub sync_folders: Vec<String>,
 }
-
 
 impl SyncSettings {
     pub fn new() -> Self {

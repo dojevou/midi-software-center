@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE musical_metadata\n            SET key_signature = $1::text::musical_key,\n                key_confidence = $2\n            WHERE file_id = $3\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Float4",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "60aed8936d66912b4c57b4f037e3a916c7b4d63425709c2167900d689445a838"
+}

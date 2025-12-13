@@ -1,0 +1,180 @@
+# MIDI Software Center - Docker Compose Configuration
+# For local development and staging environment
+#
+# Usage:
+#   docker-compose up -d              # Start all services
+#   docker-compose up -d postgres     # Start PostgreSQL only
+#   docker-compose logs -f            # Follow logs
+#   docker-compose down               # Stop services
+#   docker-compose down -v            # Stop and remove volumes (data loss!)
+#
+# Profiles:
+#   default: postgres + meilisearch
+#   --profile full: + pipeline runtime container
+
+services:
+  # ============================================================================
+  # PostgreSQL 16 - Primary Database
+  # ============================================================================
+  postgres:
+    image: postgres:16-bookworm
+    container_name: midi-postgres
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: midiuser
+      POSTGRES_PASSWORD: "145278963"
+      POSTGRES_DB: midi_library
+      # Performance tuning for large MIDI library
+      POSTGRES_INITDB_ARGS: "--encoding=UTF8 --locale=C"
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./database/migrations:/docker-entrypoint-initdb.d:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U midiuser -d midi_library"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+    # Optimized PostgreSQL config for MIDI analysis workloads
+    command: >
+      postgres
+      -c shared_buffers=256MB
+      -c effective_cache_size=1GB
+      -c maintenance_work_mem=256MB
+      -c work_mem=64MB
+      -c max_connections=100
+      -c random_page_cost=1.1
+      -c effective_io_concurrency=200
+      -c log_statement=none
+      -c log_min_duration_statement=1000
+    networks:
+      - midi-network
+
+  # ============================================================================
+  # Meilisearch - Full-text Search Engine
+  # ============================================================================
+  meilisearch:
+    image: getmeili/meilisearch:v1.5
+    container_name: midi-meilisearch
+    restart: unless-stopped
+    environment:
+      MEILI_ENV: development
+      MEILI_NO_ANALYTICS: "true"
+      MEILI_LOG_LEVEL: WARN
+    ports:
+      - "7700:7700"
+    volumes:
+      - meilisearch_data:/meili_data
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:7700/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 20s
+    networks:
+      - midi-network
+
+  # ============================================================================
+  # Redis - Caching & Session Store (Optional)
+  # ============================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: midi-redis
+    restart: unless-stopped
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - midi-network
+    profiles:
+      - full
+
+  # ============================================================================
+  # MIDI Pipeline Runtime - Import/Analysis Container
+  # ============================================================================
+  pipeline:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: runtime
+    container_name: midi-pipeline
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      meilisearch:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: "postgresql://midiuser:145278963@postgres:5432/midi_library"
+      MEILISEARCH_URL: "http://meilisearch:7700"
+      RUST_LOG: "info,midi_pipeline=debug"
+      RUST_BACKTRACE: "1"
+    volumes:
+      - ./midi-library:/data:ro
+      - pipeline_logs:/var/log/midi
+    networks:
+      - midi-network
+    profiles:
+      - full
+
+  # ============================================================================
+  # MIDI Pipeline Development - Hot-reload Container
+  # ============================================================================
+  pipeline-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      target: development
+    container_name: midi-pipeline-dev
+    restart: "no"
+    depends_on:
+      postgres:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: "postgresql://midiuser:145278963@postgres:5432/midi_library"
+      MEILISEARCH_URL: "http://meilisearch:7700"
+      RUST_LOG: "debug"
+      RUST_BACKTRACE: "full"
+    volumes:
+      - .:/app
+      - cargo_cache:/usr/local/cargo/registry
+      - target_cache:/app/target
+      - ./midi-library:/data
+    working_dir: /app
+    networks:
+      - midi-network
+    profiles:
+      - dev
+
+# ============================================================================
+# Networks
+# ============================================================================
+networks:
+  midi-network:
+    driver: bridge
+    name: midi-software-center
+
+# ============================================================================
+# Volumes
+# ============================================================================
+volumes:
+  postgres_data:
+    name: midi-postgres-data
+  meilisearch_data:
+    name: midi-meilisearch-data
+  redis_data:
+    name: midi-redis-data
+  pipeline_logs:
+    name: midi-pipeline-logs
+  cargo_cache:
+    name: midi-cargo-cache
+  target_cache:
+    name: midi-target-cache

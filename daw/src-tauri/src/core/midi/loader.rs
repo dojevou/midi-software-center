@@ -8,6 +8,8 @@ use std::fs;
 use std::path::Path;
 use tracing::debug;
 
+use super::parser::{parse_midi, ParseError};
+
 /// Load and parse a MIDI file from disk
 ///
 /// Returns all MIDI events with absolute tick positions.
@@ -69,8 +71,8 @@ pub fn load_midi_file(filepath: &str) -> Result<LoadedMidiFile, String> {
     Ok(LoadedMidiFile {
         events: all_events,
         ticks_per_quarter,
-        num_tracks: smf.tracks.len() as u16,
-        format: format_num,
+        _num_tracks: smf.tracks.len() as u16,
+        _format: format_num,
     })
 }
 
@@ -79,8 +81,36 @@ pub fn load_midi_file(filepath: &str) -> Result<LoadedMidiFile, String> {
 pub struct LoadedMidiFile {
     pub events: Vec<MidiEvent>,
     pub ticks_per_quarter: u32,
-    pub num_tracks: u16,
-    pub format: u16,
+    pub _num_tracks: u16,
+    pub _format: u16,
+}
+
+impl LoadedMidiFile {
+    /// Get ticks per quarter note for timing calculations
+    pub fn ticks_per_quarter_note(&self) -> u32 {
+        self.ticks_per_quarter
+    }
+}
+
+/// Load and parse a MIDI file from raw bytes using the custom parser
+///
+/// This is useful for parsing MIDI data from memory (e.g., network, clipboard).
+/// Uses our custom parser instead of midly for pure byte-level parsing.
+///
+/// # Arguments
+/// * `data` - Raw MIDI file bytes
+///
+/// # Returns
+/// Result containing LoadedMidiFile or error
+pub fn load_midi_from_bytes(data: &[u8]) -> Result<LoadedMidiFile, String> {
+    let pattern = parse_midi(data).map_err(|e: ParseError| format!("Parse error: {}", e))?;
+
+    Ok(LoadedMidiFile {
+        events: pattern.events,
+        ticks_per_quarter: pattern.ticks_per_quarter_note as u32,
+        _num_tracks: 1, // Custom parser merges all tracks
+        _format: 0,
+    })
 }
 
 /// Parse events from a single MIDI track
@@ -133,7 +163,7 @@ fn convert_midi_message(
     message: MidlyMessage,
     channel: u8,
     tick: u64,
-    _ticks_per_quarter: u32,
+    __ticks_per_quarter: u32,
 ) -> Option<MidiEvent> {
     match message {
         MidlyMessage::NoteOff { key, vel } => Some(MidiEvent {

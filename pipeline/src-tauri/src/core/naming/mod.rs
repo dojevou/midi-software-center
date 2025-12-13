@@ -1,4 +1,3 @@
-
 /// Intelligent filename generation
 pub mod generator;
 pub mod sanitizer;
@@ -8,4 +7,5 @@ pub mod templates;
 pub use generator::{
     generate_filename, generate_from_analysis, resolve_naming_conflict, FileMetadata, NamingConfig,
 };
+pub use sanitizer::{ensure_mid_extension, sanitize_filename, sanitize_strict};
 pub use templates::NamingTemplate;

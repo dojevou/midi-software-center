@@ -28,20 +28,20 @@ pub fn calculate_compatibility(source: &MidiFile, candidate: &MidiFile) -> Compa
     let key_score = if let (Some(key1_str), Some(key2_str)) =
         (&source.key_signature, &candidate.key_signature)
     {
-        if let (Some(key1), Some(key2)) = (
-            KeySignature::parse(key1_str),
-            KeySignature::parse(key2_str),
-        ) {
+        if let (Some(key1), Some(key2)) =
+            (KeySignature::parse(key1_str), KeySignature::parse(key2_str))
+        {
             let score = key_compatibility_score(&key1, &key2);
 
+            // Use name() method to show actual key names in explanations
             if score >= 95.0 {
-                explanations.push("Perfect key match".to_string());
+                explanations.push(format!("Perfect key match ({} → {})", key1.name(), key2.name()));
             } else if score >= 85.0 {
-                explanations.push("Excellent key compatibility".to_string());
+                explanations.push(format!("Excellent key compatibility ({} → {})", key1.name(), key2.name()));
             } else if score >= 70.0 {
-                explanations.push("Good key compatibility".to_string());
+                explanations.push(format!("Good key compatibility ({} → {})", key1.name(), key2.name()));
             } else if score < 50.0 {
-                explanations.push("Keys may clash".to_string());
+                explanations.push(format!("Keys may clash ({} → {})", key1.name(), key2.name()));
             }
 
             total_score += score * 0.4;
@@ -93,14 +93,32 @@ pub fn calculate_compatibility(source: &MidiFile, candidate: &MidiFile) -> Compa
             50.0
         };
 
-    // Build explanation
-    let explanation = if explanations.is_empty() {
+    // Build base explanation
+    let base_explanation = if explanations.is_empty() {
         "Limited metadata available".to_string()
     } else {
         explanations.join(". ")
     };
 
-    CompatibilityScore { total_score, key_score, bpm_score, category_score, explanation }
+    // Create initial score
+    let score = CompatibilityScore {
+        total_score,
+        key_score,
+        bpm_score,
+        category_score,
+        explanation: base_explanation,
+    };
+
+    // Use explain_compatibility to generate enhanced final explanation
+    let final_explanation = explain_compatibility(source, candidate, &score);
+
+    CompatibilityScore {
+        total_score,
+        key_score,
+        bpm_score,
+        category_score,
+        explanation: final_explanation,
+    }
 }
 
 /// Determine category compatibility

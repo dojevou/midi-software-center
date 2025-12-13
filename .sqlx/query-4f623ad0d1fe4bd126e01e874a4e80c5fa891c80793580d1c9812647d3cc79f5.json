@@ -1,0 +1,148 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            f.id,\n            f.filename,\n            f.filepath,\n            f.file_size_bytes,\n            f.content_hash as \"content_hash!\",\n            f.is_multi_track as \"is_multi_track!\",\n            f.parent_file_id as \"parent_file_id?\",\n            f.track_number as \"track_number?\",\n            f.total_tracks as \"total_tracks?\",\n            f.manufacturer as \"manufacturer?\",\n            f.collection_name as \"collection_name?\",\n            COALESCE(f.folder_tags, ARRAY[]::TEXT[]) as \"folder_tags!\",\n            f.parent_folder as \"parent_folder?\",\n            f.num_tracks,\n            f.created_at as \"created_at!\",\n            f.analyzed_at as \"analyzed_at?\",\n            mm.bpm::FLOAT8 as \"bpm?\",\n            mm.key_signature::TEXT as \"key_signature?\",\n            CASE\n                WHEN mm.time_signature_numerator IS NOT NULL\n                THEN mm.time_signature_numerator::TEXT || '/' || mm.time_signature_denominator::TEXT\n                ELSE NULL\n            END as \"time_signature?\",\n            f.duration_seconds::FLOAT8 as \"duration_seconds?\",\n            COALESCE(mm.total_notes, 0) as \"total_notes!\",\n            fc.primary_category::TEXT as \"primary_category?\"\n        FROM files f\n        LEFT JOIN musical_metadata mm ON f.id = mm.file_id\n        LEFT JOIN file_categories fc ON f.id = fc.file_id\n        WHERE f.id != $1\n        LIMIT 500\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "filename",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "filepath",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "file_size_bytes",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "content_hash!",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 5,
+        "name": "is_multi_track!",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 6,
+        "name": "parent_file_id?",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 7,
+        "name": "track_number?",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 8,
+        "name": "total_tracks?",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 9,
+        "name": "manufacturer?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "collection_name?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 11,
+        "name": "folder_tags!",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 12,
+        "name": "parent_folder?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 13,
+        "name": "num_tracks",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 14,
+        "name": "created_at!",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 15,
+        "name": "analyzed_at?",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 16,
+        "name": "bpm?",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 17,
+        "name": "key_signature?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 18,
+        "name": "time_signature?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 19,
+        "name": "duration_seconds?",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 20,
+        "name": "total_notes!",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 21,
+        "name": "primary_category?",
+        "type_info": "Text"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      true,
+      true,
+      true,
+      true,
+      null,
+      true,
+      false,
+      true,
+      true,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null
+    ]
+  },
+  "hash": "4f623ad0d1fe4bd126e01e874a4e80c5fa891c80793580d1c9812647d3cc79f5"
+}

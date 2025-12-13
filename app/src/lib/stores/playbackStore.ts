@@ -1,5 +1,6 @@
-import { writable, derived, get } from 'svelte/store';
-import { api } from '$lib/api';
+import { derived, get, writable } from 'svelte/store';
+import { isTauri, safeInvoke, safeListen } from '$lib/utils/tauri';
+import { Commands } from '$lib/api/commands';
 import type { PlaybackPosition } from '$lib/types';
 
 // ============================================================================
@@ -40,87 +41,127 @@ const initialState: PlaybackState = {
 
 export const playbackStore = writable<PlaybackState>(initialState);
 
-// ============================================================================
-// DERIVED STORES
-// ============================================================================
-
-export const isPlayingOrPaused = derived(
-  playbackStore,
-  ($playback) => $playback.isPlaying || $playback.isPaused
-);
-
-export const formattedPosition = derived(
-  playbackStore,
-  ($playback) => {
-    const { current_bar, current_beat } = $playback.position;
-    return `${current_bar + 1}:${current_beat + 1}`;
-  }
-);
-
-// ============================================================================
-// ACTIONS
-// ============================================================================
+// Markup function for listeners
+let unlisteners: (() => void)[] = [];
 
 export const playbackActions = {
+  async initListeners() {
+    // Only set up listeners in Tauri context
+    if (!isTauri()) {
+      console.warn('[PlaybackStore] Not in Tauri context - listeners disabled');
+      return;
+    }
+
+    // Listen for playback started
+    const unlistenPlay = await safeListen<void>('daw::playback-started', () => {
+      playbackStore.update((state) => ({ ...state, isPlaying: true, isPaused: false }));
+    });
+    if (unlistenPlay) {
+      unlisteners.push(unlistenPlay);
+    }
+
+    // Listen for playback paused
+    const unlistenPause = await safeListen<void>('daw::playback-paused', () => {
+      playbackStore.update((state) => ({ ...state, isPlaying: false, isPaused: true }));
+    });
+    if (unlistenPause) {
+      unlisteners.push(unlistenPause);
+    }
+
+    // Listen for playback stopped
+    const unlistenStop = await safeListen<void>('daw::playback-stopped', () => {
+      playbackStore.update((state) => ({
+        ...state,
+        isPlaying: false,
+        isPaused: false,
+        position: { current_tick: 0, current_bar: 0, current_beat: 0 },
+      }));
+    });
+    if (unlistenStop) {
+      unlisteners.push(unlistenStop);
+    }
+
+    // Listen for position updates
+    const unlistenPosition = await safeListen<number>('daw::position-updated', (position) => {
+      const state = get(playbackStore);
+      const ticks_per_beat = 480;
+      const beats_per_bar = state.timeSignature[0];
+      const seconds_per_beat = 60.0 / state.tempo;
+      const total_beats = position / seconds_per_beat;
+      const current_bar = Math.floor(total_beats / beats_per_bar);
+      const current_beat = Math.floor(total_beats % beats_per_bar);
+      const beat_fraction = total_beats % 1;
+      const current_tick = Math.floor(beat_fraction * ticks_per_beat);
+
+      playbackStore.update((s) => ({
+        ...s,
+        position: {
+          current_tick,
+          current_bar,
+          current_beat,
+        },
+      }));
+    });
+    if (unlistenPosition) {
+      unlisteners.push(unlistenPosition);
+    }
+
+    // Listen for metronome clicks
+    const unlistenMetronome = await safeListen<void>('daw::metronome-click', () => {
+      // Frontend can play a sound or visual cue
+      console.log('Metronome tick');
+    });
+    if (unlistenMetronome) {
+      unlisteners.push(unlistenMetronome);
+    }
+  },
+
+  cleanupListeners() {
+    unlisteners.forEach((unlisten) => unlisten());
+    unlisteners = [];
+  },
+
   async play() {
     try {
-      await api.sequencer.start();
-      playbackStore.update(state => ({ ...state, isPlaying: true, isPaused: false }));
+      await safeInvoke(Commands.START_SEQUENCER);
     } catch (error) {
       console.error('Failed to play:', error);
       throw error;
     }
   },
 
-  async stop() {
-    try {
-      await api.sequencer.stop();
-      playbackStore.update(state => ({
-        ...state,
-        isPlaying: false,
-        isPaused: false,
-        position: { current_tick: 0, current_bar: 0, current_beat: 0 }
-      }));
-    } catch (error) {
-      console.error('Failed to stop:', error);
-      throw error;
-    }
-  },
-
   async pause() {
     try {
-      await api.sequencer.pause();
-      playbackStore.update(state => ({ ...state, isPlaying: false, isPaused: true }));
+      await safeInvoke(Commands.PAUSE_SEQUENCER);
     } catch (error) {
       console.error('Failed to pause:', error);
       throw error;
     }
   },
 
-  async resume() {
+  async stop() {
     try {
-      await api.sequencer.resume();
-      playbackStore.update(state => ({ ...state, isPlaying: true, isPaused: false }));
+      await safeInvoke(Commands.STOP_SEQUENCER);
     } catch (error) {
-      console.error('Failed to resume:', error);
+      console.error('Failed to stop:', error);
       throw error;
     }
   },
 
-  async seek(bar: number, beat: number) {
+  async record() {
     try {
-      await api.sequencer.seekPosition(bar, beat);
-      // Position update will come from backend event
+      await safeInvoke(Commands.START_RECORDING);
+      playbackStore.update((state) => ({ ...state, isRecording: true }));
     } catch (error) {
-      console.error('Failed to seek:', error);
+      console.error('Failed to start recording:', error);
       throw error;
     }
   },
 
   async setTempo(bpm: number) {
     try {
-      await api.sequencer.setTempo(bpm);
-      playbackStore.update(state => ({ ...state, tempo: bpm }));
+      await safeInvoke(Commands.SET_TEMPO, { bpm });
+      playbackStore.update((state) => ({ ...state, tempo: bpm }));
     } catch (error) {
       console.error('Failed to set tempo:', error);
       throw error;
@@ -129,8 +170,8 @@ export const playbackActions = {
 
   async setTimeSignature(numerator: number, denominator: number) {
     try {
-      await api.window.setTimeSignature(numerator, denominator);
-      playbackStore.update(state => ({ ...state, timeSignature: [numerator, denominator] }));
+      await safeInvoke(Commands.SET_TIME_SIGNATURE, { numerator, denominator });
+      playbackStore.update((state) => ({ ...state, timeSignature: [numerator, denominator] }));
     } catch (error) {
       console.error('Failed to set time signature:', error);
       throw error;
@@ -139,8 +180,8 @@ export const playbackActions = {
 
   async setKeySignature(key: string) {
     try {
-      await api.window.setKeySignature(key);
-      playbackStore.update(state => ({ ...state, keySignature: key }));
+      await safeInvoke(Commands.SET_KEY_SIGNATURE, { key });
+      playbackStore.update((state) => ({ ...state, keySignature: key }));
     } catch (error) {
       console.error('Failed to set key signature:', error);
       throw error;
@@ -149,68 +190,65 @@ export const playbackActions = {
 
   async toggleLoop() {
     const currentState = get(playbackStore);
-    console.log('Attempting to toggle loop:', !currentState.loopEnabled);
     try {
-      await api.window.setLoopEnabled(!currentState.loopEnabled);
-        console.log('Backend loop toggle succeeded');
-    } catch (error: any) {
-      console.warn('Backend set_loop_enabled failed - using local fallback:', error.message || error);
+      await safeInvoke(Commands.DAW_SET_LOOP, {
+        start: currentState.loopStart,
+        end: currentState.loopEnd,
+        enabled: !currentState.loopEnabled,
+      });
+      playbackStore.update((state) => ({ ...state, loopEnabled: !state.loopEnabled }));
+    } catch (error) {
+      console.error('Failed to toggle loop:', error);
+      throw error;
     }
-    playbackStore.update(state => ({ ...state, loopEnabled: !state.loopEnabled }));
-    console.log('Local loop state updated to:', !currentState.loopEnabled);
   },
 
   async setLoopRange(start: number, end: number) {
-    console.log('Attempting to set loop range:', { start, end });
     try {
-      await api.window.setLoopRange(start, end);
-      console.log('Backend loop range set succeeded');
-    } catch (error: any) {
-      console.warn('Backend set_loop_range failed - using local fallback:', error.message || error);
+      await safeInvoke(Commands.DAW_SET_LOOP, { start, end, enabled: true });
+      playbackStore.update((state) => ({ ...state, loopStart: start, loopEnd: end }));
+    } catch (error) {
+      console.error('Failed to set loop range:', error);
+      throw error;
     }
-    playbackStore.update(state => ({ ...state, loopStart: start, loopEnd: end }));
-    console.log('Local loop range updated');
   },
 
   async toggleMetronome() {
     const currentState = get(playbackStore);
-    console.log('Attempting to toggle metronome:', !currentState.metronomeEnabled);
     try {
-      await api.window.setMetronomeEnabled(!currentState.metronomeEnabled);
-      console.log('Backend metronome toggle succeeded');
-    } catch (error: any) {
-      console.warn('Backend set_metronome_enabled failed - using local fallback:', error.message || error);
+      await safeInvoke(Commands.DAW_SET_METRONOME, { enabled: !currentState.metronomeEnabled });
+      playbackStore.update((state) => ({ ...state, metronomeEnabled: !state.metronomeEnabled }));
+    } catch (error) {
+      console.error('Failed to toggle metronome:', error);
+      throw error;
     }
-    playbackStore.update(state => ({ ...state, metronomeEnabled: !state.metronomeEnabled }));
-    console.log('Local metronome state updated to:', !currentState.metronomeEnabled);
   },
 
   async setMetronomeVolume(volume: number) {
-    console.log('Attempting to set metronome volume:', volume);
     try {
-      await api.window.setMetronomeVolume(volume);
-      console.log('Backend metronome volume set succeeded');
-    } catch (error: any) {
-      console.warn('Backend set_metronome_volume failed - using local fallback:', error.message || error);
-    }
-    playbackStore.update(state => ({ ...state, metronomeVolume: volume }));
-    console.log('Local metronome volume updated');
-  },
-
-  async getTransportInfo() {
-    console.log('Attempting to get transport info');
-    try {
-      const info = await api.window.getTransportInfo();
-      console.log('Backend transport info retrieved:', info);
-      playbackStore.update(state => ({ ...state, ...info }));
-      return info;
-    } catch (error: any) {
-      console.warn('Backend get_transport_info failed:', error.message || error);
-      return null;
+      await safeInvoke(Commands.DAW_SET_METRONOME_VOLUME, { volume });
+      playbackStore.update((state) => ({ ...state, metronomeVolume: volume }));
+    } catch (error) {
+      console.error('Failed to set metronome volume:', error);
+      throw error;
     }
   },
 
   updatePosition(position: PlaybackPosition) {
-    playbackStore.update(state => ({ ...state, position }));
+    playbackStore.update((state) => ({ ...state, position }));
   },
 };
+
+// ============================================================================
+// DERIVED STORES
+// ============================================================================
+
+export const formattedPosition = derived(playbackStore, ($playback) => {
+  const { current_bar, current_beat } = $playback.position;
+  return `${current_bar + 1}:${current_beat + 1}`;
+});
+
+export const isPlayingOrPaused = derived(
+  playbackStore,
+  ($playback) => $playback.isPlaying || $playback.isPaused
+);

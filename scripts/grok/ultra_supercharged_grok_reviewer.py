@@ -10,12 +10,9 @@ import json
 import time
 import re
 import subprocess
-import ast
 from pathlib import Path
 from datetime import datetime
-from collections import defaultdict
 import httpx
-import threading
 from io import StringIO
 
 
@@ -35,12 +32,12 @@ class TerminalOutputCapture:
         sys.stdout = self
         sys.stderr = self
         self.markdown_content = [
-            f"# MIDI Software Center Analysis Report",
+            "# MIDI Software Center Analysis Report",
             f"**Generated**: {self.start_time.strftime('%Y-%m-%d %H:%M:%S')}",
             f"**Project**: {self.project_root}",
-            f"",
-            f"## Terminal Output",
-            f"```bash"
+            "",
+            "## Terminal Output",
+            "```bash"
         ]
     
     def stop_capture(self):
@@ -53,8 +50,8 @@ class TerminalOutputCapture:
         
         # Add summary section
         self.markdown_content.extend([
-            f"",
-            f"## Analysis Summary",
+            "",
+            "## Analysis Summary",
             f"- **Analysis completed**: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}",
             f"- **Duration**: {(datetime.now() - self.start_time).total_seconds():.1f} seconds",
             f"- **Output captured**: {len(self.capture_buffer.getvalue())} characters",
@@ -648,12 +645,12 @@ cpal = "0.17"
             # Display results
             self.display_results(ai_analysis, predictions, historical_patterns, applied_fixes, actual_errors, script_path, guide_path)
             
-            print(f"\n🎉 ANALYSIS COMPLETE!")
-            print(f"📁 Generated files:")
+            print("\n🎉 ANALYSIS COMPLETE!")
+            print("📁 Generated files:")
             print(f"   - {script_path}")
             print(f"   - {guide_path}")
-            print(f"   - analysis_report.md")
-            print(f"   - grok_analysis_history.json")
+            print("   - analysis_report.md")
+            print("   - grok_analysis_history.json")
             
         except Exception as e:
             print(f"❌ Analysis failed: {e}")
@@ -669,15 +666,15 @@ cpal = "0.17"
         print("📊 ANALYSIS RESULTS")
         print("="*70)
         
-        print(f"\n🔮 PREDICTIONS:")
+        print("\n🔮 PREDICTIONS:")
         for prediction in predictions:
             print(f"  • {prediction}")
         
-        print(f"\n📚 HISTORICAL PATTERNS:")
+        print("\n📚 HISTORICAL PATTERNS:")
         for pattern, count in historical_patterns:
             print(f"  • {pattern}: {count} occurrences")
         
-        print(f"\n🔧 APPLIED FIXES:")
+        print("\n🔧 APPLIED FIXES:")
         for fix in applied_fixes:
             print(f"  • {fix}")
         
@@ -687,13 +684,13 @@ cpal = "0.17"
         if len(actual_errors) > 5:
             print(f"  ... and {len(actual_errors) - 5} more errors")
         
-        print(f"\n🧠 AI ANALYSIS:")
+        print("\n🧠 AI ANALYSIS:")
         print("-" * 40)
         print(analysis_results[:1500])
         if len(analysis_results) > 1500:
             print("\n... (see TROUBLESHOOTING_GUIDE.md for full analysis)")
         
-        print(f"\n📜 GENERATED FILES:")
+        print("\n📜 GENERATED FILES:")
         print(f"  • {script_path}")
         print(f"  • {guide_path}")
 

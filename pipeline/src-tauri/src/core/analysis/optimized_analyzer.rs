@@ -26,6 +26,7 @@ use crate::core::analysis::{analyze_chords, detect_bpm, detect_key};
 use midi_library_shared::core::midi::parser::parse_midi_file;
 
 // Phase 1: Buffer pool for zero-allocation file reading
+#[allow(dead_code)]
 static BUFFER_POOL: Lazy<Mutex<Vec<Vec<u8>>>> =
     Lazy::new(|| Mutex::new((0..64).map(|_| Vec::with_capacity(131072)).collect()));
 
@@ -35,7 +36,7 @@ pub struct AnalysisResult {
     pub file_id: i64,
     pub bpm: Option<f64>,
     pub bpm_confidence: Option<f64>,
-    pub has_tempo_variation: bool,
+    pub has_tempo_changes: bool,
     pub detected_key: String,
     pub key_confidence: Option<f64>,
     pub duration_seconds: Option<f64>,
@@ -73,7 +74,7 @@ pub fn analyze_file_mmap(file: &FileToAnalyze) -> Result<AnalysisResult> {
     } else {
         None
     };
-    let has_tempo_variation = !bpm_result.metadata.is_constant;
+    let has_tempo_changes = !bpm_result.metadata.is_constant;
 
     // Key detection
     let key_result = detect_key(&midi_file);
@@ -93,7 +94,7 @@ pub fn analyze_file_mmap(file: &FileToAnalyze) -> Result<AnalysisResult> {
         file_id: file.id,
         bpm,
         bpm_confidence: Some(bpm_result.confidence),
-        has_tempo_variation,
+        has_tempo_changes,
         detected_key: key_result.key,
         key_confidence: Some(key_result.confidence),
         duration_seconds,
@@ -146,7 +147,7 @@ pub fn analyze_file_mmap(file: &FileToAnalyze) -> Result<AnalysisResult> {
 //     } else {
 //         None
 //     };
-//     let has_tempo_variation = !bpm_result.metadata.is_constant;
+//     let has_tempo_changes = !bpm_result.metadata.is_constant;
 //
 //     // Key detection
 //     let key_result = detect_key(&midi_file);
@@ -167,7 +168,7 @@ pub fn analyze_file_mmap(file: &FileToAnalyze) -> Result<AnalysisResult> {
 //         file_id: file.id,
 //         tempo_bpm,
 //         bpm_confidence: Some(bpm_result.confidence),
-//         has_tempo_variation,
+//         has_tempo_changes,
 //         detected_key: key_result.key,
 //         key_confidence: Some(key_result.confidence),
 //         duration_seconds,
@@ -189,7 +190,7 @@ pub async fn batch_insert_results(pool: &Pool<Postgres>, results: &[AnalysisResu
     // Batch insert musical_metadata
     let mut query_builder = QueryBuilder::new(
         "INSERT INTO musical_metadata (
-            file_id, bpm, bpm_confidence, has_tempo_variation,
+            file_id, bpm, bpm_confidence, has_tempo_changes,
             detected_key, key_confidence, duration_seconds,
             chord_progression, chord_types,
             has_seventh_chords, has_extended_chords,
@@ -201,7 +202,7 @@ pub async fn batch_insert_results(pool: &Pool<Postgres>, results: &[AnalysisResu
         b.push_bind(result.file_id)
             .push_bind(result.bpm)
             .push_bind(result.bpm_confidence)
-            .push_bind(result.has_tempo_variation)
+            .push_bind(result.has_tempo_changes)
             .push_bind(&result.detected_key)
             .push_bind(result.key_confidence)
             .push_bind(result.duration_seconds)
@@ -217,7 +218,7 @@ pub async fn batch_insert_results(pool: &Pool<Postgres>, results: &[AnalysisResu
         " ON CONFLICT (file_id) DO UPDATE SET
         bpm = EXCLUDED.bpm,
         bpm_confidence = EXCLUDED.bpm_confidence,
-        has_tempo_variation = EXCLUDED.has_tempo_variation,
+        has_tempo_changes = EXCLUDED.has_tempo_changes,
         detected_key = EXCLUDED.detected_key,
         key_confidence = EXCLUDED.key_confidence,
         duration_seconds = EXCLUDED.duration_seconds,

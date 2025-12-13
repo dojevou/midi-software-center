@@ -1,4 +1,3 @@
-
 /// Search command handlers - GROWN-UP SCRIPT ARCHETYPE
 ///
 /// PURPOSE: Advanced search functionality with filters and pagination
@@ -175,7 +174,7 @@ pub async fn search_files_impl(
 ///
 /// Paginated search results with total count
 #[tauri::command]
-pub async fn search_files(
+pub async fn pipeline_search_files(
     query: String,
     filters: SearchFilters,
     page: i32,

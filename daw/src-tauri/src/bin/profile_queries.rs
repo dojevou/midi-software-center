@@ -22,7 +22,7 @@ use tracing::{error, info};
 use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 // Import from daw crate (will be added to Cargo.toml)
-use daw_lib::profiling::query_analyzer::QueryAnalyzer;
+use midi_software_center_daw::profiling::query_analyzer::QueryAnalyzer;
 
 #[derive(Parser, Debug)]
 #[command(name = "profile_queries")]

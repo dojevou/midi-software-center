@@ -1,10 +1,12 @@
+//! MIDI hardware Tauri commands
+//!
+//! Grown-up Scripts: Thin wrappers around MIDI manager for frontend access.
+//! Delegate all business logic to Trusty Modules and MIDI manager.
+#![allow(dead_code)] // Commands are called externally via Tauri IPC
+
 use crate::midi::MidiManager;
 use crate::models::MidiDevice;
 use std::sync::Arc;
-/// MIDI hardware Tauri commands
-///
-/// Grown-up Scripts: Thin wrappers around MIDI manager for frontend access.
-/// Delegate all business logic to Trusty Modules and MIDI manager.
 use tauri::State;
 
 /// List all available MIDI output devices

@@ -1,0 +1,61 @@
+# Build artifacts
+target/
+dist/
+build/
+.svelte-kit/
+
+# Dependencies (rebuilt in container)
+node_modules/
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Git
+.git/
+.gitignore
+
+# Documentation (not needed in image)
+docs/
+*.md
+!README.md
+
+# Test data (mount separately)
+midi-library/
+test-data/
+*.mid
+*.midi
+
+# Development files
+.env.local
+*.log
+*.prof
+*.profdata
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Tauri desktop builds (not for Docker) - except Cargo.toml for workspace resolution
+daw/**/*
+!daw/src-tauri/Cargo.toml
+app/**/*
+!app/src-tauri/Cargo.toml
+studio/
+
+# Backups
+backups/
+*.bak
+*.backup
+
+# Python cache
+__pycache__/
+*.pyc
+.pytest_cache/
+
+# Large analysis outputs
+*.json.gz
+analysis_results.txt

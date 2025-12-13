@@ -354,8 +354,8 @@ fn parse_meta_or_sysex(data: &[u8]) -> Result<(Event, usize, Option<u8>)> {
                     }
                 },
                 0x01..=0x0F => {
-                    // Text events
-                    let text = String::from_utf8(event_data.to_vec())?;
+                    // Text events - use lossy conversion to handle non-UTF8 encodings
+                    let text = String::from_utf8_lossy(event_data).to_string();
                     let text_type = match meta_type {
                         0x01 => TextType::Text,
                         0x02 => TextType::Copyright,
@@ -1009,12 +1009,25 @@ mod tests {
 
     #[test]
     fn test_parse_text_invalid_utf8() {
+        // Parser uses from_utf8_lossy which replaces invalid UTF-8 with replacement chars
         let data = vec![
-            0x00, 0xFF, 0x01, 0x03, 0xFF, 0xFE, 0xFD, // Invalid UTF-8
+            0x00, 0xFF, 0x01, 0x03, 0xFF, 0xFE, 0xFD, // Invalid UTF-8 bytes
             0x00, 0xFF, 0x2F, 0x00,
         ];
         let result = parse_track_events(&data);
-        assert!(matches!(result, Err(MidiParseError::Utf8(_))));
+        // from_utf8_lossy never fails - it replaces invalid sequences with U+FFFD
+        assert!(result.is_ok());
+        let events = result.unwrap();
+        // Check that the text contains replacement characters
+        match &events[0].event {
+            Event::Text { text_type: _, text } => {
+                assert!(
+                    text.contains('\u{FFFD}'),
+                    "Should contain replacement character"
+                );
+            },
+            _ => panic!("Expected Text event"),
+        }
     }
 
     #[test]

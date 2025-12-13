@@ -1,0 +1,128 @@
+#!/bin/bash
+# MIDI Software Center - Project Analysis Scripts
+# Generated for systematic error fixing
+
+PROJECT_ROOT=~/projects/midi-software-center
+
+echo "=== MIDI Software Center Analysis Scripts ==="
+echo "Project Root: $PROJECT_ROOT"
+echo "Generated: $(date)"
+echo ""
+
+echo "=== 1. COMPILATION STATUS ==="
+echo "# Check current compilation errors:"
+echo "cd $PROJECT_ROOT && cargo check --workspace 2>&1 | grep -E \"^error\" | head -50"
+echo ""
+
+echo "# Check DAW package specifically:"
+echo "cd $PROJECT_ROOT && cargo check -p midi-software-center-daw --tests 2>&1 | grep -E \"^error\""
+echo ""
+
+echo "=== 2. TEST FAILURES ==="
+echo "# Run tests and capture failures:"
+echo "cd $PROJECT_ROOT && cargo test --workspace --lib -- --test-threads=1 2>&1 | grep -E \"(FAILED|panicked|assertion failed)\" | head -50"
+echo ""
+
+echo "# Count total test failures:"
+echo "cd $PROJECT_ROOT && cargo test --workspace --lib -- --test-threads=1 2>&1 | grep -c \"FAILED\""
+echo ""
+
+echo "=== 3. AUTO-TAGGER SPECIFIC CHECKS ==="
+echo "# Check auto-tagger test file:"
+echo "cd $PROJECT_ROOT && grep -n \"tag_names.contains\" pipeline/src-tauri/src/core/analysis/auto_tagger.rs | head -20"
+echo ""
+
+echo "# Check specific failing auto-tagger lines:"
+echo "cd $PROJECT_ROOT && sed -n '1069,1070p;1093,1094p;1106,1107p;1116,1117p;1178,1179p;1249,1250p;1287,1288p;1366,1367p;1842,1843p;1865,1866p;1924,1925p' pipeline/src-tauri/src/core/analysis/auto_tagger.rs"
+echo ""
+
+echo "=== 4. CHORD ANALYZER CHECK ==="
+echo "# Check chord analyzer test:"
+echo "cd $PROJECT_ROOT && sed -n '405,410p' pipeline/src-tauri/src/core/analysis/tests/chord_analyzer_extended_test.rs"
+echo ""
+
+echo "=== 5. WINDOW STATE CHECK ==="
+echo "# Check window pagination test:"
+echo "cd $PROJECT_ROOT && sed -n '430,440p' pipeline/src-tauri/src/database/window_state.rs"
+echo ""
+
+echo "=== 6. ANALYZE COMMAND CHECK ==="
+echo "# Check analyze command test:"
+echo "cd $PROJECT_ROOT && sed -n '1745,1750p' pipeline/src-tauri/src/commands/analyze.rs"
+echo ""
+
+echo "=== 7. FILENAME METADATA CHECK ==="
+echo "# Check filename metadata test:"
+echo "cd $PROJECT_ROOT && sed -n '545,555p' pipeline/src-tauri/src/core/analysis/filename_metadata.rs"
+echo ""
+
+echo "=== 8. STRUCT DEFINITION VERIFICATION ==="
+echo "# Verify Track struct definition:"
+echo "cd $PROJECT_ROOT && grep -A 15 \"pub struct Track\" daw/src-tauri/src/models/sequencer.rs"
+echo ""
+
+echo "# Verify SequencerState struct definition:"
+echo "cd $PROJECT_ROOT && grep -A 10 \"pub struct SequencerState\" daw/src-tauri/src/models/sequencer.rs"
+echo ""
+
+echo "# Verify MidiDevice struct definition:"
+echo "cd $PROJECT_ROOT && grep -A 5 \"pub struct MidiDevice\" daw/src-tauri/src/models/midi.rs"
+echo ""
+
+echo "=== 9. ERROR SUMMARY ==="
+echo "# Count errors by type:"
+echo "cd $PROJECT_ROOT && cargo check --workspace 2>&1 | grep -E \"^error\" | sort | uniq -c | sort -rn"
+echo ""
+
+echo "# List all error locations:"
+echo "cd $PROJECT_ROOT && cargo check --workspace 2>&1 | grep -B2 \"^error\" | grep -E \"error|-->\" | head -30"
+echo ""
+
+echo "=== 10. QUICK FIX VERIFICATION ==="
+echo "# Verify models_test.rs compiles:"
+echo "cd $PROJECT_ROOT && cargo check -p midi-software-center-daw --test models_test 2>&1 | grep -E \"error|Finished\""
+echo ""
+
+echo "# Count remaining struct initialization errors:"
+echo "cd $PROJECT_ROOT && cargo check --workspace 2>&1 | grep -c \"missing field\""
+echo ""
+
+echo "=== 11. TEST EXECUTION TIME ==="
+echo "# Measure test execution time:"
+echo "cd $PROJECT_ROOT && time cargo test --workspace --lib -- --test-threads=1 2>&1 | tail -10"
+echo ""
+
+echo "=== 12. MEMORY USAGE ==="
+echo "# Check memory usage during tests:"
+echo "cd $PROJECT_ROOT && /usr/bin/time -v cargo test -p midi-pipeline --lib 2>&1 | grep -E \"Maximum resident set size|Elapsed\""
+echo ""
+
+echo "=== 13. FILE SIZE ANALYSIS ==="
+echo "# Largest test files:"
+echo "cd $PROJECT_ROOT && find . -name \"*.rs\" -type f | xargs wc -l | sort -rn | head -10"
+echo ""
+
+echo "# Test file with most failures:"
+echo "cd $PROJECT_ROOT && grep -l \"FAILED\" target/debug/deps/* 2>/dev/null | xargs -I {} basename {} | sort | uniq -c | sort -rn"
+echo ""
+
+echo "=== 14. DEPENDENCY CHECKS ==="
+echo "# Outdated dependencies:"
+echo "cd $PROJECT_ROOT && cargo outdated --workspace 2>&1 | head -20"
+echo ""
+
+echo "# Security vulnerabilities:"
+echo "cd $PROJECT_ROOT && cargo audit 2>&1 | head -20"
+echo ""
+
+echo "=== 15. PERFORMANCE BASELINE ==="
+echo "# Build time baseline:"
+echo "cd $PROJECT_ROOT && cargo clean && time cargo build --workspace 2>&1 | tail -5"
+echo ""
+
+echo "# Test time baseline:"
+echo "cd $PROJECT_ROOT && time cargo test --workspace --no-run 2>&1 | tail -5"
+echo ""
+
+echo "=== QUICK STATUS COMMAND ==="
+echo "cd $PROJECT_ROOT && echo \"=== COMPILATION ===\" && cargo check --workspace 2>&1 | grep -c \"^error\" | xargs echo \"Errors:\" && echo \"=== TESTS ===\" && cargo test --workspace --lib -- --test-threads=1 2>&1 | grep -c \"FAILED\" | xargs echo \"Failures:\""

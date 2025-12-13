@@ -1,0 +1,453 @@
+================================================================================
+                    MIDI SOFTWARE CENTER - ARCHITECTURE DIAGRAM
+================================================================================
+
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                        PRESENTATION LAYER (Svelte/TypeScript)                │
+│═════════════════════════════════════════════════════════════════════════════│
+│                                                                             │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐              │
+│  │   App.svelte    │  │  MenuBar.svelte │  │ StatusBar.svelte│              │
+│  │  (Main Layout)  │  │  (Navigation)   │  │  (Status Info)  │              │
+│  └────────┬────────┘  └────────┬────────┘  └────────┬────────┘              │
+│           │                    │                    │                       │
+│  ┌────────┴────────────────────┴────────────────────┴────────┐              │
+│  │                      WINDOW COMPONENTS                     │              │
+│  │  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐       │              │
+│  │  │DatabaseWindow│ │  DAWWindow   │ │ MixerWindow  │       │              │
+│  │  │ (File List)  │ │(Transport/   │ │(Channel Fader│       │              │
+│  │  │              │ │ Piano Roll)  │ │ & VU Meters) │       │              │
+│  │  └──────────────┘ └──────────────┘ └──────────────┘       │              │
+│  │  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐       │              │
+│  │  │PipelineWindow│ │SequencerWin  │ │ PianoRollWin │       │              │
+│  │  │(Import/Batch)│ │(Track Lanes) │ │(Note Editor) │       │              │
+│  │  └──────────────┘ └──────────────┘ └──────────────┘       │              │
+│  │  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐       │              │
+│  │  │VIP3BrowserWin│ │MidiMonitorWin│ │PreferencesWin│       │              │
+│  │  │(3-Column)    │ │(Real-time)   │ │(Settings)    │       │              │
+│  │  └──────────────┘ └──────────────┘ └──────────────┘       │              │
+│  │  ┌──────────────┐ ┌──────────────┐ ┌──────────────┐       │              │
+│  │  │GearManagerWin│ │PresetsManWin │ │MidiIOSetupWin│       │              │
+│  │  │(Hardware)    │ │(User Presets)│ │(MIDI Config) │       │              │
+│  │  └──────────────┘ └──────────────┘ └──────────────┘       │              │
+│  └───────────────────────────────────────────────────────────┘              │
+│                                                                             │
+│  UI Components: WindowBase, Knob, Slider, VUMeter, TagCloud, FileBrowser,   │
+│                 NoteGrid, WaveformView, VirtualKeyboard, ProgressIndicator  │
+└─────────────────────────────────────────────────────────────────────────────┘
+           │                    │                    │
+           │    ╔════════════════════════════════╗   │
+           │    ║  BRIDGE: Svelte Stores +       ║   │
+           │    ║  Reactive Subscriptions        ║   │
+           └────╚════════════════════════════════╝───┘
+                             │
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                      STATE MANAGEMENT LAYER (Svelte Stores)                  │
+│═════════════════════════════════════════════════════════════════════════════│
+│                                                                             │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐              │
+│  │  databaseStore  │  │   projectStore  │  │   pipelineStore │              │
+│  │  (File Queries) │  │  (Project Data) │  │  (Import State) │              │
+│  └────────┬────────┘  └────────┬────────┘  └────────┬────────┘              │
+│           │                    │                    │                       │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐              │
+│  │  playbackStore  │  │   uiStore       │  │   archiveStore  │              │
+│  │(Transport/BPM)  │  │  (Window State) │  │(Archive Extract)│              │
+│  └────────┬────────┘  └────────┬────────┘  └────────┬────────┘              │
+│           │                    │                    │                       │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐              │
+│  │  sequencerStore │  │   mixerStore    │  │  pianoRollStore │              │
+│  │ (Track/Clips)   │  │(Channels/Fader) │  │  (Note Events)  │              │
+│  └────────┬────────┘  └────────┬────────┘  └────────┬────────┘              │
+│           │                    │                    │                       │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐              │
+│  │automationStore  │  │  undoStore      │  │ preferencesStore│              │
+│  │(Automation Pts) │  │ (History Stack) │  │ (User Settings) │              │
+│  └────────┬────────┘  └────────┬────────┘  └────────┬────────┘              │
+│           │                    │                    │                       │
+│  ┌─────────────────┐  ┌─────────────────┐  ┌─────────────────┐              │
+│  │   tagStore      │  │   gearStore     │  │  presetsStore   │              │
+│  │ (File Tags)     │  │(MIDI Hardware)  │  │  (User Presets) │              │
+│  └────────┬────────┘  └────────┬────────┘  └────────┬────────┘              │
+│                                                                             │
+│  Additional: analysisStore, browserStore, categoryStore, collectionStore,   │
+│              favoritesStore, midiDeviceStore, midiMixerStore, settingsStore,│
+│              vip3Store                                                      │
+└─────────────────────────────────────────────────────────────────────────────┘
+           │                    │                    │
+           │    ╔════════════════════════════════╗   │
+           │    ║  BRIDGE: api.ts wrappers +     ║   │
+           │    ║  @tauri-apps/api invoke()      ║   │
+           └────╚════════════════════════════════╝───┘
+                             │
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                          API LAYER (TypeScript)                              │
+│═════════════════════════════════════════════════════════════════════════════│
+│                                                                             │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │                          app/src/lib/api.ts                          │    │
+│  │  ┌───────────────┐ ┌───────────────┐ ┌───────────────┐              │    │
+│  │  │  searchFiles  │ │  importFiles  │ │ analyzeFile   │              │    │
+│  │  │  (SQL Query)  │ │ (Batch Import)│ │ (BPM/Key/etc) │              │    │
+│  │  └───────────────┘ └───────────────┘ └───────────────┘              │    │
+│  │  ┌───────────────┐ ┌───────────────┐ ┌───────────────┐              │    │
+│  │  │  getFileTags  │ │ splitFile     │ │ extractArchive│              │    │
+│  │  │ (Tag Lookup)  │ │(Track Split)  │ │(ZIP/RAR/7z)   │              │    │
+│  │  └───────────────┘ └───────────────┘ └───────────────┘              │    │
+│  │  ┌───────────────┐ ┌───────────────┐ ┌───────────────┐              │    │
+│  │  │getDatabaseStats│ │ getTags      │ │getFileMetadata│              │    │
+│  │  │(Counts/Size)  │ │(All Tags)    │ │(Full Analysis)│              │    │
+│  │  └───────────────┘ └───────────────┘ └───────────────┘              │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+│                                                                             │
+│  ┌──────────────────┐ ┌──────────────────┐ ┌──────────────────┐             │
+│  │ api/commands.ts  │ │api/collections.ts│ │ api/timbres.ts   │             │
+│  │ (DAW Commands)   │ │(File Collections)│ │(Timbre Taxonomy) │             │
+│  └──────────────────┘ └──────────────────┘ └──────────────────┘             │
+│  ┌──────────────────┐ ┌──────────────────┐ ┌──────────────────┐             │
+│  │ api/styles.ts    │ │api/articulations │ │api/savedSearches │             │
+│  │ (Style Tags)     │ │(Play Techniques) │ │(Saved Filters)   │             │
+│  └──────────────────┘ └──────────────────┘ └──────────────────┘             │
+│  ┌──────────────────┐                                                       │
+│  │api/vip3Browser.ts│  VIP3 3-column browser with filtering                 │
+│  │(3-Col Browser)   │                                                       │
+│  └──────────────────┘                                                       │
+└─────────────────────────────────────────────────────────────────────────────┘
+           │                    │                    │
+           │    ╔════════════════════════════════╗   │
+           │    ║  BRIDGE: Tauri IPC            ║   │
+           │    ║  (JSON-RPC over WebView)      ║   │
+           └────╚════════════════════════════════╝───┘
+                             │
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                      TAURI COMMAND LAYER (Rust)                              │
+│═════════════════════════════════════════════════════════════════════════════│
+│                                                                             │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │                app/src-tauri/src/lib.rs (Command Hub)                │    │
+│  │  Registers all #[tauri::command] functions from sub-crates          │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+│                                                                             │
+│  ╔═══════════════════════════════╗    ╔═══════════════════════════════╗    │
+│  ║    PIPELINE COMMANDS          ║    ║      DAW COMMANDS             ║    │
+│  ║  pipeline/src-tauri/src/      ║    ║  daw/src-tauri/src/commands/  ║    │
+│  ╠═══════════════════════════════╣    ╠═══════════════════════════════╣    │
+│  ║ commands/                     ║    ║ automation.rs - Automation    ║    │
+│  ║  ├─ analyze.rs     (Analysis) ║    ║ database.rs   - DB Queries    ║    │
+│  ║  ├─ archive_import (Archives) ║    ║ daw.rs        - DAW State     ║    │
+│  ║  ├─ file_import.rs (Import)   ║    ║ effect.rs     - Audio Effects ║    │
+│  ║  ├─ progress.rs    (Progress) ║    ║ gear.rs       - MIDI Hardware ║    │
+│  ║  ├─ search.rs      (Search)   ║    ║ midi_io.rs    - MIDI I/O      ║    │
+│  ║  ├─ split_file.rs  (Split)    ║    ║ mixer.rs      - Mixer Control ║    │
+│  ║  ├─ stats.rs       (Stats)    ║    ║ piano_roll.rs - Piano Roll    ║    │
+│  ║  ├─ system.rs      (System)   ║    ║ pipeline.rs   - Pipeline Int. ║    │
+│  ║  └─ tags.rs        (Tags)     ║    ║ preferences.rs- User Prefs    ║    │
+│  ╚═══════════════════════════════╝    ║ presets.rs    - User Presets  ║    │
+│                                       ║ project.rs    - Project Mgmt  ║    │
+│                                       ║ repair.rs     - MIDI Repair   ║    │
+│                                       ║ settings.rs   - App Settings  ║    │
+│                                       ║ system.rs     - System Info   ║    │
+│                                       ║ tags.rs       - Tag Management║    │
+│                                       ║ trim.rs       - MIDI Trim     ║    │
+│                                       ║ window.rs     - Window State  ║    │
+│                                       ╚═══════════════════════════════╝    │
+└─────────────────────────────────────────────────────────────────────────────┘
+           │                    │                    │
+           │    ╔════════════════════════════════╗   │
+           │    ║  BRIDGE: Rust Crate            ║   │
+           │    ║  Dependencies (Cargo.toml)     ║   │
+           └────╚════════════════════════════════╝───┘
+                             │
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                     BACKEND SERVICES LAYER (Rust Crates)                     │
+│═════════════════════════════════════════════════════════════════════════════│
+│                                                                             │
+│  ╔═══════════════════════════════════════════════════════════════════════╗  │
+│  ║             midi-pipeline (pipeline/src-tauri)                        ║  │
+│  ╠═══════════════════════════════════════════════════════════════════════╣  │
+│  ║  core/                          │  io/                                ║  │
+│  ║  ├─ analysis/                   │  ├─ decompressor/                   ║  │
+│  ║  │  ├─ auto_tagger.rs          │  │  ├─ extractor.rs                 ║  │
+│  ║  │  ├─ bpm_detector.rs         │  │  ├─ formats.rs (ZIP/RAR/7z)      ║  │
+│  ║  │  ├─ key_detector.rs         │  │  └─ temp_manager.rs              ║  │
+│  ║  │  ├─ drum_analyzer.rs        │  └─ error.rs                        ║  │
+│  ║  │  ├─ chord_analyzer.rs       │                                     ║  │
+│  ║  │  ├─ filename_metadata.rs    │  database/                          ║  │
+│  ║  │  ├─ key_profiles.rs         │  ├─ batch_insert.rs                 ║  │
+│  ║  │  ├─ ml_features.rs          │  └─ window_state.rs                 ║  │
+│  ║  │  └─ optimized_analyzer.rs   │                                     ║  │
+│  ║  ├─ hash/blake3.rs             │  db/                                ║  │
+│  ║  ├─ naming/                     │  ├─ models.rs                       ║  │
+│  ║  │  ├─ generator.rs            │  └─ repositories/                   ║  │
+│  ║  │  ├─ sanitizer.rs            │     ├─ file_repository.rs           ║  │
+│  ║  │  └─ templates.rs            │     ├─ metadata_repository.rs       ║  │
+│  ║  ├─ normalization/filename.rs   │     ├─ search_repository.rs         ║  │
+│  ║  ├─ performance/concurrency.rs  │     └─ tag_repository.rs            ║  │
+│  ║  └─ splitting/track_splitter.rs │                                     ║  │
+│  ╚═══════════════════════════════════════════════════════════════════════╝  │
+│                                                                             │
+│  ╔═══════════════════════════════════════════════════════════════════════╗  │
+│  ║           midi-software-center-daw (daw/src-tauri)                    ║  │
+│  ╠═══════════════════════════════════════════════════════════════════════╣  │
+│  ║  sequencer/engine.rs      - Sequencer playback engine                 ║  │
+│  ║  automation.rs            - Automation lane processing                ║  │
+│  ║  undo_redo/               - Undo/redo system                          ║  │
+│  ║  │  ├─ core.rs            - Stack-based history                       ║  │
+│  ║  │  ├─ piano_roll.rs      - Piano roll operations                     ║  │
+│  ║  │  ├─ tempo.rs           - Tempo changes                             ║  │
+│  ║  │  └─ velocity.rs        - Velocity edits                            ║  │
+│  ║  hardware/                                                            ║  │
+│  ║  │  ├─ device_manager.rs  - MIDI device enumeration                   ║  │
+│  ║  │  ├─ midi_monitor.rs    - Real-time MIDI monitoring                 ║  │
+│  ║  │  ├─ midi_router.rs     - MIDI routing logic                        ║  │
+│  ║  │  └─ midi_backend.rs    - ALSA/CoreMIDI backend                     ║  │
+│  ║  editors/piano_roll.rs    - Piano roll editing                        ║  │
+│  ║  browsers/project_browser - Project file browser                      ║  │
+│  ║  settings/                - Settings modules (audio, midi, etc.)      ║  │
+│  ║  windows/state.rs         - Window state management                   ║  │
+│  ║  profiling/               - Performance profiling tools               ║  │
+│  ╚═══════════════════════════════════════════════════════════════════════╝  │
+└─────────────────────────────────────────────────────────────────────────────┘
+           │                    │                    │
+           │    ╔════════════════════════════════╗   │
+           │    ║  BRIDGE: Shared Library        ║   │
+           │    ║  midi-library-shared crate     ║   │
+           └────╚════════════════════════════════╝───┘
+                             │
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                       SHARED LIBRARY LAYER (shared/rust)                     │
+│═════════════════════════════════════════════════════════════════════════════│
+│                                                                             │
+│  ╔═══════════════════════════════════════════════════════════════════════╗  │
+│  ║                 midi-library-shared (shared/rust)                     ║  │
+│  ╠═══════════════════════════════════════════════════════════════════════╣  │
+│  ║  core/midi/                     │  db/models/                         ║  │
+│  ║  ├─ parser.rs       (MIDI I/O)  │  ├─ midi_file.rs    (MidiFile)      ║  │
+│  ║  ├─ text_metadata.rs (Meta)     │  ├─ midi.rs         (Track/Event)   ║  │
+│  ║  └─ mod.rs                      │  ├─ analysis.rs     (AnalysisResult)║  │
+│  ║                                 │  ├─ search.rs       (SearchParams)  ║  │
+│  ║  core/analysis/                 │  ├─ sequencer.rs    (Clip/Lane)     ║  │
+│  ║  ├─ bpm_detector.rs             │  ├─ error.rs        (AppError)      ║  │
+│  ║  ├─ key_detector.rs             │  ├─ articulation.rs                 ║  │
+│  ║  ├─ key_profiles.rs             │  ├─ bpm_range.rs                    ║  │
+│  ║  ├─ auto_tagger.rs              │  ├─ collection.rs                   ║  │
+│  ║  └─ mod.rs                      │  ├─ musical_key.rs                  ║  │
+│  ║                                 │  ├─ saved_search.rs                 ║  │
+│  ║                                 │  ├─ style.rs                        ║  │
+│  ║                                 │  └─ timbre.rs                       ║  │
+│  ║                                 │                                     ║  │
+│  ║                                 │  db/repositories/                   ║  │
+│  ║                                 │  ├─ file_repository.rs              ║  │
+│  ║                                 │  ├─ metadata_repository.rs          ║  │
+│  ║                                 │  ├─ search_repository.rs            ║  │
+│  ║                                 │  ├─ tag_repository.rs               ║  │
+│  ║                                 │  ├─ collection_repository.rs        ║  │
+│  ║                                 │  ├─ style_repository.rs             ║  │
+│  ║                                 │  ├─ timbre_repository.rs            ║  │
+│  ║                                 │  ├─ articulation_repository.rs      ║  │
+│  ║                                 │  └─ saved_search_repository.rs      ║  │
+│  ╚═══════════════════════════════════════════════════════════════════════╝  │
+└─────────────────────────────────────────────────────────────────────────────┘
+           │                    │                    │
+           │    ╔════════════════════════════════╗   │
+           │    ║  BRIDGE: SQLx                  ║   │
+           │    ║  (Async PostgreSQL Driver)     ║   │
+           └────╚════════════════════════════════╝───┘
+                             │
+┌─────────────────────────────────────────────────────────────────────────────┐
+│                          DATABASE LAYER (PostgreSQL 16)                      │
+│═════════════════════════════════════════════════════════════════════════════│
+│                                                                             │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │          PostgreSQL 16 + pgvector (localhost:5433/midi_library)      │    │
+│  ├─────────────────────────────────────────────────────────────────────┤    │
+│  │                                                                     │    │
+│  │  TABLES (15):                                                       │    │
+│  │  ┌───────────────┐ ┌───────────────┐ ┌───────────────┐              │    │
+│  │  │    files      │ │musical_metadata│ │    tags       │              │    │
+│  │  │ (2.15M rows)  │ │ (2.15M rows)  │ │ (1,861 types) │              │    │
+│  │  │ hash, path,   │ │ bpm, key,     │ │ name, category│              │    │
+│  │  │ size, format  │ │ duration, sig │ │               │              │    │
+│  │  └───────────────┘ └───────────────┘ └───────────────┘              │    │
+│  │  ┌───────────────┐ ┌───────────────┐ ┌───────────────┐              │    │
+│  │  │   file_tags   │ │  midi_tracks  │ │  midi_events  │              │    │
+│  │  │ (7.9M rows)   │ │ (Track info)  │ │ (Note/CC/etc) │              │    │
+│  │  │ file_id,tag_id│ │ channel, name │ │ tick, type    │              │    │
+│  │  └───────────────┘ └───────────────┘ └───────────────┘              │    │
+│  │  ┌───────────────┐ ┌───────────────┐ ┌───────────────┐              │    │
+│  │  │analysis_result│ │ drum_patterns │ │    chords     │              │    │
+│  │  │ (Enhanced)    │ │ (Drum-spec)   │ │ (Progressions)│              │    │
+│  │  │ JSON analysis │ │ kit, groove   │ │ root, quality │              │    │
+│  │  └───────────────┘ └───────────────┘ └───────────────┘              │    │
+│  │  ┌───────────────┐ ┌───────────────┐ ┌───────────────┐              │    │
+│  │  │  collections  │ │    styles     │ │   timbres     │              │    │
+│  │  │ (User Lists)  │ │ (Style Tags)  │ │(Timbre Class) │              │    │
+│  │  └───────────────┘ └───────────────┘ └───────────────┘              │    │
+│  │  ┌───────────────┐ ┌───────────────┐ ┌───────────────┐              │    │
+│  │  │ articulations │ │saved_searches │ │ file_ratings  │              │    │
+│  │  │(Play Tech)    │ │(Filter Presets│ │ (1-5 Stars)   │              │    │
+│  │  └───────────────┘ └───────────────┘ └───────────────┘              │    │
+│  │                                                                     │    │
+│  │  INDEXES (60+): B-tree, GIN (full-text), GiST (vector), Hash       │    │
+│  │  FUNCTIONS: get_files_by_instrument, get_files_by_bpm_range, etc.  │    │
+│  │                                                                     │    │
+│  │  Migrations: database/migrations/001-020*.sql                       │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+│                                                                             │
+│  ┌─────────────────────────────────────────────────────────────────────┐    │
+│  │              Meilisearch (Full-text Search - localhost:7700)         │    │
+│  │  Instant search with typo-tolerance and faceted filtering           │    │
+│  └─────────────────────────────────────────────────────────────────────┘    │
+└─────────────────────────────────────────────────────────────────────────────┘
+
+
+================================================================================
+                              DATA FLOW SUMMARY
+================================================================================
+
+  User Action (Click/Key)
+         │
+         ▼
+  ┌─────────────────┐
+  │ Svelte Component│ ──────────────────────────────────────────────────┐
+  └────────┬────────┘                                                   │
+           │ dispatch event / update store                              │
+           ▼                                                            │
+  ┌─────────────────┐                                                   │
+  │  Svelte Store   │ ◄───────────────────────────────────────┐        │
+  └────────┬────────┘                                         │        │
+           │ subscribe triggers                               │        │
+           ▼                                                  │        │
+  ┌─────────────────┐                                         │        │
+  │    api.ts       │                                         │        │
+  │  invoke('cmd')  │                                         │        │
+  └────────┬────────┘                                         │        │
+           │ IPC (JSON-RPC)                                   │        │
+           ▼                                                  │        │
+  ┌─────────────────┐                                         │        │
+  │ Tauri Command   │                                         │        │
+  │ #[tauri::command]                                         │        │
+  └────────┬────────┘                                         │        │
+           │ call service                                     │        │
+           ▼                                                  │        │
+  ┌─────────────────┐                                         │        │
+  │ Backend Service │                                         │        │
+  │ (Rust Crate)    │                                         │        │
+  └────────┬────────┘                                         │        │
+           │ SQLx query                                       │        │
+           ▼                                                  │        │
+  ┌─────────────────┐                                         │        │
+  │   PostgreSQL    │                                         │        │
+  └────────┬────────┘                                         │        │
+           │ Result                                           │        │
+           └──────────────────────────────────────────────────┘        │
+                                                                       │
+  Store update triggers reactive UI update ◄───────────────────────────┘
+
+
+================================================================================
+                           COMPONENT REGISTRY
+================================================================================
+
+  WINDOWS (20):
+  ├── DatabaseWindow      - File browser with search & filtering
+  ├── DAWWindow           - Transport, timeline, piano roll preview
+  ├── MixerWindow         - Channel strips with faders and VU meters
+  ├── PipelineWindow      - Batch import and processing (modal)
+  ├── SequencerWindow     - Track lanes with clips
+  ├── PianoRollWindow     - Note editor with velocity
+  ├── VIP3BrowserWindow   - 3-column browser (category/tag/files)
+  ├── MidiMonitorWindow   - Real-time MIDI event display
+  ├── PreferencesWindow   - User settings (modal)
+  ├── GearManagerWindow   - MIDI hardware configuration
+  ├── PresetsManagerWindow- User preset library
+  ├── MidiIOSetupWindow   - MIDI port configuration
+  ├── MidiMixerWindow     - MIDI channel mixer
+  ├── AutomationWindow    - Automation lane editor
+  ├── CommandPaletteWindow- Quick command access (Ctrl+P)
+  ├── ExportWindow        - Export settings
+  ├── FavoritesWindow     - Favorite files
+  ├── FileDetailsWindow   - File metadata view
+  ├── LoopBrowserWindow   - Loop file browser
+  ├── ProjectBrowserWindow- Project file browser
+  ├── SettingsWindow      - Application settings
+  ├── TagEditorWindow     - Tag management
+  └── VelocityEditorWindow- Velocity curve editor
+
+  UI COMPONENTS (15):
+  ├── MenuBar             - Main application menu
+  ├── StatusBar           - Status information
+  ├── WindowBase          - Draggable/resizable window frame
+  ├── WindowDockBar       - Window quick-access dock
+  ├── Knob                - Rotary control
+  ├── Slider              - Linear control
+  ├── VUMeter             - Level meter
+  ├── TagCloud            - Tag visualization
+  ├── FileBrowser         - File list with columns
+  ├── NoteGrid            - Piano roll grid
+  ├── WaveformView        - Audio waveform display
+  ├── VirtualKeyboard     - On-screen keyboard
+  ├── ProgressIndicator   - Progress bar
+  ├── Sequencer           - Sequencer track view
+  └── ToolBar             - Tool selection bar
+
+  STORES (25):
+  ├── databaseStore       - Database query results
+  ├── projectStore        - Current project state
+  ├── pipelineStore       - Import pipeline state
+  ├── playbackStore       - Transport and playback
+  ├── uiStore             - UI/window visibility
+  ├── archiveStore        - Archive extraction
+  ├── sequencerStore      - Sequencer tracks/clips
+  ├── mixerStore          - Mixer channels
+  ├── pianoRollStore      - Piano roll notes
+  ├── automationStore     - Automation points
+  ├── undoStore           - Undo/redo history
+  ├── preferencesStore    - User preferences
+  ├── tagStore            - Tag data
+  ├── gearStore           - MIDI hardware
+  ├── presetsStore        - User presets
+  ├── analysisStore       - Analysis results
+  ├── browserStore        - File browser state
+  ├── categoryStore       - Category data
+  ├── collectionStore     - User collections
+  ├── favoritesStore      - Favorite files
+  ├── midiDeviceStore     - MIDI device state
+  ├── midiMixerStore      - MIDI mixer state
+  ├── settingsStore       - App settings
+  └── vip3Store           - VIP3 browser state
+
+
+================================================================================
+                           TECHNOLOGY STACK
+================================================================================
+
+  Frontend:
+  ├── Svelte 4           - Reactive UI framework
+  ├── TypeScript 5       - Type-safe JavaScript
+  ├── Vite               - Build tool
+  ├── TailwindCSS        - Utility CSS (via app.css custom properties)
+  └── @tauri-apps/api    - Tauri JavaScript API
+
+  Backend:
+  ├── Rust 1.75+         - Systems programming language
+  ├── Tauri 2.x          - Desktop app framework
+  ├── SQLx 0.7           - Async PostgreSQL driver
+  ├── Tokio              - Async runtime
+  ├── Serde              - Serialization
+  └── midly              - MIDI parsing
+
+  Database:
+  ├── PostgreSQL 16      - Primary database
+  ├── pgvector           - Vector similarity search
+  └── Meilisearch        - Full-text search
+
+  DevOps:
+  ├── Docker Compose     - Container orchestration
+  ├── Make               - Build automation
+  └── GitHub Actions     - CI/CD
+
+
+================================================================================
+                                  END
+================================================================================

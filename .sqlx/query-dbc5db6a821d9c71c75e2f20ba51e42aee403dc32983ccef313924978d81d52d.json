@@ -1,0 +1,19 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO track_splits (\n            parent_file_id,\n            split_file_id,\n            track_number,\n            track_name,\n            instrument,\n            note_count,\n            created_at\n        ) VALUES ($1, $2, $3, $4, $5, $6, NOW())\n        ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Int8",
+        "Int4",
+        "Text",
+        "Text",
+        "Int4"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "dbc5db6a821d9c71c75e2f20ba51e42aee403dc32983ccef313924978d81d52d"
+}

@@ -2,11 +2,13 @@
 // GROWN-UP SCRIPT - I/O operations with proper error handling
 
 use anyhow::{Context, Result};
+use midir::{MidiInput, MidiOutput};
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::sync::Arc;
 use tauri::State;
 use tokio::sync::RwLock;
+use tracing::{debug, info};
 
 /// MIDI device information
 #[derive(Debug, Clone, Serialize, Deserialize, PartialEq)]
@@ -75,47 +77,165 @@ impl MidiDeviceState {
         }
     }
 
-    /// Scan for available MIDI devices
+    /// Scan for available MIDI devices using midir
     pub fn scan_devices(&mut self) -> Result<()> {
-        // In production, this would use midir to scan for devices
-        // For now, we populate with mock devices for testing
+        self.available_devices.clear();
+        info!("Scanning for MIDI devices...");
+
+        // Create temporary midir instances for scanning
+        let midi_in = MidiInput::new("MIDI Software Center Scan")
+            .context("Failed to create MIDI input for scanning")?;
+        let midi_out = MidiOutput::new("MIDI Software Center Scan")
+            .context("Failed to create MIDI output for scanning")?;
+
+        // Collect all unique device names from both inputs and outputs
+        let mut device_map: HashMap<String, MidiDevice> = HashMap::new();
+
+        // Scan input ports
+        for port in midi_in.ports() {
+            if let Ok(name) = midi_in.port_name(&port) {
+                let device_id = Self::normalize_device_id(&name);
+                let manufacturer = Self::extract_manufacturer(&name);
+
+                let device = device_map.entry(device_id.clone()).or_insert_with(|| {
+                    debug!("Found MIDI device: {}", name);
+                    let mut dev = MidiDevice::new(device_id.clone(), name.clone(), manufacturer);
+                    dev.latency_ms = 10.0; // Default ~10ms latency for USB MIDI
+                    dev
+                });
+
+                device.add_input(name.clone());
+            }
+        }
+
+        // Scan output ports
+        for port in midi_out.ports() {
+            if let Ok(name) = midi_out.port_name(&port) {
+                let device_id = Self::normalize_device_id(&name);
+                let manufacturer = Self::extract_manufacturer(&name);
+
+                let device = device_map.entry(device_id.clone()).or_insert_with(|| {
+                    debug!("Found MIDI device: {}", name);
+                    let mut dev = MidiDevice::new(device_id.clone(), name.clone(), manufacturer);
+                    dev.latency_ms = 10.0;
+                    dev
+                });
+
+                device.add_output(name.clone());
+            }
+        }
+
+        // Move devices to available_devices
+        for (id, device) in device_map {
+            info!(
+                "Registered device: {} ({} inputs, {} outputs)",
+                device.name,
+                device.inputs.len(),
+                device.outputs.len()
+            );
+            self.available_devices.insert(id, device);
+        }
+
+        info!(
+            "MIDI scan complete: {} devices found",
+            self.available_devices.len()
+        );
+        Ok(())
+    }
+
+    /// Scan for mock MIDI devices (for testing)
+    /// This provides consistent test data without requiring real hardware
+    #[cfg(test)]
+    pub fn scan_devices_mock(&mut self) -> Result<()> {
         self.available_devices.clear();
 
-        // Add some mock devices
+        // Create mock devices for testing
         let mut device1 = MidiDevice::new(
             "midi-device-1".to_string(),
-            "USB MIDI Controller".to_string(),
-            "Generic".to_string(),
+            "MIDI Device 1".to_string(),
+            "Test Manufacturer".to_string(),
         );
-        device1.add_input("Input 1".to_string());
-        device1.add_output("Output 1".to_string());
-        device1.latency_ms = 3.5;
+        device1.add_input("MIDI Device 1 Input".to_string());
+        device1.add_output("MIDI Device 1 Output".to_string());
+        device1.latency_ms = 5.0;
 
         let mut device2 = MidiDevice::new(
             "midi-device-2".to_string(),
-            "Synthesizer".to_string(),
-            "Yamaha".to_string(),
+            "MIDI Device 2".to_string(),
+            "Test Manufacturer".to_string(),
         );
-        device2.add_input("MIDI In".to_string());
-        device2.add_output("MIDI Out".to_string());
-        device2.latency_ms = 2.1;
+        device2.add_input("MIDI Device 2 Input".to_string());
+        device2.add_output("MIDI Device 2 Output".to_string());
+        device2.latency_ms = 10.0;
 
         self.available_devices
-            .insert(device1.id.clone(), device1);
+            .insert("midi-device-1".to_string(), device1);
         self.available_devices
-            .insert(device2.id.clone(), device2);
+            .insert("midi-device-2".to_string(), device2);
 
         Ok(())
+    }
+
+    /// Normalize device name to a consistent ID
+    fn normalize_device_id(name: &str) -> String {
+        // Remove port numbers and create a base device ID
+        // e.g., "UR22mkII:UR22mkII MIDI 1 20:0" -> "ur22mkii"
+        let name_lower = name.to_lowercase();
+        let base = name_lower
+            .split(':')
+            .next()
+            .unwrap_or(&name_lower)
+            .trim()
+            .replace(' ', "-")
+            .chars()
+            .filter(|c| c.is_alphanumeric() || *c == '-')
+            .collect::<String>();
+
+        if base.is_empty() {
+            format!("midi-device-{}", name.len())
+        } else {
+            base
+        }
+    }
+
+    /// Extract manufacturer from device name
+    fn extract_manufacturer(name: &str) -> String {
+        let name_lower = name.to_lowercase();
+
+        // Known manufacturers
+        let manufacturers = [
+            ("akai", "AKAI Professional"),
+            ("steinberg", "Steinberg"),
+            ("ur22", "Steinberg"),
+            ("yamaha", "Yamaha"),
+            ("roland", "Roland"),
+            ("korg", "KORG"),
+            ("native instruments", "Native Instruments"),
+            ("focusrite", "Focusrite"),
+            ("m-audio", "M-Audio"),
+            ("novation", "Novation"),
+            ("arturia", "Arturia"),
+            ("behringer", "Behringer"),
+            ("mpc", "AKAI Professional"),
+            ("force", "AKAI Professional"),
+            ("emu", "E-mu Systems"),
+            ("proteus", "E-mu Systems"),
+        ];
+
+        for (pattern, manufacturer) in manufacturers {
+            if name_lower.contains(pattern) {
+                return manufacturer.to_string();
+            }
+        }
+
+        "Unknown".to_string()
     }
 
     /// Connect to a device
     pub fn connect(&mut self, device_id: &str) -> Result<()> {
         // Check if already connected
         if self.connected_devices.contains_key(device_id) {
-            return Err(anyhow::anyhow!(
-                "Device already connected: {}",
-                device_id
-            ));
+            return Err(anyhow::anyhow!("Device already connected: {}", device_id));
         }
 
         // Find device in available devices
@@ -129,8 +249,7 @@ impl MidiDeviceState {
         let mut connected_device = device;
         connected_device.is_connected = true;
 
-        self.connected_devices
-            .insert(device_id.to_string(), connected_device);
+        self.connected_devices.insert(device_id.to_string(), connected_device);
 
         Ok(())
     }
@@ -189,22 +308,39 @@ impl Default for MidiDeviceState {
 pub async fn list_devices(
     state: State<'_, Arc<RwLock<MidiDeviceState>>>,
 ) -> Result<Vec<MidiDevice>, String> {
-    list_devices_impl(&state).await.map_err(|e| e.to_string())
+    list_devices_impl(&*state).await.map_err(|e| e.to_string())
 }
 
-async fn list_devices_impl(
-    state: &State<'_, Arc<RwLock<MidiDeviceState>>>,
+/// Implementation function for testing - accepts Arc directly
+pub async fn list_devices_impl(
+    state: &Arc<RwLock<MidiDeviceState>>,
 ) -> Result<Vec<MidiDevice>> {
     let mut device_state = state.write().await;
-    device_state
-        .scan_devices()
-        .context("Failed to scan devices")?;
+    device_state.scan_devices().context("Failed to scan devices")?;
 
-    let mut devices: Vec<MidiDevice> = device_state
-        .available_devices
-        .values()
-        .cloned()
-        .collect();
+    let mut devices: Vec<MidiDevice> = device_state.available_devices.values().cloned().collect();
+
+    // Mark connected devices
+    for device in &mut devices {
+        if device_state.connected_devices.contains_key(&device.id) {
+            device.is_connected = true;
+        }
+    }
+
+    devices.sort_by(|a, b| a.name.cmp(&b.name));
+
+    Ok(devices)
+}
+
+/// Implementation function for testing - doesn't rescan devices
+/// This allows tests to use pre-populated mock device data
+#[cfg(test)]
+pub async fn list_devices_impl_no_scan(
+    state: &Arc<RwLock<MidiDeviceState>>,
+) -> Result<Vec<MidiDevice>> {
+    let device_state = state.read().await;
+
+    let mut devices: Vec<MidiDevice> = device_state.available_devices.values().cloned().collect();
 
     // Mark connected devices
     for device in &mut devices {
@@ -224,19 +360,16 @@ pub async fn connect_device(
     device_id: String,
     state: State<'_, Arc<RwLock<MidiDeviceState>>>,
 ) -> Result<(), String> {
-    connect_device_impl(&device_id, &state)
-        .await
-        .map_err(|e| e.to_string())
+    connect_device_impl(&device_id, &*state).await.map_err(|e| e.to_string())
 }
 
-async fn connect_device_impl(
+/// Implementation function for testing - accepts Arc directly
+pub async fn connect_device_impl(
     device_id: &str,
-    state: &State<'_, Arc<RwLock<MidiDeviceState>>>,
+    state: &Arc<RwLock<MidiDeviceState>>,
 ) -> Result<()> {
     let mut device_state = state.write().await;
-    device_state
-        .connect(device_id)
-        .context("Failed to connect to device")?;
+    device_state.connect(device_id).context("Failed to connect to device")?;
     Ok(())
 }
 
@@ -246,19 +379,16 @@ pub async fn disconnect_device(
     device_id: String,
     state: State<'_, Arc<RwLock<MidiDeviceState>>>,
 ) -> Result<(), String> {
-    disconnect_device_impl(&device_id, &state)
-        .await
-        .map_err(|e| e.to_string())
+    disconnect_device_impl(&device_id, &*state).await.map_err(|e| e.to_string())
 }
 
-async fn disconnect_device_impl(
+/// Implementation function for testing - accepts Arc directly
+pub async fn disconnect_device_impl(
     device_id: &str,
-    state: &State<'_, Arc<RwLock<MidiDeviceState>>>,
+    state: &Arc<RwLock<MidiDeviceState>>,
 ) -> Result<()> {
     let mut device_state = state.write().await;
-    device_state
-        .disconnect(device_id)
-        .context("Failed to disconnect from device")?;
+    device_state.disconnect(device_id).context("Failed to disconnect from device")?;
     Ok(())
 }
 
@@ -268,19 +398,16 @@ pub async fn get_device_info(
     device_id: String,
     state: State<'_, Arc<RwLock<MidiDeviceState>>>,
 ) -> Result<MidiDevice, String> {
-    get_device_info_impl(&device_id, &state)
-        .await
-        .map_err(|e| e.to_string())
+    get_device_info_impl(&device_id, &*state).await.map_err(|e| e.to_string())
 }
 
-async fn get_device_info_impl(
+/// Implementation function for testing - accepts Arc directly
+pub async fn get_device_info_impl(
     device_id: &str,
-    state: &State<'_, Arc<RwLock<MidiDeviceState>>>,
+    state: &Arc<RwLock<MidiDeviceState>>,
 ) -> Result<MidiDevice> {
     let device_state = state.read().await;
-    device_state
-        .get_device(device_id)
-        .context("Failed to get device info")
+    device_state.get_device(device_id).context("Failed to get device info")
 }
 
 /// Set device mapping configuration
@@ -290,15 +417,16 @@ pub async fn set_device_mapping(
     mapping: HashMap<String, String>,
     state: State<'_, Arc<RwLock<MidiDeviceState>>>,
 ) -> Result<(), String> {
-    set_device_mapping_impl(&device_id, mapping, &state)
+    set_device_mapping_impl(&device_id, mapping, &*state)
         .await
         .map_err(|e| e.to_string())
 }
 
-async fn set_device_mapping_impl(
+/// Implementation function for testing - accepts Arc directly
+pub async fn set_device_mapping_impl(
     device_id: &str,
     mapping: HashMap<String, String>,
-    state: &State<'_, Arc<RwLock<MidiDeviceState>>>,
+    state: &Arc<RwLock<MidiDeviceState>>,
 ) -> Result<()> {
     let mut device_state = state.write().await;
 
@@ -376,18 +504,28 @@ mod tests {
     }
 
     #[test]
-    fn test_scan_devices() {
+    fn test_scan_devices_mock() {
         let mut state = MidiDeviceState::new();
-        let result = state.scan_devices();
+        let result = state.scan_devices_mock();
 
         assert!(result.is_ok());
         assert_eq!(state.available_devices.len(), 2);
     }
 
     #[test]
+    fn test_scan_devices_real() {
+        // Test that real device scanning works (may find 0 or more devices)
+        let mut state = MidiDeviceState::new();
+        let result = state.scan_devices();
+
+        assert!(result.is_ok());
+        // We don't assert on count - may vary by machine
+    }
+
+    #[test]
     fn test_connect_device() {
         let mut state = MidiDeviceState::new();
-        state.scan_devices().unwrap();
+        state.scan_devices_mock().unwrap();
 
         let result = state.connect("midi-device-1");
         assert!(result.is_ok());
@@ -400,7 +538,7 @@ mod tests {
     #[test]
     fn test_connect_nonexistent_device() {
         let mut state = MidiDeviceState::new();
-        state.scan_devices().unwrap();
+        state.scan_devices_mock().unwrap();
 
         let result = state.connect("nonexistent");
         assert!(result.is_err());
@@ -409,7 +547,7 @@ mod tests {
     #[test]
     fn test_connect_already_connected_device() {
         let mut state = MidiDeviceState::new();
-        state.scan_devices().unwrap();
+        state.scan_devices_mock().unwrap();
 
         state.connect("midi-device-1").unwrap();
         let result = state.connect("midi-device-1");
@@ -420,7 +558,7 @@ mod tests {
     #[test]
     fn test_disconnect_device() {
         let mut state = MidiDeviceState::new();
-        state.scan_devices().unwrap();
+        state.scan_devices_mock().unwrap();
 
         state.connect("midi-device-1").unwrap();
         let result = state.disconnect("midi-device-1");
@@ -432,7 +570,7 @@ mod tests {
     #[test]
     fn test_disconnect_not_connected_device() {
         let mut state = MidiDeviceState::new();
-        state.scan_devices().unwrap();
+        state.scan_devices_mock().unwrap();
 
         let result = state.disconnect("midi-device-1");
         assert!(result.is_err());
@@ -441,7 +579,7 @@ mod tests {
     #[test]
     fn test_disconnect_all() {
         let mut state = MidiDeviceState::new();
-        state.scan_devices().unwrap();
+        state.scan_devices_mock().unwrap();
 
         state.connect("midi-device-1").unwrap();
         state.connect("midi-device-2").unwrap();
@@ -455,7 +593,7 @@ mod tests {
     #[test]
     fn test_get_device() {
         let mut state = MidiDeviceState::new();
-        state.scan_devices().unwrap();
+        state.scan_devices_mock().unwrap();
 
         let device = state.get_device("midi-device-1");
         assert!(device.is_ok());
@@ -467,7 +605,7 @@ mod tests {
     #[test]
     fn test_get_connected_device() {
         let mut state = MidiDeviceState::new();
-        state.scan_devices().unwrap();
+        state.scan_devices_mock().unwrap();
         state.connect("midi-device-1").unwrap();
 
         let device = state.get_device("midi-device-1");
@@ -498,9 +636,13 @@ mod tests {
     #[tokio::test]
     async fn test_list_devices_impl() {
         let state = Arc::new(RwLock::new(MidiDeviceState::new()));
-        let tauri_state = State::from(&state);
+        {
+            let mut s = state.write().await;
+            s.scan_devices_mock().unwrap();
+        }
 
-        let devices = list_devices_impl(&tauri_state).await;
+        // Use the no-scan version to preserve mock devices
+        let devices = list_devices_impl_no_scan(&state).await;
         assert!(devices.is_ok());
 
         let devices = devices.unwrap();
@@ -508,15 +650,23 @@ mod tests {
     }
 
     #[tokio::test]
+    async fn test_list_devices_impl_real() {
+        // Test real device listing (may find 0 or more devices)
+        let state = Arc::new(RwLock::new(MidiDeviceState::new()));
+        let devices = list_devices_impl(&state).await;
+        assert!(devices.is_ok());
+        // Don't assert on count - depends on connected hardware
+    }
+
+    #[tokio::test]
     async fn test_connect_device_impl() {
         let state = Arc::new(RwLock::new(MidiDeviceState::new()));
         {
             let mut s = state.write().await;
-            s.scan_devices().unwrap();
+            s.scan_devices_mock().unwrap();
         }
 
-        let tauri_state = State::from(&state);
-        let result = connect_device_impl("midi-device-1", &tauri_state).await;
+        let result = connect_device_impl("midi-device-1", &state).await;
 
         assert!(result.is_ok());
 
@@ -529,12 +679,11 @@ mod tests {
         let state = Arc::new(RwLock::new(MidiDeviceState::new()));
         {
             let mut s = state.write().await;
-            s.scan_devices().unwrap();
+            s.scan_devices_mock().unwrap();
             s.connect("midi-device-1").unwrap();
         }
 
-        let tauri_state = State::from(&state);
-        let result = disconnect_device_impl("midi-device-1", &tauri_state).await;
+        let result = disconnect_device_impl("midi-device-1", &state).await;
 
         assert!(result.is_ok());
 
@@ -547,11 +696,10 @@ mod tests {
         let state = Arc::new(RwLock::new(MidiDeviceState::new()));
         {
             let mut s = state.write().await;
-            s.scan_devices().unwrap();
+            s.scan_devices_mock().unwrap();
         }
 
-        let tauri_state = State::from(&state);
-        let device = get_device_info_impl("midi-device-1", &tauri_state).await;
+        let device = get_device_info_impl("midi-device-1", &state).await;
 
         assert!(device.is_ok());
         let device = device.unwrap();
@@ -567,8 +715,7 @@ mod tests {
         mapping.insert("note_60".to_string(), "Middle C".to_string());
         mapping.insert("channel".to_string(), "1".to_string());
 
-        let tauri_state = State::from(&state);
-        let result = set_device_mapping_impl("midi-device-1", mapping, &tauri_state).await;
+        let result = set_device_mapping_impl("midi-device-1", mapping, &state).await;
 
         assert!(result.is_ok());
 

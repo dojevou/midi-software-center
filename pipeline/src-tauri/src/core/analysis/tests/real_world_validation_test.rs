@@ -125,7 +125,7 @@ fn test_realworld_detection_accuracy() {
     ];
 
     let mut detected = 0;
-    let mut has_channel_10 = 0;
+    let mut _has_channel_10 = 0;
 
     for filename in &test_files {
         let bytes = load_test_file(filename);
@@ -136,7 +136,7 @@ fn test_realworld_detection_accuracy() {
             detected += 1;
         }
         if analysis.drum_channel_detected {
-            has_channel_10 += 1;
+            _has_channel_10 += 1;
         }
     }
 

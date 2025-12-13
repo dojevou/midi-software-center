@@ -26,6 +26,7 @@ members = [
     "shared/rust",               # Shared MIDI parsing & analysis
     "scripts/import-tool",       # CLI utilities
     "scripts/test-midi-files",   # MIDI testing tool
+    "verification",              # Verification suite
 ]
 
 # Shared dependencies across all workspace members
@@ -49,12 +50,6 @@ tauri = { version = "2.7", features = [] }
 tauri-plugin-shell = "2"
 tauri-plugin-dialog = "2"
 tauri-plugin-fs = "2"
-
-# Async utilities
-futures = "0.3"
-
-# Cryptography
-blake3 = "1.5"
 sha2 = "0.10"
 
 # Time
@@ -63,32 +58,14 @@ chrono = { version = "0.4", features = ["serde"] }
 # UUID
 uuid = { version = "1.6", features = ["v4", "serde"] }
 
-# Logging
+# Logging & Observability
 tracing = "0.1"
 tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+sentry = { version = "0.32", default-features = false, features = ["backtrace", "contexts", "panic", "tracing"] }
 
 # Configuration
 config = "0.13"
-
-# File I/O
-memmap2 = "0.9"
-
-# Parallel processing
-rayon = "1.8"
-
-# MIDI processing
-midly = "0.5"
-
-# Audio processing (for DAW)
-cpal = "0.15"
-rodio = "0.17"
-
-# Testing
-mockall = "0.12"
-tempfile = "3.8"
-
-# Benchmarking
-criterion = "0.5"
+parking_lot = "0.12"        # Faster mutexes and RwLocks
 
 # Platform-specific configurations
 [workspace.metadata.cross]
@@ -112,26 +89,8 @@ opt-level = 3          # Maximum optimization for dependencies
 [profile.dev.package.tauri]
 opt-level = 3
 
-[profile.dev.package.tauri-codegen]
-opt-level = 3
-
-[profile.dev.package.tauri-macros]
-opt-level = 3
-
-[profile.dev.package.tauri-runtime]
-opt-level = 3
-
-[profile.dev.package.tauri-runtime-wry]
-opt-level = 3
-
 # Database heavy crates
 [profile.dev.package.sqlx]
-opt-level = 3
-
-[profile.dev.package.sqlx-core]
-opt-level = 3
-
-[profile.dev.package.sqlx-macros]
 opt-level = 3
 
 # Async runtime
@@ -146,13 +105,6 @@ opt-level = 3
 opt-level = 3
 
 [profile.dev.package.serde_json]
-opt-level = 3
-
-# Web rendering
-[profile.dev.package.wry]
-opt-level = 3
-
-[profile.dev.package.tao]
 opt-level = 3
 
 # Release profile - maximum optimization

@@ -1,4 +1,3 @@
-
 /// Archive Format Detection
 use std::path::Path;
 

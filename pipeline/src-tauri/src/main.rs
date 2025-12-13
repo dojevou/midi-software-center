@@ -14,6 +14,8 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 // Import from lib
 use midi_pipeline::{AppState, Database};
+use midi_pipeline::commands::health::HealthState;
+use midi_library_shared::health::HealthChecker;
 
 // Window management module
 mod windows;
@@ -57,12 +59,25 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     // Create application state
     let state = AppState { database };
 
+    // Create health checker
+    let meilisearch_url = std::env::var("MEILISEARCH_URL")
+        .unwrap_or_else(|_| "http://localhost:7700".to_string());
+    let meilisearch_key = std::env::var("MEILISEARCH_KEY").ok();
+
+    let health_checker = HealthChecker::new()
+        .with_postgres(state.database.pool().await)
+        .with_meilisearch(meilisearch_url, meilisearch_key);
+
+    let health_state = HealthState::new(health_checker);
+    info!("Health checker initialized");
+
     // Create window manager
     let window_manager = Arc::new(Mutex::new(windows::WindowManager::new()));
 
     // Build and run Tauri application
     tauri::Builder::default()
         .manage(state)
+        .manage(health_state)
         .manage(window_manager)
         .invoke_handler(tauri::generate_handler![
             // File commands
@@ -79,7 +94,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             midi_pipeline::commands::file_import::import_directory,
             midi_pipeline::commands::archive_import::import_archive_collection,
             // Search commands
-            midi_pipeline::commands::search::search_files,
+            midi_pipeline::commands::search::pipeline_search_files,
             midi_pipeline::commands::search::get_all_tags,
             midi_pipeline::commands::search::get_files_by_tag,
             midi_pipeline::commands::search::get_bpm_range,
@@ -105,6 +120,47 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             midi_pipeline::commands::tags::remove_tag_from_file,
             midi_pipeline::commands::tags::get_files_by_tags,
             midi_pipeline::commands::tags::get_tag_stats,
+            // Rating commands
+            midi_pipeline::commands::tags::set_file_rating,
+            midi_pipeline::commands::tags::get_file_rating,
+            midi_pipeline::commands::tags::get_files_by_rating,
+            // VIP3 Browser commands
+            midi_pipeline::commands::vip3::search_files_vip3,
+            midi_pipeline::commands::vip3::get_vip3_filter_counts,
+            // VIP3 Favorites commands
+            midi_pipeline::commands::vip3::toggle_favorite,
+            midi_pipeline::commands::vip3::set_favorite,
+            midi_pipeline::commands::vip3::get_favorites,
+            midi_pipeline::commands::vip3::get_favorite_count,
+            // VIP3 Saved Search commands
+            midi_pipeline::commands::vip3::save_search,
+            midi_pipeline::commands::vip3::get_saved_searches,
+            midi_pipeline::commands::vip3::load_saved_search,
+            midi_pipeline::commands::vip3::delete_saved_search,
+            midi_pipeline::commands::vip3::toggle_saved_search_pin,
+            // VIP3 Collection commands
+            midi_pipeline::commands::vip3::create_collection,
+            midi_pipeline::commands::vip3::get_collections,
+            midi_pipeline::commands::vip3::get_collection,
+            midi_pipeline::commands::vip3::add_file_to_collection,
+            midi_pipeline::commands::vip3::remove_file_from_collection,
+            midi_pipeline::commands::vip3::get_collection_files,
+            midi_pipeline::commands::vip3::delete_collection,
+            midi_pipeline::commands::vip3::update_collection,
+            // VIP3 Category Assignment commands
+            midi_pipeline::commands::vip3::add_timbre_to_file,
+            midi_pipeline::commands::vip3::remove_timbre_from_file,
+            midi_pipeline::commands::vip3::add_style_to_file,
+            midi_pipeline::commands::vip3::remove_style_from_file,
+            midi_pipeline::commands::vip3::add_articulation_to_file,
+            midi_pipeline::commands::vip3::remove_articulation_from_file,
+            midi_pipeline::commands::vip3::get_file_categories,
+            // VIP3 Lookup commands
+            midi_pipeline::commands::vip3::get_all_timbres,
+            midi_pipeline::commands::vip3::get_all_styles,
+            midi_pipeline::commands::vip3::get_all_articulations,
+            midi_pipeline::commands::vip3::get_all_bpm_ranges,
+            midi_pipeline::commands::vip3::get_all_musical_keys,
             // Progress tracking commands
             midi_pipeline::commands::progress::start_progress_tracking,
             midi_pipeline::commands::progress::update_progress,
@@ -130,6 +186,11 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             windows::commands::get_focused_window,
             windows::commands::set_focused_window,
             windows::commands::get_current_layout,
+            // Health check commands
+            midi_pipeline::commands::health::check_system_health,
+            midi_pipeline::commands::health::get_cached_health,
+            midi_pipeline::commands::health::check_postgres_health,
+            midi_pipeline::commands::health::check_meilisearch_health,
         ])
         .setup(|_app| {
             info!("Application setup complete");

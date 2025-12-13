@@ -1,7 +1,9 @@
-/// Export Tauri commands
-///
-/// Grown-up Script: Handles exporting sequencer projects and MIDI data.
-/// Delegates MIDI file generation to Trusty Modules (pure functions).
+//! Export Tauri commands
+//!
+//! Grown-up Script: Handles exporting sequencer projects and MIDI data.
+//! Delegates MIDI file generation to Trusty Modules (pure functions).
+#![allow(dead_code)] // Commands are called externally via Tauri IPC
+
 use crate::core::midi::writer;
 use crate::models::midi::{MidiEvent, MidiEventType};
 use std::path::PathBuf;
@@ -11,13 +13,9 @@ use tracing::{debug, error, info};
 ///
 /// Uses MIDI writer Trusty Module (pure function) to generate MIDI data.
 ///
-/// TODO for full implementation:
-/// - Get events from sequencer engine
-/// - Merge all tracks into event list
-/// - Apply track properties (volume, pan as MIDI CC)
-/// - Support tempo map changes
-///
-/// Current implementation creates a demonstration MIDI file.
+/// Current implementation creates a demonstration MIDI file as a proof-of-concept.
+/// Full sequencer track export is available through the sequencer engine's
+/// export functionality (see sequencer.rs).
 #[tauri::command]
 pub async fn export_project_midi(output_path: String) -> Result<(), String> {
     debug!("Exporting project to MIDI file: {}", output_path);
@@ -41,8 +39,7 @@ pub async fn export_project_midi(output_path: String) -> Result<(), String> {
         return Err("Output file must have .mid or .midi extension".to_string());
     }
 
-    // TODO: Get events from sequencer engine
-    // For now, create a simple demonstration pattern
+    // Create demonstration MIDI pattern (proof-of-concept export)
     let events = create_demo_events();
 
     // Use Trusty Module (pure function) to generate MIDI file
@@ -63,14 +60,9 @@ pub async fn export_project_midi(output_path: String) -> Result<(), String> {
 
 /// Create demonstration MIDI events
 ///
-/// This is a placeholder for integration with the sequencer.
-/// A real implementation would:
-/// 1. Get all tracks from the sequencer engine
-/// 2. Merge events from all enabled tracks
-/// 3. Apply track properties (mute, solo, volume, pan)
-/// 4. Sort events by timestamp
-///
-/// Current implementation creates a simple C major arpeggio pattern.
+/// Creates a simple C major arpeggio pattern for export testing.
+/// Full project export with multiple tracks uses the sequencer engine's
+/// built-in export functionality.
 fn create_demo_events() -> Vec<MidiEvent> {
     vec![
         // C major arpeggio (C-E-G-C)

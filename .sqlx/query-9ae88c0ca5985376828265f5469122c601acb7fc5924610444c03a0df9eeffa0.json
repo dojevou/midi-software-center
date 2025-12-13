@@ -1,0 +1,46 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO files (\n                filename,\n                filepath,\n                original_filename,\n                content_hash,\n                file_size_bytes,\n                format,\n                num_tracks,\n                ticks_per_quarter_note,\n                duration_seconds,\n                duration_ticks,\n                manufacturer,\n                collection_name,\n                folder_tags,\n                import_batch_id,\n                parent_folder,\n                filename_bpm,\n                filename_key,\n                filename_genres,\n                structure_tags,\n                metadata_source,\n                track_names,\n                copyright,\n                instrument_names_text,\n                markers,\n                lyrics\n            ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13, $14, $15, $16, $17, $18, $19, $20, $21, $22, $23, $24, $25)\n            RETURNING id\n            ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Bytea",
+        "Int8",
+        "Int2",
+        "Int2",
+        "Int4",
+        "Numeric",
+        "Int8",
+        "Text",
+        "Text",
+        "TextArray",
+        "Uuid",
+        "Text",
+        "Float4",
+        "Text",
+        "TextArray",
+        "TextArray",
+        "Text",
+        "TextArray",
+        "Text",
+        "TextArray",
+        "TextArray",
+        "TextArray"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "9ae88c0ca5985376828265f5469122c601acb7fc5924610444c03a0df9eeffa0"
+}

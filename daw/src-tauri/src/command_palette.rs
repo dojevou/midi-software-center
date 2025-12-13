@@ -469,10 +469,7 @@ impl CommandPalette {
         }
 
         // Check if abbreviation matches first letters of words
-        words
-            .iter()
-            .zip(abbr_chars.iter())
-            .all(|(word, &ch)| word.starts_with(ch))
+        words.iter().zip(abbr_chars.iter()).all(|(word, &ch)| word.starts_with(ch))
     }
 
     pub fn get_recently_used(&self) -> Vec<SearchResult> {

@@ -9,7 +9,7 @@ pub mod validator;
 pub mod writer;
 
 #[allow(unused_imports)]
-pub use loader::{load_midi_file, LoadedMidiFile};
+pub use loader::{load_midi_file, load_midi_from_bytes, LoadedMidiFile};
 #[allow(unused_imports)]
 pub use parser::{parse_midi, ParseError};
 #[allow(unused_imports)]

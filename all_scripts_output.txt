@@ -1,0 +1,178 @@
+================================================================================
+MIDI SOFTWARE CENTER - ALL DIAGNOSTIC SCRIPTS
+================================================================================
+
+--------------------------------------------------------------------------------
+1. COMPILATION STATUS - Workspace Errors
+--------------------------------------------------------------------------------
+cd ~/projects/midi-software-center && cargo check --workspace 2>&1 | grep -E "^error" | head -50
+
+--------------------------------------------------------------------------------
+2. COMPILATION STATUS - DAW Package Errors
+--------------------------------------------------------------------------------
+cd ~/projects/midi-software-center && cargo check -p midi-software-center-daw --tests 2>&1 | grep -E "^error"
+
+--------------------------------------------------------------------------------
+3. TEST FAILURES - All Failures with Panic Info
+--------------------------------------------------------------------------------
+cd ~/projects/midi-software-center && cargo test --workspace --lib -- --test-threads=1 2>&1 | grep -E "(FAILED|panicked|assertion failed)" | head -50
+
+--------------------------------------------------------------------------------
+4. TEST FAILURES - Count
+--------------------------------------------------------------------------------
+cd ~/projects/midi-software-center && cargo test --workspace --lib -- --test-threads=1 2>&1 | grep -c "FAILED"
+
+--------------------------------------------------------------------------------
+5. AUTO-TAGGER - tag_names.contains assertions
+--------------------------------------------------------------------------------
+cd ~/projects/midi-software-center && grep -n "tag_names.contains" pipeline/src-tauri/src/core/analysis/auto_tagger.rs | head -20
+
+--------------------------------------------------------------------------------
+6. AUTO-TAGGER - Failing Lines Context
+--------------------------------------------------------------------------------
+cd ~/projects/midi-software-center && sed -n '1065,1072p' pipeline/src-tauri/src/core/analysis/auto_tagger.rs
+cd ~/projects/midi-software-center && sed -n '1089,1096p' pipeline/src-tauri/src/core/analysis/auto_tagger.rs
+cd ~/projects/midi-software-center && sed -n '1102,1109p' pipeline/src-tauri/src/core/analysis/auto_tagger.rs
+cd ~/projects/midi-software-center && sed -n '1112,1119p' pipeline/src-tauri/src/core/analysis/auto_tagger.rs
+cd ~/projects/midi-software-center && sed -n '1174,1181p' pipeline/src-tauri/src/core/analysis/auto_tagger.rs
+cd ~/projects/midi-software-center && sed -n '1245,1252p' pipeline/src-tauri/src/core/analysis/auto_tagger.rs
+cd ~/projects/midi-software-center && sed -n '1283,1290p' pipeline/src-tauri/src/core/analysis/auto_tagger.rs
+cd ~/projects/midi-software-center && sed -n '1362,1369p' pipeline/src-tauri/src/core/analysis/auto_tagger.rs
+cd ~/projects/midi-software-center && sed -n '1838,1845p' pipeline/src-tauri/src/core/analysis/auto_tagger.rs
+cd ~/projects/midi-software-center && sed -n '1861,1868p' pipeline/src-tauri/src/core/analysis/auto_tagger.rs
+cd ~/projects/midi-software-center && sed -n '1920,1927p' pipeline/src-tauri/src/core/analysis/auto_tagger.rs
+
+--------------------------------------------------------------------------------
+7. CHORD ANALYZER - test_rapid_chord_changes
+--------------------------------------------------------------------------------
+cd ~/projects/midi-software-center && sed -n '400,415p' pipeline/src-tauri/src/core/analysis/tests/chord_analyzer_extended_test.rs
+
+--------------------------------------------------------------------------------
+8. WINDOW STATE - test_database_window_pagination
+--------------------------------------------------------------------------------
+cd ~/projects/midi-software-center && sed -n '425,445p' pipeline/src-tauri/src/database/window_state.rs
+
+--------------------------------------------------------------------------------
+9. ANALYZE COMMAND - test_get_key_name
+--------------------------------------------------------------------------------
+cd ~/projects/midi-software-center && sed -n '1740,1760p' pipeline/src-tauri/src/commands/analyze.rs
+
+--------------------------------------------------------------------------------
+10. FILENAME METADATA - test_number_classification
+--------------------------------------------------------------------------------
+cd ~/projects/midi-software-center && sed -n '540,560p' pipeline/src-tauri/src/core/analysis/filename_metadata.rs
+
+--------------------------------------------------------------------------------
+11. STRUCT DEFINITIONS - Track
+--------------------------------------------------------------------------------
+cd ~/projects/midi-software-center && grep -A 15 "pub struct Track {" daw/src-tauri/src/models/sequencer.rs
+
+--------------------------------------------------------------------------------
+12. STRUCT DEFINITIONS - SequencerState
+--------------------------------------------------------------------------------
+cd ~/projects/midi-software-center && grep -A 12 "pub struct SequencerState {" daw/src-tauri/src/models/sequencer.rs
+
+--------------------------------------------------------------------------------
+13. STRUCT DEFINITIONS - MidiDevice
+--------------------------------------------------------------------------------
+cd ~/projects/midi-software-center && grep -A 6 "pub struct MidiDevice {" daw/src-tauri/src/models/midi.rs
+
+--------------------------------------------------------------------------------
+14. STRUCT DEFINITIONS - MidiEvent
+--------------------------------------------------------------------------------
+cd ~/projects/midi-software-center && grep -A 20 "pub struct MidiEvent {" daw/src-tauri/src/models/midi.rs
+
+--------------------------------------------------------------------------------
+15. STRUCT DEFINITIONS - SearchFilters
+--------------------------------------------------------------------------------
+cd ~/projects/midi-software-center && grep -A 20 "pub struct SearchFilters {" daw/src-tauri/src/models/search.rs
+
+--------------------------------------------------------------------------------
+16. ERROR SUMMARY - Count by Type
+--------------------------------------------------------------------------------
+cd ~/projects/midi-software-center && cargo check --workspace 2>&1 | grep -E "^error" | sort | uniq -c | sort -rn
+
+--------------------------------------------------------------------------------
+17. ERROR SUMMARY - All Error Locations
+--------------------------------------------------------------------------------
+cd ~/projects/midi-software-center && cargo check --workspace 2>&1 | grep -B2 "^error" | grep -E "error|-->" | head -30
+
+--------------------------------------------------------------------------------
+18. MODELS_TEST.RS - Compilation Check
+--------------------------------------------------------------------------------
+cd ~/projects/midi-software-center && cargo check -p midi-software-center-daw --test models_test 2>&1 | grep -E "error|Finished|warning.*models_test"
+
+--------------------------------------------------------------------------------
+19. MISSING FIELD ERRORS - Count
+--------------------------------------------------------------------------------
+cd ~/projects/midi-software-center && cargo check --workspace 2>&1 | grep -c "missing field"
+
+--------------------------------------------------------------------------------
+20. LARGEST SOURCE FILES
+--------------------------------------------------------------------------------
+cd ~/projects/midi-software-center && find . -name "*.rs" -type f ! -path "./target/*" | xargs wc -l 2>/dev/null | sort -rn | head -15
+
+--------------------------------------------------------------------------------
+21. TEST FILE SIZES
+--------------------------------------------------------------------------------
+cd ~/projects/midi-software-center && find . -name "*_test.rs" -o -name "*_tests.rs" | xargs wc -l 2>/dev/null | sort -rn | head -10
+
+--------------------------------------------------------------------------------
+22. AUTO-TAGGER FUNCTION - extract_from_filename
+--------------------------------------------------------------------------------
+cd ~/projects/midi-software-center && grep -n "pub fn extract_from_filename" pipeline/src-tauri/src/core/analysis/auto_tagger.rs
+cd ~/projects/midi-software-center && grep -A 50 "pub fn extract_from_filename" pipeline/src-tauri/src/core/analysis/auto_tagger.rs | head -60
+
+--------------------------------------------------------------------------------
+23. AUTO-TAGGER FUNCTION - extract_from_path
+--------------------------------------------------------------------------------
+cd ~/projects/midi-software-center && grep -n "pub fn extract_from_path" pipeline/src-tauri/src/core/analysis/auto_tagger.rs
+cd ~/projects/midi-software-center && grep -A 30 "pub fn extract_from_path" pipeline/src-tauri/src/core/analysis/auto_tagger.rs | head -40
+
+--------------------------------------------------------------------------------
+24. CHORD ANALYZER - analyze_chords function
+--------------------------------------------------------------------------------
+cd ~/projects/midi-software-center && grep -n "pub fn analyze_chords" pipeline/src-tauri/src/core/analysis/chord_analyzer.rs
+cd ~/projects/midi-software-center && grep -n "pub fn analyze_chords" pipeline/src-tauri/src/core/analysis/*.rs
+
+--------------------------------------------------------------------------------
+25. WINDOW STATE - previous_page function
+--------------------------------------------------------------------------------
+cd ~/projects/midi-software-center && grep -n "fn previous_page" pipeline/src-tauri/src/database/window_state.rs
+cd ~/projects/midi-software-center && grep -A 10 "fn previous_page" pipeline/src-tauri/src/database/window_state.rs
+
+--------------------------------------------------------------------------------
+26. ANALYZE COMMAND - get_key_name function
+--------------------------------------------------------------------------------
+cd ~/projects/midi-software-center && grep -n "fn get_key_name" pipeline/src-tauri/src/commands/analyze.rs
+cd ~/projects/midi-software-center && grep -A 20 "fn get_key_name" pipeline/src-tauri/src/commands/analyze.rs | head -25
+
+--------------------------------------------------------------------------------
+27. FILENAME METADATA - classify_leading_number function
+--------------------------------------------------------------------------------
+cd ~/projects/midi-software-center && grep -n "fn classify_leading_number" pipeline/src-tauri/src/core/analysis/filename_metadata.rs
+cd ~/projects/midi-software-center && grep -A 15 "fn classify_leading_number" pipeline/src-tauri/src/core/analysis/filename_metadata.rs
+
+--------------------------------------------------------------------------------
+28. FILENAME METADATA - NumberType enum
+--------------------------------------------------------------------------------
+cd ~/projects/midi-software-center && grep -B 2 -A 10 "enum NumberType" pipeline/src-tauri/src/core/analysis/filename_metadata.rs
+
+--------------------------------------------------------------------------------
+29. TOKIO TEST ANNOTATION CHECK
+--------------------------------------------------------------------------------
+cd ~/projects/midi-software-center && grep -rn "PgPool::connect_lazy" --include="*.rs" | grep -v target | head -10
+
+--------------------------------------------------------------------------------
+30. FULL TEST RESULTS SUMMARY
+--------------------------------------------------------------------------------
+cd ~/projects/midi-software-center && cargo test --workspace --lib -- --test-threads=1 2>&1 | tail -20
+
+--------------------------------------------------------------------------------
+31. QUICK STATUS COMMAND
+--------------------------------------------------------------------------------
+cd ~/projects/midi-software-center && echo "=== COMPILATION ===" && cargo check --workspace 2>&1 | grep -c "^error" | xargs echo "Errors:" && echo "=== TESTS ===" && cargo test --workspace --lib -- --test-threads=1 2>&1 | grep -c "FAILED" | xargs echo "Failures:"
+
+================================================================================
+END OF SCRIPTS
+================================================================================

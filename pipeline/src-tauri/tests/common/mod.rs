@@ -2,7 +2,6 @@
 #[allow(dead_code, unused_imports, unused_variables)]
 // Common test infrastructure for Pipeline command tests
 // Provides database mocks, Tauri mocks, fixtures, builders, and assertions
-
 pub mod assertions;
 pub mod builders;
 pub mod database;

@@ -1,4 +1,3 @@
-
 /// Krumhansl-Schmuckler Key Profiles
 ///
 /// These profiles represent the expected distribution of pitch classes

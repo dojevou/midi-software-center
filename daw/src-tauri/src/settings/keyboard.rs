@@ -1,8 +1,7 @@
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub enum KeybindingProfile {
     #[default]
     Default,
@@ -13,7 +12,6 @@ pub enum KeybindingProfile {
     Logic,
     Reaper,
 }
-
 
 impl KeybindingProfile {
     pub fn all_profiles() -> Vec<KeybindingProfile> {
@@ -41,13 +39,11 @@ impl KeybindingProfile {
     }
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
-#[derive(Default)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct KeyboardSettings {
     pub profile: KeybindingProfile,
     pub custom_keybindings: HashMap<String, String>,
 }
-
 
 impl KeyboardSettings {
     pub fn new() -> Self {

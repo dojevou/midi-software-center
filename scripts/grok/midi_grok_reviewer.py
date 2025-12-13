@@ -22,10 +22,24 @@ class MIDIProjectReviewer:
         self.project_root = Path("/home/dojevou/projects/midi-software-center")
         self.analysis_history = []
 
-        self.client = httpx.Client(timeout=120.0, http2=True)
+        # Browser-like headers that xAI expects
+        self.default_headers = {
+            "User-Agent": "Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+            "Accept": "application/json, text/plain, */*",
+            "Accept-Language": "en-US,en;q=0.9",
+            "Accept-Encoding": "gzip, deflate, br",
+            "Connection": "keep-alive",
+            "Sec-Fetch-Dest": "empty",
+            "Sec-Fetch-Mode": "cors",
+            "Sec-Fetch-Site": "same-site",
+            "Cache-Control": "no-cache",
+            "Pragma": "no-cache",
+        }
+
+        self.client = httpx.Client(timeout=120.0, http2=True, follow_redirects=True)
 
         if not self.api_key:
-            print("❌ GROK_API_KEY not set")
+            print("⚠️  GROK_API_KEY not set. Set it with:")
             print("   export GROK_API_KEY='xai-...'")
             sys.exit(1)
 
@@ -61,7 +75,7 @@ class MIDIProjectReviewer:
                 try:
                     content = full_path.read_text()[:1000]
                     phase_info[phase_file] = {"exists": True, "summary": content[:500]}
-                except:
+                except Exception as e:
                     phase_info[phase_file] = {"exists": True, "error": "read_failed"}
             else:
                 phase_info[phase_file] = {"exists": False}
@@ -312,7 +326,7 @@ class MIDIProjectReviewer:
                 if result.stderr
                 else "No TypeScript errors"
             }
-        except:
+        except Exception as e:
             return {"error": "TypeScript check skipped"}
 
     def check_test_compilation(self):

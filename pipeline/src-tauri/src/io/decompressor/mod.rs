@@ -1,4 +1,3 @@
-
 /// Archive decompression module
 ///
 /// # Archetype: Grown-up Script

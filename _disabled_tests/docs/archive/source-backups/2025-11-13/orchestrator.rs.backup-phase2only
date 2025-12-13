@@ -1,0 +1,477 @@
+// orchestrator.rs - Intelligent pipeline orchestrator
+// Coordinates import and analysis phases with optimal parallelization
+
+use anyhow::{Context, Result};
+use blake3;
+use clap::Parser;
+use crossbeam_channel::bounded;
+use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
+use midi_pipeline::core::analysis::chord_analyzer::analyze_chords;
+use midi_pipeline::core::analysis::{detect_bpm, detect_key};
+use midi_library_shared::core::midi::parser::parse_midi_file;
+use sqlx::postgres::PgPoolOptions;
+use sqlx::{Pool, Postgres};
+use std::path::{Path, PathBuf};
+use std::sync::atomic::{AtomicBool, AtomicU64, Ordering};
+use std::sync::Arc;
+use std::time::{Duration, Instant};
+use tokio::task::JoinHandle;
+use tracing::error;
+
+#[derive(Parser, Debug)]
+#[command(name = "orchestrator")]
+#[command(about = "MIDI Pipeline Orchestrator - Parallel import and analysis")]
+struct Args {
+    /// Source directory containing MIDI files
+    #[arg(short, long)]
+    source: PathBuf,
+
+    /// Number of analysis workers (default: CPU count)
+    #[arg(short = 'w', long, default_value_t = num_cpus::get())]
+    workers: usize,
+
+    /// Batch size for database inserts
+    #[arg(short = 'b', long, default_value_t = 1000)]
+    batch_size: usize,
+
+    /// Skip import if files already exist
+    #[arg(long)]
+    skip_import: bool,
+
+    /// Skip analysis phase
+    #[arg(long)]
+    skip_analysis: bool,
+}
+
+#[derive(Debug, Clone)]
+struct FileRecord {
+    id: i64,
+    filepath: String,
+    filename: String,
+}
+
+#[derive(Debug)]
+struct Stats {
+    files_imported: AtomicU64,
+    files_analyzed: AtomicU64,
+    import_errors: AtomicU64,
+    analysis_errors: AtomicU64,
+    start_time: Instant,
+}
+
+impl Stats {
+    fn new() -> Self {
+        Self {
+            files_imported: AtomicU64::new(0),
+            files_analyzed: AtomicU64::new(0),
+            import_errors: AtomicU64::new(0),
+            analysis_errors: AtomicU64::new(0),
+            start_time: Instant::now(),
+        }
+    }
+
+    fn import_file(&self) {
+        self.files_imported.fetch_add(1, Ordering::Relaxed);
+    }
+
+    fn analyze_file(&self) {
+        self.files_analyzed.fetch_add(1, Ordering::Relaxed);
+    }
+
+    fn import_error(&self) {
+        self.import_errors.fetch_add(1, Ordering::Relaxed);
+    }
+
+    fn analysis_error(&self) {
+        self.analysis_errors.fetch_add(1, Ordering::Relaxed);
+    }
+
+    fn get_import_count(&self) -> u64 {
+        self.files_imported.load(Ordering::Relaxed)
+    }
+
+    fn get_analysis_count(&self) -> u64 {
+        self.files_analyzed.load(Ordering::Relaxed)
+    }
+
+    fn get_import_errors(&self) -> u64 {
+        self.import_errors.load(Ordering::Relaxed)
+    }
+
+    fn get_analysis_errors(&self) -> u64 {
+        self.analysis_errors.load(Ordering::Relaxed)
+    }
+
+    fn elapsed(&self) -> Duration {
+        self.start_time.elapsed()
+    }
+}
+
+#[tokio::main]
+async fn main() -> Result<()> {
+    // Initialize tracing
+    tracing_subscriber::fmt::init();
+
+    let args = Args::parse();
+
+    // Validate source directory
+    if !args.source.exists() {
+        anyhow::bail!("Source directory does not exist: {:?}", args.source);
+    }
+
+    println!("🎵 MIDI Pipeline Orchestrator");
+    println!("==============================");
+    println!("Source: {:?}", args.source);
+    println!("Workers: {}", args.workers);
+    println!("Batch size: {}", args.batch_size);
+    println!();
+
+    // Connect to database
+    let database_url = std::env::var("DATABASE_URL")
+        .context("DATABASE_URL not set")?;
+
+    let pool = PgPoolOptions::new()
+        .max_connections(args.workers as u32 + 2)
+        .connect(&database_url)
+        .await
+        .context("Failed to connect to database")?;
+
+    println!("✅ Connected to database");
+    println!();
+
+    let stats = Arc::new(Stats::new());
+    let shutdown = Arc::new(AtomicBool::new(false));
+    let multi_progress = Arc::new(MultiProgress::new());
+
+    // Phase 1: Import
+    let import_handle = if !args.skip_import {
+        Some(spawn_import_phase(
+            args.source.clone(),
+            pool.clone(),
+            args.batch_size,
+            stats.clone(),
+            shutdown.clone(),
+            multi_progress.clone(),
+        ))
+    } else {
+        println!("⏭️  Skipping import phase");
+        None
+    };
+
+    // Phase 2: Analysis
+    let analysis_handles = if !args.skip_analysis {
+        if import_handle.is_some() {
+            tokio::time::sleep(Duration::from_secs(2)).await;
+        }
+        spawn_analysis_phase(
+            pool.clone(),
+            args.workers,
+            stats.clone(),
+            shutdown.clone(),
+            multi_progress.clone(),
+        )
+        .await?
+    } else {
+        println!("⏭️  Skipping analysis phase");
+        Vec::new()
+    };
+
+    if let Some(handle) = import_handle {
+        handle.await??;
+        println!("✅ Import phase complete");
+    }
+
+    for handle in analysis_handles {
+        handle.await??;
+    }
+
+    if !args.skip_analysis {
+        println!("✅ Analysis phase complete");
+    }
+
+    println!();
+    println!("🎉 Pipeline Complete!");
+    println!("======================");
+    println!("Files imported:  {}", stats.get_import_count());
+    println!("Files analyzed:  {}", stats.get_analysis_count());
+    println!("Import errors:   {}", stats.get_import_errors());
+    println!("Analysis errors: {}", stats.get_analysis_errors());
+    println!("Total time:      {:.1}s", stats.elapsed().as_secs_f64());
+    println!();
+
+    Ok(())
+}
+
+fn spawn_import_phase(
+    source: PathBuf,
+    pool: Pool<Postgres>,
+    batch_size: usize,
+    stats: Arc<Stats>,
+    shutdown: Arc<AtomicBool>,
+    multi_progress: Arc<MultiProgress>,
+) -> JoinHandle<Result<()>> {
+    tokio::spawn(async move {
+        let pb = multi_progress.add(ProgressBar::new(0));
+        pb.set_style(
+            ProgressStyle::default_bar()
+                .template("[{elapsed_precise}] {bar:40.cyan/blue} {pos}/{len} {msg}")
+                .unwrap()
+                .progress_chars("=>-"),
+        );
+        pb.set_message("Importing files...");
+
+        let files = scan_directory(&source)?;
+        pb.set_length(files.len() as u64);
+
+        for batch in files.chunks(batch_size) {
+            if shutdown.load(Ordering::Relaxed) {
+                break;
+            }
+            import_batch(&pool, batch, &stats, &pb).await?;
+        }
+
+        pb.finish_with_message("Import complete");
+        Ok(())
+    })
+}
+
+async fn spawn_analysis_phase(
+    pool: Pool<Postgres>,
+    worker_count: usize,
+    stats: Arc<Stats>,
+    shutdown: Arc<AtomicBool>,
+    multi_progress: Arc<MultiProgress>,
+) -> Result<Vec<JoinHandle<Result<()>>>> {
+    let mut handles = Vec::new();
+    let (tx, rx) = bounded::<FileRecord>(worker_count * 2);
+
+    let fetcher_pool = pool.clone();
+    let fetcher_shutdown = shutdown.clone();
+
+    let fetcher_handle = tokio::spawn(async move {
+        loop {
+            if fetcher_shutdown.load(Ordering::Relaxed) {
+                break;
+            }
+
+            let files = fetch_unanalyzed_files(&fetcher_pool, 100).await?;
+
+            if files.is_empty() {
+                tokio::time::sleep(Duration::from_secs(1)).await;
+                continue;
+            }
+
+            for file in files {
+                if fetcher_shutdown.load(Ordering::Relaxed) {
+                    break;
+                }
+                if tx.send(file).is_err() {
+                    break;
+                }
+            }
+        }
+        drop(tx);
+        Ok::<(), anyhow::Error>(())
+    });
+
+    handles.push(fetcher_handle);
+
+    for worker_id in 0..worker_count {
+        let worker_pool = pool.clone();
+        let worker_rx = rx.clone();
+        let worker_stats = stats.clone();
+        let worker_shutdown = shutdown.clone();
+        let worker_mp = multi_progress.clone();
+
+        let handle = tokio::spawn(async move {
+            let pb = worker_mp.add(ProgressBar::new(0));
+            pb.set_style(
+                ProgressStyle::default_bar()
+                    .template(&format!("[Worker {}] {{spinner:.green}} {{msg}}", worker_id))
+                    .unwrap(),
+            );
+
+            while let Ok(file) = worker_rx.recv() {
+                if worker_shutdown.load(Ordering::Relaxed) {
+                    break;
+                }
+
+                pb.set_message(format!("Analyzing {}", file.filename));
+
+                if let Err(e) = analyze_file(&worker_pool, &file).await {
+                    error!("Analysis failed for {}: {}", file.filename, e);
+                    worker_stats.analysis_error();
+                } else {
+                    worker_stats.analyze_file();
+                }
+            }
+
+            pb.finish_with_message("Worker finished");
+            Ok(())
+        });
+
+        handles.push(handle);
+    }
+
+    Ok(handles)
+}
+
+fn scan_directory(path: &Path) -> Result<Vec<PathBuf>> {
+    use jwalk::WalkDir;
+
+    let files: Vec<PathBuf> = WalkDir::new(path)
+        .into_iter()
+        .filter_map(|entry| entry.ok())
+        .filter(|entry| entry.file_type().is_file())
+        .filter(|entry| {
+            entry
+                .path()
+                .extension()
+                .and_then(|e| e.to_str())
+                .map(|e| e.eq_ignore_ascii_case("mid") || e.eq_ignore_ascii_case("midi"))
+                .unwrap_or(false)
+        })
+        .map(|entry| entry.path())
+        .collect();
+
+    Ok(files)
+}
+
+async fn import_batch(
+    pool: &Pool<Postgres>,
+    files: &[PathBuf],
+    stats: &Stats,
+    pb: &ProgressBar,
+) -> Result<()> {
+    for file in files {
+        match import_single_file(pool, file).await {
+            Ok(_) => {
+                stats.import_file();
+                pb.inc(1);
+            }
+            Err(e) => {
+                error!("Import failed for {:?}: {}", file, e);
+                stats.import_error();
+            }
+        }
+    }
+    Ok(())
+}
+
+async fn import_single_file(pool: &Pool<Postgres>, filepath: &Path) -> Result<i64> {
+    let filepath_str = filepath.to_string_lossy().to_string();
+    let filename = filepath
+        .file_name()
+        .and_then(|n| n.to_str())
+        .unwrap_or("unknown.mid")
+        .to_string();
+
+    // Read file to get size and hash
+    let file_bytes = std::fs::read(filepath)?;
+    let file_size_bytes = file_bytes.len() as i64;
+
+    // Calculate BLAKE3 hash for deduplication
+    let content_hash = blake3::hash(&file_bytes).as_bytes().to_vec();
+
+    let file_id: i64 = sqlx::query_scalar(
+        "INSERT INTO files (filename, filepath, original_filename, content_hash, file_size_bytes)
+         VALUES ($1, $2, $3, $4, $5)
+         ON CONFLICT (filepath) DO UPDATE SET
+            filename = EXCLUDED.filename,
+            original_filename = EXCLUDED.original_filename,
+            content_hash = EXCLUDED.content_hash,
+            file_size_bytes = EXCLUDED.file_size_bytes
+         RETURNING id"
+    )
+    .bind(&filename)
+    .bind(&filepath_str)
+    .bind(&filename)  // original_filename = filename for direct files
+    .bind(&content_hash)
+    .bind(file_size_bytes)
+    .fetch_one(pool)
+    .await?;
+
+    Ok(file_id)
+}
+
+async fn fetch_unanalyzed_files(pool: &Pool<Postgres>, limit: i64) -> Result<Vec<FileRecord>> {
+    let files = sqlx::query_as!(
+        FileRecord,
+        "SELECT id, filepath, filename FROM files WHERE analyzed_at IS NULL ORDER BY id LIMIT $1",
+        limit
+    )
+    .fetch_all(pool)
+    .await?;
+
+    Ok(files)
+}
+
+async fn analyze_file(pool: &Pool<Postgres>, file: &FileRecord) -> Result<()> {
+    let midi_data = std::fs::read(&file.filepath)?;
+    let midi_file = parse_midi_file(&midi_data)?;
+
+    let bpm_result = detect_bpm(&midi_file);
+    let tempo_bpm = if bpm_result.confidence > 0.3 {
+        Some(bpm_result.bpm)
+    } else {
+        None
+    };
+    let has_tempo_variation = !bpm_result.metadata.is_constant;
+
+    let key_result = detect_key(&midi_file);
+
+    let ticks_per_quarter = midi_file.header.ticks_per_quarter_note as u32;
+    let chord_analysis = analyze_chords(&midi_file, ticks_per_quarter);
+    let chord_progression = if !chord_analysis.progression.is_empty() {
+        Some(serde_json::json!(chord_analysis.progression))
+    } else {
+        None
+    };
+
+    let duration_seconds = Some(midi_file.duration_seconds(120.0));
+
+    sqlx::query(
+        "INSERT INTO musical_metadata (
+            file_id, tempo_bpm, bpm_confidence, has_tempo_variation,
+            detected_key, key_confidence, duration_seconds,
+            chord_progression, chord_types,
+            has_seventh_chords, has_extended_chords,
+            chord_change_rate, chord_complexity_score
+        ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12, $13)
+        ON CONFLICT (file_id) DO UPDATE SET
+            tempo_bpm = EXCLUDED.tempo_bpm,
+            bpm_confidence = EXCLUDED.bpm_confidence,
+            has_tempo_variation = EXCLUDED.has_tempo_variation,
+            detected_key = EXCLUDED.detected_key,
+            key_confidence = EXCLUDED.key_confidence,
+            duration_seconds = EXCLUDED.duration_seconds,
+            chord_progression = EXCLUDED.chord_progression,
+            chord_types = EXCLUDED.chord_types,
+            has_seventh_chords = EXCLUDED.has_seventh_chords,
+            has_extended_chords = EXCLUDED.has_extended_chords,
+            chord_change_rate = EXCLUDED.chord_change_rate,
+            chord_complexity_score = EXCLUDED.chord_complexity_score"
+    )
+    .bind(file.id)
+    .bind(tempo_bpm)
+    .bind(Some(bpm_result.confidence))
+    .bind(has_tempo_variation)
+    .bind(&key_result.key)
+    .bind(Some(key_result.confidence))
+    .bind(duration_seconds)
+    .bind(&chord_progression)
+    .bind(&chord_analysis.types)
+    .bind(chord_analysis.has_sevenths)
+    .bind(chord_analysis.has_extended)
+    .bind(chord_analysis.change_rate)
+    .bind(Some(chord_analysis.complexity_score))
+    .execute(pool)
+    .await?;
+
+    sqlx::query("UPDATE files SET analyzed_at = NOW() WHERE id = $1")
+        .bind(file.id)
+        .execute(pool)
+        .await?;
+
+    Ok(())
+}

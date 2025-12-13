@@ -1,4 +1,3 @@
-
 pub mod error;
 /// MIDI file parsing and types
 ///

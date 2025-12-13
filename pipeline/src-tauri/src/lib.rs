@@ -1,6 +1,12 @@
 /// MIDI Library Pipeline Processor
 ///
 /// Core library for MIDI file processing, analysis, and management.
+// Use mimalloc as global allocator for better performance
+use mimalloc::MiMalloc;
+
+#[global_allocator]
+static GLOBAL: MiMalloc = MiMalloc;
+
 pub mod commands;
 pub mod core;
 pub mod db;

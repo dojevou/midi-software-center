@@ -27,7 +27,7 @@ const initialState: AnalysisState = {
   totalFiles: 0,
   results: [],
   errors: [],
-  lastComplete: null
+  lastComplete: null,
 };
 
 const { subscribe, set, update }: Writable<AnalysisState> = writable(initialState);
@@ -43,7 +43,7 @@ const analysisActions = {
       totalFiles: 0,
       results: [],
       errors: [],
-      lastComplete: null
+      lastComplete: null,
     }));
   },
 
@@ -53,7 +53,7 @@ const analysisActions = {
       progress: (progress.current / progress.total) * 100,
       currentFile: progress.current_file,
       processed: progress.current,
-      totalFiles: progress.total
+      totalFiles: progress.total,
     }));
   },
 
@@ -61,7 +61,7 @@ const analysisActions = {
     update((state: AnalysisState) => ({
       ...state,
       isRunning: false,
-      lastComplete: result
+      lastComplete: result,
     }));
   },
 
@@ -69,16 +69,16 @@ const analysisActions = {
     update((state: AnalysisState) => ({
       ...state,
       results: [],
-      lastComplete: null
+      lastComplete: null,
     }));
   },
 
   addError: (error: string) => {
     update((state: AnalysisState) => ({
       ...state,
-      errors: [...state.errors, error]
+      errors: [...state.errors, error],
     }));
-  }
+  },
 };
 
 export const analysisStore = { subscribe, ...analysisActions };

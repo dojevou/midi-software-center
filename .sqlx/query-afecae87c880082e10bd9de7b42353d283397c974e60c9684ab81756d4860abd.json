@@ -1,0 +1,136 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        SELECT\n            f.id as \"id!\",\n            f.filename as \"filename!\",\n            f.filepath as \"filepath!\",\n            f.file_size_bytes as \"file_size_bytes!\",\n            f.parent_folder as \"parent_folder?\",\n            f.created_at as \"created_at!\",\n            f.content_hash as \"content_hash!\",\n            f.num_tracks as \"track_count!\",\n            f.manufacturer as \"manufacturer?\",\n            f.collection_name as \"collection_name?\",\n            COALESCE(f.folder_tags, ARRAY[]::TEXT[]) as \"tags!\",\n            mm.bpm::FLOAT8 as \"bpm?\",\n            mm.key_signature::TEXT as \"key_signature?\",\n            CASE\n                WHEN mm.time_signature_numerator IS NOT NULL\n                THEN mm.time_signature_numerator::TEXT || '/' || mm.time_signature_denominator::TEXT\n                ELSE NULL\n            END as \"time_signature?\",\n            f.duration_seconds::FLOAT8 as \"duration_seconds?\",\n            COALESCE(mm.total_notes, 0) > 0 as \"has_notes!\",\n            mm.total_notes as \"total_notes?\",\n            mm.is_percussive as \"has_drums?\",\n            fc.primary_category::TEXT as \"primary_category?\",\n            CASE WHEN fav.file_id IS NOT NULL THEN true ELSE false END as \"is_favorite!\"\n        FROM files f\n        LEFT JOIN musical_metadata mm ON f.id = mm.file_id\n        LEFT JOIN file_categories fc ON f.id = fc.file_id\n        LEFT JOIN favorites fav ON f.id = fav.file_id\n        WHERE f.id = $1\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 1,
+        "name": "filename!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 2,
+        "name": "filepath!",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 3,
+        "name": "file_size_bytes!",
+        "type_info": "Int8"
+      },
+      {
+        "ordinal": 4,
+        "name": "parent_folder?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 5,
+        "name": "created_at!",
+        "type_info": "Timestamptz"
+      },
+      {
+        "ordinal": 6,
+        "name": "content_hash!",
+        "type_info": "Bytea"
+      },
+      {
+        "ordinal": 7,
+        "name": "track_count!",
+        "type_info": "Int2"
+      },
+      {
+        "ordinal": 8,
+        "name": "manufacturer?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 9,
+        "name": "collection_name?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 10,
+        "name": "tags!",
+        "type_info": "TextArray"
+      },
+      {
+        "ordinal": 11,
+        "name": "bpm?",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 12,
+        "name": "key_signature?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 13,
+        "name": "time_signature?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 14,
+        "name": "duration_seconds?",
+        "type_info": "Float8"
+      },
+      {
+        "ordinal": 15,
+        "name": "has_notes!",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 16,
+        "name": "total_notes?",
+        "type_info": "Int4"
+      },
+      {
+        "ordinal": 17,
+        "name": "has_drums?",
+        "type_info": "Bool"
+      },
+      {
+        "ordinal": 18,
+        "name": "primary_category?",
+        "type_info": "Text"
+      },
+      {
+        "ordinal": 19,
+        "name": "is_favorite!",
+        "type_info": "Bool"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Int8"
+      ]
+    },
+    "nullable": [
+      false,
+      false,
+      false,
+      false,
+      true,
+      true,
+      false,
+      false,
+      true,
+      true,
+      null,
+      null,
+      null,
+      null,
+      null,
+      null,
+      false,
+      true,
+      null,
+      null
+    ]
+  },
+  "hash": "afecae87c880082e10bd9de7b42353d283397c974e60c9684ab81756d4860abd"
+}

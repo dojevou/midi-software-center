@@ -1,6 +1,8 @@
-/// Sequencer Tauri commands
-///
-/// Thin wrappers that expose sequencer functionality to the frontend.
+//! Sequencer Tauri commands
+//!
+//! Thin wrappers that expose sequencer functionality to the frontend.
+#![allow(dead_code)] // Commands are called externally via Tauri IPC
+
 use crate::commands::AppState;
 use crate::core::midi::loader::load_midi_file;
 use crate::models::sequencer::{PlaybackPosition, Track, TrackProperties};
@@ -56,7 +58,9 @@ pub async fn seek_position(
 ) -> Result<(), String> {
     use crate::core::sequencer::timing::bar_beat_to_tick;
 
-    let tick = bar_beat_to_tick(bar, beat, 480, 4); // TODO: Get these from engine
+    let ppq = engine.get_ticks_per_quarter();
+    let beats_per_bar = engine.get_beats_per_bar();
+    let tick = bar_beat_to_tick(bar, beat, ppq, beats_per_bar);
     engine.seek(tick).await;
     Ok(())
 }

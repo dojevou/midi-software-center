@@ -1,13 +1,11 @@
 use serde::{Deserialize, Serialize};
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
-#[derive(Default)]
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
 pub enum SyncMode {
     #[default]
     Internal,
     External,
 }
-
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
 pub struct MidiSettings {

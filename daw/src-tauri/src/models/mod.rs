@@ -1,10 +1,12 @@
+//! Data models for the DAW application
+//!
+//! These models match the TypeScript frontend types for proper serialization.
+//! Trusty Module: Type definitions only, no I/O operations.
+#![allow(dead_code)] // Models are serialized/deserialized at runtime
+
 pub mod analysis;
 pub mod error;
 pub mod midi;
-/// Data models for the DAW application
-///
-/// These models match the TypeScript frontend types for proper serialization.
-/// Trusty Module: Type definitions only, no I/O operations.
 pub mod midi_file;
 pub mod search;
 pub mod sequencer;

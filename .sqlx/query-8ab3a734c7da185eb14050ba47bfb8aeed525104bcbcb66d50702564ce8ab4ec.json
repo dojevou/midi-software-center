@@ -1,0 +1,19 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            UPDATE musical_metadata\n            SET total_notes = $1,\n                unique_pitches = $2,\n                pitch_range_min = $3,\n                pitch_range_max = $4,\n                avg_velocity = $5\n            WHERE file_id = $6\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int4",
+        "Int4",
+        "Int2",
+        "Int2",
+        "Numeric",
+        "Int8"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "8ab3a734c7da185eb14050ba47bfb8aeed525104bcbcb66d50702564ce8ab4ec"
+}
