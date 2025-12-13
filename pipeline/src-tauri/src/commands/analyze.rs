@@ -1,24 +1,15 @@
+//! Musical Analysis Commands - Parallel MIDI file analysis pipeline
+//!
+//! Processes imported files with BPM detection, key detection, chord analysis,
+//! and note statistics. Uses parallel processing with batch database inserts.
+
 use crate::core::analysis::bpm_detector::detect_bpm;
 use crate::core::analysis::chord_analyzer::analyze_chords;
 use crate::core::analysis::drum_analyzer::analyze_drum_midi;
 use crate::core::analysis::key_detector::detect_key;
-/// Musical Analysis Commands - HIGH-PERFORMANCE PARALLEL IMPLEMENTATION
-///
-/// Architecture: Grown-up Script
-/// Purpose: Analyze all imported MIDI files using existing analysis modules
-///
-/// This module processes 1.1M+ imported files by:
-/// - Reading unanalyzed files from database in batches
-/// - Parallel processing with buffer_unordered (32 workers)
-/// - Running BPM detection, key detection, and auto-tagging
-/// - Batch database inserts for musical_metadata
-/// - Real-time progress updates
-///
-/// Performance Target: 400-500 files/sec (complete 1.1M files in ~40-60 minutes)
 use crate::AppState;
 use midi_library_shared::core::midi::parser::parse_midi_file;
 use midi_library_shared::core::midi::types::{Event, MidiFile, TextType};
-// Unused: use crate::core::analysis::auto_tagger::{AutoTagger, Tag};
 
 use futures::stream::{self, StreamExt};
 use serde::{Deserialize, Serialize};
@@ -27,12 +18,13 @@ use std::sync::Arc;
 use tauri::{Emitter, State, Window};
 use tokio::sync::Mutex;
 
-// For JSON serialization of variation timelines
 extern crate serde_json;
 
-//=============================================================================
-// TYPE DEFINITIONS
-//=============================================================================
+// Analysis configuration
+const CONCURRENCY_LIMIT: usize = 32;
+const BATCH_SIZE: i64 = 1000;
+const BPM_CONFIDENCE_THRESHOLD: f64 = 0.3;
+const KEY_CONFIDENCE_THRESHOLD: f64 = 0.5;
 
 /// Progress event for real-time UI updates
 #[derive(Debug, Clone, Serialize)]
@@ -151,19 +143,7 @@ pub struct AnalyzedFile {
     pub has_cc_messages: bool,
 }
 
-//=============================================================================
-// TAURI COMMANDS
-//=============================================================================
-
-/// Analyze all unanalyzed MIDI files (HIGH-PERFORMANCE PARALLEL VERSION)
-///
-/// This command:
-/// 1. Reads unanalyzed files from database in batches
-/// 2. Processes them in parallel with 32 workers
-/// 3. Runs BPM detection, key detection, note analysis
-/// 4. Batch inserts results into musical_metadata
-/// 5. Updates files.analyzed_at timestamp
-/// 6. Shows real-time progress
+/// Analyze all unanalyzed MIDI files with parallel processing.
 #[tauri::command]
 pub async fn start_analysis(
     state: State<'_, AppState>,
@@ -191,13 +171,9 @@ pub async fn start_analysis(
         });
     }
 
-    // Parallel processing configuration
-    let concurrency_limit = 32; // Process 32 files concurrently
-    let batch_size = 1000; // Fetch files in batches of 1000
-
     println!("🚀 Starting analysis:");
-    println!("  Concurrency: {} workers", concurrency_limit);
-    println!("  Batch size: {} files", batch_size);
+    println!("  Concurrency: {} workers", CONCURRENCY_LIMIT);
+    println!("  Batch size: {} files", BATCH_SIZE);
 
     // Thread-safe counters
     let analyzed = Arc::new(AtomicUsize::new(0));
@@ -205,8 +181,7 @@ pub async fn start_analysis(
     let errors = Arc::new(Mutex::new(Vec::new()));
     let current_index = Arc::new(AtomicUsize::new(0));
 
-    // Semaphore to limit concurrency
-    let semaphore = Arc::new(tokio::sync::Semaphore::new(concurrency_limit));
+    let semaphore = Arc::new(tokio::sync::Semaphore::new(CONCURRENCY_LIMIT));
 
     // Batch buffer for database inserts
     let analyzed_files = Arc::new(Mutex::new(Vec::new()));
@@ -225,7 +200,7 @@ pub async fn start_analysis(
              ORDER BY id
              LIMIT $1 OFFSET $2",
         )
-        .bind(batch_size)
+        .bind(BATCH_SIZE)
         .bind(offset)
         .fetch_all(&pool)
         .await
@@ -337,11 +312,11 @@ pub async fn start_analysis(
                     }
                 }
             })
-            .buffer_unordered(concurrency_limit) // ← THE MAGIC: Process N files concurrently!
+            .buffer_unordered(CONCURRENCY_LIMIT)
             .collect::<Vec<_>>()
             .await;
 
-        offset += batch_size;
+        offset += BATCH_SIZE;
     }
 
     // Flush remaining batch
@@ -384,76 +359,49 @@ pub async fn start_analysis(
     })
 }
 
-//=============================================================================
-// CORE ANALYSIS LOGIC
-//=============================================================================
-
-/// Analyze a single MIDI file using all analysis modules
+/// Analyze a single MIDI file using all analysis modules.
 pub async fn analyze_single_file(
     file_record: &FileRecord,
 ) -> Result<AnalyzedFile, Box<dyn std::error::Error + Send + Sync>> {
-    // 1. Read MIDI file from filesystem
     let file_bytes = tokio::fs::read(&file_record.filepath).await?;
-
-    // 2. Parse MIDI file (Trusty Module)
     let midi_file = parse_midi_file(&file_bytes)?;
 
-    // 3. BPM Detection (Trusty Module)
+    // BPM Detection
     let bpm_result = detect_bpm(&midi_file);
-    let tempo_bpm = if bpm_result.confidence > 0.3 {
-        Some(bpm_result.bpm)
-    } else {
-        None
-    };
+    let tempo_bpm =
+        (bpm_result.confidence > BPM_CONFIDENCE_THRESHOLD).then_some(bpm_result.bpm);
     let bpm_confidence = Some(bpm_result.confidence);
     let has_tempo_variation = !bpm_result.metadata.is_constant;
 
-    // 4. Key Detection (Trusty Module)
+    // Key Detection
     let key_result = detect_key(&midi_file);
-    let key_signature = if key_result.confidence > 0.5 {
-        Some(key_result.key.clone())
-    } else {
-        None
-    };
+    let key_signature =
+        (key_result.confidence > KEY_CONFIDENCE_THRESHOLD).then(|| key_result.key.clone());
     let key_confidence = Some(key_result.confidence);
     let scale_type = Some(key_result.scale_type.to_string());
 
-    // 5. Extract time signature from MIDI events
+    // Time signature and duration
     let (time_signature_num, time_signature_den) = extract_time_signature(&midi_file);
-
-    // 6. Calculate duration
     let duration_ticks = calculate_total_ticks(&midi_file);
     let duration_seconds = calculate_duration_seconds(&midi_file, bpm_result.bpm);
 
-    // 7. Note analysis
+    // Note and track analysis
     let note_stats = analyze_notes(&midi_file);
-
-    // 8. Track-level analysis (per-channel instruments)
     let track_instruments = analyze_tracks(&midi_file);
-
-    // 9. Extract instruments (legacy - from text events + program changes)
     let instruments = extract_instrument_names(&midi_file);
 
-    // 10. Detect MIDI features
+    // MIDI feature detection
     let has_pitch_bend = detect_pitch_bend(&midi_file);
     let has_cc_messages = detect_cc_messages(&midi_file);
 
-    // 10. Chord analysis
+    // Chord analysis
     let ticks_per_quarter = midi_file.header.ticks_per_quarter_note as u32;
     let chord_analysis = analyze_chords(&midi_file, ticks_per_quarter);
     let has_chords = !chord_analysis.progression.is_empty();
-    let chord_progression = if has_chords {
-        Some(chord_analysis.progression)
-    } else {
-        None
-    };
-    let chord_types = if !chord_analysis.types.is_empty() {
-        Some(chord_analysis.types)
-    } else {
-        None
-    };
+    let chord_progression = has_chords.then_some(chord_analysis.progression);
+    let chord_types = (!chord_analysis.types.is_empty()).then_some(chord_analysis.types);
 
-    // 11. Drum analysis (if percussion file)
+    // Drum analysis (if percussion file)
     let _drum_analysis = if note_stats.is_percussive {
         Some(analyze_drum_midi(&midi_file))
     } else {
@@ -706,10 +654,6 @@ pub async fn batch_insert_analyzed_files(
 
     Ok(())
 }
-
-//=============================================================================
-// HELPER FUNCTIONS - MIDI ANALYSIS
-//=============================================================================
 
 /// Note statistics
 #[derive(Debug, Clone)]
@@ -1648,10 +1592,6 @@ fn calculate_complexity_score(note_stats: &NoteStats, midi_file: &MidiFile) -> O
     // Normalize to 0-100 scale
     Some(score.min(100.0))
 }
-
-//=============================================================================
-// TESTS
-//=============================================================================
 
 #[cfg(test)]
 mod tests {
