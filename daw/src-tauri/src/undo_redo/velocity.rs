@@ -309,7 +309,7 @@ mod tests {
         let cmd = InterpolateVelocityCommand::new(note_ids, 1, 127);
 
         let vel = cmd.calculate_interpolated_velocity(1);
-        assert!(vel >= 1 && vel <= 127);
+        assert!((1..=127).contains(&vel));
     }
 
     #[test]

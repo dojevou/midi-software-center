@@ -383,6 +383,7 @@ pub async fn gear_profiles_search(
 }
 
 /// Create a new gear profile
+#[allow(clippy::too_many_arguments)]
 #[command]
 pub async fn gear_profiles_create(
     state: State<'_, GearState>,
@@ -557,6 +558,7 @@ pub async fn gear_cc_get_by_number(
 }
 
 /// Create a CC mapping
+#[allow(clippy::too_many_arguments)]
 #[command]
 pub async fn gear_cc_create(
     state: State<'_, GearState>,
@@ -607,6 +609,7 @@ pub async fn gear_cc_create(
 }
 
 /// Update a CC mapping
+#[allow(clippy::too_many_arguments)]
 #[command]
 pub async fn gear_cc_update(
     state: State<'_, GearState>,
@@ -719,6 +722,7 @@ pub async fn gear_programs_search(
 }
 
 /// Create a program
+#[allow(clippy::too_many_arguments)]
 #[command]
 pub async fn gear_programs_create(
     state: State<'_, GearState>,
@@ -822,6 +826,7 @@ pub async fn user_gear_get(
 }
 
 /// Add gear to user's collection
+#[allow(clippy::too_many_arguments)]
 #[command]
 pub async fn user_gear_add(
     state: State<'_, GearState>,
@@ -966,6 +971,7 @@ pub async fn user_gear_get_with_profile(
 // =============================================================================
 
 #[cfg(test)]
+#[allow(clippy::field_reassign_with_default)]
 mod tests {
     use super::*;
 

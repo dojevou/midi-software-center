@@ -264,7 +264,7 @@ mod tests {
 
         let result = CommandCompressor::compress(&mut cmd1, cmd2.as_ref());
         assert!(result.is_ok());
-        assert_eq!(result.unwrap(), true);
+        assert!(result.unwrap());
         assert_eq!(cmd1.memory_usage(), 150);
     }
 

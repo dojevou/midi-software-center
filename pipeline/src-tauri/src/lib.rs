@@ -1,3 +1,8 @@
+// Clippy lint configuration for Pipeline crate
+#![allow(clippy::too_many_arguments)]
+#![allow(clippy::field_reassign_with_default)]
+#![allow(clippy::ptr_arg)]
+
 /// MIDI Library Pipeline Processor
 ///
 /// Core library for MIDI file processing, analysis, and management.

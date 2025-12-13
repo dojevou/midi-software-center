@@ -5,7 +5,7 @@
 /// - Pre-populated test datasets (files, tags, metadata)
 /// - Automatic cleanup on Drop
 /// - Transaction support for test isolation
-use sqlx::{PgPool, Postgres, Transaction};
+use sqlx::PgPool;
 use std::sync::Arc;
 use tokio::sync::Mutex;
 

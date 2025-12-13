@@ -1243,7 +1243,6 @@ pub async fn stretch_note_impl(
 
     // Apply stretch via note update - the frontend provides the calculated
     // new duration/position based on the anchor point and ratio
-    let update = update;
     update_note_impl(update, state).await
 }
 

@@ -1200,7 +1200,7 @@ fn test_autotagger_tag_deduplication() {
     let drums_count = tags.iter().filter(|t| t.name == "drums").count();
     // Accept 1-2 drums tags (different categories are NOT duplicates)
     assert!(
-        drums_count >= 1 && drums_count <= 3,
+        (1..=3).contains(&drums_count),
         "Should have 1-3 'drums' tags (possibly with different categories), found {}",
         drums_count
     );

@@ -1277,9 +1277,7 @@ fn parse_manufacturer(name: &str) -> Option<String> {
         Some("Elektron".into())
     } else if lower.contains("teenage engineering") {
         Some("Teenage Engineering".into())
-    } else if lower.contains("emu") || lower.contains("e-mu") {
-        Some("E-mu".into())
-    } else if lower.contains("proteus") {
+    } else if lower.contains("emu") || lower.contains("e-mu") || lower.contains("proteus") {
         Some("E-mu".into())
     } else {
         None

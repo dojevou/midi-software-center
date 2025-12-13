@@ -26,20 +26,13 @@
 /// - Track count validation (0-128 tracks)
 /// - Filepath/filename length limits (VARCHAR(500) and VARCHAR(255))
 mod common;
-use midi_pipeline::db::models::{File, NewFile};
 use midi_pipeline::db::repositories::FileRepository;
-use sqlx::PgPool;
 
 // Import test infrastructure
 mod fixtures;
 mod helpers;
-use common::assertions::{
-    assert_bpm_set, assert_file_has_tag, assert_file_not_exists as assert_file_path_not_exists,
-    assert_metadata_exists,
-};
 use fixtures::*;
 use helpers::db::*;
-use helpers::macros::*;
 
 // ============================================================================
 // SECTION 1: Insert Operations (12 tests)

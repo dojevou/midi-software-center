@@ -687,7 +687,7 @@ mod tests {
             calculate_profile_correlation(&normalized_random, &KRUMHANSL_MAJOR_PROFILE);
 
         // Should be between -1 and 1
-        assert!(correlation >= -1.0 && correlation <= 1.0);
+        assert!((-1.0..=1.0).contains(&correlation));
     }
 
     #[test]

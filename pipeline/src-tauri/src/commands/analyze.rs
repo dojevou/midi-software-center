@@ -1050,7 +1050,7 @@ fn extract_tempo_changes(midi_file: &MidiFile) -> Option<String> {
                 let bpm = 60_000_000.0 / *microseconds_per_quarter as f64;
                 tempo_changes.push(serde_json::json!({
                     "tick": track_tick,
-                    "bpm": ((bpm * 100.0)).round() / 100.0 // Round to 2 decimals
+                    "bpm": (bpm * 100.0).round() / 100.0 // Round to 2 decimals
                 }));
             }
         }
@@ -1953,7 +1953,7 @@ mod tests {
 
     #[test]
     fn test_analyze_articulation_empty() {
-        use midi_library_shared::core::midi::types::{Event, TimedEvent, Track};
+        use midi_library_shared::core::midi::types::Track;
 
         let midi_file = MidiFile {
             header: midi_library_shared::core::midi::types::Header {

@@ -186,6 +186,7 @@ pub async fn database_get_file_metadata(
     }
 }
 
+#[allow(clippy::too_many_arguments)]
 #[command]
 pub async fn database_add_file(
     state: State<'_, AppState>,

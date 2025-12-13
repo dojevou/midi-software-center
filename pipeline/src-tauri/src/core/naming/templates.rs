@@ -88,6 +88,7 @@ pub fn apply_template(
 ///
 /// # Returns
 /// * Formatted filename string (without extension)
+#[allow(clippy::too_many_arguments)]
 pub fn apply_template_extended(
     template: &NamingTemplate,
     category: &str,

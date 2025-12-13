@@ -230,8 +230,6 @@ impl ImportWorker {
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     #[tokio::test]
     async fn test_import_worker_creation() {
         // TODO: Add tests for import worker

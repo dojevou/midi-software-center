@@ -1,3 +1,9 @@
+// Clippy lint configuration for DAW crate
+#![allow(clippy::too_many_arguments)]
+#![allow(clippy::field_reassign_with_default)]
+#![allow(clippy::manual_clamp)]
+#![allow(clippy::ptr_arg)]
+
 /// MIDI Library DAW Interface
 ///
 /// Core library for DAW functionality including MIDI playback, sequencing, and search.

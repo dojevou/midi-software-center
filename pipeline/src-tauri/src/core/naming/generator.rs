@@ -232,6 +232,7 @@ pub fn generate_production_filename(
 /// );
 /// assert_eq!(filename, "HIHAT_6-8_140BPM_Am_000123_VintageDrums_OpenHat_L01.mid");
 /// ```
+#[allow(clippy::too_many_arguments)]
 pub fn generate_production_layer_filename(
     category: &str,
     bpm: f64,

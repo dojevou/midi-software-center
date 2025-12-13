@@ -214,8 +214,9 @@ mod tests {
 
     #[test]
     fn test_collection_icons_and_colors() {
-        assert!(!COLLECTION_ICONS.is_empty());
-        assert!(!COLLECTION_COLORS.is_empty());
+        // Verify icons and colors are populated (const arrays are known at compile time)
+        assert!(COLLECTION_ICONS.len() >= 10);
+        assert!(COLLECTION_COLORS.len() >= 5);
 
         // All colors should be valid hex
         for color in COLLECTION_COLORS {

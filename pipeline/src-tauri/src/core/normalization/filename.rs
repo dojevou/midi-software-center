@@ -76,14 +76,16 @@ fn normalize_file(
 
     // 1. Normalize extension
     let lowercase = filename.to_lowercase();
-    if filename.ends_with(".MIDI") {
-        new_filename = filename[..filename.len() - 5].to_string() + ".mid";
+    if let Some(base) = filename.strip_suffix(".MIDI") {
+        new_filename = format!("{base}.mid");
         changed = true;
         stats.extensions_fixed.fetch_add(1, Ordering::Relaxed);
-    } else if filename.ends_with(".MID") && !lowercase.ends_with(".mid") {
-        new_filename = filename[..filename.len() - 4].to_string() + ".mid";
-        changed = true;
-        stats.extensions_fixed.fetch_add(1, Ordering::Relaxed);
+    } else if let Some(base) = filename.strip_suffix(".MID") {
+        if !lowercase.ends_with(".mid") {
+            new_filename = format!("{base}.mid");
+            changed = true;
+            stats.extensions_fixed.fetch_add(1, Ordering::Relaxed);
+        }
     } else if filename.ends_with(".midi") && filename != lowercase {
         new_filename = filename[..filename.len() - 5].to_string() + ".mid";
         changed = true;

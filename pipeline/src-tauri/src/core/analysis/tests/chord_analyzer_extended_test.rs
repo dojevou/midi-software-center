@@ -1,6 +1,6 @@
 /// Extended Chord Analysis Tests
 /// Tests for complex chords, inversions, and edge cases not covered by basic tests
-use crate::core::analysis::chord_analyzer::{analyze_chords, ChordAnalysis};
+use crate::core::analysis::chord_analyzer::analyze_chords;
 use midi_library_shared::core::midi::types::{Event, MidiFile, TimedEvent, Track};
 
 /// Helper to create a MIDI file with specific notes at specific times

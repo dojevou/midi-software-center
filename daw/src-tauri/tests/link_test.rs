@@ -1,6 +1,6 @@
 //! Ableton Link tests
 
-use midi_software_center_daw::midi::link::{AbletonLink, LinkState};
+use midi_software_center_daw::midi::link::AbletonLink;
 
 #[test]
 fn test_link_creation() {

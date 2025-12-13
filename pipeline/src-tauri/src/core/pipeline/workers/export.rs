@@ -147,7 +147,7 @@ impl ExportWorker {
     async fn export_file(
         file_record: &FileRecord,
         db_pool: &PgPool,
-        export_path: &PathBuf,
+        export_path: &std::path::Path,
     ) -> Result<(), PipelineError> {
         use std::path::Path;
 

@@ -410,8 +410,6 @@ impl FileRepository {
 
 #[cfg(all(test, feature = "database"))]
 mod tests {
-    use super::*;
-
     // Integration tests would go here with a test database connection
     // For now, we just verify the struct compiles
     #[test]

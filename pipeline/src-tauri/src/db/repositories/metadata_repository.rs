@@ -225,6 +225,7 @@ impl MetadataRepository {
     }
 
     /// Updates harmonic analysis data
+    #[allow(clippy::too_many_arguments)]
     pub async fn update_chords(
         pool: &PgPool,
         file_id: i64,
