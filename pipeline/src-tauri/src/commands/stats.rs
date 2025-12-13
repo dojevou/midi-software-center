@@ -1,21 +1,10 @@
-/// Statistics command handlers - GROWN-UP SCRIPT ARCHETYPE
-///
-/// PURPOSE: Database statistics and metrics
-/// ARCHETYPE: Grown-up Script (I/O operations)
-///
-/// ✅ CAN: Perform database I/O
-/// ✅ CAN: Have side effects (complex queries)
-/// ✅ SHOULD: Handle errors properly
-/// ❌ NO: Complex business logic (delegate to Trusty Modules)
+//! Stats Commands - Database statistics and metrics queries
+
 use crate::AppState;
 use std::collections::HashMap;
 use tauri::State;
 
-// =============================================================================
-// TAURI COMMANDS
-// =============================================================================
-
-/// Get file count breakdown by category (implementation for tests and reuse)
+/// Get file count breakdown by category (implementation for tests and reuse).
 pub async fn get_category_stats_impl(state: &AppState) -> Result<HashMap<String, i64>, String> {
     let results: Vec<(Option<String>, i64)> = sqlx::query_as(
         r#"
@@ -39,16 +28,7 @@ pub async fn get_category_stats_impl(state: &AppState) -> Result<HashMap<String,
     Ok(stats)
 }
 
-/// Get file count breakdown by category
-///
-/// Returns a map of category names to file counts.
-///
-/// # Frontend Usage
-///
-/// ```typescript
-/// const stats = await invoke<Record<string, number>>('get_category_stats');
-/// // { "bass": 150, "drums": 200, "melody": 100 }
-/// ```
+/// Get file count breakdown by category.
 #[tauri::command]
 pub async fn get_category_stats(
     state: State<'_, AppState>,
@@ -56,15 +36,7 @@ pub async fn get_category_stats(
     get_category_stats_impl(&state).await
 }
 
-/// Get file count breakdown by manufacturer
-///
-/// Returns a map of manufacturer names to file counts.
-///
-/// # Frontend Usage
-///
-/// ```typescript
-/// const stats = await invoke<Record<string, number>>('get_manufacturer_stats');
-/// ```
+/// Get file count breakdown by manufacturer.
 #[tauri::command]
 pub async fn get_manufacturer_stats(
     state: State<'_, AppState>,
@@ -93,15 +65,7 @@ pub async fn get_manufacturer_stats(
     Ok(stats)
 }
 
-/// Get file count breakdown by key signature
-///
-/// Returns a map of key signatures to file counts.
-///
-/// # Frontend Usage
-///
-/// ```typescript
-/// const stats = await invoke<Record<string, number>>('get_key_signature_stats');
-/// ```
+/// Get file count breakdown by key signature.
 #[tauri::command]
 pub async fn get_key_signature_stats(
     state: State<'_, AppState>,
@@ -130,13 +94,7 @@ pub async fn get_key_signature_stats(
     Ok(stats)
 }
 
-/// Get count of recently added files (last 7 days)
-///
-/// # Frontend Usage
-///
-/// ```typescript
-/// const count = await invoke<number>('get_recently_added_count');
-/// ```
+/// Get count of recently added files (last 7 days).
 #[tauri::command]
 pub async fn get_recently_added_count(state: State<'_, AppState>) -> Result<i64, String> {
     let count: (i64,) = sqlx::query_as(
@@ -153,15 +111,7 @@ pub async fn get_recently_added_count(state: State<'_, AppState>) -> Result<i64,
     Ok(count.0)
 }
 
-/// Get count of duplicate files
-///
-/// Files are considered duplicates if they have the same content hash.
-///
-/// # Frontend Usage
-///
-/// ```typescript
-/// const count = await invoke<number>('get_duplicate_count');
-/// ```
+/// Get count of duplicate files (same content hash).
 #[tauri::command]
 pub async fn get_duplicate_count(state: State<'_, AppState>) -> Result<i64, String> {
     let count: (i64,) = sqlx::query_as(
@@ -182,7 +132,7 @@ pub async fn get_duplicate_count(state: State<'_, AppState>) -> Result<i64, Stri
     Ok(count.0)
 }
 
-/// Get database size as formatted string (implementation for tests and reuse)
+/// Get database size as formatted string (implementation for tests and reuse).
 pub async fn get_database_size_impl(state: &AppState) -> Result<String, String> {
     let size: (Option<String>,) = sqlx::query_as(
         r#"
@@ -196,30 +146,13 @@ pub async fn get_database_size_impl(state: &AppState) -> Result<String, String> 
     Ok(size.0.unwrap_or_else(|| "Unknown".to_string()))
 }
 
-/// Get database size as formatted string
-///
-/// Returns the total size of the database in a human-readable format.
-///
-/// # Frontend Usage
-///
-/// ```typescript
-/// const size = await invoke<string>('get_database_size');
-/// // "125.4 MB"
-/// ```
+/// Get database size as human-readable string (e.g., "125.4 MB").
 #[tauri::command]
 pub async fn get_database_size(state: State<'_, AppState>) -> Result<String, String> {
     get_database_size_impl(&state).await
 }
 
-/// Check database health status
-///
-/// Returns health status based on connection and basic query tests.
-///
-/// # Frontend Usage
-///
-/// ```typescript
-/// const health = await invoke<'good' | 'warning' | 'error'>('check_database_health');
-/// ```
+/// Check database health status ("good", "warning", or "error").
 #[tauri::command]
 pub async fn check_database_health(state: State<'_, AppState>) -> Result<String, String> {
     // Try a simple query

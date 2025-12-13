@@ -1,32 +1,33 @@
-#[allow(dead_code, unused_imports, unused_variables)]
-/// Comprehensive tests for MetadataRepository
-///
-/// **Target Coverage:** 90%+ (Trusty Module requirement: 80%+)
-/// **Total Tests:** 68 (48 original + 20 error path tests)
-///
-/// This test suite covers all 7 public methods of MetadataRepository with comprehensive
-/// edge case testing, BigDecimal precision validation, PostgreSQL ENUM handling, and
-/// comprehensive error path coverage for constraint violations.
-///
-/// **Test Categories:**
-/// 1. CRUD Operations (12 tests) - Insert, find, update, delete
-/// 2. Musical Key ENUM (12 tests) - All 24 keys + validation
-/// 3. BPM BigDecimal Handling (8 tests) - Precision, ranges, edge cases
-/// 4. Time Signatures (6 tests) - Common and uncommon signatures
-/// 5. File Associations (6 tests) - FK constraints, CASCADE
-/// 6. Query Patterns (4 tests) - Complex queries, aggregations
-/// 7. Edge Cases (2 tests) - Concurrency, errors
-/// 8. Error Path Tests - BigDecimal Constraints (12 tests) - Overflow, validation
-/// 9. Error Path Tests - Data Validation (8 tests) - Duplicate, FK, boundary
-///
-/// **Special Considerations:**
-/// - BigDecimal precision (BPM, avg_velocity, note_density, polyphony_avg)
-/// - PostgreSQL ENUM (musical_key with 24 values)
-/// - MIDI range validation (pitch_range_min/max: 0-127)
-/// - Upsert pattern (ON CONFLICT DO UPDATE)
-/// - 11 optional fields requiring NULL handling
+#![allow(dead_code, unused_imports, unused_variables)]
+//! Comprehensive tests for MetadataRepository
+//!
+//! **Target Coverage:** 90%+ (Trusty Module requirement: 80%+)
+//! **Total Tests:** 68 (48 original + 20 error path tests)
+//!
+//! This test suite covers all 7 public methods of MetadataRepository with comprehensive
+//! edge case testing, BigDecimal precision validation, PostgreSQL ENUM handling, and
+//! comprehensive error path coverage for constraint violations.
+//!
+//! **Test Categories:**
+//! 1. CRUD Operations (12 tests) - Insert, find, update, delete
+//! 2. Musical Key ENUM (12 tests) - All 24 keys + validation
+//! 3. BPM BigDecimal Handling (8 tests) - Precision, ranges, edge cases
+//! 4. Time Signatures (6 tests) - Common and uncommon signatures
+//! 5. File Associations (6 tests) - FK constraints, CASCADE
+//! 6. Query Patterns (4 tests) - Complex queries, aggregations
+//! 7. Edge Cases (2 tests) - Concurrency, errors
+//! 8. Error Path Tests - BigDecimal Constraints (12 tests) - Overflow, validation
+//! 9. Error Path Tests - Data Validation (8 tests) - Duplicate, FK, boundary
+//!
+//! **Special Considerations:**
+//! - BigDecimal precision (BPM, avg_velocity, note_density, polyphony_avg)
+//! - PostgreSQL ENUM (musical_key with 24 values)
+//! - MIDI range validation (pitch_range_min/max: 0-127)
+//! - Upsert pattern (ON CONFLICT DO UPDATE)
+//! - 11 optional fields requiring NULL handling
+
 mod common;
-use midi_pipeline::db::models::{MusicalMetadata, NewMusicalMetadata};
+use midi_pipeline::db::models::NewMusicalMetadata;
 use midi_pipeline::db::repositories::MetadataRepository;
 use num_traits::FromPrimitive;
 use sqlx::types::BigDecimal;

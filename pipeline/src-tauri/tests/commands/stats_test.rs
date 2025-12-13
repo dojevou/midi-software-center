@@ -1,7 +1,6 @@
-#[allow(dead_code, unused_imports, unused_variables)]
-
-/// Tests for pipeline/src-tauri/src/commands/stats.rs
-/// Commands: get_category_stats, get_manufacturer_stats, get_key_signature_stats, etc.
+#![allow(dead_code, unused_imports, unused_variables)]
+//! Tests for pipeline/src-tauri/src/commands/stats.rs
+//! Commands: get_category_stats, get_manufacturer_stats, get_key_signature_stats, etc.
 use crate::common::*;
 use midi_pipeline::commands::stats::{get_category_stats_impl, get_database_size_impl};
 

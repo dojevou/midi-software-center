@@ -1,6 +1,5 @@
-#[allow(dead_code, unused_imports, unused_variables)]
-#[allow(dead_code, unused_imports, unused_variables)]
-/// Test data builders with fluent API for easy test setup
+#![allow(dead_code, unused_imports, unused_variables)]
+//! Test data builders with fluent API for easy test setup
 use sqlx::PgPool;
 
 //=============================================================================

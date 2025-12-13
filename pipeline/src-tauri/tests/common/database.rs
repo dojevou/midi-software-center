@@ -1,12 +1,11 @@
-#[allow(dead_code, unused_imports, unused_variables)]
-#[allow(dead_code, unused_imports, unused_variables)]
-/// TestDatabase - Thread-safe test database wrapper with automatic cleanup
-///
-/// Provides:
-/// - Automatic database connection pooling
-/// - Pre-populated test datasets (files, tags, metadata)
-/// - Automatic cleanup on Drop
-/// - Transaction support for test isolation
+#![allow(dead_code, unused_imports, unused_variables)]
+//! TestDatabase - Thread-safe test database wrapper with automatic cleanup
+//!
+//! Provides:
+//! - Automatic database connection pooling
+//! - Pre-populated test datasets (files, tags, metadata)
+//! - Automatic cleanup on Drop
+//! - Transaction support for test isolation
 use sqlx::{PgPool, Postgres, Transaction};
 use std::sync::Arc;
 use tokio::sync::Mutex;

@@ -1,7 +1,6 @@
-#[allow(dead_code, unused_imports, unused_variables)]
-
-/// Tests for pipeline/src-tauri/src/commands/search.rs
-/// Commands: search_files, get_all_tags, get_files_by_tag, get_bpm_range, get_all_keys
+#![allow(dead_code, unused_imports, unused_variables)]
+//! Tests for pipeline/src-tauri/src/commands/search.rs
+//! Commands: search_files, get_all_tags, get_files_by_tag, get_bpm_range, get_all_keys
 use crate::common::*;
 use midi_pipeline::commands::search::{
     get_all_tags_impl, get_bpm_range_impl, search_files_impl, SearchFilters,

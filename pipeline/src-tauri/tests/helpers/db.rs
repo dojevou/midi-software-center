@@ -1,9 +1,8 @@
-#[allow(dead_code, unused_imports, unused_variables)]
-#[allow(dead_code, unused_imports, unused_variables)]
-/// Database test helpers
-///
-/// Provides utilities for setting up test databases, managing transactions,
-/// and performing common database operations in tests.
+#![allow(dead_code, unused_imports, unused_variables)]
+//! Database test helpers
+//!
+//! Provides utilities for setting up test databases, managing transactions,
+//! and performing common database operations in tests.
 use sqlx::{PgPool, Postgres, Row, Transaction};
 use std::env;
 

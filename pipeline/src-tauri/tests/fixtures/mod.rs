@@ -1,9 +1,8 @@
-#[allow(dead_code, unused_imports, unused_variables)]
-#[allow(dead_code, unused_imports, unused_variables)]
-/// Test fixtures for database testing
-///
-/// Provides builder patterns for creating realistic test data for MIDI files,
-/// musical metadata, tags, and other database entities.
+#![allow(dead_code, unused_imports, unused_variables)]
+//! Test fixtures for database testing
+//!
+//! Provides builder patterns for creating realistic test data for MIDI files,
+//! musical metadata, tags, and other database entities.
 use sqlx::types::BigDecimal;
 use std::str::FromStr;
 

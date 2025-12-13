@@ -1,46 +1,41 @@
-#[allow(dead_code, unused_imports, unused_variables)]
-/// Comprehensive tests for pipeline/src-tauri/src/commands/analyze.rs
-/// Commands: start_analysis
-///
-/// **Target Coverage:** 90%+ (Trusty Module requirement: 80%+)
-/// **Total Tests:** 35 (original comprehensive suite)
-///
-/// This test suite validates the high-performance parallel analysis system that processes
-/// 1.1M+ MIDI files using 32 concurrent workers with batch database operations.
-///
-/// **Test Categories:**
-/// 1. Musical Analysis Operations - BPM detection, key detection, duration calculation
-/// 2. Parallel Processing - 32 worker pool with Arc<Semaphore> limiting
-/// 3. Batch Database Operations - 1000-file fetch chunks, 100-file insert batches
-/// 4. Progress Tracking - Arc<AtomicUsize> counters, event emission
-/// 5. Error Handling - Arc<Mutex<Vec>>> error collection, graceful recovery
-///
-/// **Performance Characteristics:**
-/// - Batch fetching in 1000-file chunks from database
-/// - Parallel analysis with 32 concurrent workers
-/// - Arc<Semaphore> concurrency control for resource limiting
-/// - Arc<AtomicUsize> thread-safe counters for progress tracking
-/// - Arc<Mutex<Vec<>>> for error collection across workers
-/// - Progress event emission throttling (every 10 files)
-/// - Batch metadata insertion (100-file batches for optimal throughput)
-///
-/// **Special Considerations:**
-/// - BPM detector accuracy (within ±5 BPM tolerance)
-/// - Key detector using Krumhansl-Schmuckler algorithm
-/// - Duration analysis in both seconds and MIDI ticks
-/// - Worker pool saturation and semaphore backpressure
-/// - Database transaction batching for high throughput
-/// - Progress event rate limiting to avoid UI overload
-/// - Error recovery without stopping entire analysis batch
+#![allow(dead_code, unused_imports, unused_variables, unexpected_cfgs)]
+//! Comprehensive tests for pipeline/src-tauri/src/commands/analyze.rs
+//! Commands: start_analysis
+//!
+//! **Target Coverage:** 90%+ (Trusty Module requirement: 80%+)
+//! **Total Tests:** 35 (original comprehensive suite)
+//!
+//! This test suite validates the high-performance parallel analysis system that processes
+//! 1.1M+ MIDI files using 32 concurrent workers with batch database operations.
+//!
+//! **Test Categories:**
+//! 1. Musical Analysis Operations - BPM detection, key detection, duration calculation
+//! 2. Parallel Processing - 32 worker pool with Arc<Semaphore> limiting
+//! 3. Batch Database Operations - 1000-file fetch chunks, 100-file insert batches
+//! 4. Progress Tracking - Arc<AtomicUsize> counters, event emission
+//! 5. Error Handling - Arc<Mutex<Vec>>> error collection, graceful recovery
+//!
+//! **Performance Characteristics:**
+//! - Batch fetching in 1000-file chunks from database
+//! - Parallel analysis with 32 concurrent workers
+//! - Arc<Semaphore> concurrency control for resource limiting
+//! - Arc<AtomicUsize> thread-safe counters for progress tracking
+//! - Arc<Mutex<Vec<>>> for error collection across workers
+//! - Progress event emission throttling (every 10 files)
+//! - Batch metadata insertion (100-file batches for optimal throughput)
+//!
+//! **Special Considerations:**
+//! - BPM detector accuracy (within ±5 BPM tolerance)
+//! - Key detector using Krumhansl-Schmuckler algorithm
+//! - Duration analysis in both seconds and MIDI ticks
+//! - Worker pool saturation and semaphore backpressure
+//! - Database transaction batching for high throughput
+//! - Progress event rate limiting to avoid UI overload
+//! - Error recovery without stopping entire analysis batch
+
 mod common;
 
-use common::{FileFixtures, MockWindow, TestDatabase};
-use midi_library_shared::core::midi::parser::parse_midi_file;
-use midi_library_shared::core::midi::types::{
-    Event, Header, MidiFile, TextType, TimedEvent, Track,
-};
-use std::sync::Arc;
-use tauri::{Emitter, Manager};
+use common::{MockWindow, TestDatabase};
 
 // Type alias to fix TestWindow -> MockWindow references in ignored tests
 #[allow(dead_code)]
@@ -211,6 +206,7 @@ fn create_complex_midi_bytes() -> Vec<u8> {
 // To run these tests, implement the _impl pattern as described above.
 // =============================================================================
 
+#[allow(unexpected_cfgs)]
 #[cfg(feature = "tauri-test")]
 mod tauri_integration_tests {
     use super::*;

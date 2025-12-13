@@ -1,6 +1,5 @@
-#[allow(dead_code, unused_imports, unused_variables)]
-#[allow(dead_code, unused_imports, unused_variables)]
-/// Test fixtures: databases, files, and sample data
+#![allow(dead_code, unused_imports, unused_variables)]
+//! Test fixtures: databases, files, and sample data
 use super::database::TestDatabase;
 use sqlx::PgPool;
 

@@ -1,49 +1,38 @@
-#[allow(dead_code, unused_imports, unused_variables)]
-/// Comprehensive tests for TagRepository
-///
-/// **Target Coverage:** 90%+ (Trusty Module requirement: 80%+)
-/// **Total Tests:** 80 (69 original + 11 error path tests)
-///
-/// This test suite covers all 9 public methods of TagRepository with comprehensive
-/// edge case testing, constraint violation handling, and performance verification.
-///
-/// **Test Categories:**
-/// 1. Tag CRUD Operations (8 tests) - Insert, find, update, delete
-/// 2. Batch Tag Operations (9 tests) - Bulk upsert, batch insert
-/// 3. File-Tag Associations (10 tests) - Add, remove, many-to-many
-/// 4. Tag Queries and Filtering (9 tests) - Search, fuzzy, pattern matching
-/// 5. Popular Tags and Usage Counts (7 tests) - Top tags, usage metrics
-/// 6. Tag Category Operations (5 tests) - Category grouping, filtering
-/// 7. File Filtering by Tags (6 tests) - Multi-tag queries, aggregation
-/// 8. Update File Tags (Replace All) (6 tests) - Batch replace, transaction safety
-/// 9. Edge Cases and Boundary Conditions (6 tests) - Empty, large datasets, null
-/// 10. Error Path Tests (12 tests) - Constraint violations, FK, uniqueness
-/// 11. Performance and Optimization (2 tests) - Bulk operations, indexing
-///
-/// **Special Considerations:**
-/// - Unique constraint on (file_id, tag_id) pairs
-/// - Tag name length limit (VARCHAR(100))
-/// - Category length limit (VARCHAR(50))
-/// - Foreign key constraint (file_id must exist)
-/// - Idempotent operations (remove non-existent tag)
-///
-/// Total: 74 tests
+#![allow(dead_code, unused_imports, unused_variables)]
+//! Comprehensive tests for TagRepository
+//!
+//! **Target Coverage:** 90%+ (Trusty Module requirement: 80%+)
+//! **Total Tests:** 80 (69 original + 11 error path tests)
+//!
+//! This test suite covers all 9 public methods of TagRepository with comprehensive
+//! edge case testing, constraint violation handling, and performance verification.
+//!
+//! **Test Categories:**
+//! 1. Tag CRUD Operations (8 tests) - Insert, find, update, delete
+//! 2. Batch Tag Operations (9 tests) - Bulk upsert, batch insert
+//! 3. File-Tag Associations (10 tests) - Add, remove, many-to-many
+//! 4. Tag Queries and Filtering (9 tests) - Search, fuzzy, pattern matching
+//! 5. Popular Tags and Usage Counts (7 tests) - Top tags, usage metrics
+//! 6. Tag Category Operations (5 tests) - Category grouping, filtering
+//! 7. File Filtering by Tags (6 tests) - Multi-tag queries, aggregation
+//! 8. Update File Tags (Replace All) (6 tests) - Batch replace, transaction safety
+//! 9. Edge Cases and Boundary Conditions (6 tests) - Empty, large datasets, null
+//! 10. Error Path Tests (12 tests) - Constraint violations, FK, uniqueness
+//! 11. Performance and Optimization (2 tests) - Bulk operations, indexing
+//!
+//! **Special Considerations:**
+//! - Unique constraint on (file_id, tag_id) pairs
+//! - Tag name length limit (VARCHAR(100))
+//! - Category length limit (VARCHAR(50))
+//! - Foreign key constraint (file_id must exist)
+//! - Idempotent operations (remove non-existent tag)
+//!
+//! Total: 74 tests
 mod common;
-use midi_pipeline::db::models::NewFile;
-use midi_pipeline::db::repositories::tag_repository::{TagRepository, TagRepositoryError};
-use midi_pipeline::db::repositories::FileRepository;
-use sqlx::PgPool;
+use midi_pipeline::db::repositories::tag_repository::TagRepository;
 
 mod fixtures;
 mod helpers;
-use common::{
-    assertions::{
-        assert_bpm_set, assert_file_has_tag, assert_file_not_exists as assert_file_path_not_exists,
-        assert_metadata_exists,
-    },
-    create_test_file, insert_metadata,
-};
-use fixtures::{random_hash, Fixtures, NewFileBuilder, NewTagBuilder};
 use helpers::db::*;
 
 // ============================================================================

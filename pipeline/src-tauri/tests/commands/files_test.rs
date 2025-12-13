@@ -1,7 +1,6 @@
-#[allow(dead_code, unused_imports, unused_variables)]
-
-/// Tests for pipeline/src-tauri/src/commands/files.rs
-/// Commands: test_db_connection, get_file_count, get_file_details, list_files, etc.
+#![allow(dead_code, unused_imports, unused_variables)]
+//! Tests for pipeline/src-tauri/src/commands/files.rs
+//! Commands: test_db_connection, get_file_count, get_file_details, list_files, etc.
 use crate::common::*;
 use midi_pipeline::commands::files::{get_file_count_impl, get_file_details_impl, list_files_impl};
 

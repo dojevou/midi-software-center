@@ -1,6 +1,5 @@
-#[allow(dead_code, unused_imports, unused_variables)]
-#[allow(dead_code, unused_imports, unused_variables)]
-/// Custom assertion helpers for common test validations
+#![allow(dead_code, unused_imports, unused_variables)]
+//! Custom assertion helpers for common test validations
 use sqlx::PgPool;
 
 /// Assert file exists in database

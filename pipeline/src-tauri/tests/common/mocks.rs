@@ -1,8 +1,7 @@
-#[allow(dead_code, unused_imports, unused_variables)]
-#[allow(dead_code, unused_imports, unused_variables)]
+#![allow(dead_code, unused_imports, unused_variables)]
+//! Tauri mocking framework for testing IPC commands
+//! Captures event emissions and provides assertions
 use serde::Serialize;
-/// Tauri mocking framework for testing IPC commands
-/// Captures event emissions and provides assertions
 use std::sync::Arc;
 use tokio::sync::Mutex;
 

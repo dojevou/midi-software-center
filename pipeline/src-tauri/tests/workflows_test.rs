@@ -1,45 +1,30 @@
-#[allow(dead_code, unused_imports, unused_variables)]
+#![allow(dead_code, unused_imports, unused_variables)]
+//! Phase 7.1: Full Workflow Integration Tests (45-55 tests)
+//!
+//! Extended multi-step workflows testing real-world scenarios:
+//! - Music production workflows (8 tests)
+//! - Library management workflows (7 tests)
+//! - Collaborative workflows (6 tests)
+//! - Search and curation workflows (6 tests)
+//! - Performance and optimization workflows (6 tests)
+//! - Error recovery workflows (6 tests)
+//! - Advanced feature workflows (6 tests)
+//!
+//! All tests use real database operations, actual MIDI files, and complete
+//! end-to-end workflow validation with performance assertions.
 use midi_pipeline::commands::analyze::start_analysis;
-/// Phase 7.1: Full Workflow Integration Tests (45-55 tests)
-///
-/// Extended multi-step workflows testing real-world scenarios:
-/// - Music production workflows (8 tests)
-/// - Library management workflows (7 tests)
-/// - Collaborative workflows (6 tests)
-/// - Search and curation workflows (6 tests)
-/// - Performance and optimization workflows (6 tests)
-/// - Error recovery workflows (6 tests)
-/// - Advanced feature workflows (6 tests)
-///
-/// All tests use real database operations, actual MIDI files, and complete
-/// end-to-end workflow validation with performance assertions.
-use midi_pipeline::commands::file_import::{
-    import_directory, import_directory_impl, import_single_file, import_single_file_impl,
-};
-use midi_pipeline::commands::files::{
-    delete_file, get_file_count, get_file_count_impl, get_file_details, get_file_details_impl,
-    list_files, list_files_impl,
-};
-use midi_pipeline::commands::search::{
-    get_all_tags, get_all_tags_impl, get_files_by_tag, pipeline_search_files, search_files_impl,
-    SearchFilters,
-};
-use midi_pipeline::commands::stats::{get_category_stats, get_database_size};
-use midi_pipeline::commands::tags::{
-    add_tags_to_file, add_tags_to_file_impl, get_file_tags, get_file_tags_impl, update_file_tags,
-};
+use midi_pipeline::commands::file_import::import_directory_impl;
+use midi_pipeline::commands::files::{get_file_count_impl, get_file_details_impl, list_files_impl};
+use midi_pipeline::commands::search::{get_all_tags_impl, search_files_impl, SearchFilters};
+use midi_pipeline::commands::tags::{add_tags_to_file_impl, get_file_tags_impl};
 use midi_pipeline::{AppState, Database};
 use sqlx::PgPool;
-use std::path::PathBuf;
-use std::sync::Arc;
 use std::time::Instant;
 use tempfile::TempDir;
 use tokio::fs;
 
 mod common;
-use common::{
-    import_and_analyze_file, setup_test_state, FileFixtures, MidiFileBuilder, TestDatabase,
-};
+use common::setup_test_state;
 
 // ============================================================================
 // TEST FIXTURES & HELPERS

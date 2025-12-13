@@ -1,29 +1,30 @@
-#[allow(dead_code, unused_imports, unused_variables)]
+#![allow(dead_code, unused_imports, unused_variables)]
+//! Comprehensive tests for SearchRepository
+//!
+//! **Target Coverage:** 90%+ (Trusty Module requirement: 80%+)
+//! **Total Tests:** 62 (50 original + 12 error path tests)
+//!
+//! This test suite covers PostgreSQL full-text search with tsvector, ts_rank,
+//! complex filtering, and comprehensive error handling for query validation.
+//!
+//! **Test Categories:**
+//! 1. Full-Text Search (12 tests) - tsvector, plainto_tsquery, ts_rank
+//! 2. Filter Combinations (15 tests) - BPM, key, and duration filters
+//! 3. Pagination & Limits (8 tests) - LIMIT/OFFSET behavior
+//! 4. Musical Metadata JOIN (8 tests) - LEFT JOIN with BPM/key filters
+//! 5. Count Queries (5 tests) - Count validation and aggregation
+//! 6. Edge Cases (4 tests) - Unicode, special chars, SQL injection safety
+//! 7. Error Path Tests (12 tests) - Query validation, constraint violations
+//!
+//! **Special Considerations:**
+//! - Full-text search with Russian/English language support
+//! - BPM range validation (min ≤ max, non-negative)
+//! - Key filter validation (must be valid ENUM values)
+//! - Pagination safety (negative offset/limit handling)
+//! - SQL injection prevention via parameterized queries
+//! - Complex filter combinations (AND logic)
+
 use midi_pipeline::db::models::File;
-/// Comprehensive tests for SearchRepository
-///
-/// **Target Coverage:** 90%+ (Trusty Module requirement: 80%+)
-/// **Total Tests:** 62 (50 original + 12 error path tests)
-///
-/// This test suite covers PostgreSQL full-text search with tsvector, ts_rank,
-/// complex filtering, and comprehensive error handling for query validation.
-///
-/// **Test Categories:**
-/// 1. Full-Text Search (12 tests) - tsvector, plainto_tsquery, ts_rank
-/// 2. Filter Combinations (15 tests) - BPM, key, and duration filters
-/// 3. Pagination & Limits (8 tests) - LIMIT/OFFSET behavior
-/// 4. Musical Metadata JOIN (8 tests) - LEFT JOIN with BPM/key filters
-/// 5. Count Queries (5 tests) - Count validation and aggregation
-/// 6. Edge Cases (4 tests) - Unicode, special chars, SQL injection safety
-/// 7. Error Path Tests (12 tests) - Query validation, constraint violations
-///
-/// **Special Considerations:**
-/// - Full-text search with Russian/English language support
-/// - BPM range validation (min ≤ max, non-negative)
-/// - Key filter validation (must be valid ENUM values)
-/// - Pagination safety (negative offset/limit handling)
-/// - SQL injection prevention via parameterized queries
-/// - Complex filter combinations (AND logic)
 use midi_pipeline::db::repositories::{search_repository::SearchQuery, SearchRepository};
 use sqlx::types::BigDecimal;
 use sqlx::PgPool;
