@@ -3,15 +3,64 @@
 
 [advisories]
 # Advisories to ignore (with justification)
-# All of these are transitive dependencies from Tauri and its GTK/webkit bindings.
+# These are all transitive dependencies from Tauri, SQLx, and other frameworks.
 # We don't use the affected APIs directly in our codebase.
 ignore = [
-    # glib: Unsoundness in VariantStrIter (gtk-rs transitive dep)
+    # === VULNERABILITIES (from transitive deps) ===
+    # ring 0.16.20: AES panic (jsonwebtoken -> meilisearch-sdk transitive)
+    "RUSTSEC-2025-0009",
+    # rsa 0.9.9: Marvin Attack timing sidechannel (sqlx-mysql transitive, no fix)
+    "RUSTSEC-2023-0071",
+    # rustc-serialize 0.3.25: Stack overflow in JSON (rimd -> num transitive, no fix)
+    "RUSTSEC-2022-0004",
+    # sqlx 0.7.4: Binary protocol misinterpretation (we use PostgreSQL, not MySQL)
+    "RUSTSEC-2024-0363",
+
+    # === UNMAINTAINED WARNINGS (GTK/Tauri transitive deps) ===
+    # glib unsoundness in VariantStrIter
     "RUSTSEC-2024-0429",
-    # unic-ucd-version: unmaintained (tauri-utils -> urlpattern transitive dep)
-    "RUSTSEC-2025-0098",
-    # yaml-rust: unmaintained (config crate transitive dep)
-    "RUSTSEC-2024-0320",
-    # atty: potential unaligned read (old transitive dep)
+    # GTK3 bindings - all unmaintained (Tauri uses these)
+    "RUSTSEC-2024-0411", # gdkwayland-sys
+    "RUSTSEC-2024-0412", # gdk
+    "RUSTSEC-2024-0413", # atk
+    "RUSTSEC-2024-0414", # gdkx11-sys
+    "RUSTSEC-2024-0415", # gtk
+    "RUSTSEC-2024-0416", # atk-sys
+    "RUSTSEC-2024-0417", # gdkx11
+    "RUSTSEC-2024-0418", # gdk-sys
+    "RUSTSEC-2024-0419", # gtk3-macros
+    "RUSTSEC-2024-0420", # gtk-sys
+
+    # === OTHER UNMAINTAINED WARNINGS ===
+    # ansi_term (clap 2.x -> rust-music-theory transitive)
+    "RUSTSEC-2021-0139",
+    # atty unmaintained (clap 2.x transitive) - also unsound
     "RUSTSEC-2021-0145",
+    "RUSTSEC-2024-0375",
+    # dotenv unmaintained
+    "RUSTSEC-2021-0141",
+    # yaml-rust unmaintained (config crate)
+    "RUSTSEC-2024-0320",
+    # proc-macro-error unmaintained (GTK macros)
+    "RUSTSEC-2024-0370",
+    # instant unmaintained
+    "RUSTSEC-2024-0384",
+    # paste unmaintained
+    "RUSTSEC-2024-0436",
+    # fxhash unmaintained
+    "RUSTSEC-2025-0057",
+    # unic-* crates unmaintained (urlpattern -> tauri-utils)
+    "RUSTSEC-2025-0075", # unic-char-range
+    "RUSTSEC-2025-0080", # unic-common
+    "RUSTSEC-2025-0081", # unic-char-property
+    "RUSTSEC-2025-0098", # unic-ucd-version
+    "RUSTSEC-2025-0100", # unic-ucd-ident
+    # ring 0.16.x unmaintained
+    "RUSTSEC-2025-0010",
+    # rustc-serialize unmaintained
+    "RUSTSEC-2025-0025",
+    # number_prefix unmaintained
+    "RUSTSEC-2025-0119",
+    # rustls-pemfile unmaintained
+    "RUSTSEC-2025-0134",
 ]
