@@ -1,6 +1,4 @@
-// ARCHETYPE: MANAGER (Grown-up Script)
-// Purpose: Track import progress and emit real-time updates to frontend
-// Side effects: Emits Tauri events, manages mutable state
+//! Progress Commands - Track import progress and emit real-time updates to frontend
 
 use serde::{Deserialize, Serialize};
 use std::sync::{Arc, Mutex};
