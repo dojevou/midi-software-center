@@ -1,15 +1,4 @@
-// src-tauri/src/commands/files.rs
-//
-// ARCHETYPE: MANAGER (Grown-up Script)
-// PURPOSE: Tauri commands for file operations with database I/O
-//
-// ✅ CAN: Perform database I/O (queries)
-// ✅ CAN: Have side effects (database reads/writes)
-// ✅ CAN: Be async
-// ✅ SHOULD: Handle errors using AppError
-// ❌ MUST NOT: Contain complex business logic
-// ❌ MUST NOT: Have UI concerns
-// ❌ SHOULD: Delegate complex logic to separate modules
+//! File Commands - Database queries for MIDI file records and metadata
 
 use chrono::{DateTime, Utc};
 use serde::Serialize;
@@ -18,18 +7,7 @@ use tauri::State;
 
 use crate::AppState;
 
-// =============================================================================
-// DATA STRUCTURES
-// =============================================================================
-
-/// MIDI file record with musical metadata
-///
-/// Combined data from files and musical_metadata tables.
-/// Used for displaying file information in the UI.
-///
-/// # Archetype: Trusty Module (data structure)
-///
-/// This is a pure data container with no behavior.
+/// MIDI file record with musical metadata from files and musical_metadata tables.
 #[derive(Debug, FromRow, Serialize)]
 pub struct MidiFile {
     /// Unique file ID
@@ -76,32 +54,7 @@ pub struct MidiFile {
     pub updated_at: DateTime<Utc>,
 }
 
-// =============================================================================
-// TAURI COMMANDS - MANAGER ARCHETYPE
-// =============================================================================
-
-/// Test database connection
-///
-/// Verifies that the database is reachable and responds to queries.
-///
-/// # Manager Archetype
-/// - ✅ Performs I/O (database query)
-/// - ✅ Has side effects (network call to database)
-/// - ✅ Handles errors properly (converts to String)
-/// - ❌ No complex business logic
-///
-/// # Returns
-///
-/// * `Result<bool, String>` - True if connected, error message if failed
-///
-/// # Frontend Usage
-///
-/// ```typescript
-/// const connected = await invoke<boolean>('test_db_connection');
-/// if (connected) {
-///   console.log('Database is ready');
-/// }
-/// ```
+/// Test database connection.
 #[tauri::command]
 pub async fn test_db_connection(state: State<'_, AppState>) -> Result<bool, String> {
     state
@@ -111,15 +64,7 @@ pub async fn test_db_connection(state: State<'_, AppState>) -> Result<bool, Stri
         .map_err(|e| format!("Database connection failed: {}", e))
 }
 
-/// Get total count of files in database (implementation for tests and reuse)
-///
-/// Internal implementation that accepts &AppState for testing without Tauri context.
-///
-/// # Arguments
-/// * `state` - Application state containing database connection
-///
-/// # Returns
-/// * `Result<i64, String>` - Total file count or error message
+/// Get total count of files (internal implementation for tests).
 pub async fn get_file_count_impl(state: &AppState) -> Result<i64, String> {
     let pool = state.database.pool().await;
     let count: i64 = sqlx::query_scalar("SELECT COUNT(*) FROM files")
@@ -130,34 +75,13 @@ pub async fn get_file_count_impl(state: &AppState) -> Result<i64, String> {
     Ok(count)
 }
 
-/// Get total count of files in database
-///
-/// Returns the number of MIDI files currently stored.
-///
-/// # Manager Archetype
-/// - ✅ Performs I/O (database query)
-/// - ✅ Has side effects (reads from database)
-/// - ✅ Handles errors properly
-/// - ❌ No complex business logic
-///
-/// # Returns
-///
-/// * `Result<i64, String>` - Total file count or error message
-///
-/// # Frontend Usage
-///
-/// ```typescript
-/// const count = await invoke<number>('get_file_count');
-/// console.log(`Library contains ${count} files`);
-/// ```
+/// Get total count of files in database.
 #[tauri::command]
 pub async fn get_file_count(state: State<'_, AppState>) -> Result<i64, String> {
     get_file_count_impl(&state).await
 }
 
-/// Get file details by ID (implementation for tests and reuse)
-///
-/// Internal implementation that accepts &AppState for testing without Tauri context.
+/// Get file details by ID (internal implementation for tests).
 pub async fn get_file_details_impl(file_id: i64, state: &AppState) -> Result<MidiFile, String> {
     let pool = state.database.pool().await;
     let file = sqlx::query_as::<_, MidiFile>(
@@ -190,34 +114,7 @@ pub async fn get_file_details_impl(file_id: i64, state: &AppState) -> Result<Mid
     Ok(file)
 }
 
-/// Get file details by ID
-///
-/// Retrieves complete information for a single MIDI file.
-///
-/// # Manager Archetype
-/// - ✅ Performs I/O (database query)
-/// - ✅ Has side effects (reads from database)
-/// - ✅ Handles errors properly (including NotFound)
-/// - ❌ No complex business logic
-///
-/// # Arguments
-///
-/// * `file_id` - Unique file ID to retrieve
-///
-/// # Returns
-///
-/// * `Result<MidiFile, String>` - File details or error message
-///
-/// # Errors
-///
-/// Returns error if file doesn't exist or query fails.
-///
-/// # Frontend Usage
-///
-/// ```typescript
-/// const file = await invoke<MidiFile>('get_file_details', { fileId: 123 });
-/// console.log(`File: ${file.filename}, BPM: ${file.bpm}`);
-/// ```
+/// Get file details by ID.
 #[tauri::command]
 pub async fn get_file_details(
     file_id: i64,
@@ -226,21 +123,13 @@ pub async fn get_file_details(
     get_file_details_impl(file_id, &state).await
 }
 
-/// Get file by ID (alias for get_file_details for frontend compatibility)
-///
-/// # Frontend Usage
-///
-/// ```typescript
-/// const file = await invoke<MidiFile>('get_file', { fileId: 123 });
-/// ```
+/// Get file by ID (alias for get_file_details).
 #[tauri::command]
 pub async fn get_file(file_id: i64, state: State<'_, AppState>) -> Result<MidiFile, String> {
     get_file_details(file_id, state).await
 }
 
-/// List files with pagination (implementation for tests and reuse)
-///
-/// Internal implementation that accepts &AppState for testing without Tauri context.
+/// List files with pagination (internal implementation for tests).
 pub async fn list_files_impl(
     limit: Option<i64>,
     offset: Option<i64>,
@@ -288,25 +177,7 @@ pub async fn list_files_impl(
     Ok(files)
 }
 
-/// List files with pagination
-///
-/// Returns a paginated list of files ordered by creation date (newest first).
-///
-/// # Manager Archetype
-/// - ✅ Performs I/O (database query)
-/// - ✅ Has side effects (reads from database)
-/// - ✅ Handles errors properly
-///
-/// # Arguments
-///
-/// * `limit` - Maximum number of files to return (default: 50)
-/// * `offset` - Number of files to skip (default: 0)
-///
-/// # Frontend Usage
-///
-/// ```typescript
-/// const files = await invoke<MidiFile[]>('list_files', { limit: 50, offset: 0 });
-/// ```
+/// List files with pagination, ordered by creation date (newest first).
 #[tauri::command]
 pub async fn list_files(
     limit: Option<i64>,
@@ -316,23 +187,7 @@ pub async fn list_files(
     list_files_impl(limit, offset, &state).await
 }
 
-/// Get files by category
-///
-/// Returns all files in a specific category.
-///
-/// # Arguments
-///
-/// * `category` - Category name (e.g., "bass", "drums", "melody")
-/// * `limit` - Maximum number of files to return (default: 50)
-///
-/// # Frontend Usage
-///
-/// ```typescript
-/// const files = await invoke<MidiFile[]>('get_files_by_category', {
-///   category: 'bass',
-///   limit: 50
-/// });
-/// ```
+/// Get files by category.
 #[tauri::command]
 pub async fn get_files_by_category(
     category: String,
@@ -374,19 +229,7 @@ pub async fn get_files_by_category(
     Ok(files)
 }
 
-/// Get recently added files
-///
-/// Returns the most recently imported files.
-///
-/// # Arguments
-///
-/// * `limit` - Maximum number of files to return (default: 10)
-///
-/// # Frontend Usage
-///
-/// ```typescript
-/// const files = await invoke<MidiFile[]>('get_recent_files', { limit: 10 });
-/// ```
+/// Get recently added files.
 #[tauri::command]
 pub async fn get_recent_files(
     limit: Option<i64>,
@@ -425,19 +268,7 @@ pub async fn get_recent_files(
     Ok(files)
 }
 
-/// Delete a file
-///
-/// Removes a file from the database (cascading deletes related records).
-///
-/// # Arguments
-///
-/// * `file_id` - ID of the file to delete
-///
-/// # Frontend Usage
-///
-/// ```typescript
-/// await invoke('delete_file', { fileId: 123 });
-/// ```
+/// Delete a file from the database (cascading deletes related records).
 #[tauri::command]
 pub async fn delete_file(file_id: i64, state: State<'_, AppState>) -> Result<(), String> {
     let pool = state.database.pool().await;
@@ -449,12 +280,6 @@ pub async fn delete_file(file_id: i64, state: State<'_, AppState>) -> Result<(),
 
     Ok(())
 }
-
-// Update file tags moved to commands/tags.rs to use TagRepository
-
-// =============================================================================
-// TESTS - MANAGER ARCHETYPE TESTING
-// =============================================================================
 
 #[cfg(test)]
 mod tests {
