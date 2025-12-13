@@ -1,3 +1,7 @@
+//! File Import Commands - High-performance parallel MIDI file importing
+//!
+//! Optimizations: BLAKE3 hashing, parallel processing, batch DB inserts, dynamic concurrency
+
 use crate::core::analysis::auto_tagger::{AutoTagger, Tag};
 use crate::core::analysis::bpm_detector::detect_bpm;
 use crate::core::analysis::key_detector::detect_key;
@@ -8,21 +12,6 @@ use crate::core::performance::concurrency::{
     calculate_optimal_concurrency, detect_system_resources,
 };
 use crate::database::batch_insert::BatchInserter;
-/// File Import Commands - HIGH-PERFORMANCE PARALLEL IMPLEMENTATION
-///
-/// Architecture: Grown-up Script
-/// Purpose: Tauri commands for importing MIDI files with parallel processing
-///
-/// This module integrates ALL optimizations:
-/// - BLAKE3 hashing (7x faster than SHA-256)
-/// - Parallel processing with buffer_unordered (40x speedup)
-/// - Batch database inserts (10x faster writes)
-/// - Dynamic concurrency tuning (optimal for any system)
-///
-/// Performance Targets:
-/// - 1,000 files: < 2 seconds
-/// - 10,000 files: ~25 seconds
-/// - 3,000,000 files: 1.5-2 hours (400-500 files/sec)
 use crate::AppState;
 use midi_library_shared::core::midi::parser::parse_midi_file;
 use midi_library_shared::core::midi::text_metadata::TextMetadata;
@@ -342,20 +331,7 @@ pub async fn import_directory_impl(
                             let batch: Vec<ProcessedFile> = files.drain(..).collect();
                             drop(files); // Release lock
 
-                            // Convert ProcessedFile to FileRecord for batch insert
-                            let file_records: Vec<crate::database::batch_insert::FileRecord> = batch.iter().map(|f| {
-                                crate::database::batch_insert::FileRecord::new(
-                                    f.filename.clone(),
-                                    f.original_filename.clone(),
-                                    f.filepath.clone(),
-                                    f.parent_folder.clone(),
-                                    hex::encode(&f.content_hash), // Convert bytea to hex string
-                                    f.file_size_bytes,
-                                    f.category.clone(),
-                                )
-                            }).collect();
-
-                            // Batch insert with proper error handling
+                            let file_records = to_file_records(&batch);
                             if let Err(e) = batch_inserter.insert_files_batch(file_records).await {
                                 let error_msg = format!("Batch insert failed: {}", e);
                                 eprintln!("ERROR: {}", error_msg);
@@ -380,28 +356,13 @@ pub async fn import_directory_impl(
         .collect::<Vec<_>>()
         .await;
 
-    // OPTIMIZATION 4: Flush remaining batch
+    // Flush remaining batch
     let remaining_files = processed_files.lock().await;
     if !remaining_files.is_empty() {
         let batch: Vec<ProcessedFile> = remaining_files.iter().cloned().collect();
-        drop(remaining_files); // Release lock before async operation
+        drop(remaining_files);
 
-        // Convert ProcessedFile to FileRecord for batch insert
-        let file_records: Vec<crate::database::batch_insert::FileRecord> = batch
-            .iter()
-            .map(|f| {
-                crate::database::batch_insert::FileRecord::new(
-                    f.filename.clone(),
-                    f.original_filename.clone(),
-                    f.filepath.clone(),
-                    f.parent_folder.clone(),
-                    hex::encode(&f.content_hash), // Convert bytea to hex string
-                    f.file_size_bytes,
-                    f.category.clone(),
-                )
-            })
-            .collect();
-
+        let file_records = to_file_records(&batch);
         if let Err(e) = batch_inserter.insert_files_batch(file_records).await {
             errors.lock().await.push(format!("Final batch insert failed: {}", e));
         }
@@ -894,6 +855,21 @@ fn is_midi_file(path: &Path) -> bool {
         .and_then(|ext| ext.to_str())
         .map(|ext| ext.eq_ignore_ascii_case("mid") || ext.eq_ignore_ascii_case("midi"))
         .unwrap_or(false)
+}
+
+/// Convert ProcessedFile batch to FileRecord batch for database insertion
+fn to_file_records(files: &[ProcessedFile]) -> Vec<crate::database::batch_insert::FileRecord> {
+    files.iter().map(|f| {
+        crate::database::batch_insert::FileRecord::new(
+            f.filename.clone(),
+            f.original_filename.clone(),
+            f.filepath.clone(),
+            f.parent_folder.clone(),
+            hex::encode(&f.content_hash),
+            f.file_size_bytes,
+            f.category.clone(),
+        )
+    }).collect()
 }
 
 /// Deduplicate files by checking hashes against the database
