@@ -1,21 +1,10 @@
-/// Search command handlers - GROWN-UP SCRIPT ARCHETYPE
-///
-/// PURPOSE: Advanced search functionality with filters and pagination
-/// ARCHETYPE: Grown-up Script (I/O operations, reusable logic)
-///
-/// ✅ CAN: Perform database I/O
-/// ✅ CAN: Have side effects (complex queries)
-/// ✅ SHOULD: Handle errors properly
-/// ❌ NO: Complex business logic (delegate to Trusty Modules)
+//! Search Commands - Advanced search with filters and pagination
+
 use crate::AppState;
 use serde::{Deserialize, Serialize};
 use tauri::State;
 
-// =============================================================================
-// DATA STRUCTURES
-// =============================================================================
-
-/// Search filters from frontend
+/// Search filters from frontend.
 #[derive(Debug, Clone, Deserialize)]
 pub struct SearchFilters {
     pub category: Option<String>,
@@ -24,21 +13,19 @@ pub struct SearchFilters {
     pub key_signature: Option<String>,
 }
 
-/// Search result item (simplified for list view)
-///
-/// Note: NUMERIC columns are cast to float8 in SQL queries for simplicity
+/// Search result item (simplified for list view).
 #[derive(Debug, Clone, Serialize, sqlx::FromRow)]
 pub struct SearchResultItem {
     pub id: i64,
     pub filename: String,
     pub filepath: String,
-    pub bpm: Option<f64>, // Cast from NUMERIC in SQL
+    pub bpm: Option<f64>,
     pub key_signature: Option<String>,
-    pub duration_seconds: Option<f64>, // Cast from NUMERIC in SQL
+    pub duration_seconds: Option<f64>,
     pub category: Option<String>,
 }
 
-/// Paginated search results
+/// Paginated search results.
 #[derive(Debug, Serialize)]
 pub struct SearchResults {
     pub items: Vec<SearchResultItem>,
@@ -48,11 +35,7 @@ pub struct SearchResults {
     pub total_pages: i32,
 }
 
-// =============================================================================
-// HELPER FUNCTIONS
-// =============================================================================
-
-/// Count search results for pagination
+/// Count search results for pagination.
 async fn count_search_results(
     query: &str,
     filters: &SearchFilters,
@@ -83,11 +66,7 @@ async fn count_search_results(
     Ok(count.0)
 }
 
-// =============================================================================
-// TAURI COMMANDS
-// =============================================================================
-
-/// Search files with filters and pagination (implementation for tests and reuse)
+/// Search files with filters and pagination (implementation for tests and reuse).
 pub async fn search_files_impl(
     query: String,
     filters: SearchFilters,
@@ -156,23 +135,7 @@ pub async fn search_files_impl(
     })
 }
 
-/// Search files with filters and pagination
-///
-/// # Manager Archetype
-/// - ✅ Performs I/O (complex database query)
-/// - ✅ Has side effects (reads from database)
-/// - ✅ Handles errors properly
-///
-/// # Arguments
-///
-/// * `query` - Text search query (searches filename and filepath)
-/// * `filters` - Search filters (category, BPM range, key)
-/// * `page` - Page number (1-indexed)
-/// * `page_size` - Items per page (1-100)
-///
-/// # Returns
-///
-/// Paginated search results with total count
+/// Search files with filters and pagination.
 #[tauri::command]
 pub async fn pipeline_search_files(
     query: String,
@@ -200,33 +163,13 @@ pub async fn get_all_tags_impl(state: &AppState) -> Result<Vec<String>, String> 
     Ok(tags.into_iter().map(|(tag,)| tag).collect())
 }
 
-/// Get all unique tags from database
-///
-/// Returns a list of all unique tag names used in the database.
-///
-/// # Frontend Usage
-///
-/// ```typescript
-/// const tags = await invoke<string[]>('get_all_tags');
-/// ```
+/// Get all unique tags from database.
 #[tauri::command]
 pub async fn get_all_tags(state: State<'_, AppState>) -> Result<Vec<String>, String> {
     get_all_tags_impl(&state).await
 }
 
-/// Get files by tag
-///
-/// Returns all files that have a specific tag.
-///
-/// # Arguments
-///
-/// * `tag` - Tag name to filter by
-///
-/// # Frontend Usage
-///
-/// ```typescript
-/// const files = await invoke<FileMetadata[]>('get_files_by_tag', { tag: 'ambient' });
-/// ```
+/// Get files by tag.
 #[tauri::command]
 pub async fn get_files_by_tag(
     tag: String,
@@ -278,29 +221,13 @@ pub async fn get_bpm_range_impl(state: &AppState) -> Result<BpmRange, String> {
     }
 }
 
-/// Get BPM range from database
-///
-/// Returns the minimum and maximum BPM values in the database.
-///
-/// # Frontend Usage
-///
-/// ```typescript
-/// const range = await invoke<{min: number, max: number}>('get_bpm_range');
-/// ```
+/// Get BPM range (min/max) from database.
 #[tauri::command]
 pub async fn get_bpm_range(state: State<'_, AppState>) -> Result<BpmRange, String> {
     get_bpm_range_impl(&state).await
 }
 
-/// Get all unique key signatures from database
-///
-/// Returns a list of all unique key signatures.
-///
-/// # Frontend Usage
-///
-/// ```typescript
-/// const keys = await invoke<string[]>('get_all_keys');
-/// ```
+/// Get all unique key signatures from database.
 #[tauri::command]
 pub async fn get_all_keys(state: State<'_, AppState>) -> Result<Vec<String>, String> {
     let keys: Vec<(String,)> = sqlx::query_as(
