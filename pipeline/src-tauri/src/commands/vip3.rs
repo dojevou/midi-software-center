@@ -1,11 +1,5 @@
-/// VIP3 Browser Commands - Tauri commands for VIP3-style filtering
-///
-/// This module provides frontend-facing commands for:
-/// - Multi-filter file search (VIP3-style browser)
-/// - Filter category counts (for sidebar)
-/// - Favorites management
-/// - Saved searches
-/// - Collections management
+//! VIP3 Browser Commands - Multi-filter file search, favorites, saved searches, collections
+
 use crate::AppState;
 use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
@@ -13,11 +7,12 @@ use serde_json::Value;
 use sqlx::FromRow;
 use tauri::State;
 
-// =============================================================================
-// TYPE DEFINITIONS - FILTERS
-// =============================================================================
+// Pagination defaults
+const DEFAULT_PAGE: i32 = 1;
+const DEFAULT_PAGE_SIZE: i32 = 50;
+const MAX_PAGE_SIZE: i32 = 500;
 
-/// VIP3 browser filter state (matches BrowserFilters from shared models)
+/// VIP3 browser filter state
 #[derive(Debug, Clone, Default, Serialize, Deserialize)]
 pub struct Vip3Filters {
     /// Selected folder IDs
@@ -82,11 +77,7 @@ impl Default for Vip3Sort {
     }
 }
 
-// =============================================================================
-// TYPE DEFINITIONS - RESULTS
-// =============================================================================
-
-/// VIP3 search result item with all relevant data
+/// VIP3 search result item
 #[derive(Debug, Clone, Serialize, FromRow)]
 pub struct Vip3FileResult {
     pub id: i64,
@@ -131,10 +122,6 @@ pub struct Vip3FilterCounts {
     pub instruments: Vec<FilterOption>,
 }
 
-// =============================================================================
-// SAVED SEARCH TYPES
-// =============================================================================
-
 /// Saved search record
 #[derive(Debug, Clone, Serialize, FromRow)]
 pub struct SavedSearchResponse {
@@ -168,10 +155,6 @@ pub struct CreateSavedSearchRequest {
     pub color: Option<String>,
 }
 
-// =============================================================================
-// COLLECTION TYPES
-// =============================================================================
-
 /// Collection record
 #[derive(Debug, Clone, Serialize, FromRow)]
 pub struct CollectionResponse {
@@ -195,18 +178,7 @@ pub struct CreateCollectionRequest {
     pub color: Option<String>,
 }
 
-// =============================================================================
-// MAIN VIP3 SEARCH COMMAND
-// =============================================================================
-
-/// Search files with VIP3-style multi-filter support
-///
-/// This is the main browser query supporting all filter types:
-/// - Multiple category filters (timbres, styles, articulations)
-/// - BPM ranges and musical keys
-/// - Favorites and rating filters
-/// - Full-text search
-/// - Pagination and sorting
+/// Search files with VIP3-style multi-filter support (main browser query).
 #[tauri::command]
 pub async fn search_files_vip3(
     filters: Vip3Filters,
@@ -216,8 +188,8 @@ pub async fn search_files_vip3(
     state: State<'_, AppState>,
 ) -> Result<Vip3SearchResults, String> {
     let pool = state.database.pool().await;
-    let page = page.unwrap_or(1).max(1);
-    let page_size = page_size.unwrap_or(50).clamp(1, 500);
+    let page = page.unwrap_or(DEFAULT_PAGE).max(1);
+    let page_size = page_size.unwrap_or(DEFAULT_PAGE_SIZE).clamp(1, MAX_PAGE_SIZE);
     let sort = sort.unwrap_or_default();
     let offset = (page - 1) * page_size;
 
@@ -435,14 +407,7 @@ pub async fn search_files_vip3(
     })
 }
 
-// =============================================================================
-// FILTER COUNTS COMMAND
-// =============================================================================
-
-/// Get counts for all VIP3 filter categories
-///
-/// Returns counts of files for each filter option to populate the sidebar.
-/// Only options with file_count > 0 are returned.
+/// Get counts for all VIP3 filter categories (for sidebar).
 #[tauri::command]
 pub async fn get_vip3_filter_counts(
     state: State<'_, AppState>,
@@ -537,11 +502,7 @@ pub async fn get_vip3_filter_counts(
     })
 }
 
-// =============================================================================
-// FAVORITES COMMANDS
-// =============================================================================
-
-/// Toggle favorite status for a file
+/// Toggle favorite status for a file.
 #[tauri::command]
 pub async fn toggle_favorite(
     file_id: i64,
@@ -567,7 +528,7 @@ pub async fn toggle_favorite(
     Ok(result.0)
 }
 
-/// Set favorite status explicitly
+/// Set favorite status for a file.
 #[tauri::command]
 pub async fn set_favorite(
     file_id: i64,
@@ -586,7 +547,7 @@ pub async fn set_favorite(
     Ok(())
 }
 
-/// Get all favorite files
+/// Get all favorite files.
 #[tauri::command]
 pub async fn get_favorites(
     page: Option<i32>,
@@ -608,7 +569,7 @@ pub async fn get_favorites(
     .await
 }
 
-/// Get favorite count
+/// Get favorite count.
 #[tauri::command]
 pub async fn get_favorite_count(
     state: State<'_, AppState>,
@@ -623,11 +584,7 @@ pub async fn get_favorite_count(
     Ok(count.0)
 }
 
-// =============================================================================
-// SAVED SEARCH COMMANDS
-// =============================================================================
-
-/// Save a search configuration
+/// Save a search configuration.
 #[tauri::command]
 pub async fn save_search(
     request: CreateSavedSearchRequest,
@@ -747,11 +704,7 @@ pub async fn toggle_saved_search_pin(
     Ok(result.0)
 }
 
-// =============================================================================
-// COLLECTION COMMANDS
-// =============================================================================
-
-/// Create a new collection
+/// Create a new collection.
 #[tauri::command]
 pub async fn create_collection(
     request: CreateCollectionRequest,
@@ -886,8 +839,8 @@ pub async fn get_collection_files(
     state: State<'_, AppState>,
 ) -> Result<Vip3SearchResults, String> {
     let pool = state.database.pool().await;
-    let page = page.unwrap_or(1).max(1);
-    let page_size = page_size.unwrap_or(50).clamp(1, 500);
+    let page = page.unwrap_or(DEFAULT_PAGE).max(1);
+    let page_size = page_size.unwrap_or(DEFAULT_PAGE_SIZE).clamp(1, MAX_PAGE_SIZE);
     let offset = (page - 1) * page_size;
 
     // Get total count
@@ -991,11 +944,7 @@ pub async fn update_collection(
     Ok(())
 }
 
-// =============================================================================
-// CATEGORY ASSIGNMENT COMMANDS
-// =============================================================================
-
-/// Add a timbre to a file
+/// Add a timbre to a file.
 #[tauri::command]
 pub async fn add_timbre_to_file(
     file_id: i64,
@@ -1192,11 +1141,7 @@ pub struct FileCategoriesResponse {
     pub articulations: Vec<FilterOption>,
 }
 
-// =============================================================================
-// LOOKUP COMMANDS (for dropdowns)
-// =============================================================================
-
-/// Get all timbres (for dropdown/multiselect)
+/// Get all timbres (for dropdown/multiselect).
 #[tauri::command]
 pub async fn get_all_timbres(
     state: State<'_, AppState>,
