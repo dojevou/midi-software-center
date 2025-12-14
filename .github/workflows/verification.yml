@@ -75,6 +75,9 @@ jobs:
             libayatana-appindicator3-dev \
             librsvg2-dev \
             libssl-dev \
+            libasound2-dev \
+            libc++-dev \
+            libc++abi-dev \
             pkg-config
 
       - name: Check formatting
@@ -257,6 +260,9 @@ jobs:
             libayatana-appindicator3-dev \
             librsvg2-dev \
             libssl-dev \
+            libasound2-dev \
+            libc++-dev \
+            libc++abi-dev \
             pkg-config
 
       - name: Setup Node.js
@@ -324,6 +330,9 @@ jobs:
             libayatana-appindicator3-dev \
             librsvg2-dev \
             libssl-dev \
+            libasound2-dev \
+            libc++-dev \
+            libc++abi-dev \
             pkg-config
 
       - name: Install cargo-tarpaulin
@@ -375,6 +384,9 @@ jobs:
             libayatana-appindicator3-dev \
             librsvg2-dev \
             libssl-dev \
+            libasound2-dev \
+            libc++-dev \
+            libc++abi-dev \
             pkg-config
 
       - name: Setup Node.js
