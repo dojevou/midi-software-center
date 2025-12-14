@@ -1853,8 +1853,7 @@ async fn test_import_single_file_tag_extraction_crash() {
 
     // Should handle long filenames gracefully
     // May succeed with truncation or fail with clear error
-    if result.is_err() {
-        let err = result.unwrap_err();
+    if let Err(err) = result {
         assert!(
             err.contains("name") || err.contains("length") || err.contains("path"),
             "Error should relate to filename handling: {}",
