@@ -10,7 +10,9 @@
   let editingId: string | null = null;
 
   $: filteredShortcuts = Object.values($keyboardStore.shortcuts).filter(shortcut => {
-    if (selectedCategory !== 'all' && shortcut.category !== selectedCategory) return false;
+    if (selectedCategory !== 'all' && shortcut.category !== selectedCategory) {
+      return false;
+    }
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       return shortcut.name.toLowerCase().includes(query) ||

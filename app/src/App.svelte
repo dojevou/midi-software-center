@@ -17,7 +17,7 @@
   import { archiveActions } from '$lib/stores/archiveStore';
   import { keyboardStore } from '$lib/stores/keyboardStore';
   import { a11yStore, isKeyboardNav } from '$lib/stores/a11yStore';
-  import { themeStore, reducedMotion } from '$lib/stores/themeStore';
+  import { reducedMotion } from '$lib/stores/themeStore';
 
   // Accessibility Components
   import SkipLinks from '$lib/components/SkipLinks.svelte';
@@ -488,8 +488,8 @@ import { isLearning } from '$lib/stores/learnStore';
 
   <!-- Pipeline Window as Modal/Popup -->
   {#if $uiStore.windows.pipeline.visible}
-    <div class="modal-overlay" on:click={() => uiActions.hideWindow('pipeline')} on:keydown={(e) => e.key === 'Escape' && uiActions.hideWindow('pipeline')} role="dialog" aria-modal="true" tabindex="-1">
-      <div class="modal-content" on:click|stopPropagation on:keydown|stopPropagation role="document">
+    <div class="modal-overlay" on:click={(e) => e.target === e.currentTarget && uiActions.hideWindow('pipeline')} on:keydown={(e) => e.key === 'Escape' && uiActions.hideWindow('pipeline')} role="dialog" aria-modal="true" tabindex="-1">
+      <div class="modal-content" role="document">
         <div class="modal-header">
           <h2>Import Files</h2>
           <button class="modal-close" on:click={() => uiActions.hideWindow('pipeline')} aria-label="Close">×</button>
@@ -501,8 +501,8 @@ import { isLearning } from '$lib/stores/learnStore';
 
   <!-- MIDI I/O Setup Window as Modal/Popup (F6) -->
   {#if $uiStore.windows['midi-io-setup']?.visible}
-    <div class="modal-overlay" on:click={() => uiActions.hideWindow('midi-io-setup')} on:keydown={(e) => e.key === 'Escape' && uiActions.hideWindow('midi-io-setup')} role="dialog" aria-modal="true" tabindex="-1">
-      <div class="modal-content modal-content-wide" on:click|stopPropagation on:keydown|stopPropagation role="document">
+    <div class="modal-overlay" on:click={(e) => e.target === e.currentTarget && uiActions.hideWindow('midi-io-setup')} on:keydown={(e) => e.key === 'Escape' && uiActions.hideWindow('midi-io-setup')} role="dialog" aria-modal="true" tabindex="-1">
+      <div class="modal-content modal-content-wide" role="document">
         <div class="modal-header">
           <h2>MIDI I/O Setup</h2>
           <button class="modal-close" on:click={() => uiActions.hideWindow('midi-io-setup')} aria-label="Close">×</button>
@@ -514,8 +514,8 @@ import { isLearning } from '$lib/stores/learnStore';
 
   <!-- MIDI Monitor Window as Modal/Popup (F7) -->
   {#if $uiStore.windows['midi-monitor']?.visible}
-    <div class="modal-overlay" on:click={() => uiActions.hideWindow('midi-monitor')} on:keydown={(e) => e.key === 'Escape' && uiActions.hideWindow('midi-monitor')} role="dialog" aria-modal="true" tabindex="-1">
-      <div class="modal-content modal-content-wide" on:click|stopPropagation on:keydown|stopPropagation role="document">
+    <div class="modal-overlay" on:click={(e) => e.target === e.currentTarget && uiActions.hideWindow('midi-monitor')} on:keydown={(e) => e.key === 'Escape' && uiActions.hideWindow('midi-monitor')} role="dialog" aria-modal="true" tabindex="-1">
+      <div class="modal-content modal-content-wide" role="document">
         <div class="modal-header">
           <h2>MIDI Monitor</h2>
           <button class="modal-close" on:click={() => uiActions.hideWindow('midi-monitor')} aria-label="Close">×</button>
@@ -527,8 +527,8 @@ import { isLearning } from '$lib/stores/learnStore';
 
   <!-- Preferences Window as Modal/Popup (F8) -->
   {#if $uiStore.windows['preferences']?.visible}
-    <div class="modal-overlay" on:click={() => uiActions.hideWindow('preferences')} on:keydown={(e) => e.key === 'Escape' && uiActions.hideWindow('preferences')} role="dialog" aria-modal="true" tabindex="-1">
-      <div class="modal-content modal-content-wide" on:click|stopPropagation on:keydown|stopPropagation role="document">
+    <div class="modal-overlay" on:click={(e) => e.target === e.currentTarget && uiActions.hideWindow('preferences')} on:keydown={(e) => e.key === 'Escape' && uiActions.hideWindow('preferences')} role="dialog" aria-modal="true" tabindex="-1">
+      <div class="modal-content modal-content-wide" role="document">
         <PreferencesWindow windowId="preferences" />
       </div>
     </div>
@@ -536,8 +536,8 @@ import { isLearning } from '$lib/stores/learnStore';
 
   <!-- Gear Manager Window as Modal/Popup (F9) -->
   {#if $uiStore.windows['gear-manager']?.visible}
-    <div class="modal-overlay" on:click={() => uiActions.hideWindow('gear-manager')} on:keydown={(e) => e.key === 'Escape' && uiActions.hideWindow('gear-manager')} role="dialog" aria-modal="true" tabindex="-1">
-      <div class="modal-content modal-content-wide" on:click|stopPropagation on:keydown|stopPropagation role="document">
+    <div class="modal-overlay" on:click={(e) => e.target === e.currentTarget && uiActions.hideWindow('gear-manager')} on:keydown={(e) => e.key === 'Escape' && uiActions.hideWindow('gear-manager')} role="dialog" aria-modal="true" tabindex="-1">
+      <div class="modal-content modal-content-wide" role="document">
         <GearManagerWindow windowId="gear-manager" />
       </div>
     </div>
@@ -545,8 +545,8 @@ import { isLearning } from '$lib/stores/learnStore';
 
   <!-- Presets Manager Window as Modal/Popup (F10) -->
   {#if $uiStore.windows['presets-manager']?.visible}
-    <div class="modal-overlay" on:click={() => uiActions.hideWindow('presets-manager')} on:keydown={(e) => e.key === 'Escape' && uiActions.hideWindow('presets-manager')} role="dialog" aria-modal="true" tabindex="-1">
-      <div class="modal-content modal-content-wide" on:click|stopPropagation on:keydown|stopPropagation role="document">
+    <div class="modal-overlay" on:click={(e) => e.target === e.currentTarget && uiActions.hideWindow('presets-manager')} on:keydown={(e) => e.key === 'Escape' && uiActions.hideWindow('presets-manager')} role="dialog" aria-modal="true" tabindex="-1">
+      <div class="modal-content modal-content-wide" role="document">
         <PresetsManagerWindow windowId="presets-manager" />
       </div>
     </div>
@@ -554,8 +554,8 @@ import { isLearning } from '$lib/stores/learnStore';
 
   <!-- Score Window as Modal/Popup -->
   {#if $uiStore.windows['score']?.visible}
-    <div class="modal-overlay" on:click={() => uiActions.hideWindow('score')} on:keydown={(e) => e.key === 'Escape' && uiActions.hideWindow('score')} role="dialog" aria-modal="true" tabindex="-1">
-      <div class="modal-content modal-content-wide" on:click|stopPropagation on:keydown|stopPropagation role="document">
+    <div class="modal-overlay" on:click={(e) => e.target === e.currentTarget && uiActions.hideWindow('score')} on:keydown={(e) => e.key === 'Escape' && uiActions.hideWindow('score')} role="dialog" aria-modal="true" tabindex="-1">
+      <div class="modal-content modal-content-wide" role="document">
         <div class="modal-header">
           <h2>Score View</h2>
           <button class="modal-close" on:click={() => uiActions.hideWindow('score')} aria-label="Close">×</button>
@@ -567,8 +567,8 @@ import { isLearning } from '$lib/stores/learnStore';
 
   <!-- Script Editor Window as Modal/Popup -->
   {#if $uiStore.windows['script-editor']?.visible}
-    <div class="modal-overlay" on:click={() => uiActions.hideWindow('script-editor')} on:keydown={(e) => e.key === 'Escape' && uiActions.hideWindow('script-editor')} role="dialog" aria-modal="true" tabindex="-1">
-      <div class="modal-content modal-content-wide" on:click|stopPropagation on:keydown|stopPropagation role="document">
+    <div class="modal-overlay" on:click={(e) => e.target === e.currentTarget && uiActions.hideWindow('script-editor')} on:keydown={(e) => e.key === 'Escape' && uiActions.hideWindow('script-editor')} role="dialog" aria-modal="true" tabindex="-1">
+      <div class="modal-content modal-content-wide" role="document">
         <div class="modal-header">
           <h2>Script Editor</h2>
           <button class="modal-close" on:click={() => uiActions.hideWindow('script-editor')} aria-label="Close">×</button>
@@ -580,8 +580,8 @@ import { isLearning } from '$lib/stores/learnStore';
 
   <!-- MIDI Learn Window as Modal/Popup -->
   {#if $uiStore.windows['midi-learn']?.visible}
-    <div class="modal-overlay" on:click={() => uiActions.hideWindow('midi-learn')} on:keydown={(e) => e.key === 'Escape' && uiActions.hideWindow('midi-learn')} role="dialog" aria-modal="true" tabindex="-1">
-      <div class="modal-content" on:click|stopPropagation on:keydown|stopPropagation role="document">
+    <div class="modal-overlay" on:click={(e) => e.target === e.currentTarget && uiActions.hideWindow('midi-learn')} on:keydown={(e) => e.key === 'Escape' && uiActions.hideWindow('midi-learn')} role="dialog" aria-modal="true" tabindex="-1">
+      <div class="modal-content" role="document">
         <div class="modal-header">
           <h2>MIDI Learn</h2>
           <button class="modal-close" on:click={() => uiActions.hideWindow('midi-learn')} aria-label="Close">×</button>
@@ -593,8 +593,8 @@ import { isLearning } from '$lib/stores/learnStore';
 
   <!-- Link Sync Window as Modal/Popup -->
   {#if $uiStore.windows['link-sync']?.visible}
-    <div class="modal-overlay" on:click={() => uiActions.hideWindow('link-sync')} on:keydown={(e) => e.key === 'Escape' && uiActions.hideWindow('link-sync')} role="dialog" aria-modal="true" tabindex="-1">
-      <div class="modal-content" on:click|stopPropagation on:keydown|stopPropagation role="document">
+    <div class="modal-overlay" on:click={(e) => e.target === e.currentTarget && uiActions.hideWindow('link-sync')} on:keydown={(e) => e.key === 'Escape' && uiActions.hideWindow('link-sync')} role="dialog" aria-modal="true" tabindex="-1">
+      <div class="modal-content" role="document">
         <div class="modal-header">
           <h2>Ableton Link</h2>
           <button class="modal-close" on:click={() => uiActions.hideWindow('link-sync')} aria-label="Close">×</button>
@@ -606,8 +606,8 @@ import { isLearning } from '$lib/stores/learnStore';
 
   <!-- Piano Roll Window as Modal/Popup (Alt+4) -->
   {#if $uiStore.windows['piano-roll']?.visible}
-    <div class="modal-overlay" on:click={() => uiActions.hideWindow('piano-roll')} on:keydown={(e) => e.key === 'Escape' && uiActions.hideWindow('piano-roll')} role="dialog" aria-modal="true" tabindex="-1">
-      <div class="modal-content modal-content-wide" on:click|stopPropagation on:keydown|stopPropagation role="document">
+    <div class="modal-overlay" on:click={(e) => e.target === e.currentTarget && uiActions.hideWindow('piano-roll')} on:keydown={(e) => e.key === 'Escape' && uiActions.hideWindow('piano-roll')} role="dialog" aria-modal="true" tabindex="-1">
+      <div class="modal-content modal-content-wide" role="document">
         <div class="modal-header">
           <h2>Piano Roll</h2>
           <button class="modal-close" on:click={() => uiActions.hideWindow('piano-roll')} aria-label="Close">×</button>

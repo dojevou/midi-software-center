@@ -47,7 +47,9 @@
   });
 
   function render() {
-    if (!ctx || !canvas) return;
+    if (!ctx || !canvas) {
+      return;
+    }
 
     // Clear canvas
     ctx.clearRect(0, 0, width, height);
@@ -153,7 +155,9 @@
   }
 
   function drawWaveform() {
-    if (!ctx) return;
+    if (!ctx) {
+      return;
+    }
 
     // Simulated waveform (in real implementation, this would use actual audio data)
     // For now, draw a stylized waveform pattern
@@ -176,7 +180,9 @@
   }
 
   function drawGrid() {
-    if (!ctx) return;
+    if (!ctx) {
+      return;
+    }
 
     ctx.strokeStyle = gridColor;
     ctx.lineWidth = 0.5;
@@ -193,7 +199,9 @@
   }
 
   function drawEmptyState() {
-    if (!ctx) return;
+    if (!ctx) {
+      return;
+    }
 
     // Draw subtle pattern indicating empty clip
     ctx.fillStyle = hexToRgba(color, 0.1);

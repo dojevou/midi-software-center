@@ -117,7 +117,9 @@
   let draggedFileId: number | null = null;
 
   function handleDragStart(file: FileItem, event: DragEvent) {
-    if (file.type === 'folder' || !event.dataTransfer) return;
+    if (file.type === 'folder' || !event.dataTransfer) {
+      return;
+    }
 
     draggedFileId = file.id;
     log.debug('Drag started', { fileId: file.id, name: file.name });

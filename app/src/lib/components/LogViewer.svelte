@@ -60,7 +60,7 @@
       aria-label="Filter by level"
     >
       <option value="">All Levels</option>
-      {#each levels as level}
+      {#each levels as level (level)}
         <option value={level}>{level.toUpperCase()}</option>
       {/each}
     </select>
@@ -71,7 +71,7 @@
       aria-label="Filter by category"
     >
       <option value="">All Categories</option>
-      {#each categories as category}
+      {#each categories as category (category)}
         <option value={category}>{category}</option>
       {/each}
     </select>

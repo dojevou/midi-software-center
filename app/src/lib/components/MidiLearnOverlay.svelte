@@ -110,7 +110,7 @@
   
   async function exportMappings() {
     try {
-      const json = await invoke('learn_export_mappings') as string;
+      const json = await invoke<string>('learn_export_mappings');
       
       const blob = new Blob([json], { type: 'application/json' });
       const url = URL.createObjectURL(blob);

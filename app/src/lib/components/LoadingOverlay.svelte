@@ -24,7 +24,9 @@
 
   function getElapsedTime(startTime: number): string {
     const elapsed = Math.floor((Date.now() - startTime) / 1000);
-    if (elapsed < 60) return `${elapsed}s`;
+    if (elapsed < 60) {
+      return `${elapsed}s`;
+    }
     return `${Math.floor(elapsed / 60)}m ${elapsed % 60}s`;
   }
 </script>
