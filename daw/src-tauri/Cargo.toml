@@ -9,9 +9,6 @@ edition = "2021"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
-[build-dependencies]
-tauri-build = { version = "2.0", features = [] }
-
 [dependencies]
 tauri = { workspace = true }
 serde = { workspace = true }
@@ -104,11 +101,7 @@ harness = false
 
 [features]
 # Default: cross-platform with midir
-default = ["custom-protocol"]
-
-# this feature is used for production builds or when `devPath` points to the filesystem and the built-in dev server is disabled.
-# If you use cargo directly instead of tauri's cli you need to __also__ set `TAURI_DEV` to `false`
-custom-protocol = ["tauri/custom-protocol"]
+default = []
 
 # Low-latency backends (choose based on platform)
 jack-backend = ["jack"]

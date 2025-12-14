@@ -129,14 +129,6 @@ jobs:
         run: |
           cd app && pnpm install && pnpm build
 
-      - name: Create backend placeholders for Clippy
-        run: |
-          # Pipeline and DAW are backends accessed through app/, but their
-          # Tauri config still requires frontendDist for compilation
-          mkdir -p pipeline/dist daw/dist
-          echo '<!DOCTYPE html><html><body></body></html>' > pipeline/dist/index.html
-          echo '<!DOCTYPE html><html><body></body></html>' > daw/dist/index.html
-
       - name: Override native CPU flags for CI
         run: |
           mkdir -p .cargo
@@ -184,12 +176,6 @@ jobs:
       - name: Build app frontend
         run: |
           cd app && pnpm install && pnpm build
-
-      - name: Create backend placeholders for Clippy
-        run: |
-          mkdir -p pipeline/dist daw/dist
-          echo '<!DOCTYPE html><html><body></body></html>' > pipeline/dist/index.html
-          echo '<!DOCTYPE html><html><body></body></html>' > daw/dist/index.html
 
       - name: Override native CPU flags for CI
         run: |
