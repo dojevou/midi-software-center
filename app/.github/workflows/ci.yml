@@ -212,4 +212,4 @@ jobs:
         run: pnpm check
 
       - name: Lint
-        run: pnpm lint --max-warnings 350
+        run: pnpm lint

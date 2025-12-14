@@ -1,0 +1,398 @@
+# MIDI Software Center - Comprehensive Verification Workflow
+#
+# Runs all verification checks on push and pull requests.
+# Also provides manual trigger for full verification.
+
+name: Verification
+
+on:
+  push:
+    branches: [main, develop]
+  pull_request:
+    branches: [main, develop]
+  workflow_dispatch:
+    inputs:
+      full_verification:
+        description: 'Run full verification including long tests'
+        required: false
+        default: 'false'
+        type: boolean
+
+env:
+  CARGO_TERM_COLOR: always
+  RUST_BACKTRACE: 1
+  DATABASE_URL: postgresql://midiuser:145278963@localhost:5433/midi_library_test
+
+jobs:
+  # ===========================================================================
+  # Rust Workspace Verification
+  # ===========================================================================
+  rust-check:
+    name: Rust Build & Test
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: midiuser
+          POSTGRES_PASSWORD: 145278963
+          POSTGRES_DB: midi_library_test
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+        with:
+          components: rustfmt, clippy
+
+      - name: Cache cargo registry
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
+          key: cargo-${{ runner.os }}-${{ hashFiles('**/Cargo.lock') }}
+          restore-keys: |
+            cargo-${{ runner.os }}-
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libgtk-3-dev \
+            libwebkit2gtk-4.1-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            libssl-dev \
+            pkg-config
+
+      - name: Check formatting
+        run: cargo fmt --all -- --check
+
+      - name: Run clippy
+        run: cargo clippy --workspace --all-targets --all-features -- -D warnings
+
+      - name: Build workspace
+        run: cargo build --workspace --all-targets
+
+      - name: Run tests
+        run: cargo test --workspace --lib -- --test-threads=1
+
+      - name: Run doc tests
+        run: cargo test --workspace --doc
+
+  # ===========================================================================
+  # Frontend Verification
+  # ===========================================================================
+  frontend-check:
+    name: Frontend Build & Lint
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+
+      - name: Get pnpm store directory
+        shell: bash
+        run: |
+          echo "STORE_PATH=$(pnpm store path --silent)" >> "$GITHUB_ENV"
+
+      - name: Setup pnpm cache
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.STORE_PATH }}
+          key: pnpm-store-${{ runner.os }}-${{ hashFiles('**/pnpm-lock.yaml') }}
+          restore-keys: |
+            pnpm-store-${{ runner.os }}-
+
+      - name: Install frontend dependencies
+        working-directory: ./app
+        run: pnpm install
+
+      - name: TypeScript check
+        working-directory: ./app
+        run: pnpm run check
+
+      - name: Build frontend
+        working-directory: ./app
+        run: pnpm run build
+
+  # ===========================================================================
+  # Database Migration Verification
+  # ===========================================================================
+  database-check:
+    name: Database Schema Verification
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: midiuser
+          POSTGRES_PASSWORD: 145278963
+          POSTGRES_DB: midi_library_test
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install PostgreSQL client
+        run: sudo apt-get install -y postgresql-client
+
+      - name: Run migrations
+        run: |
+          for migration in database/migrations/*.sql; do
+            echo "Running migration: $migration"
+            psql "postgresql://midiuser:145278963@localhost:5433/midi_library_test" -f "$migration" || true
+          done
+
+      - name: Verify schema
+        run: |
+          psql "postgresql://midiuser:145278963@localhost:5433/midi_library_test" -f verification/sql/schema_validation.sql
+
+  # ===========================================================================
+  # Dependency Verification
+  # ===========================================================================
+  dependency-check:
+    name: Dependency Audit
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install cargo-audit
+        run: cargo install cargo-audit
+
+      - name: Audit Rust dependencies
+        run: cargo audit
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+
+      - name: Install frontend dependencies
+        working-directory: ./app
+        run: pnpm install
+
+      - name: Audit npm dependencies
+        working-directory: ./app
+        run: pnpm audit --audit-level=high
+        continue-on-error: true
+
+  # ===========================================================================
+  # Full Verification Runner
+  # ===========================================================================
+  full-verification:
+    name: Full Verification Suite
+    runs-on: ubuntu-latest
+    needs: [rust-check, frontend-check, database-check]
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.full_verification == 'true'
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: midiuser
+          POSTGRES_PASSWORD: 145278963
+          POSTGRES_DB: midi_library_test
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libgtk-3-dev \
+            libwebkit2gtk-4.1-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            libssl-dev \
+            pkg-config
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+
+      - name: Install frontend dependencies
+        working-directory: ./app
+        run: pnpm install
+
+      - name: Run migrations
+        run: |
+          for migration in database/migrations/*.sql; do
+            psql "postgresql://midiuser:145278963@localhost:5433/midi_library_test" -f "$migration" || true
+          done
+
+      - name: Build verification tool
+        run: cargo build --release -p verification
+
+      - name: Run full verification
+        run: ./target/release/midi-verification --all --ci
+
+  # ===========================================================================
+  # Code Coverage
+  # ===========================================================================
+  coverage:
+    name: Code Coverage
+    runs-on: ubuntu-latest
+    needs: rust-check
+
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: midiuser
+          POSTGRES_PASSWORD: 145278963
+          POSTGRES_DB: midi_library_test
+        ports:
+          - 5433:5432
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libgtk-3-dev \
+            libwebkit2gtk-4.1-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            libssl-dev \
+            pkg-config
+
+      - name: Install cargo-tarpaulin
+        run: cargo install cargo-tarpaulin
+
+      - name: Run coverage
+        run: |
+          cargo tarpaulin --workspace --out Xml --out Html \
+            --exclude-files "*/tests/*" \
+            --exclude-files "*/benches/*" \
+            --exclude-files "**/main.rs" \
+            -- --test-threads=1
+
+      - name: Upload coverage to Codecov
+        uses: codecov/codecov-action@v4
+        with:
+          files: ./cobertura.xml
+          fail_ci_if_error: false
+          verbose: true
+
+      - name: Upload coverage artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: coverage-report
+          path: tarpaulin-report.html
+
+  # ===========================================================================
+  # Tauri Build Verification (optional, expensive)
+  # ===========================================================================
+  tauri-build:
+    name: Tauri Application Build
+    runs-on: ubuntu-latest
+    needs: [rust-check, frontend-check]
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Install Rust toolchain
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y \
+            libgtk-3-dev \
+            libwebkit2gtk-4.1-dev \
+            libayatana-appindicator3-dev \
+            librsvg2-dev \
+            libssl-dev \
+            pkg-config
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 8
+
+      - name: Install frontend dependencies
+        working-directory: ./app
+        run: pnpm install
+
+      - name: Build Tauri application
+        working-directory: ./app
+        run: pnpm tauri build
+        env:
+          TAURI_SIGNING_PRIVATE_KEY: ""
