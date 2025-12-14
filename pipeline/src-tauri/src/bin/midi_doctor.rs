@@ -344,8 +344,10 @@ fn main() {
     let repaired_count = stats.repaired_files.load(Ordering::Relaxed);
     let corrupt_count = stats.corrupt_files.load(Ordering::Relaxed);
 
-    if repaired_count > 0 && repair_dir.is_some() {
-        println!("🔧 Repaired files saved to: {}", repair_dir.unwrap());
+    if repaired_count > 0 {
+        if let Some(ref dir) = repair_dir {
+            println!("🔧 Repaired files saved to: {}", dir);
+        }
     }
 
     if corrupt_count > 0 {
