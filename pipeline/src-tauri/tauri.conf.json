@@ -1,8 +1,8 @@
 {
   "$schema": "https://schema.tauri.app/config/2",
-  "productName": "MIDI Pipeline",
-  "version": "0.1.0",
-  "identifier": "com.midilibrary.pipeline",
+  "productName": "MIDI Software Center",
+  "version": "1.0.0",
+  "identifier": "com.midilibrary.software-center",
   "build": {
     "beforeDevCommand": "npm run dev",
     "beforeBuildCommand": "npm run build",
@@ -11,23 +11,22 @@
   },
   "bundle": {
     "active": true,
-    "targets": "all",
+    "targets": ["deb"],
     "icon": [
       "icons/32x32.png",
       "icons/128x128.png",
       "icons/128x128@2x.png",
-      "icons/icon.icns",
       "icons/icon.ico"
     ],
     "copyright": "",
     "category": "Utility",
-    "shortDescription": "MIDI file processing pipeline",
-    "longDescription": "High-performance MIDI file importer and processor"
+    "shortDescription": "Professional MIDI library management",
+    "longDescription": "High-performance MIDI file management, import, analysis, and organization"
   },
   "app": {
     "windows": [
       {
-        "title": "MIDI Pipeline",
+        "title": "MIDI Software Center",
         "width": 1200,
         "height": 800,
         "resizable": true,
