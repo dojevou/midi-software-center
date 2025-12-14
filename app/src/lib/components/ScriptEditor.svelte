@@ -11,7 +11,7 @@
   // State
   let content: string = initialContent;
   let scriptName: string = 'Untitled Script';
-  let scriptDescription: string = '';
+  const scriptDescription: string = '';
   let scriptType: 'MidiProcessor' | 'Generator' | 'Automation' | 'Utility' | 'Action' = 'MidiProcessor';
   let isSaved: boolean = true;
   let isRunning: boolean = false;
@@ -19,9 +19,9 @@
   let error: string | null = null;
   
   // Editor settings
-  let fontSize: number = 14;
-  let showLineNumbers: boolean = true;
-  let wordWrap: boolean = true;
+  const fontSize: number = 14;
+  const showLineNumbers: boolean = true;
+  const wordWrap: boolean = true;
   
   // Templates
   type TemplateName = 'midi_processor' | 'arpeggiator' | 'chord_trigger' | 'velocity_curve' | 'random_humanize';
@@ -324,7 +324,7 @@ end
     <div class="editor-wrapper">
       {#if showLineNumbers}
         <div class="line-numbers">
-          {#each getLineNumbers() as num}
+          {#each getLineNumbers() as num (num)}
             <span>{num}</span>
           {/each}
         </div>
@@ -349,7 +349,7 @@ end
     </div>
     
     <div class="console-output">
-      {#each consoleOutput as line}
+      {#each consoleOutput as line, i (i)}
         <div class="console-line" class:error={line.startsWith('✗')}>
           {line}
         </div>

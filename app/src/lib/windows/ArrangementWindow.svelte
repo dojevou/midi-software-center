@@ -100,7 +100,7 @@
   // Keyboard shortcuts for the window
   function handleKeyDown(event: KeyboardEvent) {
     // Don't handle if typing in an input
-    if ((event.target as HTMLElement).tagName === 'INPUT') return;
+    if ((event.target as HTMLElement).tagName === 'INPUT') {return;}
 
     // Check for modifier keys
     const isModifier = event.ctrlKey || event.metaKey;

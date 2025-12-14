@@ -161,7 +161,7 @@ function createDnDStore() {
     // Update drag position
     handleMouseMove(event: MouseEvent) {
       const state = get({ subscribe });
-      if (!state.isDragging) return;
+      if (!state.isDragging) {return;}
 
       update(s => ({ ...s, cursorPosition: { x: event.clientX, y: event.clientY } }));
 
@@ -188,7 +188,7 @@ function createDnDStore() {
     // Handle drop
     handleMouseUp(event: MouseEvent) {
       const state = get({ subscribe });
-      if (!state.isDragging || !state.dragData) return;
+      if (!state.isDragging || !state.dragData) {return;}
 
       // Clean up preview
       if (previewElement) {
@@ -333,7 +333,7 @@ function findActiveDropZone(
 
   zones.forEach(zone => {
     // Check if zone accepts this drag type
-    if (!zone.accepts.includes(dragData.type)) return;
+    if (!zone.accepts.includes(dragData.type)) {return;}
 
     // Check if cursor is over element
     const rect = zone.element.getBoundingClientRect();
@@ -344,7 +344,7 @@ function findActiveDropZone(
       event.clientY <= rect.bottom
     ) {
       // Check custom onDragOver validation
-      if (zone.onDragOver && !zone.onDragOver(dragData)) return;
+      if (zone.onDragOver && !zone.onDragOver(dragData)) {return;}
 
       candidates.push(zone);
     }

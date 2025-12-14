@@ -141,7 +141,7 @@ function createOfflineStore() {
     const cacheKey = CACHE_PREFIX + key;
     try {
       const stored = localStorage.getItem(cacheKey);
-      if (!stored) return null;
+      if (!stored) {return null;}
 
       const item: CachedItem<T> = JSON.parse(stored);
 
@@ -212,7 +212,7 @@ function createOfflineStore() {
     const keysToRemove: string[] = [];
 
     for (const item of items) {
-      if (freedBytes >= bytesNeeded) break;
+      if (freedBytes >= bytesNeeded) {break;}
       keysToRemove.push(item.key);
       freedBytes += item.size;
     }

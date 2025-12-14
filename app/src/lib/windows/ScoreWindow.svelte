@@ -13,7 +13,7 @@
 
   // Derived store for selected file
   const selectedFile = derived(databaseStore, ($store) => {
-    if ($store.selectedFileId === null) return null;
+    if ($store.selectedFileId === null) {return null;}
     return $store.searchResults.find(f => f.id === $store.selectedFileId) || null;
   });
 

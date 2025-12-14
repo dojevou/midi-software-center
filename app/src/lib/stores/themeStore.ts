@@ -255,12 +255,12 @@ function applyCssVariables(vars: Record<string, string>) {
 // ============================================================================
 
 function getSystemPreference(): 'light' | 'dark' {
-  if (typeof window === 'undefined') return 'dark';
+  if (typeof window === 'undefined') {return 'dark';}
   return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
 }
 
 function getReducedMotionPreference(): boolean {
-  if (typeof window === 'undefined') return false;
+  if (typeof window === 'undefined') {return false;}
   return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 }
 
@@ -339,7 +339,7 @@ function createThemeStore() {
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     mediaQuery.addEventListener('change', (e) => {
       update(state => {
-        if (state.config.mode !== 'system') return state;
+        if (state.config.mode !== 'system') {return state;}
         const newResolved: 'dark' | 'light' = e.matches ? 'dark' : 'light';
         const newState: ThemeState = { ...state, resolvedMode: newResolved };
         newState.cssVariables = generateCssVariables(newState);

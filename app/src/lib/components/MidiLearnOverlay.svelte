@@ -131,12 +131,12 @@
     
     input.onchange = async (e) => {
       const file = (e.target as HTMLInputElement).files?.[0];
-      if (!file) return;
+      if (!file) {return;}
       
       const json = await file.text();
       
       try {
-        const count = await invoke('learn_import_mappings', { json }) as number;
+        const count = await invoke('learn_import_mappings', { json });
         await loadMappings();
         alert(`Imported ${count} mappings`);
       } catch (e) {
@@ -216,7 +216,7 @@
           
           {#if mappings.filter(m => m.target.Parameter?.path === targetPath).length > 0}
             <div class="mappings-list">
-              {#each mappings.filter(m => m.target.Parameter?.path === targetPath) as mapping}
+              {#each mappings.filter(m => m.target.Parameter?.path === targetPath) as mapping (JSON.stringify(mapping.source))}
                 <div 
                   class="mapping-item"
                   class:selected={selectedMapping === mapping.id}
@@ -258,7 +258,7 @@
           
           {#if mappings.length > 0}
             <div class="mappings-list all-mappings">
-              {#each mappings as mapping}
+              {#each mappings as mapping (JSON.stringify(mapping.source))}
                 <div class="mapping-item-compact">
                   <span class="source">{formatMidiSource(mapping.source)}</span>
                   <span class="arrow">→</span>

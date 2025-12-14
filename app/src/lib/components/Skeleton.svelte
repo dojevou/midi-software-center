@@ -15,7 +15,7 @@
 
 {#if variant === 'text' && lines > 1}
   <div class="skeleton-lines">
-    {#each Array(lines) as _, i}
+    {#each Array(lines) as _, i (i)}
       <div
         class="skeleton text"
         class:animate

@@ -40,7 +40,7 @@
     <div class="toolbar">
       <select bind:value={selectedExample} on:change={loadExample}>
         <option value="">Load Example...</option>
-        {#each examples as example}
+        {#each examples as example (example.name)}
           <option value={example.name}>{example.name} ({example.type})</option>
         {/each}
       </select>
@@ -57,7 +57,7 @@
     <div class="scripts-list">
       <h4>Loaded Scripts ({$scriptingState.scripts.length})</h4>
       <ul>
-        {#each $scriptingState.scripts as script}
+        {#each $scriptingState.scripts as script (script.name)}
           <li>
             <strong>{script.name}</strong> ({script.scriptType})
             <button on:click={() => scriptingActions.unloadScript(script.name)}>×</button>

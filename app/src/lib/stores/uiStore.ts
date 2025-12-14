@@ -421,7 +421,7 @@ export const uiActions = {
       const windows = [...state.minimizedWindows];
       const draggedIdx = windows.indexOf(draggedId);
       const targetIdx = windows.indexOf(targetId);
-      if (draggedIdx === -1 || targetIdx === -1) return state;
+      if (draggedIdx === -1 || targetIdx === -1) {return state;}
       windows.splice(draggedIdx, 1);
       windows.splice(targetIdx, 0, draggedId);
       return { ...state, minimizedWindows: windows };
@@ -456,10 +456,10 @@ export const uiActions = {
 
   // ========== TABBED WINDOWS ==========
   createTabbedGroup(windowIds: WindowId[]) {
-    if (windowIds.length < 2) return;
+    if (windowIds.length < 2) {return;}
     const state = get(uiStore);
     const firstWindow = state.windows[windowIds[0]];
-    if (!firstWindow) return;
+    if (!firstWindow) {return;}
 
     const groupId = `tab-group-${Date.now()}`;
     const group: TabbedGroup = {
@@ -492,9 +492,9 @@ export const uiActions = {
   removeFromTabbedGroup(groupId: string, windowId: WindowId) {
     uiStore.update((state) => {
       const groups = state.tabbedGroups.map(g => {
-        if (g.id !== groupId) return g;
+        if (g.id !== groupId) {return g;}
         const newWindowIds = g.windowIds.filter(id => id !== windowId);
-        if (newWindowIds.length < 2) return null; // Dissolve group
+        if (newWindowIds.length < 2) {return null;} // Dissolve group
         return {
           ...g,
           windowIds: newWindowIds,
@@ -527,7 +527,7 @@ export const uiActions = {
   loadLayout(layoutId: string) {
     uiStore.update((state) => {
       const layout = state.savedLayouts.find(l => l.id === layoutId);
-      if (!layout) return state;
+      if (!layout) {return state;}
 
       // Merge layout windows with existing (preserving windows not in layout)
       const newWindows = { ...state.windows };
@@ -574,7 +574,7 @@ export const uiActions = {
         .filter(([_, pos]) => pos.visible)
         .map(([id]) => id as WindowId);
 
-      if (visibleIds.length === 0) return state;
+      if (visibleIds.length === 0) {return state;}
 
       const menuBarHeight = 32;
       const statusBarHeight = 24;
@@ -638,7 +638,7 @@ export const WINDOW_SHORTCUTS: Record<string, WindowId> = {
 
 export function handleKeyboardShortcut(event: KeyboardEvent): boolean {
   const isMeta = event.metaKey || event.ctrlKey;
-  if (!isMeta) return false;
+  if (!isMeta) {return false;}
 
   const key = event.key.toLowerCase();
 

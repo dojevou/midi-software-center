@@ -34,11 +34,11 @@ const initialState: A11yState = {
 
 // Focus trap handler
 function handleFocusTrap(event: KeyboardEvent) {
-  if (event.key !== 'Tab') return;
+  if (event.key !== 'Tab') {return;}
 
   const element = event.currentTarget as HTMLElement;
   const focusable = getFocusableElements(element);
-  if (focusable.length === 0) return;
+  if (focusable.length === 0) {return;}
 
   const first = focusable[0];
   const last = focusable[focusable.length - 1];
@@ -63,7 +63,7 @@ function getFocusableElements(container: HTMLElement): HTMLElement[] {
     '[tabindex]:not([tabindex="-1"])',
   ].join(', ');
 
-  return Array.from(container.querySelectorAll(selector)) as HTMLElement[];
+  return Array.from(container.querySelectorAll(selector));
 }
 
 function createA11yStore() {
@@ -87,7 +87,7 @@ function createA11yStore() {
 
     // Screen reader announcements
     announce(message: string, priority: 'polite' | 'assertive' = 'polite') {
-      if (!liveRegion) return;
+      if (!liveRegion) {return;}
 
       liveRegion.setAttribute('aria-live', priority);
       // Clear then set to trigger announcement

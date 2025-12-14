@@ -19,7 +19,7 @@
   }
 
   function getIcon(mode: ThemeMode, resolved: boolean): string {
-    if (mode === 'system') return '💻';
+    if (mode === 'system') {return '💻';}
     return resolved ? '🌙' : '☀️';
   }
 

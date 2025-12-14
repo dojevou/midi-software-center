@@ -145,7 +145,7 @@ export function getNextAvailableColor(usedColors: string[]): string {
  */
 export function hexToRgba(hex: string, alpha: number = 1): string {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  if (!result) return `rgba(59, 130, 246, ${alpha})`; // Default blue
+  if (!result) {return `rgba(59, 130, 246, ${alpha})`;} // Default blue
 
   const r = parseInt(result[1], 16);
   const g = parseInt(result[2], 16);
@@ -159,11 +159,11 @@ export function hexToRgba(hex: string, alpha: number = 1): string {
  */
 export function hexToHsl(hex: string): { h: number; s: number; l: number } {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  if (!result) return { h: 0, s: 0, l: 50 };
+  if (!result) {return { h: 0, s: 0, l: 50 };}
 
-  let r = parseInt(result[1], 16) / 255;
-  let g = parseInt(result[2], 16) / 255;
-  let b = parseInt(result[3], 16) / 255;
+  const r = parseInt(result[1], 16) / 255;
+  const g = parseInt(result[2], 16) / 255;
+  const b = parseInt(result[3], 16) / 255;
 
   const max = Math.max(r, g, b);
   const min = Math.min(r, g, b);
@@ -205,11 +205,11 @@ export function hslToHex(h: number, s: number, l: number): string {
     r = g = b = l;
   } else {
     const hue2rgb = (p: number, q: number, t: number) => {
-      if (t < 0) t += 1;
-      if (t > 1) t -= 1;
-      if (t < 1 / 6) return p + (q - p) * 6 * t;
-      if (t < 1 / 2) return q;
-      if (t < 2 / 3) return p + (q - p) * (2 / 3 - t) * 6;
+      if (t < 0) {t += 1;}
+      if (t > 1) {t -= 1;}
+      if (t < 1 / 6) {return p + (q - p) * 6 * t;}
+      if (t < 1 / 2) {return q;}
+      if (t < 2 / 3) {return p + (q - p) * (2 / 3 - t) * 6;}
       return p;
     };
 
@@ -242,7 +242,7 @@ export function adjustColorLightness(hex: string, amount: number): string {
  */
 export function getContrastingTextColor(hex: string): string {
   const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
-  if (!result) return '#ffffff';
+  if (!result) {return '#ffffff';}
 
   const r = parseInt(result[1], 16);
   const g = parseInt(result[2], 16);

@@ -121,7 +121,7 @@
   let draggedFileId: number | null = null;
 
   function handleDragStart(file: FileDetails, event: DragEvent) {
-    if (!event.dataTransfer) return;
+    if (!event.dataTransfer) {return;}
 
     draggedFileId = file.id;
 
@@ -253,7 +253,7 @@
       Name
       <div class="sort-controls">
         <select bind:value={sortBy} on:change={handleSortChange} class="sort-select">
-          {#each sortOptions as opt}
+          {#each sortOptions as opt (opt.value)}
             <option value={opt.value}>{opt.label}</option>
           {/each}
         </select>
@@ -318,7 +318,7 @@
               <!-- Star Rating -->
               <span class="file-cell rating">
                 <div class="star-rating" role="group" aria-label="Rating for {file.filename}">
-                  {#each [1, 2, 3, 4, 5] as star}
+                  {#each [1, 2, 3, 4, 5] as star (star)}
                     <button
                       type="button"
                       class="star-btn"
@@ -428,7 +428,7 @@
           on:change={handlePageSizeChange}
           class="page-size-select"
         >
-          {#each pageSizeOptions as size}
+          {#each pageSizeOptions as size (size)}
             <option value={size}>{size}</option>
           {/each}
         </select>

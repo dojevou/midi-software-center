@@ -194,10 +194,10 @@
 
   async function addTags() {
     const tagInput = prompt('Enter tags to add (comma-separated):');
-    if (!tagInput) return;
+    if (!tagInput) {return;}
 
     const newTags = tagInput.split(',').map(t => t.trim()).filter(t => t.length > 0);
-    if (newTags.length === 0) return;
+    if (newTags.length === 0) {return;}
 
     try {
       await api.tags.addToFile(fileId, newTags);
@@ -209,11 +209,11 @@
   }
 
   async function editTags() {
-    if (!fileDetails?.tags) return;
+    if (!fileDetails?.tags) {return;}
 
     const currentTags = fileDetails.tags.join(', ');
     const tagInput = prompt('Edit tags (comma-separated):', currentTags);
-    if (tagInput === null) return;
+    if (tagInput === null) {return;}
 
     const updatedTags = tagInput.split(',').map(t => t.trim()).filter(t => t.length > 0);
 

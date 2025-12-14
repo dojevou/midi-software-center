@@ -32,8 +32,8 @@
   }
 
   function formatLatency(ms: number | null): string {
-    if (ms === null) return 'N/A';
-    if (ms < 1) return '<1ms';
+    if (ms === null) {return 'N/A';}
+    if (ms < 1) {return '<1ms';}
     return `${ms}ms`;
   }
 
@@ -42,8 +42,8 @@
     const hours = Math.floor((seconds % 86400) / 3600);
     const minutes = Math.floor((seconds % 3600) / 60);
 
-    if (days > 0) return `${days}d ${hours}h`;
-    if (hours > 0) return `${hours}h ${minutes}m`;
+    if (days > 0) {return `${days}d ${hours}h`;}
+    if (hours > 0) {return `${hours}h ${minutes}m`;}
     return `${minutes}m`;
   }
 
@@ -103,7 +103,7 @@
       </div>
 
       <ul class="services-list">
-        {#each $healthStore.health.services as service}
+        {#each $healthStore.health.services as service (service.name)}
           <li class="service-item">
             <span
               class="service-status"

@@ -9,7 +9,7 @@
 
   let showSaveDialog = false;
   let newSearchName = '';
-  let editingSearchId: number | null = null;
+  const editingSearchId: number | null = null;
 
   const dispatch = createEventDispatcher<{
     save: { name: string };
@@ -48,12 +48,12 @@
 
   function formatFiltersPreview(filters: VIP3Filters): string {
     const parts: string[] = [];
-    if (filters.searchQuery) parts.push(`"${filters.searchQuery}"`);
-    if (filters.timbreIds.length) parts.push(`${filters.timbreIds.length} timbres`);
-    if (filters.styleIds.length) parts.push(`${filters.styleIds.length} styles`);
-    if (filters.articulationIds.length) parts.push(`${filters.articulationIds.length} articulations`);
-    if (filters.bpmRangeId) parts.push('BPM');
-    if (filters.keyIds.length) parts.push(`${filters.keyIds.length} keys`);
+    if (filters.searchQuery) {parts.push(`"${filters.searchQuery}"`);}
+    if (filters.timbreIds.length) {parts.push(`${filters.timbreIds.length} timbres`);}
+    if (filters.styleIds.length) {parts.push(`${filters.styleIds.length} styles`);}
+    if (filters.articulationIds.length) {parts.push(`${filters.articulationIds.length} articulations`);}
+    if (filters.bpmRangeId) {parts.push('BPM');}
+    if (filters.keyIds.length) {parts.push(`${filters.keyIds.length} keys`);}
     return parts.length > 0 ? parts.join(' \u2022 ') : 'All files';
   }
 
@@ -102,7 +102,7 @@
             placeholder="Enter search name..."
             bind:value={newSearchName}
             on:keydown={(e) => {
-              if (e.key === 'Enter') handleSave();
+              if (e.key === 'Enter') {handleSave();}
               if (e.key === 'Escape') { showSaveDialog = false; newSearchName = ''; }
             }}
           />

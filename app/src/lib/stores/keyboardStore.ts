@@ -52,10 +52,10 @@ export interface ShortcutConflict {
 
 export function comboToString(combo: KeyCombo): string {
   const parts: string[] = [];
-  if (combo.modifiers.includes('meta')) parts.push('\u2318');
-  if (combo.modifiers.includes('ctrl')) parts.push('Ctrl');
-  if (combo.modifiers.includes('alt')) parts.push('Alt');
-  if (combo.modifiers.includes('shift')) parts.push('Shift');
+  if (combo.modifiers.includes('meta')) {parts.push('\u2318');}
+  if (combo.modifiers.includes('ctrl')) {parts.push('Ctrl');}
+  if (combo.modifiers.includes('alt')) {parts.push('Alt');}
+  if (combo.modifiers.includes('shift')) {parts.push('Shift');}
   parts.push(combo.key.toUpperCase());
   return parts.join('+');
 }
@@ -66,11 +66,11 @@ export function stringToCombo(str: string): KeyCombo {
   let key = '';
 
   for (const part of parts) {
-    if (part === '\u2318' || part === 'cmd' || part === 'meta') modifiers.push('meta');
-    else if (part === 'ctrl' || part === 'control') modifiers.push('ctrl');
-    else if (part === 'alt' || part === 'option') modifiers.push('alt');
-    else if (part === 'shift') modifiers.push('shift');
-    else key = part;
+    if (part === '\u2318' || part === 'cmd' || part === 'meta') {modifiers.push('meta');}
+    else if (part === 'ctrl' || part === 'control') {modifiers.push('ctrl');}
+    else if (part === 'alt' || part === 'option') {modifiers.push('alt');}
+    else if (part === 'shift') {modifiers.push('shift');}
+    else {key = part;}
   }
 
   return { key, modifiers };
@@ -80,13 +80,13 @@ export function matchesCombo(event: KeyboardEvent, combo: KeyCombo): boolean {
   const key = event.key.toLowerCase();
   const eventModifiers = new Set<ModifierKey>();
 
-  if (event.metaKey) eventModifiers.add('meta');
-  if (event.ctrlKey) eventModifiers.add('ctrl');
-  if (event.altKey) eventModifiers.add('alt');
-  if (event.shiftKey) eventModifiers.add('shift');
+  if (event.metaKey) {eventModifiers.add('meta');}
+  if (event.ctrlKey) {eventModifiers.add('ctrl');}
+  if (event.altKey) {eventModifiers.add('alt');}
+  if (event.shiftKey) {eventModifiers.add('shift');}
 
-  if (key !== combo.key.toLowerCase()) return false;
-  if (eventModifiers.size !== combo.modifiers.length) return false;
+  if (key !== combo.key.toLowerCase()) {return false;}
+  if (eventModifiers.size !== combo.modifiers.length) {return false;}
 
   return combo.modifiers.every(mod => eventModifiers.has(mod));
 }
@@ -213,7 +213,7 @@ function createKeyboardStore() {
       const state = get({ subscribe });
 
       // Don't intercept if typing in input
-      if (isTypingInInput(event)) return false;
+      if (isTypingInInput(event)) {return false;}
 
       // Handle recording mode
       if (state.isRecording && state.recordingTarget) {
@@ -228,8 +228,8 @@ function createKeyboardStore() {
 
       // Find matching shortcut
       for (const shortcut of Object.values(state.shortcuts)) {
-        if (!shortcut.enabled) continue;
-        if (shortcut.context && shortcut.context !== state.activeContext) continue;
+        if (!shortcut.enabled) {continue;}
+        if (shortcut.context && shortcut.context !== state.activeContext) {continue;}
         if (matchesCombo(event, shortcut.currentCombo)) {
           event.preventDefault();
           event.stopPropagation();
@@ -244,7 +244,7 @@ function createKeyboardStore() {
     // Set custom shortcut
     setShortcut(id: string, combo: KeyCombo) {
       update(state => {
-        if (!state.shortcuts[id]) return state;
+        if (!state.shortcuts[id]) {return state;}
 
         const shortcuts = {
           ...state.shortcuts,
@@ -267,7 +267,7 @@ function createKeyboardStore() {
     // Reset shortcut to default
     resetShortcut(id: string) {
       update(state => {
-        if (!state.shortcuts[id]) return state;
+        if (!state.shortcuts[id]) {return state;}
 
         const shortcuts = {
           ...state.shortcuts,
@@ -307,7 +307,7 @@ function createKeyboardStore() {
     // Enable/disable shortcut
     setEnabled(id: string, enabled: boolean) {
       update(state => {
-        if (!state.shortcuts[id]) return state;
+        if (!state.shortcuts[id]) {return state;}
         return {
           ...state,
           shortcuts: {
@@ -334,10 +334,10 @@ function eventToCombo(event: KeyboardEvent): KeyCombo | null {
   }
 
   const modifiers: ModifierKey[] = [];
-  if (event.metaKey) modifiers.push('meta');
-  if (event.ctrlKey) modifiers.push('ctrl');
-  if (event.altKey) modifiers.push('alt');
-  if (event.shiftKey) modifiers.push('shift');
+  if (event.metaKey) {modifiers.push('meta');}
+  if (event.ctrlKey) {modifiers.push('ctrl');}
+  if (event.altKey) {modifiers.push('alt');}
+  if (event.shiftKey) {modifiers.push('shift');}
 
   return { key: event.key.toLowerCase(), modifiers };
 }
@@ -346,7 +346,7 @@ function detectConflicts(shortcuts: Record<string, ShortcutAction>): ShortcutCon
   const comboMap = new Map<string, string[]>();
 
   for (const [id, shortcut] of Object.entries(shortcuts)) {
-    if (!shortcut.enabled) continue;
+    if (!shortcut.enabled) {continue;}
     const comboStr = comboToString(shortcut.currentCombo);
     const contextKey = shortcut.context ? `${comboStr}@${shortcut.context}` : comboStr;
 

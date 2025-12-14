@@ -18,12 +18,12 @@ export function draggable(node: HTMLElement, options: DraggableOptions) {
   }
 
   function handleMouseDown(event: MouseEvent) {
-    if (options.disabled) return;
-    if (event.button !== 0) return; // Only left click
+    if (options.disabled) {return;}
+    if (event.button !== 0) {return;} // Only left click
 
     // Check if clicked on handle
     const handle = getHandle();
-    if (handle !== node && !handle.contains(event.target as Node)) return;
+    if (handle !== node && !handle.contains(event.target as Node)) {return;}
 
     event.preventDefault();
 

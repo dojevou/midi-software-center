@@ -511,7 +511,7 @@
   function detectTabTarget(clientX: number, clientY: number): WindowId | null {
     const titleBarHeight = 40; // Approximate title bar height
     for (const [id, pos] of Object.entries($uiStore.windows)) {
-      if (id === windowId || !pos.visible) continue;
+      if (id === windowId || !pos.visible) {continue;}
       // Check if cursor is over this window's title bar area
       if (
         clientX >= pos.x &&

@@ -79,7 +79,7 @@
       value={currentConfig.fontSize}
       on:change={handleFontSizeChange}
     >
-      {#each fontSizeOptions as opt}
+      {#each fontSizeOptions as opt (opt.value)}
         <option value={opt.value}>{opt.label}</option>
       {/each}
     </select>
@@ -93,7 +93,7 @@
       value={currentConfig.borderRadius}
       on:change={handleBorderRadiusChange}
     >
-      {#each borderRadiusOptions as opt}
+      {#each borderRadiusOptions as opt (opt.value)}
         <option value={opt.value}>{opt.label}</option>
       {/each}
     </select>

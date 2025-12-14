@@ -288,7 +288,7 @@
   let showStretchDialog = false;
 
   async function stretchSelectedNotes() {
-    if (selectedNotes.size === 0) return;
+    if (selectedNotes.size === 0) {return;}
 
     try {
       const noteIds = Array.from(selectedNotes);
@@ -326,7 +326,7 @@
   let showScaleQuantizeDialog = false;
 
   async function scaleQuantizeSelected() {
-    if (selectedNotes.size === 0) return;
+    if (selectedNotes.size === 0) {return;}
 
     try {
       const result = await api.pianoRoll.scaleQuantizeNotes(effectiveTrackId, selectedScaleRoot, selectedScaleType);
@@ -671,7 +671,7 @@
             bind:value={selectedScaleRoot}
             class="w-full dark:bg-input dark:border-window-border rounded px-2 py-1"
           >
-            {#each noteNames as name, i}
+            {#each noteNames as name, i (i)}
               <option value={i}>{name}</option>
             {/each}
           </select>
@@ -683,7 +683,7 @@
             bind:value={selectedScaleType}
             class="w-full dark:bg-input dark:border-window-border rounded px-2 py-1"
           >
-            {#each scaleTypes as scale}
+            {#each scaleTypes as scale (scale)}
               <option value={scale}>{scale}</option>
             {/each}
           </select>

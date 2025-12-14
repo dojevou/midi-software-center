@@ -18,7 +18,7 @@ export function droppable(node: HTMLElement, options: DroppableOptions) {
   let unregister: (() => void) | null = null;
 
   function register() {
-    if (options.disabled) return;
+    if (options.disabled) {return;}
 
     unregister = dndStore.registerDropZone({
       id: zoneId,

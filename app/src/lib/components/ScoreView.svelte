@@ -29,7 +29,9 @@
   }
   
   async function renderScore() {
-    if (!midiData) return;
+    if (!midiData) {
+      return;
+    }
     
     loading = true;
     error = null;
@@ -50,7 +52,9 @@
   }
   
   async function exportMusicXML() {
-    if (!midiData) return;
+    if (!midiData) {
+      return;
+    }
     
     try {
       const xml: string = await invoke('export_musicxml', {
@@ -92,7 +96,7 @@
   }
   
   function handleMouseMove(e: MouseEvent) {
-    if (!isDragging) return;
+    if (!isDragging) {return;}
     
     const deltaX = e.clientX - lastMouseX;
     const deltaY = e.clientY - lastMouseY;

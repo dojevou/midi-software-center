@@ -68,7 +68,7 @@
           </tr>
         </thead>
         <tbody>
-          {#each $learnState.mappings as mapping}
+          {#each $learnState.mappings as mapping (mapping.id)}
             <tr>
               <td>{mapping.channel + 1}</td>
               <td>{mapping.ccNumber}</td>
