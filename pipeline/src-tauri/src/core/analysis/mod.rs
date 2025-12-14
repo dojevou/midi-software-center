@@ -11,6 +11,7 @@ pub mod key_profiles;
 pub mod ml_features;
 pub mod optimized_analyzer;
 pub mod simd_bpm;
+pub mod vip3_retagger;
 
 // Re-export main types
 // pub use arena_midi::{ArenaEvent, ArenaMidiFile, ArenaParser, ArenaTimedEvent, ArenaTrack};
@@ -41,6 +42,7 @@ pub use simd_bpm::{
     batch_detect_onsets_simd, detect_bpm_from_onsets, detect_onsets_simd_vectorized,
     extract_onsets_simd, Onset, OnsetBpmResult,
 };
+pub use vip3_retagger::{RetagStats, Vip3Categories, Vip3Extractor};
 
 // Test modules
 #[cfg(test)]

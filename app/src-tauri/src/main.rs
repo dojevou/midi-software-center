@@ -234,6 +234,51 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             midi_pipeline::commands::tags::remove_tag_from_file,
             midi_pipeline::commands::tags::get_files_by_tags,
             midi_pipeline::commands::tags::get_tag_stats,
+            // VIP3 Browser lookup commands (legacy tags module)
+            midi_pipeline::commands::tags::get_all_instruments,
+            midi_pipeline::commands::tags::get_vip3_styles,
+            midi_pipeline::commands::tags::get_vip3_moods,
+            midi_pipeline::commands::tags::get_vip3_keys,
+            // VIP3 Browser - Search
+            midi_pipeline::commands::vip3::search::search_files_vip3,
+            midi_pipeline::commands::vip3::search::get_vip3_filter_counts,
+            // VIP3 Browser - Lookups
+            midi_pipeline::commands::vip3::lookups::get_all_timbres,
+            midi_pipeline::commands::vip3::lookups::get_all_styles,
+            midi_pipeline::commands::vip3::lookups::get_all_articulations,
+            midi_pipeline::commands::vip3::lookups::get_all_bpm_ranges,
+            midi_pipeline::commands::vip3::lookups::get_all_musical_keys,
+            // VIP3 Browser - Categories
+            midi_pipeline::commands::vip3::categories::get_file_categories,
+            midi_pipeline::commands::vip3::categories::add_timbre_to_file,
+            midi_pipeline::commands::vip3::categories::add_style_to_file,
+            midi_pipeline::commands::vip3::categories::add_articulation_to_file,
+            midi_pipeline::commands::vip3::categories::remove_timbre_from_file,
+            midi_pipeline::commands::vip3::categories::remove_style_from_file,
+            midi_pipeline::commands::vip3::categories::remove_articulation_from_file,
+            // VIP3 Browser - Favorites
+            midi_pipeline::commands::vip3::favorites::toggle_favorite,
+            midi_pipeline::commands::vip3::favorites::set_favorite,
+            midi_pipeline::commands::vip3::favorites::get_favorites,
+            midi_pipeline::commands::vip3::favorites::get_favorite_count,
+            // VIP3 Browser - Collections
+            midi_pipeline::commands::vip3::collections::create_collection,
+            midi_pipeline::commands::vip3::collections::get_collections,
+            midi_pipeline::commands::vip3::collections::get_collection,
+            midi_pipeline::commands::vip3::collections::update_collection,
+            midi_pipeline::commands::vip3::collections::delete_collection,
+            midi_pipeline::commands::vip3::collections::add_file_to_collection,
+            midi_pipeline::commands::vip3::collections::remove_file_from_collection,
+            midi_pipeline::commands::vip3::collections::get_collection_files,
+            // VIP3 Browser - Saved Searches
+            midi_pipeline::commands::vip3::saved_searches::save_search,
+            midi_pipeline::commands::vip3::saved_searches::get_saved_searches,
+            midi_pipeline::commands::vip3::saved_searches::load_saved_search,
+            midi_pipeline::commands::vip3::saved_searches::delete_saved_search,
+            midi_pipeline::commands::vip3::saved_searches::toggle_saved_search_pin,
+            // VIP3 Bulk retag commands (high-performance Rust + Rayon)
+            midi_pipeline::commands::vip3::bulk_retag::bulk_retag_vip3,
+            midi_pipeline::commands::vip3::bulk_retag::update_vip3_counts,
             // Progress tracking commands
             midi_pipeline::commands::progress::start_progress_tracking,
             midi_pipeline::commands::progress::update_progress,

@@ -7,7 +7,9 @@
 //! - Collections with file ordering
 //! - Category management (timbres, styles, articulations)
 //! - Lookup endpoints for filter dropdowns
+//! - Bulk retag for high-performance category assignment
 
+pub mod bulk_retag;
 pub mod categories;
 pub mod collections;
 pub mod favorites;
@@ -42,3 +44,4 @@ pub use saved_searches::{
     toggle_saved_search_pin,
 };
 pub use search::{get_vip3_filter_counts, search_files_vip3};
+pub use bulk_retag::{bulk_retag_vip3, update_vip3_counts, BulkRetagResponse};
