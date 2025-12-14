@@ -66,6 +66,7 @@ jobs:
         run: |
           cd app && pnpm install && pnpm build
           cd ../pipeline && pnpm install && pnpm build
+          cd ..
           mkdir -p daw/dist
           echo '<!DOCTYPE html><html><body>DAW Placeholder</body></html>' > daw/dist/index.html
 
