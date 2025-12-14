@@ -62,13 +62,9 @@ jobs:
         with:
           version: 8
 
-      - name: Build frontends for Tauri
+      - name: Build app frontend
         run: |
           cd app && pnpm install && pnpm build
-          cd ../pipeline && pnpm install && pnpm build
-          cd ..
-          mkdir -p daw/dist
-          echo '<!DOCTYPE html><html><body>DAW Placeholder</body></html>' > daw/dist/index.html
 
       - name: Override native CPU flags for CI
         run: |
