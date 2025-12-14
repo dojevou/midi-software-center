@@ -1,0 +1,27 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n        INSERT INTO files (\n            filename, filepath, original_filename, content_hash,\n            file_size_bytes, format, num_tracks, manufacturer, collection_name\n        )\n        VALUES ($1, $2, $3, $4, 1024, 1, 1, $5, $6)\n        RETURNING id\n        ",
+  "describe": {
+    "columns": [
+      {
+        "ordinal": 0,
+        "name": "id",
+        "type_info": "Int8"
+      }
+    ],
+    "parameters": {
+      "Left": [
+        "Text",
+        "Text",
+        "Text",
+        "Bytea",
+        "Text",
+        "Text"
+      ]
+    },
+    "nullable": [
+      false
+    ]
+  },
+  "hash": "894376cf0d39a1fa9da09da0189025e5003ec52925558c7441414af856b44205"
+}

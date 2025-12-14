@@ -1,0 +1,16 @@
+{
+  "db_name": "PostgreSQL",
+  "query": "\n            INSERT INTO musical_metadata (file_id, bpm, key_signature, total_notes)\n            VALUES ($1, $2, $3::text::musical_key, 100)\n            ",
+  "describe": {
+    "columns": [],
+    "parameters": {
+      "Left": [
+        "Int8",
+        "Numeric",
+        "Text"
+      ]
+    },
+    "nullable": []
+  },
+  "hash": "ebb1c7e825b6998f4aa62c2282a704b94e853a35aae07c9068fead11624c2d82"
+}
