@@ -108,7 +108,7 @@
       <span class="menu-label">Add to Track</span>
       <span class="submenu-arrow">▶</span>
       <div class="submenu" role="menu">
-        {#each tracks as track (track.id)}
+        {#each tracks as track (track.index)}
           <button
             type="button"
             class="menu-item"

@@ -13,7 +13,7 @@
 </script>
 
 <nav class="skip-links" aria-label="Skip navigation">
-  {#each links as link (link.href)}
+  {#each links as link (link.id)}
     <a
       href="#{link.id}"
       class="skip-link"
