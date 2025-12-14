@@ -239,16 +239,36 @@ export const hasErrors = derived(errorStore, $errors =>
   $errors.errors.some(e => !e.dismissed)
 );
 
+// Svelte warnings to ignore (development-time warnings that aren't actual errors)
+const IGNORED_SVELTE_WARNINGS = [
+  'Function called outside component initialization',
+  'lifecycle_function_unavailable',
+];
+
+function shouldIgnoreError(error: unknown): boolean {
+  const message = formatErrorMessage(error);
+  return IGNORED_SVELTE_WARNINGS.some(warning => message.includes(warning));
+}
+
 // Global error handler
 if (typeof window !== 'undefined') {
   window.addEventListener('error', (event) => {
-    errorStore.addError(event.error || event.message, {
+    const error = event.error || event.message;
+    // Skip Svelte development warnings
+    if (shouldIgnoreError(error)) {
+      return;
+    }
+    errorStore.addError(error, {
       severity: 'error',
       component: 'window',
     });
   });
 
   window.addEventListener('unhandledrejection', (event) => {
+    // Skip Svelte development warnings
+    if (shouldIgnoreError(event.reason)) {
+      return;
+    }
     errorStore.addError(event.reason, {
       severity: 'error',
       component: 'promise',
