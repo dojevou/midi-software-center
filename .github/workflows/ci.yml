@@ -131,6 +131,9 @@ jobs:
         run: |
           cd app && pnpm install && pnpm build
           cd ../pipeline && pnpm install && pnpm build
+          # DAW doesn't have a frontend yet - create placeholder
+          mkdir -p daw/dist
+          echo '<!DOCTYPE html><html><body>DAW Placeholder</body></html>' > daw/dist/index.html
 
       - name: Override native CPU flags for CI
         run: |
@@ -164,6 +167,11 @@ jobs:
         run: |
           sudo apt-get update
           sudo apt-get install -y libasound2-dev libjack-jackd2-dev libgtk-3-dev libwebkit2gtk-4.1-dev librsvg2-dev
+
+      - name: Create DAW frontend placeholder
+        run: |
+          mkdir -p daw/dist
+          echo '<!DOCTYPE html><html><body>DAW Placeholder</body></html>' > daw/dist/index.html
 
       - name: Override native CPU flags for CI
         run: |
@@ -207,6 +215,9 @@ jobs:
         run: |
           cd app && pnpm install && pnpm build
           cd ../pipeline && pnpm install && pnpm build
+          # DAW doesn't have a frontend yet - create placeholder
+          mkdir -p daw/dist
+          echo '<!DOCTYPE html><html><body>DAW Placeholder</body></html>' > daw/dist/index.html
 
       - name: Override native CPU flags for CI
         run: |
