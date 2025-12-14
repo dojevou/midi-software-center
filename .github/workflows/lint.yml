@@ -8,6 +8,7 @@ on:
 
 env:
   CARGO_TERM_COLOR: always
+  SQLX_OFFLINE: true
 
 jobs:
   rustfmt:
@@ -22,8 +23,7 @@ jobs:
           components: rustfmt
 
       - name: Check formatting
-        run: |
-          cargo fmt --all -- --check
+        run: cargo fmt --all -- --check
 
   clippy:
     name: Clippy
@@ -52,9 +52,31 @@ jobs:
       - name: Cache Rust dependencies
         uses: Swatinem/rust-cache@v2
 
-      - name: Run Clippy
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Build frontends for Tauri
         run: |
-          cargo clippy --workspace --all-targets -- -D warnings
+          cd app && pnpm install && pnpm build
+          cd ../pipeline && pnpm install && pnpm build
+          mkdir -p daw/dist
+          echo '<!DOCTYPE html><html><body>DAW Placeholder</body></html>' > daw/dist/index.html
+
+      - name: Override native CPU flags for CI
+        run: |
+          mkdir -p .cargo
+          echo '[target.x86_64-unknown-linux-gnu]' > .cargo/config.toml
+          echo 'rustflags = []' >> .cargo/config.toml
+
+      - name: Run Clippy
+        run: cargo clippy --workspace --all-targets -- -D warnings
 
   eslint:
     name: ESLint & Prettier
