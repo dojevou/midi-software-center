@@ -731,6 +731,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore] // Requires real MIDI hardware - run with: cargo test -- --ignored
     fn test_midir_backend_available() {
         // midir should always be available
         assert!(MidirBackend::is_available());

@@ -509,6 +509,7 @@ mod tests {
     }
 
     #[test]
+    #[ignore] // Requires real MIDI hardware - run with: cargo test -- --ignored
     fn test_scan_devices_real() {
         // Test that real device scanning works (may find 0 or more devices)
         let mut state = MidiDeviceState::new();
@@ -646,6 +647,7 @@ mod tests {
     }
 
     #[tokio::test]
+    #[ignore] // Requires real MIDI hardware - run with: cargo test -- --ignored
     async fn test_list_devices_impl_real() {
         // Test real device listing (may find 0 or more devices)
         let state = Arc::new(RwLock::new(MidiDeviceState::new()));

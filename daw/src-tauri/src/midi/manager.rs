@@ -254,6 +254,7 @@ mod tests {
     use super::*;
 
     #[tokio::test]
+    #[ignore] // Requires real MIDI hardware - run with: cargo test -- --ignored
     async fn test_list_devices() {
         let manager = MidiManager::new();
         let result = manager.list_devices();

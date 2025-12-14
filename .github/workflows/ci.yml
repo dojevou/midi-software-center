@@ -176,6 +176,21 @@ jobs:
 
       - uses: Swatinem/rust-cache@v2
 
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v2
+        with:
+          version: 8
+
+      - name: Build frontends for Tauri
+        run: |
+          cd app && pnpm install && pnpm build
+          cd ../pipeline && pnpm install && pnpm build
+
       - name: Override native CPU flags for CI
         run: |
           mkdir -p .cargo
