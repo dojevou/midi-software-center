@@ -38,11 +38,12 @@ impl DependencyVerifier {
     pub fn verify_workspace_consistency() -> Result<(), Vec<DependencyError>> {
         let mut errors = Vec::new();
 
+        // Unified architecture: only the main app and helper scripts
         let crates = vec![
             ("./app/src-tauri", "midi-software-center"),
-            ("./pipeline/src-tauri", "midi-pipeline"),
-            ("./daw/src-tauri", "midi-daw"),
-            ("./shared/rust", "midi-library-shared"),
+            ("./scripts/import-tool", "import-tool"),
+            ("./scripts/test-midi-files", "test-midi-files"),
+            ("./verification", "verification"),
         ];
 
         let mut versions: HashMap<String, String> = HashMap::new();
@@ -78,29 +79,8 @@ impl DependencyVerifier {
             });
         }
 
-        // Check shared library version consistency
-        if let Some(shared_version) = versions.get("midi-library-shared") {
-            for crate_name in versions.keys() {
-                if crate_name != "midi-library-shared" {
-                    // Check if this crate depends on shared with correct version
-                    let dep_version =
-                        Self::get_dependency_version(crate_name, "midi-library-shared");
-                    if let Some(dep_ver) = dep_version {
-                        if &dep_ver != shared_version && !dep_ver.contains("path") {
-                            errors.push(DependencyError {
-                                category: "version".to_string(),
-                                package: crate_name.to_string(),
-                                message: format!(
-                                    "Depends on midi-library-shared {} but current version is {}",
-                                    dep_ver, shared_version
-                                ),
-                                severity: DependencyErrorSeverity::Warning,
-                            });
-                        }
-                    }
-                }
-            }
-        }
+        // Unified architecture - no need to check shared library version consistency
+        // All code is now in midi-software-center
 
         if errors.is_empty() {
             Ok(())

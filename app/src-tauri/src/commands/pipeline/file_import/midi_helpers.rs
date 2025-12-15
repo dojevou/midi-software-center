@@ -1,7 +1,7 @@
 //! MIDI extraction helpers for file import
 
 use super::gm_instruments::program_to_instrument_name;
-use midi_library_shared::core::midi::types::{Event, MidiFile, TextType};
+use crate::core::midi::types::{Event, MidiFile, TextType};
 
 /// Extract instrument names from MIDI file for tag extraction
 pub fn extract_instrument_names(midi: &MidiFile) -> Vec<String> {
@@ -45,7 +45,7 @@ pub fn extract_time_signature(midi: &MidiFile) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use midi_library_shared::core::midi::types::Header;
+    use crate::core::midi::types::Header;
 
     fn empty_midi() -> MidiFile {
         MidiFile {

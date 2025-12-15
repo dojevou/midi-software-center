@@ -1,7 +1,7 @@
 //! MIDI feature detection helpers
 
 use super::gm_instruments::program_to_instrument_name;
-use midi_library_shared::core::midi::types::{Event, MidiFile, TextType};
+use crate::core::midi::types::{Event, MidiFile, TextType};
 
 /// Detect if MIDI file contains pitch bend events
 pub fn detect_pitch_bend(midi_file: &MidiFile) -> bool {
@@ -59,7 +59,7 @@ pub fn extract_instrument_names(midi_file: &MidiFile) -> Vec<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use midi_library_shared::core::midi::types::{Header, TimedEvent, Track};
+    use crate::core::midi::types::{Header, TimedEvent, Track};
 
     #[test]
     fn test_detect_pitch_bend() {

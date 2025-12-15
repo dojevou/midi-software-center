@@ -2,7 +2,7 @@
 // Identifies corrupt, fixable, and valid MIDI files
 // Attempts automatic repairs for common issues
 
-use midi_library_shared::core::midi::parser::parse_midi_file;
+use midi_app::core::midi::parse_midi_file;
 use rayon::prelude::*;
 use std::fs;
 use std::path::{Path, PathBuf};

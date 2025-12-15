@@ -9,7 +9,7 @@
 /// - No I/O operations
 /// - Highly testable
 /// - Reusable across the application
-use midi_library_shared::core::midi::types::{Event, MidiFile};
+use crate::core::midi::types::{Event, MidiFile};
 
 use super::simd_bpm::{detect_bpm_from_onsets, OnsetBpmResult};
 
@@ -182,7 +182,7 @@ pub fn detect_bpm(midi_file: &MidiFile) -> BpmDetectionResult {
 /// # Examples
 /// ```no_run
 /// use pipeline::core::analysis::bpm_detector::detect_bpm_with_onsets;
-/// use midi_library_shared::core::midi::types::MidiFile;
+/// use crate::core::midi::types::MidiFile;
 ///
 /// # fn example(midi_file: MidiFile) -> Result<(), Box<dyn std::error::Error>> {
 /// if let Some(result) = detect_bpm_with_onsets(&midi_file) {
@@ -228,7 +228,7 @@ pub fn detect_bpm_with_onsets(midi_file: &MidiFile) -> Option<BpmDetectionResult
 /// # Examples
 /// ```no_run
 /// use pipeline::core::analysis::bpm_detector::detect_bpm_hybrid;
-/// use midi_library_shared::core::midi::types::MidiFile;
+/// use crate::core::midi::types::MidiFile;
 ///
 /// # fn example(midi_file: MidiFile) -> Result<(), Box<dyn std::error::Error>> {
 /// let result = detect_bpm_hybrid(&midi_file);

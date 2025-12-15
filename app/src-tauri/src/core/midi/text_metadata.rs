@@ -42,8 +42,8 @@ impl TextMetadata {
     ///
     /// # Examples
     /// ```ignore
-    /// use midi_library_shared::core::midi::parser::parse_midi_file;
-    /// use midi_library_shared::core::midi::text_metadata::TextMetadata;
+    /// use crate::core::midi::parse_midi_file;
+    /// use crate::core::midi::text_metadata::TextMetadata;
     ///
     /// let data = std::fs::read("song.mid").unwrap();
     /// let midi_file = parse_midi_file(&data).unwrap();

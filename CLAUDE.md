@@ -8,15 +8,15 @@
 - Avoid reading more than 3 files in a single operation
 - Use `Grep` to find specific content instead of reading entire files
 
-## Status: PRODUCTION READY (Phase 17 Complete)
+## Status: PRODUCTION READY (Unified Architecture)
 
-**Scale:** 2.15M files, 7.9M tags, 1,861 tag types, 15 tables, 60+ indexes, 1,051 tests passing
+**Scale:** 2.15M files, 7.9M tags, 1,861 tag types, 15 tables, 60+ indexes, 1,999 tests passing
 
 ## Quick Start
 
 ```bash
 make setup && make docker-up    # Setup
-make dev-both                   # Dev servers (:5173 Pipeline, :5174 DAW)
+make dev                        # Dev server (:5173)
 make format test                # Format & test
 ./scripts/run-pipeline-ultra-fast.sh    # Import files
 ./scripts/organize-database.sh          # Apply 97 instrument tags
@@ -24,11 +24,15 @@ make format test                # Format & test
 
 ## Architecture
 
-**Components:** Pipeline (batch import/analysis), DAW (real-time MIDI), Shared (parser/DB), Database (PostgreSQL/Meilisearch)
+**Unified Application:** All functionality (Pipeline batch import/analysis + DAW real-time MIDI) in single app
 
-**Stack:** Rust backend + Tauri + Svelte/TypeScript frontend + PostgreSQL 16 + pgvector + Meilisearch
+**Stack:** Rust backend + Tauri 2.0 + Svelte/TypeScript frontend + PostgreSQL 16 + pgvector + Meilisearch
 
-**Workspace:** `pipeline/src-tauri`, `daw/src-tauri`, `shared/rust`, `database/migrations/`
+**Workspace:**
+- `app/src-tauri` - Main unified application (midi-software-center)
+- `scripts/import-tool` - CLI import utilities
+- `scripts/test-midi-files` - MIDI testing tool
+- `verification` - Verification suite
 
 ## Pipeline Phases
 
@@ -46,12 +50,12 @@ make format test                # Format & test
 
 | Purpose | Location |
 |---------|----------|
-| MIDI Parser | `shared/rust/src/core/midi/parser.rs` |
-| BPM Detector | `shared/rust/src/core/analysis/bpm_detector.rs` |
-| Key Detector | `pipeline/src-tauri/src/core/analysis/key_detector.rs` |
-| Auto-tagger | `pipeline/src-tauri/src/core/analysis/auto_tagger.rs` |
-| Drum Analyzer | `pipeline/src-tauri/src/core/analysis/drum_analyzer.rs` |
-| File Repository | `pipeline/src-tauri/src/db/repositories/file_repository.rs` |
+| MIDI Parser | `app/src-tauri/src/core/midi/analysis_parser.rs` |
+| BPM Detector | `app/src-tauri/src/core/analysis/bpm_detector.rs` |
+| Key Detector | `app/src-tauri/src/core/analysis/key_detector.rs` |
+| Auto-tagger | `app/src-tauri/src/core/analysis/auto_tagger.rs` |
+| Drum Analyzer | `app/src-tauri/src/core/analysis/drum_analyzer.rs` |
+| File Repository | `app/src-tauri/src/db/repositories/file_repository.rs` |
 | Migrations | `database/migrations/001-011*.sql` |
 
 ## Database Schema (15 tables)
@@ -74,14 +78,13 @@ SELECT * FROM get_files_by_instruments(ARRAY['jazz', 'piano']);
 ## Development
 
 ```bash
-cargo test --workspace --lib -- --test-threads=1  # Run tests (shared DB state)
+cargo test --workspace --lib    # Run tests
 cargo tarpaulin --workspace --out Html            # Coverage report
 make check                                        # Pre-commit validation
 ```
 
 **Rules:**
 - Never edit migrations - always create new
-- Use `--test-threads=1` for DB tests
 - LUDICROUS mode is import-only (unsafe: fsync=off)
 - Backup before `make db-reset` or `docker-compose down -v`
 
@@ -95,11 +98,15 @@ make check                                        # Pre-commit validation
 | Query (complex) | <100ms | - |
 | Deduplication | 73.4% (4.74M dupes removed) | - |
 
-## Component Separation
+## Module Structure
 
-- **Shared:** MIDI parsing, BPM/key, DB models (NO UI, NO commands)
-- **Pipeline:** Batch ops, archives (NO playback, NO MIDI I/O)
-- **DAW:** Real-time, MIDI hardware (NO batch import, NO archives)
+The unified `midi_app` library (app/src-tauri) contains:
+
+- **core/** - MIDI parsing, analysis (BPM, key, drums), performance utilities
+- **db/** - Database repositories, batch operations, connection management
+- **commands/** - Tauri commands for frontend communication
+- **windows/** - Window state management (Pipeline, DAW, VIP3 browser)
+- **bin/** - CLI tools (import, analyze, split, etc.)
 
 ## DB Connection
 

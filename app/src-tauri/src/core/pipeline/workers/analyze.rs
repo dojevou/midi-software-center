@@ -109,7 +109,7 @@ impl AnalyzeWorker {
     async fn analyze_file(file_record: &FileRecord, db_pool: &PgPool) -> Result<(), PipelineError> {
         use crate::core::analysis::bpm_detector::detect_bpm;
         use crate::core::analysis::key_detector::detect_key;
-        use midi_library_shared::core::midi::parser::parse_midi_file;
+        use crate::core::midi::parse_midi_file;
         use std::path::Path;
 
         // Read and parse MIDI file
@@ -143,7 +143,7 @@ impl AnalyzeWorker {
             .filter(|e| {
                 matches!(
                     e.event,
-                    midi_library_shared::core::midi::types::Event::NoteOn { .. }
+                    crate::core::midi::types::Event::NoteOn { .. }
                 )
             })
             .count() as i32;

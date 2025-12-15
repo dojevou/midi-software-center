@@ -23,7 +23,7 @@ use std::sync::Arc;
 use tokio::task;
 
 use crate::core::analysis::{analyze_chords, detect_bpm, detect_key};
-use midi_library_shared::core::midi::parser::parse_midi_file;
+use crate::core::midi::parse_midi_file;
 
 // Phase 1: Buffer pool for zero-allocation file reading
 #[allow(dead_code)]

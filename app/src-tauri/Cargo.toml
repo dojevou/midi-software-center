@@ -64,9 +64,6 @@ base64 = "0.22.1"
 # Random number generation (used by DAW)
 rand = "0.8"
 
-# Shared library (common code)
-midi-library-shared = { path = "../../shared/rust", features = ["database"] }
-
 # Database
 sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "postgres", "migrate", "chrono", "bigdecimal", "uuid", "rust_decimal"] }
 

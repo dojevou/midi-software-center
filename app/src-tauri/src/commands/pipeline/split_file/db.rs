@@ -6,7 +6,7 @@ use crate::core::analysis::bpm_detector::detect_bpm;
 use crate::core::analysis::key_detector::detect_key;
 use crate::core::hash::calculate_file_hash;
 use crate::core::splitting::SplitTrack;
-use midi_library_shared::core::midi::parser::parse_midi_file;
+use crate::core::midi::parse_midi_file;
 
 use super::types::CONFIDENCE_THRESHOLD;
 

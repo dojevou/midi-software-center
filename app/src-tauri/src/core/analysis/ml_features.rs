@@ -15,7 +15,7 @@
 ///
 /// This module provides feature extraction and heuristic-based classification.
 /// When an ONNX model is available, it can be loaded via the `tract-onnx` crate.
-use midi_library_shared::core::midi::types::{Event, MidiFile};
+use crate::core::midi::types::{Event, MidiFile};
 
 /// Feature vector size expected by ONNX model
 pub const MODEL_INPUT_SIZE: usize = 128;

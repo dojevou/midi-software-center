@@ -14,7 +14,7 @@
 //! **Archetype: Trusty Module** (Pure functions, no I/O, 80%+ test coverage)
 
 use crate::core::analysis::auto_tagger::Tag;
-use midi_library_shared::core::midi::types::{Event, MidiFile};
+use crate::core::midi::types::{Event, MidiFile};
 use std::collections::HashMap;
 
 // ============================================================================

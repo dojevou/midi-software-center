@@ -9,7 +9,7 @@
 /// - Highly testable
 /// - Reusable across the application
 use crate::core::analysis::key_profiles::*;
-use midi_library_shared::core::midi::types::{Event, MidiFile};
+use crate::core::midi::types::{Event, MidiFile};
 
 /// Musical scale types
 #[derive(Debug, Clone, Copy, PartialEq, Eq)]
@@ -249,7 +249,7 @@ fn format_key_name(pitch_class: usize, scale_type: ScaleType) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use midi_library_shared::core::midi::types::{Header, MidiFile, TimedEvent, Track};
+    use crate::core::midi::types::{Header, MidiFile, TimedEvent, Track};
 
     // ============================================================================
     // Helper Functions for Building Test MIDI Files

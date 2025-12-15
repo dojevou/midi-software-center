@@ -1,6 +1,6 @@
 use anyhow::{Context, Result};
-use midi_library_shared::core::analysis::detect_bpm;
-use midi_library_shared::core::midi::{parse_midi_file, Event, MidiFile};
+use midi_app::core::analysis::detect_bpm;
+use midi_app::core::midi::{parse_midi_file, Event, MidiFile};
 use serde::{Deserialize, Serialize};
 use std::env;
 use std::fs;
@@ -83,15 +83,17 @@ fn analyze_file(file_path: &Path) -> Result<TestResult> {
         println!("  ⚠️  BPM: Not detected");
     }
 
-    // Detect key using the shared library implementation
-    use midi_library_shared::core::analysis::key_detector::detect_key;
+    // Detect key using the app's analysis module
+    use midi_app::core::analysis::key_detector::detect_key;
 
-    let key = detect_key(&midi_file);
-    if let Some(ref key_str) = key {
-        println!("  🎹 Key: {}", key_str);
+    let key_result = detect_key(&midi_file);
+    let key = if key_result.confidence > 0.5 {
+        println!("  🎹 Key: {} (confidence: {:.1}%)", key_result.key, key_result.confidence * 100.0);
+        Some(key_result.key.clone())
     } else {
         println!("  ⚠️  Key: Unable to detect (low confidence or insufficient notes)");
-    }
+        None
+    };
 
     let parse_time = start.elapsed();
     println!("  ⏱️  Processing time: {}ms", parse_time.as_millis());

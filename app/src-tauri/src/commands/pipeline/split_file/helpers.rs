@@ -48,9 +48,9 @@ pub fn sanitize_filename(name: &str) -> String {
 
 /// Extract time signature from MIDI events (e.g., "4-4" for 4/4 time).
 pub fn extract_time_signature_from_midi(
-    midi: &midi_library_shared::core::midi::types::MidiFile,
+    midi: &crate::core::midi::types::MidiFile,
 ) -> Option<String> {
-    use midi_library_shared::core::midi::types::Event;
+    use crate::core::midi::types::Event;
 
     // Search all tracks for TimeSignature event
     for track in &midi.tracks {

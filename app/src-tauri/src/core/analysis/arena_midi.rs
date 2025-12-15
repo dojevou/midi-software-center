@@ -40,7 +40,7 @@
 //! ```
 
 use anyhow::Result;
-use midi_library_shared::core::midi::error::MidiParseError;
+use crate::core::midi::error::MidiParseError;
 use typed_arena::Arena;
 
 /// Arena-allocated MIDI file structure

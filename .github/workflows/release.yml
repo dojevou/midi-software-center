@@ -78,7 +78,7 @@ jobs:
 
       - name: Build CLI tools
         run: |
-          cargo build --release --package midi-pipeline
+          cargo build --release --package midi-software-center
 
       - name: Create CLI archive
         run: |
@@ -87,12 +87,12 @@ jobs:
           cp target/release/orchestrator release-artifacts/
           cp target/release/analyze release-artifacts/
           cp target/release/batch_import release-artifacts/
-          tar -czvf midi-pipeline-linux-x86_64.tar.gz -C release-artifacts .
+          tar -czvf midi-cli-linux-x86_64.tar.gz -C release-artifacts .
 
       - name: Upload CLI tools
         uses: softprops/action-gh-release@v1
         with:
-          files: midi-pipeline-linux-x86_64.tar.gz
+          files: midi-cli-linux-x86_64.tar.gz
 
   build-macos:
     name: Build macOS
@@ -128,7 +128,7 @@ jobs:
 
       - name: Build CLI tools
         run: |
-          cargo build --release --package midi-pipeline
+          cargo build --release --package midi-software-center
 
       - name: Create CLI archive
         run: |
@@ -137,12 +137,12 @@ jobs:
           cp target/release/orchestrator release-artifacts/
           cp target/release/analyze release-artifacts/
           cp target/release/batch_import release-artifacts/
-          tar -czvf midi-pipeline-macos-x86_64.tar.gz -C release-artifacts .
+          tar -czvf midi-cli-macos-x86_64.tar.gz -C release-artifacts .
 
       - name: Upload CLI tools
         uses: softprops/action-gh-release@v1
         with:
-          files: midi-pipeline-macos-x86_64.tar.gz
+          files: midi-cli-macos-x86_64.tar.gz
 
   build-windows:
     name: Build Windows
@@ -178,7 +178,7 @@ jobs:
 
       - name: Build CLI tools
         run: |
-          cargo build --release --package midi-pipeline
+          cargo build --release --package midi-software-center
 
       - name: Create CLI archive
         run: |
@@ -187,12 +187,12 @@ jobs:
           copy target\release\orchestrator.exe release-artifacts\
           copy target\release\analyze.exe release-artifacts\
           copy target\release\batch_import.exe release-artifacts\
-          Compress-Archive -Path release-artifacts\* -DestinationPath midi-pipeline-windows-x86_64.zip
+          Compress-Archive -Path release-artifacts\* -DestinationPath midi-cli-windows-x86_64.zip
 
       - name: Upload CLI tools
         uses: softprops/action-gh-release@v1
         with:
-          files: midi-pipeline-windows-x86_64.zip
+          files: midi-cli-windows-x86_64.zip
 
   publish-release:
     name: Publish Release

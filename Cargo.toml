@@ -2,29 +2,23 @@
 # Root workspace configuration for all Rust projects
 #
 # Architecture:
-#   - app/src-tauri        : Unified frontend app (contains core/midi, core/analysis, db/*, health, logging)
-#   - pipeline/src-tauri   : MIDI import, processing, and analysis
-#   - daw/src-tauri        : Real-time MIDI playback and sequencing
-#   - shared/rust          : Legacy shared code (being migrated to app/src-tauri)
-#   - scripts/import-tool  : CLI utilities
+#   - app/src-tauri        : Unified desktop app (Pipeline + DAW combined)
+#   - scripts/import-tool  : CLI import utility
+#   - scripts/test-midi-files : MIDI testing tool
+#   - verification         : Verification test suite
 #
 # Build Performance:
 #   - Full workspace: ~28 seconds (dev), ~2-3 minutes (release)
-#   - Shared library: ~1-2 seconds
-#   - Pipeline: ~9-24 seconds (uses shared)
-#   - DAW: ~10-20 seconds (independent MIDI for playback)
+#   - App (unified): ~15-20 seconds (dev)
 #
-# Note: Pipeline uses shared library for MIDI file analysis.
-#       DAW has independent MIDI for real-time playback (not duplication).
+# The unified app combines:
+#   - Pipeline: batch processing, import, analysis, database
+#   - DAW: real-time playback, sequencer, MIDI I/O, mixer
 
 [workspace]
 resolver = "2"
 members = [
-    "pipeline/src-tauri",        # Import & analysis (uses shared library)
-    "daw/src-tauri",             # Playback & sequencing (independent MIDI)
-    "app/src-tauri",             # Unified frontend app (has own core/db/health/logging modules)
-    # "studio/src-tauri",        # Removed - incomplete, may add later
-    "shared/rust",               # Legacy - still used by pipeline/daw (TODO: migrate away)
+    "app/src-tauri",             # Unified frontend app (Pipeline + DAW combined)
     "scripts/import-tool",       # CLI utilities
     "scripts/test-midi-files",   # MIDI testing tool
     "verification",              # Verification suite

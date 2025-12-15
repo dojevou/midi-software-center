@@ -66,15 +66,6 @@ jobs:
         run: |
           cd app && pnpm install && pnpm build
 
-      - name: Build pipeline frontend
-        run: |
-          cd pipeline && pnpm install && pnpm build
-
-      - name: Create DAW frontend placeholder
-        run: |
-          mkdir -p daw/dist
-          echo '<!DOCTYPE html><html><body>DAW Placeholder</body></html>' > daw/dist/index.html
-
       - name: Override native CPU flags for CI
         run: |
           mkdir -p .cargo

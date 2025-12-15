@@ -1,6 +1,6 @@
 //! MIDI meta event extraction (tempo, key, time signature changes)
 
-use midi_library_shared::core::midi::types::{Event, MidiFile};
+use crate::core::midi::types::{Event, MidiFile};
 
 /// Extract time signature from MIDI file
 pub fn extract_time_signature(midi_file: &MidiFile) -> (Option<i16>, Option<i16>) {
@@ -147,7 +147,7 @@ pub fn get_key_name(sharps_flats: i8, is_minor: bool) -> String {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use midi_library_shared::core::midi::types::{Header, TimedEvent, Track};
+    use crate::core::midi::types::{Header, TimedEvent, Track};
 
     #[test]
     fn test_get_key_name() {

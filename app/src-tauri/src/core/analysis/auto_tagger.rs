@@ -39,7 +39,7 @@ use std::collections::HashSet;
 
 // Drum analyzer integration (v2.1)
 use super::drum_analyzer;
-use midi_library_shared::core::midi::types::MidiFile;
+use crate::core::midi::types::MidiFile;
 
 /// Main auto-tagging engine
 pub struct AutoTagger {

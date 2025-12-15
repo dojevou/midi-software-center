@@ -1,6 +1,6 @@
 //! Tauri commands for log access and management.
 
-use midi_library_shared::logging::{metrics::get_metrics, LogEvent, PerformanceMetrics};
+use crate::logging::{metrics::get_metrics, LogEvent, PerformanceMetrics};
 use std::path::PathBuf;
 use tauri::Emitter;
 use tokio::fs;

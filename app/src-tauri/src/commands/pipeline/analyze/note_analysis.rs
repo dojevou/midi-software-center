@@ -1,7 +1,7 @@
 //! Note statistics analysis for MIDI files
 
 use super::types::NoteStats;
-use midi_library_shared::core::midi::types::{Event, MidiFile};
+use crate::core::midi::types::{Event, MidiFile};
 use std::collections::{HashMap, HashSet};
 
 /// Analyze notes in MIDI file

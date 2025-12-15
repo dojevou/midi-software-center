@@ -1,6 +1,6 @@
 //! Articulation and performance characteristics analysis
 
-use midi_library_shared::core::midi::types::{Event, MidiFile};
+use crate::core::midi::types::{Event, MidiFile};
 use std::collections::{HashMap, HashSet};
 
 /// Analyze articulation and performance characteristics
@@ -106,7 +106,7 @@ pub fn analyze_articulation(midi_file: &MidiFile, tempo_us_per_qn: u32) -> Optio
 #[cfg(test)]
 mod tests {
     use super::*;
-    use midi_library_shared::core::midi::types::{Header, TimedEvent, Track};
+    use crate::core::midi::types::{Header, TimedEvent, Track};
 
     #[test]
     fn test_analyze_articulation() {

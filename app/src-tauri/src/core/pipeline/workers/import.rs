@@ -133,7 +133,7 @@ impl ImportWorker {
         db_pool: &PgPool,
     ) -> Result<FileRecord, PipelineError> {
         use crate::core::hash::calculate_file_hash;
-        use midi_library_shared::core::midi::parser::parse_midi_file;
+        use crate::core::midi::parse_midi_file;
 
         // Read file bytes
         let bytes = tokio::fs::read(&file_path).await?;
@@ -203,7 +203,7 @@ impl ImportWorker {
         file_id: i64,
         db_pool: &PgPool,
     ) -> Result<FileRecord, PipelineError> {
-        use midi_library_shared::core::midi::parser::parse_midi_file;
+        use crate::core::midi::parse_midi_file;
 
         let record = sqlx::query_as::<_, (i64, String, String, Option<String>)>(
             "SELECT id, filepath, filename, parent_folder FROM files WHERE id = $1",

@@ -7,7 +7,7 @@ use anyhow::{Context, Result};
 use clap::Parser;
 use crossbeam_channel::bounded;
 use indicatif::{MultiProgress, ProgressBar, ProgressStyle};
-use midi_library_shared::core::midi::parser::parse_midi_file;
+use midi_app::core::midi::parse_midi_file;
 use midi_app::core::analysis::chord_analyzer::analyze_chords;
 use midi_app::core::analysis::{detect_bpm, detect_key};
 use midi_app::core::splitting::track_splitter::split_tracks;

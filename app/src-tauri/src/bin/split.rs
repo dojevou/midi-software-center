@@ -70,7 +70,7 @@ async fn main() -> Result<()> {
     // Read and parse MIDI file
     let content = tokio::fs::read(&args.file).await.context("Failed to read file")?;
 
-    let midi_file = midi_library_shared::core::midi::parser::parse_midi_file(&content)
+    let midi_file = midi_app::core::midi::parse_midi_file(&content)
         .map_err(|e| anyhow::anyhow!("Failed to parse MIDI file: {}", e))?;
 
     let track_count = midi_file.tracks.len();
@@ -87,7 +87,7 @@ async fn main() -> Result<()> {
     // Split tracks using the splitter module
     println!("🔧 Splitting tracks...");
 
-    use midi_library_shared::core::midi::types::*;
+    use midi_app::core::midi::types::*;
 
     let mut split_count = 0;
 
@@ -99,7 +99,7 @@ async fn main() -> Result<()> {
 
         // Create a new MIDI file with just this track
         let split_file = MidiFile {
-            header: midi_library_shared::core::midi::types::Header {
+            header: midi_app::core::midi::types::Header {
                 format: 0, // Single track format
                 num_tracks: 1,
                 ticks_per_quarter_note: midi_file.header.ticks_per_quarter_note,
@@ -198,7 +198,7 @@ fn sanitize_filename(name: &str) -> String {
 
 /// Serialize a MIDI file back to bytes
 fn serialize_midi_file(
-    midi_file: &midi_library_shared::core::midi::types::MidiFile,
+    midi_file: &midi_app::core::midi::types::MidiFile,
 ) -> Result<Vec<u8>> {
     let mut buffer = Vec::new();
 
@@ -222,8 +222,8 @@ fn serialize_midi_file(
 }
 
 /// Serialize a track to bytes
-fn serialize_track(track: &midi_library_shared::core::midi::types::Track) -> Result<Vec<u8>> {
-    use midi_library_shared::core::midi::Event;
+fn serialize_track(track: &midi_app::core::midi::types::Track) -> Result<Vec<u8>> {
+    use midi_app::core::midi::Event;
 
     let mut buffer = Vec::new();
 

@@ -24,7 +24,7 @@ use crate::core::analysis::chord_analyzer::analyze_chords;
 use crate::core::analysis::drum_analyzer::analyze_drum_midi;
 use crate::core::analysis::key_detector::detect_key;
 use crate::AppState;
-use midi_library_shared::core::midi::parser::parse_midi_file;
+use crate::core::midi::parse_midi_file;
 
 use articulation::analyze_articulation;
 use complexity::calculate_complexity_score;

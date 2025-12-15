@@ -165,7 +165,7 @@ async fn import_file(pool: &PgPool, file_path: &PathBuf) -> Result<()> {
     }
 
     // Parse MIDI file for metadata
-    let midi_file = match midi_library_shared::core::midi::parser::parse_midi_file(&content) {
+    let midi_file = match midi_app::core::midi::parse_midi_file(&content) {
         Ok(file) => file,
         Err(_) => return Ok(()), // Skip invalid MIDI files
     };

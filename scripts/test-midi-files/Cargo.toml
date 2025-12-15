@@ -8,7 +8,7 @@ name = "test-midi-files"
 path = "src/main.rs"
 
 [dependencies]
-midi-library-shared = { path = "../../shared/rust" }
+midi_app = { path = "../../app/src-tauri", package = "midi-software-center" }
 anyhow = "1.0"
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"

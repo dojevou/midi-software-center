@@ -8,8 +8,8 @@
 //!   cargo run --bin midi_to_mpcpattern -- --batch /path/to/midi/files /path/to/output
 
 use anyhow::{Context, Result};
-use midi_library_shared::core::midi::parser::parse_midi_file;
-use midi_library_shared::core::midi::types::Event;
+use midi_app::core::midi::parse_midi_file;
+use midi_app::core::midi::types::Event;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
 use std::fs;

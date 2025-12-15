@@ -22,8 +22,8 @@ use crate::database::batch_insert::BatchInserter;
 use crate::AppState;
 use discovery::{find_midi_files_recursive, find_midi_files_shallow, is_midi_file};
 use midi_helpers::{extract_instrument_names, extract_time_signature};
-use midi_library_shared::core::midi::parser::parse_midi_file;
-use midi_library_shared::core::midi::text_metadata::TextMetadata;
+use crate::core::midi::parse_midi_file;
+use crate::core::midi::text_metadata::TextMetadata;
 use types::{DeduplicationResult, ProcessedFile};
 
 use futures::stream::{self, StreamExt};

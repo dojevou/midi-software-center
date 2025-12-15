@@ -15,7 +15,7 @@
 /// - Auto-vectorization hints for compiler optimization
 /// - Optimized scalar fallback for small data
 /// - Target: 2-4x speedup for onset detection hot paths
-use midi_library_shared::core::midi::types::{Event, MidiFile};
+use crate::core::midi::types::{Event, MidiFile};
 
 /// Onset detection threshold (velocity must exceed this to be considered an onset)
 const ONSET_THRESHOLD: u8 = 30;
@@ -72,7 +72,7 @@ pub struct OnsetBpmResult {
 /// # Examples
 /// ```no_run
 /// use pipeline::core::analysis::simd_bpm::detect_bpm_from_onsets;
-/// use midi_library_shared::core::midi::types::MidiFile;
+/// use crate::core::midi::types::MidiFile;
 ///
 /// # fn example(midi_file: MidiFile) -> Result<(), Box<dyn std::error::Error>> {
 /// if let Some(result) = detect_bpm_from_onsets(&midi_file) {
@@ -301,7 +301,7 @@ pub fn batch_detect_onsets_simd(velocity_arrays: &[Vec<u8>]) -> Vec<Vec<usize>> 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use midi_library_shared::core::midi::types::{Header, MidiFile, TimedEvent, Track};
+    use crate::core::midi::types::{Header, MidiFile, TimedEvent, Track};
 
     fn create_test_midi_file(note_ticks: Vec<(u32, u8)>) -> MidiFile {
         let mut events = Vec::new();

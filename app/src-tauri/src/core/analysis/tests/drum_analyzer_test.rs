@@ -16,7 +16,7 @@ use crate::core::analysis::drum_analyzer::{
     has_drum_channel, note_to_drum_type, CymbalType, DrumAnalysis, DrumNote, DrumTechnique,
     PatternType, RhythmicFeel, SongStructure, TimeSignature,
 };
-use midi_library_shared::core::midi::types::{Event, Header, MidiFile, TimedEvent, Track};
+use crate::core::midi::types::{Event, Header, MidiFile, TimedEvent, Track};
 use std::collections::HashMap;
 
 // ============================================================================

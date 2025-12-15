@@ -2,7 +2,7 @@
 
 use super::meta_events::calculate_total_ticks;
 use super::types::NoteStats;
-use midi_library_shared::core::midi::types::MidiFile;
+use crate::core::midi::types::MidiFile;
 
 /// Calculate complexity score based on various factors
 pub fn calculate_complexity_score(note_stats: &NoteStats, midi_file: &MidiFile) -> Option<f64> {
@@ -49,7 +49,7 @@ pub fn calculate_complexity_score(note_stats: &NoteStats, midi_file: &MidiFile) 
 #[cfg(test)]
 mod tests {
     use super::*;
-    use midi_library_shared::core::midi::types::Header;
+    use crate::core::midi::types::Header;
 
     #[test]
     fn test_complexity_score_empty() {

@@ -1,6 +1,6 @@
 //! MIDI controller (CC) message analysis
 
-use midi_library_shared::core::midi::types::{Event, MidiFile};
+use crate::core::midi::types::{Event, MidiFile};
 use std::collections::HashMap;
 
 /// Analyze MIDI controller (CC) messages
@@ -97,7 +97,7 @@ pub fn get_cc_name(cc: u8) -> &'static str {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use midi_library_shared::core::midi::types::{Header, TimedEvent, Track};
+    use crate::core::midi::types::{Header, TimedEvent, Track};
 
     #[test]
     fn test_get_cc_name() {

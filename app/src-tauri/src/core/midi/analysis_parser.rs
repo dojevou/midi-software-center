@@ -8,7 +8,7 @@ use super::types::*;
 ///
 /// # Examples
 /// ```ignore
-/// use midi_library_shared::core::midi::parse_midi_file;
+/// use crate::core::midi::parse_midi_file;
 ///
 /// let data = std::fs::read("song.mid").unwrap();
 /// let midi_file = parse_midi_file(&data)?;

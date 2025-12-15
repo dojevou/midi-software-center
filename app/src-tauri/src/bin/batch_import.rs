@@ -11,7 +11,7 @@ use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 use std::sync::Arc;
 use std::time::Instant;
 
-use midi_library_shared::core::midi::parser::parse_midi_file;
+use midi_app::core::midi::parse_midi_file;
 use midi_app::core::analysis::bpm_detector::detect_bpm;
 use midi_app::core::analysis::key_detector::detect_key;
 use midi_app::core::hash::calculate_file_hash;
@@ -315,9 +315,9 @@ fn find_midi_files(dir: &Path) -> Result<Vec<PathBuf>> {
 
 /// Extract time signature from MIDI file
 fn extract_time_signature(
-    midi_file: &midi_library_shared::core::midi::types::MidiFile,
+    midi_file: &midi_app::core::midi::types::MidiFile,
 ) -> (Option<i16>, Option<i16>) {
-    use midi_library_shared::core::midi::types::Event;
+    use midi_app::core::midi::types::Event;
 
     for track in &midi_file.tracks {
         for timed_event in &track.events {
@@ -331,7 +331,7 @@ fn extract_time_signature(
 }
 
 /// Calculate total ticks in MIDI file
-fn calculate_total_ticks(midi_file: &midi_library_shared::core::midi::types::MidiFile) -> i64 {
+fn calculate_total_ticks(midi_file: &midi_app::core::midi::types::MidiFile) -> i64 {
     let mut max_ticks = 0u32;
     for track in &midi_file.tracks {
         let mut track_ticks = 0u32;
@@ -355,8 +355,8 @@ struct NoteStats {
 }
 
 /// Analyze notes in MIDI file
-fn analyze_notes(midi_file: &midi_library_shared::core::midi::types::MidiFile) -> NoteStats {
-    use midi_library_shared::core::midi::types::Event;
+fn analyze_notes(midi_file: &midi_app::core::midi::types::MidiFile) -> NoteStats {
+    use midi_app::core::midi::types::Event;
     use std::collections::{HashMap, HashSet};
 
     let mut note_count = 0i32;

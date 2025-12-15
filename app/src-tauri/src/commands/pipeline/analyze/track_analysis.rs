@@ -2,7 +2,7 @@
 
 use super::gm_instruments::get_instrument_info;
 use super::types::TrackInstrument;
-use midi_library_shared::core::midi::types::{Event, MidiFile};
+use crate::core::midi::types::{Event, MidiFile};
 use std::collections::HashMap;
 
 /// Analyze tracks and extract per-channel instrument information

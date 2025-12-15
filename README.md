@@ -30,21 +30,26 @@ MIDI Software Center manages **2.15M+ MIDI files** with advanced musical analysi
 
 ```
 midi-software-center/
-├── app/                    # Main Tauri application (Svelte/TypeScript frontend)
-├── pipeline/               # Batch processing pipeline (import, analysis, splitting)
-├── daw/                    # DAW integration features (sequencer, MIDI I/O)
-├── shared/rust/            # Shared Rust library (MIDI parsing, analysis algorithms)
+├── app/                    # Main Tauri application (unified)
+│   ├── src/               # Svelte/TypeScript frontend
+│   └── src-tauri/         # Rust backend (midi-software-center)
 ├── database/               # PostgreSQL migrations and schemas
-└── scripts/                # Automation and utility scripts
+├── scripts/                # Automation and utility scripts
+│   ├── import-tool/       # CLI import utilities
+│   └── test-midi-files/   # MIDI testing tool
+└── verification/           # Verification suite
 ```
 
-### Component Separation
+### Unified Application
 
-| Component | Responsibility |
-|-----------|----------------|
-| **Pipeline** | Batch import, archive extraction, analysis (NO playback, NO MIDI I/O) |
-| **DAW** | Real-time MIDI, hardware I/O, sequencer (NO batch import, NO archives) |
-| **Shared** | MIDI parsing, BPM/key detection, DB models (NO UI, NO commands) |
+The application combines all functionality in a single codebase:
+
+| Feature Area | Description |
+|--------------|-------------|
+| **Pipeline** | Batch import, archive extraction, analysis |
+| **DAW** | Real-time MIDI, hardware I/O, sequencer |
+| **Analysis** | BPM/key detection, chord analysis, drum patterns |
+| **Database** | PostgreSQL integration, repositories, batch operations |
 
 ### Technology Stack
 
@@ -87,8 +92,8 @@ make docker-up
 # Run database migrations
 make db-migrate
 
-# Start development servers
-make dev-both    # Launches Pipeline (:5173) and DAW (:5174)
+# Start development server
+make dev    # Launches application at :5173
 ```
 
 ### Running the Pipeline
@@ -151,9 +156,7 @@ SELECT * FROM get_files_by_instruments(ARRAY['jazz', 'piano']);
 
 ```bash
 # Development
-make dev-pipeline       # Start pipeline dev server
-make dev-daw           # Start DAW dev server
-make dev-both          # Start both servers
+make dev               # Start dev server
 
 # Building
 make build-all         # Build all components
@@ -173,31 +176,33 @@ make db-reset          # Reset database (destructive!)
 ### Running Tests
 
 ```bash
-# All library tests (use single thread for DB tests)
-cargo test --workspace --lib -- --test-threads=1
+# All workspace tests
+cargo test --workspace --lib
 
-# Specific crate
-cargo test -p midi-pipeline
-cargo test -p midi-library-shared
+# Main application tests
+cargo test --package midi-software-center --lib
+
+# Verification suite
+cargo test --package verification
 
 # With coverage
 cargo tarpaulin --workspace --out Html
 ```
 
-**Current Test Status:** 2,071 tests passing
+**Current Test Status:** 1,999 tests passing
 
 ### Key Files
 
 | Purpose | Location |
 |---------|----------|
-| MIDI Parser | `shared/rust/src/core/midi/parser.rs` |
-| BPM Detector | `shared/rust/src/core/analysis/bpm_detector.rs` |
-| Key Detector | `pipeline/src-tauri/src/core/analysis/key_detector.rs` |
-| Auto-tagger | `pipeline/src-tauri/src/core/analysis/auto_tagger.rs` |
-| Drum Analyzer | `pipeline/src-tauri/src/core/analysis/drum_analyzer.rs` |
-| File Repository | `pipeline/src-tauri/src/db/repositories/file_repository.rs` |
-| Sequencer Engine | `daw/src-tauri/src/sequencer/engine.rs` |
-| Hardware Manager | `daw/src-tauri/src/hardware/device_manager.rs` |
+| MIDI Parser | `app/src-tauri/src/core/midi/analysis_parser.rs` |
+| BPM Detector | `app/src-tauri/src/core/analysis/bpm_detector.rs` |
+| Key Detector | `app/src-tauri/src/core/analysis/key_detector.rs` |
+| Auto-tagger | `app/src-tauri/src/core/analysis/auto_tagger.rs` |
+| Drum Analyzer | `app/src-tauri/src/core/analysis/drum_analyzer.rs` |
+| File Repository | `app/src-tauri/src/db/repositories/file_repository.rs` |
+| Sequencer Engine | `app/src-tauri/src/sequencer/engine.rs` |
+| Hardware Manager | `app/src-tauri/src/hardware/device_manager.rs` |
 
 ## Pipeline Phases
 
@@ -209,7 +214,7 @@ cargo tarpaulin --workspace --out Html
 | 4. Analyze | BPM, key, drums, chords, structure | 181-360/sec |
 | 5. Rename | Metadata-based filenames | Batch |
 
-**Recommended Order:** Import → Sanitize → Split → Analyze → Rename
+**Recommended Order:** Import -> Sanitize -> Split -> Analyze -> Rename
 
 ## Configuration
 
@@ -281,4 +286,4 @@ This project is proprietary software. All rights reserved.
 
 ---
 
-**Status:** Production Ready | **Tests:** 2,071 passing | **Files Managed:** 2.15M+ | **Tags:** 7.9M+
+**Status:** Production Ready | **Tests:** 1,999 passing | **Files Managed:** 2.15M+ | **Tags:** 7.9M+

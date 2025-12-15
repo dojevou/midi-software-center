@@ -1,6 +1,6 @@
 //! Musical structure and form analysis
 
-use midi_library_shared::core::midi::types::{Event, MidiFile};
+use crate::core::midi::types::{Event, MidiFile};
 use std::collections::HashMap;
 
 /// Analyze musical structure and form
@@ -92,7 +92,7 @@ pub fn analyze_structure(midi_file: &MidiFile) -> Option<String> {
 #[cfg(test)]
 mod tests {
     use super::*;
-    use midi_library_shared::core::midi::types::{Header, TimedEvent, Track};
+    use crate::core::midi::types::{Header, TimedEvent, Track};
 
     #[test]
     fn test_analyze_structure() {

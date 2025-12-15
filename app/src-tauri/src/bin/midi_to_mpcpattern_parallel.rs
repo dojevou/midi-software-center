@@ -12,8 +12,8 @@
 
 use anyhow::{Context, Result};
 use indicatif::{ProgressBar, ProgressStyle};
-use midi_library_shared::core::midi::parser::parse_midi_file;
-use midi_library_shared::core::midi::types::Event;
+use midi_app::core::midi::parse_midi_file;
+use midi_app::core::midi::types::Event;
 use rayon::prelude::*;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;

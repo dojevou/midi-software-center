@@ -54,8 +54,8 @@ use tokio::sync::Mutex;
 // Unused: use indicatif::{ProgressBar, ProgressStyle, MultiProgress};
 
 // Import existing modules - we just orchestrate them
-use midi_library_shared::core::midi::parser::parse_midi_file;
-use midi_library_shared::core::midi::types::{Event, MidiFile, TextType};
+use midi_app::core::midi::parse_midi_file;
+use midi_app::core::midi::types::{Event, MidiFile, TextType};
 use midi_app::core::analysis::auto_tagger::AutoTagger;
 use midi_app::core::analysis::bpm_detector::detect_bpm;
 use midi_app::core::analysis::key_detector::detect_key;

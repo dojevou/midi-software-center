@@ -1,7 +1,7 @@
 /// Extended Chord Analysis Tests
 /// Tests for complex chords, inversions, and edge cases not covered by basic tests
 use crate::core::analysis::chord_analyzer::analyze_chords;
-use midi_library_shared::core::midi::types::{Event, MidiFile, TimedEvent, Track};
+use crate::core::midi::types::{Event, MidiFile, TimedEvent, Track};
 
 /// Helper to create a MIDI file with specific notes at specific times
 fn create_midi_with_notes(notes_at_ticks: Vec<(u32, Vec<u8>)>) -> MidiFile {
@@ -25,7 +25,7 @@ fn create_midi_with_notes(notes_at_ticks: Vec<(u32, Vec<u8>)>) -> MidiFile {
     }
 
     MidiFile {
-        header: midi_library_shared::core::midi::types::Header {
+        header: crate::core::midi::types::Header {
             format: 1,
             num_tracks: 1,
             ticks_per_quarter_note: 480,
@@ -240,7 +240,7 @@ fn test_half_diminished_seventh() {
 fn test_chord_progression_complexity() {
     // Create a complex progression: Cmaj7 -> Dm7 -> G7 -> Cmaj7
     let midi = MidiFile {
-        header: midi_library_shared::core::midi::types::Header {
+        header: crate::core::midi::types::Header {
             format: 1,
             num_tracks: 1,
             ticks_per_quarter_note: 480,
@@ -375,7 +375,7 @@ fn test_two_notes_no_chord() {
 #[test]
 fn test_empty_midi_file() {
     let midi = MidiFile {
-        header: midi_library_shared::core::midi::types::Header {
+        header: crate::core::midi::types::Header {
             format: 1,
             num_tracks: 1,
             ticks_per_quarter_note: 480,
@@ -396,7 +396,7 @@ fn test_empty_midi_file() {
 fn test_drum_channel_ignored() {
     // Notes on channel 9 (drums) should be ignored
     let midi = MidiFile {
-        header: midi_library_shared::core::midi::types::Header {
+        header: crate::core::midi::types::Header {
             format: 1,
             num_tracks: 1,
             ticks_per_quarter_note: 480,
@@ -432,7 +432,7 @@ fn test_rapid_chord_changes() {
     // to be detected in separate windows
     // Note: Chord analyzer requires root-position triads for reliable detection
     let midi = MidiFile {
-        header: midi_library_shared::core::midi::types::Header {
+        header: crate::core::midi::types::Header {
             format: 1,
             num_tracks: 1,
             ticks_per_quarter_note: 480,

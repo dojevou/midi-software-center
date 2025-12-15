@@ -1,6 +1,6 @@
 //! Health Commands - System health checks for PostgreSQL and Meilisearch
 
-use midi_library_shared::health::{HealthChecker, ServiceHealth, SystemHealth};
+use crate::health::{HealthChecker, ServiceHealth, SystemHealth};
 use std::sync::Arc;
 use tauri::State;
 use tokio::sync::RwLock;

@@ -4,7 +4,7 @@
 
 use crate::core::analysis::auto_tagger::AutoTagger;
 use crate::core::analysis::drum_analyzer::{self, DrumAnalysis};
-use midi_library_shared::core::midi::{parse_midi_file, MidiFile};
+use crate::core::midi::{parse_midi_file, MidiFile};
 use std::fs;
 use std::time::Instant;
 

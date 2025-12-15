@@ -2,7 +2,7 @@
 ///
 /// Detects chord progressions, types, and complexity from MIDI files
 /// Uses pitch class analysis for chord identification
-use midi_library_shared::core::midi::types::{Event, MidiFile};
+use crate::core::midi::types::{Event, MidiFile};
 use std::collections::HashSet;
 
 /// Result of chord analysis
