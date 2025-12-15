@@ -137,7 +137,7 @@ pub use saved_search::{
 // ============================================================================
 
 pub use pipeline::{
-    bigdecimal_to_f64, f64_to_bigdecimal, File as PipelineFile, FileSearchResult,
-    FileWithMetadata, MusicalMetadata, NewFile, NewMusicalMetadata,
-    SearchFilters as PipelineSearchFilters, SearchResults as PipelineSearchResults,
+    bigdecimal_to_f64, f64_to_bigdecimal, File as PipelineFile, FileSearchResult, FileWithMetadata,
+    MusicalMetadata, NewFile, NewMusicalMetadata, SearchFilters as PipelineSearchFilters,
+    SearchResults as PipelineSearchResults,
 };

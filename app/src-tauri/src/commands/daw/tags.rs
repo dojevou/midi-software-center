@@ -60,7 +60,10 @@ pub struct UpdateTagRequest {
 /// # Returns
 /// The newly created tag with its assigned ID
 #[tauri::command]
-pub async fn create_tag(tag: CreateTagRequest, state: State<'_, DawAppState>) -> Result<Tag, String> {
+pub async fn create_tag(
+    tag: CreateTagRequest,
+    state: State<'_, DawAppState>,
+) -> Result<Tag, String> {
     let pool = state.db_pool.as_ref().ok_or("Database not connected")?;
 
     // Insert the new tag

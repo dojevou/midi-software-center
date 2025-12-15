@@ -11,5 +11,9 @@ pub mod tag_repository;
 // Re-export with prefixed names to avoid conflicts
 pub use file_repository::FileRepository as PipelineFileRepository;
 pub use metadata_repository::MetadataRepository as PipelineMetadataRepository;
-pub use search_repository::{SearchQuery as PipelineSearchQuery, SearchRepository as PipelineSearchRepository};
-pub use tag_repository::{DbTag, TagRepository as PipelineTagRepository, TagWithCount as PipelineTagWithCount};
+pub use search_repository::{
+    SearchQuery as PipelineSearchQuery, SearchRepository as PipelineSearchRepository,
+};
+pub use tag_repository::{
+    DbTag, TagRepository as PipelineTagRepository, TagWithCount as PipelineTagWithCount,
+};

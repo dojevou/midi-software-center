@@ -48,7 +48,6 @@
 /// - `windows` - Window management
 /// - `health` - Service health monitoring
 /// - `logging` - Structured logging
-
 // Use mimalloc as global allocator for better performance
 use mimalloc::MiMalloc;
 
@@ -77,8 +76,8 @@ pub mod browsers;
 pub mod command_palette;
 pub mod editors;
 pub mod hardware;
-pub mod midi_io;
 pub mod midi_clock;
+pub mod midi_io;
 pub mod notation;
 pub mod profiling;
 pub mod scripting;

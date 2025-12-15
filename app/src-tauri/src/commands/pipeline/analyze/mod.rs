@@ -23,8 +23,8 @@ use crate::core::analysis::bpm_detector::detect_bpm;
 use crate::core::analysis::chord_analyzer::analyze_chords;
 use crate::core::analysis::drum_analyzer::analyze_drum_midi;
 use crate::core::analysis::key_detector::detect_key;
-use crate::AppState;
 use crate::core::midi::parse_midi_file;
+use crate::AppState;
 
 use articulation::analyze_articulation;
 use complexity::calculate_complexity_score;

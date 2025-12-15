@@ -14,6 +14,8 @@ use crate::core::analysis::bpm_detector::detect_bpm;
 use crate::core::analysis::key_detector::detect_key;
 use crate::core::analysis::FilenameMetadata;
 use crate::core::hash::calculate_file_hash;
+use crate::core::midi::parse_midi_file;
+use crate::core::midi::text_metadata::TextMetadata;
 use crate::core::naming::generator::generate_production_filename;
 use crate::core::performance::concurrency::{
     calculate_optimal_concurrency, detect_system_resources,
@@ -22,8 +24,6 @@ use crate::database::batch_insert::BatchInserter;
 use crate::AppState;
 use discovery::{find_midi_files_recursive, find_midi_files_shallow, is_midi_file};
 use midi_helpers::{extract_instrument_names, extract_time_signature};
-use crate::core::midi::parse_midi_file;
-use crate::core::midi::text_metadata::TextMetadata;
 use types::{DeduplicationResult, ProcessedFile};
 
 use futures::stream::{self, StreamExt};

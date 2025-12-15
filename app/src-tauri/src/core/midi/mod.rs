@@ -1,4 +1,3 @@
-pub mod error;
 /// MIDI file parsing and types
 ///
 /// This module provides:
@@ -6,6 +5,7 @@ pub mod error;
 /// - MIDI data types
 /// - Error handling
 pub mod analysis_parser;
+pub mod error;
 pub mod text_metadata;
 pub mod types;
 

@@ -19,12 +19,6 @@ static SENTRY_GUARD: std::sync::OnceLock<Option<sentry::ClientInitGuard>> =
 use midi_app::{AppState as PipelineState, Database};
 
 // Import DAW types
-use midi_app::commands::daw::{
-    DawAppState,
-    AutomationState,
-    DAWState, // Window state with mixer (different from DawState!)
-    DawState,
-};
 use midi_app::commands::daw::gear::GearState;
 use midi_app::commands::daw::mixer::MixerState;
 use midi_app::commands::daw::preferences::{
@@ -32,6 +26,12 @@ use midi_app::commands::daw::preferences::{
 };
 use midi_app::commands::daw::presets::PresetsState;
 use midi_app::commands::daw::system::SystemState;
+use midi_app::commands::daw::{
+    AutomationState,
+    DAWState, // Window state with mixer (different from DawState!)
+    DawAppState,
+    DawState,
+};
 use midi_app::midi_io::MidiManager;
 use midi_app::profiling::commands::ProfilingState;
 use midi_app::sequencer::SequencerEngine;

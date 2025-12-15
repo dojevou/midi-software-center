@@ -4,8 +4,8 @@
 /// Grown-up Script: Coordinates playback, timing, and MIDI output.
 /// Integrates TrackManager, EventScheduler, and MidiManager.
 use crate::core::sequencer::timing;
-use crate::midi_io::MidiManager;
 use crate::daw_models::sequencer::PlaybackPosition;
+use crate::midi_io::MidiManager;
 use crate::sequencer::{EventScheduler, ScheduledEvent, TrackManager};
 use std::sync::Arc;
 use std::time::{Duration, Instant};

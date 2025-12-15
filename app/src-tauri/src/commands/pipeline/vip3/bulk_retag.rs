@@ -30,30 +30,24 @@ struct CategoryMaps {
 /// Load category ID maps from database
 async fn load_category_maps(pool: &PgPool) -> Result<CategoryMaps, sqlx::Error> {
     // Load timbres
-    let timbre_rows: Vec<(i16, String)> = sqlx::query_as("SELECT id, name FROM timbres")
-        .fetch_all(pool)
-        .await?;
-    let timbres: HashMap<String, i16> = timbre_rows.into_iter().map(|(id, name)| (name, id)).collect();
+    let timbre_rows: Vec<(i16, String)> =
+        sqlx::query_as("SELECT id, name FROM timbres").fetch_all(pool).await?;
+    let timbres: HashMap<String, i16> =
+        timbre_rows.into_iter().map(|(id, name)| (name, id)).collect();
 
     // Load styles
-    let style_rows: Vec<(i16, String)> = sqlx::query_as("SELECT id, name FROM styles")
-        .fetch_all(pool)
-        .await?;
-    let styles: HashMap<String, i16> = style_rows.into_iter().map(|(id, name)| (name, id)).collect();
+    let style_rows: Vec<(i16, String)> =
+        sqlx::query_as("SELECT id, name FROM styles").fetch_all(pool).await?;
+    let styles: HashMap<String, i16> =
+        style_rows.into_iter().map(|(id, name)| (name, id)).collect();
 
     // Load articulations
     let articulation_rows: Vec<(i16, String)> =
-        sqlx::query_as("SELECT id, name FROM articulations")
-            .fetch_all(pool)
-            .await?;
+        sqlx::query_as("SELECT id, name FROM articulations").fetch_all(pool).await?;
     let articulations: HashMap<String, i16> =
         articulation_rows.into_iter().map(|(id, name)| (name, id)).collect();
 
-    Ok(CategoryMaps {
-        timbres,
-        styles,
-        articulations,
-    })
+    Ok(CategoryMaps { timbres, styles, articulations })
 }
 
 /// Fetch files in batches for processing
@@ -77,19 +71,12 @@ async fn fetch_file_batch(
 
     Ok(rows
         .into_iter()
-        .map(|(id, filename, filepath)| FileRecord {
-            id,
-            filename,
-            filepath,
-        })
+        .map(|(id, filename, filepath)| FileRecord { id, filename, filepath })
         .collect())
 }
 
 /// Batch insert timbre assignments
-async fn insert_timbres(
-    pool: &PgPool,
-    assignments: &[(i64, i16)],
-) -> Result<u64, sqlx::Error> {
+async fn insert_timbres(pool: &PgPool, assignments: &[(i64, i16)]) -> Result<u64, sqlx::Error> {
     if assignments.is_empty() {
         return Ok(0);
     }
@@ -114,10 +101,7 @@ async fn insert_timbres(
 }
 
 /// Batch insert style assignments
-async fn insert_styles(
-    pool: &PgPool,
-    assignments: &[(i64, i16)],
-) -> Result<u64, sqlx::Error> {
+async fn insert_styles(pool: &PgPool, assignments: &[(i64, i16)]) -> Result<u64, sqlx::Error> {
     if assignments.is_empty() {
         return Ok(0);
     }
@@ -243,10 +227,8 @@ pub async fn bulk_retag_vip3(
         let batch_len = files.len();
 
         // Convert to format expected by extractor
-        let file_tuples: Vec<(i64, String, String)> = files
-            .iter()
-            .map(|f| (f.id, f.filename.clone(), f.filepath.clone()))
-            .collect();
+        let file_tuples: Vec<(i64, String, String)> =
+            files.iter().map(|f| (f.id, f.filename.clone(), f.filepath.clone())).collect();
 
         // Extract categories in parallel
         let results = extractor.extract_batch(&file_tuples);

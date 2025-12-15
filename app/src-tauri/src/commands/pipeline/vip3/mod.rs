@@ -26,6 +26,7 @@ pub use types::{
 };
 
 // Re-export all commands
+pub use bulk_retag::{bulk_retag_vip3, update_vip3_counts, BulkRetagResponse};
 pub use categories::{
     add_articulation_to_file, add_style_to_file, add_timbre_to_file, get_file_categories,
     remove_articulation_from_file, remove_style_from_file, remove_timbre_from_file,
@@ -44,4 +45,3 @@ pub use saved_searches::{
     toggle_saved_search_pin,
 };
 pub use search::{get_vip3_filter_counts, search_files_vip3};
-pub use bulk_retag::{bulk_retag_vip3, update_vip3_counts, BulkRetagResponse};

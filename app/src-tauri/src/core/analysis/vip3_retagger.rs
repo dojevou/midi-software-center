@@ -23,58 +23,120 @@ pub mod normalizations {
     pub static INSTRUMENT: LazyLock<HashMap<&'static str, &'static str>> = LazyLock::new(|| {
         HashMap::from([
             // Drums
-            ("kicks", "kick"), ("kik", "kick"), ("kck", "kick"), ("bd", "kick"),
-            ("snares", "snare"), ("sn", "snare"), ("sd", "snare"),
-            ("hihats", "hihat"), ("hh", "hihat"), ("hi-hats", "hihat"), ("hats", "hihat"),
-            ("claps", "clap"), ("clp", "clap"), ("handclap", "clap"),
-            ("cymbals", "cymbal"), ("cym", "cymbal"),
-            ("crashes", "crash"), ("crsh", "crash"),
-            ("rides", "ride"), ("rd", "ride"),
-            ("toms", "tom"), ("tomtom", "tom"), ("tom-tom", "tom"),
-            ("percs", "percussion"), ("prcs", "percussion"),
-            ("drm", "drums"), ("drms", "drums"), ("drumkit", "drums"),
-            ("tambourines", "tambourine"), ("tamb", "tambourine"),
-            ("shakers", "shaker"), ("shkr", "shaker"),
-            ("congas", "conga"), ("bongos", "bongo"),
+            ("kicks", "kick"),
+            ("kik", "kick"),
+            ("kck", "kick"),
+            ("bd", "kick"),
+            ("snares", "snare"),
+            ("sn", "snare"),
+            ("sd", "snare"),
+            ("hihats", "hihat"),
+            ("hh", "hihat"),
+            ("hi-hats", "hihat"),
+            ("hats", "hihat"),
+            ("claps", "clap"),
+            ("clp", "clap"),
+            ("handclap", "clap"),
+            ("cymbals", "cymbal"),
+            ("cym", "cymbal"),
+            ("crashes", "crash"),
+            ("crsh", "crash"),
+            ("rides", "ride"),
+            ("rd", "ride"),
+            ("toms", "tom"),
+            ("tomtom", "tom"),
+            ("tom-tom", "tom"),
+            ("percs", "percussion"),
+            ("prcs", "percussion"),
+            ("drm", "drums"),
+            ("drms", "drums"),
+            ("drumkit", "drums"),
+            ("tambourines", "tambourine"),
+            ("tamb", "tambourine"),
+            ("shakers", "shaker"),
+            ("shkr", "shaker"),
+            ("congas", "conga"),
+            ("bongos", "bongo"),
             // Bass
-            ("basses", "bass"), ("bs", "bass"), ("bassline", "bass"),
-            ("subbass", "sub"), ("sub-bass", "sub"),
-            ("808s", "808"), ("tr808", "808"),
+            ("basses", "bass"),
+            ("bs", "bass"),
+            ("bassline", "bass"),
+            ("subbass", "sub"),
+            ("sub-bass", "sub"),
+            ("808s", "808"),
+            ("tr808", "808"),
             // Keys
-            ("pianos", "piano"), ("pno", "piano"), ("pian", "piano"),
-            ("organs", "organ"), ("org", "organ"), ("b3", "organ"), ("hammond", "organ"),
-            ("ep", "electric-piano"), ("epiano", "electric-piano"), ("rhodes", "electric-piano"),
-            ("clavs", "clav"), ("clavinet", "clav"),
-            ("keyboards", "keyboard"), ("keyb", "keyboard"), ("kbd", "keyboard"),
+            ("pianos", "piano"),
+            ("pno", "piano"),
+            ("pian", "piano"),
+            ("organs", "organ"),
+            ("org", "organ"),
+            ("b3", "organ"),
+            ("hammond", "organ"),
+            ("ep", "electric-piano"),
+            ("epiano", "electric-piano"),
+            ("rhodes", "electric-piano"),
+            ("clavs", "clav"),
+            ("clavinet", "clav"),
+            ("keyboards", "keyboard"),
+            ("keyb", "keyboard"),
+            ("kbd", "keyboard"),
             // Guitar
-            ("guitars", "guitar"), ("gtr", "guitar"), ("guit", "guitar"),
-            ("acousticguitar", "acoustic-guitar"), ("acgtr", "acoustic-guitar"),
-            ("electricguitar", "electric-guitar"), ("elgtr", "electric-guitar"),
+            ("guitars", "guitar"),
+            ("gtr", "guitar"),
+            ("guit", "guitar"),
+            ("acousticguitar", "acoustic-guitar"),
+            ("acgtr", "acoustic-guitar"),
+            ("electricguitar", "electric-guitar"),
+            ("elgtr", "electric-guitar"),
             // Brass
-            ("trumpets", "trumpet"), ("tpt", "trumpet"),
-            ("trombones", "trombone"), ("trb", "trombone"),
-            ("horns", "horn"), ("frenchhorn", "horn"),
-            ("saxophones", "saxophone"), ("saxes", "saxophone"), ("sax", "saxophone"),
+            ("trumpets", "trumpet"),
+            ("tpt", "trumpet"),
+            ("trombones", "trombone"),
+            ("trb", "trombone"),
+            ("horns", "horn"),
+            ("frenchhorn", "horn"),
+            ("saxophones", "saxophone"),
+            ("saxes", "saxophone"),
+            ("sax", "saxophone"),
             // Synth
-            ("synths", "synth"), ("syn", "synth"), ("synthesizer", "synth"),
-            ("leads", "lead"), ("ld", "lead"),
-            ("pads", "pad"), ("pd", "pad"),
-            ("arps", "arp"), ("arpeggio", "arp"), ("arpeggios", "arp"),
-            ("plucks", "pluck"), ("plk", "pluck"),
-            ("stabs", "stab"), ("stb", "stab"),
+            ("synths", "synth"),
+            ("syn", "synth"),
+            ("synthesizer", "synth"),
+            ("leads", "lead"),
+            ("ld", "lead"),
+            ("pads", "pad"),
+            ("pd", "pad"),
+            ("arps", "arp"),
+            ("arpeggio", "arp"),
+            ("arpeggios", "arp"),
+            ("plucks", "pluck"),
+            ("plk", "pluck"),
+            ("stabs", "stab"),
+            ("stb", "stab"),
             // Strings
-            ("string", "strings"), ("str", "strings"),
-            ("violins", "violin"), ("vln", "violin"),
-            ("cellos", "cello"), ("vlc", "cello"),
+            ("string", "strings"),
+            ("str", "strings"),
+            ("violins", "violin"),
+            ("vln", "violin"),
+            ("cellos", "cello"),
+            ("vlc", "cello"),
             // Woodwind
-            ("flutes", "flute"), ("flt", "flute"),
-            ("clarinets", "clarinet"), ("clar", "clarinet"),
+            ("flutes", "flute"),
+            ("flt", "flute"),
+            ("clarinets", "clarinet"),
+            ("clar", "clarinet"),
             // Vocal
-            ("vocals", "vocal"), ("voc", "vocal"), ("vx", "vocal"),
-            ("voices", "voice"), ("choirs", "choir"),
+            ("vocals", "vocal"),
+            ("voc", "vocal"),
+            ("vx", "vocal"),
+            ("voices", "voice"),
+            ("choirs", "choir"),
             // Orchestral
-            ("orch", "orchestral"), ("orchestras", "orchestral"),
-            ("cinematic", "orchestral"), ("filmscore", "orchestral"),
+            ("orch", "orchestral"),
+            ("orchestras", "orchestral"),
+            ("cinematic", "orchestral"),
+            ("filmscore", "orchestral"),
         ])
     });
 
@@ -82,35 +144,67 @@ pub mod normalizations {
     pub static GENRE: LazyLock<HashMap<&'static str, &'static str>> = LazyLock::new(|| {
         HashMap::from([
             // Rock/Metal
-            ("rocks", "rock"), ("rck", "rock"),
-            ("metals", "metal"), ("mtl", "metal"), ("heavymetal", "metal"),
-            ("punks", "punk"), ("pnk", "punk"),
+            ("rocks", "rock"),
+            ("rck", "rock"),
+            ("metals", "metal"),
+            ("mtl", "metal"),
+            ("heavymetal", "metal"),
+            ("punks", "punk"),
+            ("pnk", "punk"),
             // Jazz
-            ("jazzy", "jazz"), ("jz", "jazz"),
-            ("swinging", "swing"), ("swg", "swing"),
-            ("fusions", "fusion"), ("jazzfusion", "fusion"),
+            ("jazzy", "jazz"),
+            ("jz", "jazz"),
+            ("swinging", "swing"),
+            ("swg", "swing"),
+            ("fusions", "fusion"),
+            ("jazzfusion", "fusion"),
             // Electronic
-            ("houses", "house"), ("deephouse", "house"), ("deep-house", "house"),
-            ("technos", "techno"), ("tek", "techno"),
-            ("trances", "trance"), ("psytrance", "trance"),
-            ("dubsteps", "dubstep"), ("dub-step", "dubstep"),
-            ("dnb", "drum-and-bass"), ("drumnbass", "drum-and-bass"),
-            ("traps", "trap"), ("melodictrap", "trap"),
-            ("edms", "edm"), ("electronica", "electronic"),
+            ("houses", "house"),
+            ("deephouse", "house"),
+            ("deep-house", "house"),
+            ("technos", "techno"),
+            ("tek", "techno"),
+            ("trances", "trance"),
+            ("psytrance", "trance"),
+            ("dubsteps", "dubstep"),
+            ("dub-step", "dubstep"),
+            ("dnb", "drum-and-bass"),
+            ("drumnbass", "drum-and-bass"),
+            ("traps", "trap"),
+            ("melodictrap", "trap"),
+            ("edms", "edm"),
+            ("electronica", "electronic"),
             // Urban
-            ("hiphop", "hip-hop"), ("hip_hop", "hip-hop"), ("hiphops", "hip-hop"),
-            ("raps", "rap"), ("rapper", "rap"),
-            ("rnb", "r&b"), ("r-and-b", "r&b"), ("randb", "r&b"),
-            ("souls", "soul"), ("neo-soul", "soul"),
+            ("hiphop", "hip-hop"),
+            ("hip_hop", "hip-hop"),
+            ("hiphops", "hip-hop"),
+            ("raps", "rap"),
+            ("rapper", "rap"),
+            ("rnb", "r&b"),
+            ("r-and-b", "r&b"),
+            ("randb", "r&b"),
+            ("souls", "soul"),
+            ("neo-soul", "soul"),
             // Other
-            ("pops", "pop"), ("disco", "disco"),
-            ("funks", "funk"), ("funky", "funk"),
-            ("lofi", "lo-fi"), ("lo_fi", "lo-fi"), ("chillhop", "lo-fi"),
-            ("ambients", "ambient"), ("atmospheres", "ambient"),
-            ("cinematic", "orchestral"), ("filmscore", "orchestral"),
-            ("latins", "latin"), ("salsa", "latin"), ("bossa", "latin"),
-            ("worlds", "world"), ("ethnic", "world"), ("tribal", "world"),
-            ("countrys", "country"), ("bluegrass", "country"),
+            ("pops", "pop"),
+            ("disco", "disco"),
+            ("funks", "funk"),
+            ("funky", "funk"),
+            ("lofi", "lo-fi"),
+            ("lo_fi", "lo-fi"),
+            ("chillhop", "lo-fi"),
+            ("ambients", "ambient"),
+            ("atmospheres", "ambient"),
+            ("cinematic", "orchestral"),
+            ("filmscore", "orchestral"),
+            ("latins", "latin"),
+            ("salsa", "latin"),
+            ("bossa", "latin"),
+            ("worlds", "world"),
+            ("ethnic", "world"),
+            ("tribal", "world"),
+            ("countrys", "country"),
+            ("bluegrass", "country"),
         ])
     });
 }
@@ -119,55 +213,158 @@ pub mod normalizations {
 pub mod keywords {
     /// Timbre keywords (map to VIP3 timbres table)
     pub const TIMBRES: &[(&str, &[&str])] = &[
-        ("Aggressive", &["aggressive", "angry", "hard", "heavy", "brutal", "harsh", "fierce"]),
-        ("Airy", &["airy", "breathy", "light", "ethereal", "floating", "spacey"]),
-        ("Bright", &["bright", "crisp", "sharp", "clear", "shiny", "sparkling"]),
-        ("Clean", &["clean", "pure", "pristine", "crystal", "transparent"]),
-        ("Dark", &["dark", "sinister", "evil", "menacing", "ominous", "scary", "creepy"]),
-        ("Dirty", &["dirty", "gritty", "raw", "nasty", "grimy", "filthy"]),
-        ("Distorted", &["distorted", "distortion", "fuzz", "fuzzy", "overdrive", "overdriven"]),
+        (
+            "Aggressive",
+            &["aggressive", "angry", "hard", "heavy", "brutal", "harsh", "fierce"],
+        ),
+        (
+            "Airy",
+            &["airy", "breathy", "light", "ethereal", "floating", "spacey"],
+        ),
+        (
+            "Bright",
+            &["bright", "crisp", "sharp", "clear", "shiny", "sparkling"],
+        ),
+        (
+            "Clean",
+            &["clean", "pure", "pristine", "crystal", "transparent"],
+        ),
+        (
+            "Dark",
+            &["dark", "sinister", "evil", "menacing", "ominous", "scary", "creepy"],
+        ),
+        (
+            "Dirty",
+            &["dirty", "gritty", "raw", "nasty", "grimy", "filthy"],
+        ),
+        (
+            "Distorted",
+            &["distorted", "distortion", "fuzz", "fuzzy", "overdrive", "overdriven"],
+        ),
         ("Fat", &["fat", "thick", "huge", "massive", "big", "beefy"]),
-        ("Gritty", &["gritty", "grainy", "textured", "rough", "coarse"]),
+        (
+            "Gritty",
+            &["gritty", "grainy", "textured", "rough", "coarse"],
+        ),
         ("Hard", &["hard", "punchy", "tight", "snappy", "aggressive"]),
-        ("Metallic", &["metallic", "metal", "iron", "steel", "tinny", "bell"]),
+        (
+            "Metallic",
+            &["metallic", "metal", "iron", "steel", "tinny", "bell"],
+        ),
         ("Muted", &["muted", "dampened", "subdued", "quiet", "soft"]),
-        ("Punchy", &["punchy", "punch", "impact", "transient", "attack"]),
-        ("Soft", &["soft", "gentle", "smooth", "mellow", "delicate", "tender"]),
+        (
+            "Punchy",
+            &["punchy", "punch", "impact", "transient", "attack"],
+        ),
+        (
+            "Soft",
+            &["soft", "gentle", "smooth", "mellow", "delicate", "tender"],
+        ),
         ("Thin", &["thin", "narrow", "weak", "tiny", "small"]),
         ("Warm", &["warm", "lush", "rich", "full", "round", "cozy"]),
-        ("Wide", &["wide", "stereo", "spread", "spacious", "expansive"]),
-        ("Analog", &["analog", "analogue", "vintage", "retro", "classic", "old-school"]),
-        ("Digital", &["digital", "modern", "clean", "precise", "hi-fi"]),
-        ("Organic", &["organic", "natural", "acoustic", "real", "live"]),
-        ("Synthetic", &["synthetic", "synth", "electronic", "artificial", "processed"]),
+        (
+            "Wide",
+            &["wide", "stereo", "spread", "spacious", "expansive"],
+        ),
+        (
+            "Analog",
+            &["analog", "analogue", "vintage", "retro", "classic", "old-school"],
+        ),
+        (
+            "Digital",
+            &["digital", "modern", "clean", "precise", "hi-fi"],
+        ),
+        (
+            "Organic",
+            &["organic", "natural", "acoustic", "real", "live"],
+        ),
+        (
+            "Synthetic",
+            &["synthetic", "synth", "electronic", "artificial", "processed"],
+        ),
     ];
 
     /// Style keywords (map to VIP3 styles table)
     pub const STYLES: &[(&str, &[&str])] = &[
-        ("Ambient", &["ambient", "atmosphere", "atmospheric", "drone", "soundscape"]),
-        ("Cinematic", &["cinematic", "film", "movie", "epic", "trailer", "score", "soundtrack"]),
+        (
+            "Ambient",
+            &["ambient", "atmosphere", "atmospheric", "drone", "soundscape"],
+        ),
+        (
+            "Cinematic",
+            &["cinematic", "film", "movie", "epic", "trailer", "score", "soundtrack"],
+        ),
         ("Dance", &["dance", "club", "disco", "dancefloor"]),
         ("EDM", &["edm", "electro", "electronic", "electronica"]),
         ("Funk", &["funk", "funky", "groovy", "groove"]),
-        ("Hip-Hop", &["hip-hop", "hiphop", "hip_hop", "rap", "trap", "boom-bap", "boombap"]),
-        ("House", &["house", "deep-house", "deephouse", "tech-house", "techhouse", "progressive-house"]),
-        ("Jazz", &["jazz", "jazzy", "swing", "bebop", "fusion", "smooth-jazz"]),
-        ("Latin", &["latin", "salsa", "bossa", "samba", "tango", "cumbia", "reggaeton"]),
-        ("Lo-Fi", &["lofi", "lo-fi", "lo_fi", "chillhop", "jazzhop", "study"]),
-        ("Metal", &["metal", "heavy-metal", "thrash", "death-metal", "black-metal", "doom"]),
+        (
+            "Hip-Hop",
+            &["hip-hop", "hiphop", "hip_hop", "rap", "trap", "boom-bap", "boombap"],
+        ),
+        (
+            "House",
+            &[
+                "house",
+                "deep-house",
+                "deephouse",
+                "tech-house",
+                "techhouse",
+                "progressive-house",
+            ],
+        ),
+        (
+            "Jazz",
+            &["jazz", "jazzy", "swing", "bebop", "fusion", "smooth-jazz"],
+        ),
+        (
+            "Latin",
+            &["latin", "salsa", "bossa", "samba", "tango", "cumbia", "reggaeton"],
+        ),
+        (
+            "Lo-Fi",
+            &["lofi", "lo-fi", "lo_fi", "chillhop", "jazzhop", "study"],
+        ),
+        (
+            "Metal",
+            &["metal", "heavy-metal", "thrash", "death-metal", "black-metal", "doom"],
+        ),
         ("Pop", &["pop", "poppy", "mainstream", "commercial"]),
-        ("R&B", &["rnb", "r&b", "r-and-b", "randb", "soul", "neo-soul"]),
+        (
+            "R&B",
+            &["rnb", "r&b", "r-and-b", "randb", "soul", "neo-soul"],
+        ),
         ("Reggae", &["reggae", "dub", "ska", "dancehall", "roots"]),
-        ("Rock", &["rock", "alternative", "indie", "punk", "grunge", "classic-rock"]),
+        (
+            "Rock",
+            &["rock", "alternative", "indie", "punk", "grunge", "classic-rock"],
+        ),
         ("Soul", &["soul", "motown", "gospel", "neo-soul"]),
-        ("Techno", &["techno", "minimal", "detroit", "berlin", "industrial-techno"]),
+        (
+            "Techno",
+            &["techno", "minimal", "detroit", "berlin", "industrial-techno"],
+        ),
         ("Trap", &["trap", "melodic-trap", "drill", "uk-drill"]),
-        ("Orchestral", &["orchestral", "orchestra", "classical", "symphonic", "strings", "brass"]),
-        ("Electronic", &["electronic", "synth", "synthesizer", "analog"]),
+        (
+            "Orchestral",
+            &["orchestral", "orchestra", "classical", "symphonic", "strings", "brass"],
+        ),
+        (
+            "Electronic",
+            &["electronic", "synth", "synthesizer", "analog"],
+        ),
         ("Acoustic", &["acoustic", "unplugged", "folk"]),
-        ("World", &["world", "ethnic", "tribal", "african", "asian", "middle-east", "arabic"]),
-        ("Experimental", &["experimental", "avant-garde", "noise", "glitch", "idm"]),
-        ("Chillout", &["chillout", "chill", "relaxed", "downtempo", "lounge"]),
+        (
+            "World",
+            &["world", "ethnic", "tribal", "african", "asian", "middle-east", "arabic"],
+        ),
+        (
+            "Experimental",
+            &["experimental", "avant-garde", "noise", "glitch", "idm"],
+        ),
+        (
+            "Chillout",
+            &["chillout", "chill", "relaxed", "downtempo", "lounge"],
+        ),
     ];
 
     /// Articulation keywords (map to VIP3 articulations table)
@@ -176,13 +373,22 @@ pub mod keywords {
         ("Chord", &["chord", "chords", "progression", "chordprog"]),
         ("Fill", &["fill", "fills", "drum-fill", "drumfill"]),
         ("Loop", &["loop", "loops", "looped", "looping"]),
-        ("Melody", &["melody", "melodic", "melodious", "tune", "topline"]),
-        ("One-Shot", &["one-shot", "oneshot", "hit", "single", "shot"]),
+        (
+            "Melody",
+            &["melody", "melodic", "melodious", "tune", "topline"],
+        ),
+        (
+            "One-Shot",
+            &["one-shot", "oneshot", "hit", "single", "shot"],
+        ),
         ("Phrase", &["phrase", "phrases", "lick", "riff"]),
         ("Riff", &["riff", "riffs", "hook", "hooks", "lick"]),
         ("Stab", &["stab", "stabs", "stabby"]),
         ("Sustain", &["sustain", "sustained", "long", "held"]),
-        ("Sequence", &["sequence", "seq", "seqs", "pattern", "sequenced"]),
+        (
+            "Sequence",
+            &["sequence", "seq", "seqs", "pattern", "sequenced"],
+        ),
         ("Pattern", &["pattern", "patterns", "motif"]),
         ("Groove", &["groove", "grooves", "groovy", "grooving"]),
         ("Break", &["break", "breakdown", "breakbeat", "breaks"]),
@@ -239,7 +445,8 @@ impl Vip3Extractor {
             .expect("Failed to build style matcher");
 
         // Build articulation matcher
-        let (articulation_patterns, articulation_map) = Self::build_pattern_map(keywords::ARTICULATIONS);
+        let (articulation_patterns, articulation_map) =
+            Self::build_pattern_map(keywords::ARTICULATIONS);
         let articulation_matcher = AhoCorasickBuilder::new()
             .match_kind(MatchKind::LeftmostFirst)
             .ascii_case_insensitive(true)
@@ -283,8 +490,7 @@ impl Vip3Extractor {
 
     /// Normalize text for matching (lowercase, replace separators)
     fn normalize_text(text: &str) -> String {
-        text.to_lowercase()
-            .replace(['_', '-', '.', '/', '\\'], " ")
+        text.to_lowercase().replace(['_', '-', '.', '/', '\\'], " ")
     }
 
     /// Normalize a word using the normalization map (for future fuzzy matching)
@@ -398,7 +604,10 @@ mod tests {
         let extractor = Vip3Extractor::new();
 
         let result = extractor.extract("HipHop_Beat_01.mid", "/samples/hip-hop/trap/");
-        assert!(result.styles.contains(&"Hip-Hop".to_string()) || result.styles.contains(&"Trap".to_string()));
+        assert!(
+            result.styles.contains(&"Hip-Hop".to_string())
+                || result.styles.contains(&"Trap".to_string())
+        );
     }
 
     #[test]
@@ -426,7 +635,13 @@ mod tests {
 
     #[test]
     fn test_normalize_text() {
-        assert_eq!(Vip3Extractor::normalize_text("Dark_Synth-Loop.mid"), "dark synth loop mid");
-        assert_eq!(Vip3Extractor::normalize_text("/path/to/File"), " path to file");
+        assert_eq!(
+            Vip3Extractor::normalize_text("Dark_Synth-Loop.mid"),
+            "dark synth loop mid"
+        );
+        assert_eq!(
+            Vip3Extractor::normalize_text("/path/to/File"),
+            " path to file"
+        );
     }
 }

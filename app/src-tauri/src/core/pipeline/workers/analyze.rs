@@ -140,12 +140,7 @@ impl AnalyzeWorker {
             .tracks
             .iter()
             .flat_map(|track| track.events.iter())
-            .filter(|e| {
-                matches!(
-                    e.event,
-                    crate::core::midi::types::Event::NoteOn { .. }
-                )
-            })
+            .filter(|e| matches!(e.event, crate::core::midi::types::Event::NoteOn { .. }))
             .count() as i32;
 
         // Calculate duration (use last event from longest track)

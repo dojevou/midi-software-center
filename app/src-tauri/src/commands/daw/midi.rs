@@ -4,8 +4,8 @@
 //! Delegate all business logic to Trusty Modules and MIDI manager.
 #![allow(dead_code)] // Commands are called externally via Tauri IPC
 
-use crate::midi_io::MidiManager;
 use crate::daw_models::MidiDevice;
+use crate::midi_io::MidiManager;
 use std::sync::Arc;
 use tauri::State;
 
