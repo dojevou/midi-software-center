@@ -1311,7 +1311,7 @@ mod tests {
             _ => {},
         }
 
-        score.max(0).min(100)
+        score.clamp(0, 100)
     }
 
     // Helper to identify bottlenecks without needing a pool

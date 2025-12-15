@@ -1,6 +1,7 @@
 pub mod analysis;
 pub mod automation;
 pub mod database;
+#[allow(clippy::module_inception)]
 pub mod daw;
 pub mod effect;
 pub mod export;
