@@ -114,6 +114,14 @@ pub async fn search_files(
         conditions.push(format!("f.duration_seconds <= {}", max_duration));
     }
 
+    // Track count range
+    if let Some(min_tracks) = filters.min_tracks {
+        conditions.push(format!("f.num_tracks >= {}", min_tracks));
+    }
+    if let Some(max_tracks) = filters.max_tracks {
+        conditions.push(format!("f.num_tracks <= {}", max_tracks));
+    }
+
     // Text search in filename
     if let Some(ref search_text) = filters.search_text {
         if !search_text.is_empty() {

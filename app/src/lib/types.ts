@@ -37,6 +37,8 @@ export interface SearchFilters {
   max_notes?: number;
   min_duration?: number;
   max_duration?: number;
+  min_tracks?: number;
+  max_tracks?: number;
   instruments?: string[];
   sort_by?: string;
   sort_desc?: boolean;

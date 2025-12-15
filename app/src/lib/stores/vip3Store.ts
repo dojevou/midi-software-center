@@ -83,6 +83,7 @@ export interface VIP3Filters {
   bpmRangeId: number | null;
   keyIds: number[];
   searchQuery: string;
+  trackLayerFilter: 'all' | 'single' | 'multi'; // Filter by track count
   sortBy: 'filename' | 'bpm' | 'key_signature' | 'duration' | 'created_at';
   sortOrder: 'asc' | 'desc';
 }
@@ -123,6 +124,7 @@ const initialFilters: VIP3Filters = {
   bpmRangeId: null,
   keyIds: [],
   searchQuery: '',
+  trackLayerFilter: 'all',
   sortBy: 'filename',
   sortOrder: 'asc',
 };

@@ -30,6 +30,10 @@ pub struct SearchFilters {
     pub min_duration: Option<f64>,
     pub max_duration: Option<f64>,
 
+    // Track count range
+    pub min_tracks: Option<i32>,
+    pub max_tracks: Option<i32>,
+
     // Instruments (array match)
     pub instruments: Option<Vec<String>>,
 

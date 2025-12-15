@@ -33,6 +33,7 @@
     bpmRangeId: null,
     keyIds: [],
     searchQuery: searchQuery,
+    trackLayerFilter: trackLayerFilter,
     sortBy: 'filename' as const,
     sortOrder: 'asc' as const,
   };
@@ -46,6 +47,7 @@
   let bpmRanges: string[] = [];
   let keys: string[] = [];
   let channels: string[] = [];
+  let trackLayerFilter: 'all' | 'single' | 'multi' = 'all';
   let searchQuery: string = '';
 
   // Options populated from backend
@@ -236,23 +238,25 @@
       bpmRanges,
       keys,
       channels,
+      trackLayerFilter,
     };
 
     await databaseActions.search(filters);
   }
 
-  function handleFilterChange(event: CustomEvent<{ type: string; values: string[] }>) {
+  function handleFilterChange(event: CustomEvent<{ type: string; values: string[] | string }>) {
     const { type, values } = event.detail;
 
     switch (type) {
-      case 'folder': folders = values; break;
-      case 'instrument': instruments = values; break;
-      case 'timbre': timbres = values; break;
-      case 'style': styles = values; break;
-      case 'articulation': articulations = values; break;
-      case 'bpm': bpmRanges = values; break;
-      case 'key': keys = values; break;
-      case 'channel': channels = values; break;
+      case 'folder': folders = values as string[]; break;
+      case 'instrument': instruments = values as string[]; break;
+      case 'timbre': timbres = values as string[]; break;
+      case 'style': styles = values as string[]; break;
+      case 'articulation': articulations = values as string[]; break;
+      case 'bpm': bpmRanges = values as string[]; break;
+      case 'key': keys = values as string[]; break;
+      case 'channel': channels = values as string[]; break;
+      case 'trackLayer': trackLayerFilter = values as 'all' | 'single' | 'multi'; break;
     }
 
     void executeSearch();
@@ -279,6 +283,7 @@
     bpmRanges = [];
     keys = [];
     channels = [];
+    trackLayerFilter = 'all';
     searchQuery = '';
     void executeSearch();
   }
@@ -503,6 +508,7 @@
         {bpmRanges}
         {keys}
         {channels}
+        {trackLayerFilter}
         {folderOptions}
         {instrumentOptions}
         {timbreOptions}

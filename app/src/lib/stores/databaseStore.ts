@@ -151,7 +151,7 @@ export const totalPages = derived(databaseStore, ($store) => $store.totalPages);
 
 // Actions (separate export)
 export const databaseActions = {
-  search: async (params?: SearchFilters) => {
+  search: async (params?: SearchFilters & { trackLayerFilter?: 'all' | 'single' | 'multi' }) => {
     console.log('🔧 databaseActions.search called with params:', params);
 
     try {
@@ -159,6 +159,19 @@ export const databaseActions = {
         console.log('🔧 databaseActions.search: updating state to loading');
         return { ...state, isLoading: true };
       });
+
+      // Map trackLayerFilter to track count ranges
+      let min_tracks: number | undefined;
+      let max_tracks: number | undefined;
+
+      if (params?.trackLayerFilter === 'single') {
+        min_tracks = 1;
+        max_tracks = 1;
+      } else if (params?.trackLayerFilter === 'multi') {
+        min_tracks = 2;
+        // No max_tracks limit for multi
+      }
+      // 'all' means no filtering on track count
 
       // Build search filters with pagination
       const searchFilters: SearchFilters = {
@@ -172,6 +185,8 @@ export const databaseActions = {
         max_notes: params?.max_notes,
         min_duration: params?.min_duration,
         max_duration: params?.max_duration,
+        min_tracks,
+        max_tracks,
         instruments: params?.instruments,
         sort_by: params?.sort_by || 'created_at',
         sort_desc: params?.sort_desc,

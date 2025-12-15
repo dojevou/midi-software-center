@@ -17,6 +17,7 @@
   export let bpmRanges: string[] = [];
   export let keys: string[] = [];
   export let channels: string[] = [];
+  export let trackLayerFilter: 'all' | 'single' | 'multi' = 'all';
 
   // Options for each column (loaded from backend)
   export let folderOptions: { value: string; label: string; count?: number }[] = [];
@@ -55,8 +56,8 @@
 
   const dispatch = createEventDispatcher<{
     filterChange: {
-      type: 'folder' | 'instrument' | 'timbre' | 'style' | 'articulation' | 'bpm' | 'key' | 'channel';
-      values: string[];
+      type: 'folder' | 'instrument' | 'timbre' | 'style' | 'articulation' | 'bpm' | 'key' | 'channel' | 'trackLayer';
+      values: string[] | string;
     };
     search: { query: string };
     selectFile: { file: FileDetails; ctrlKey: boolean; shiftKey: boolean };
@@ -158,6 +159,11 @@
     dispatch('search', { query: '' });
   }
 
+  function handleTrackLayerChange(value: 'all' | 'single' | 'multi') {
+    log.info('Track layer filter changed', { value });
+    dispatch('filterChange', { type: 'trackLayer', values: value });
+  }
+
   function getFilterLabel(type: string): string {
     switch (type) {
       case 'folder': return '📁';
@@ -185,6 +191,40 @@
       on:clear={handleSearchClear}
       on:input={(e) => searchQuery = e.detail.value}
     />
+
+    <!-- Track Layer Filter -->
+    <div class="track-layer-filter">
+      <span class="filter-label">Tracks:</span>
+      <div class="button-group">
+        <button
+          type="button"
+          class="filter-button"
+          class:active={trackLayerFilter === 'all'}
+          on:click={() => handleTrackLayerChange('all')}
+          title="Show all MIDI files"
+        >
+          All
+        </button>
+        <button
+          type="button"
+          class="filter-button"
+          class:active={trackLayerFilter === 'single'}
+          on:click={() => handleTrackLayerChange('single')}
+          title="Show single-track MIDI files only"
+        >
+          Single
+        </button>
+        <button
+          type="button"
+          class="filter-button"
+          class:active={trackLayerFilter === 'multi'}
+          on:click={() => handleTrackLayerChange('multi')}
+          title="Show multi-track MIDI files only"
+        >
+          Multi
+        </button>
+      </div>
+    </div>
   </div>
 
   <!-- Active Filters Bar -->
@@ -483,5 +523,51 @@
 
   .filter-columns::-webkit-scrollbar-thumb:hover {
     background: var(--gray-500, #71717a);
+  }
+
+  /* Track Layer Filter */
+  .track-layer-filter {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-top: 8px;
+  }
+
+  .filter-label {
+    font-size: 11px;
+    color: var(--gray-500, #71717a);
+    font-weight: 500;
+  }
+
+  .button-group {
+    display: flex;
+    gap: 4px;
+  }
+
+  .filter-button {
+    padding: 4px 12px;
+    background: var(--gray-700, #3f3f46);
+    border: 1px solid var(--gray-600, #52525b);
+    border-radius: 4px;
+    color: var(--gray-300, #d4d4d8);
+    font-size: 11px;
+    cursor: pointer;
+    transition: all 0.15s ease;
+  }
+
+  .filter-button:hover {
+    background: var(--gray-600, #52525b);
+    border-color: var(--gray-500, #71717a);
+    color: var(--gray-100, #f4f4f5);
+  }
+
+  .filter-button.active {
+    background: var(--primary-600, #2563eb);
+    border-color: var(--primary-500, #3b82f6);
+    color: white;
+  }
+
+  .filter-button.active:hover {
+    background: var(--primary-500, #3b82f6);
   }
 </style>
