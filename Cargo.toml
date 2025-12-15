@@ -2,9 +2,10 @@
 # Root workspace configuration for all Rust projects
 #
 # Architecture:
+#   - app/src-tauri        : Unified frontend app (contains core/midi, core/analysis, db/*, health, logging)
 #   - pipeline/src-tauri   : MIDI import, processing, and analysis
 #   - daw/src-tauri        : Real-time MIDI playback and sequencing
-#   - shared/rust          : Common MIDI parsing and analysis code
+#   - shared/rust          : Legacy shared code (being migrated to app/src-tauri)
 #   - scripts/import-tool  : CLI utilities
 #
 # Build Performance:
@@ -21,9 +22,9 @@ resolver = "2"
 members = [
     "pipeline/src-tauri",        # Import & analysis (uses shared library)
     "daw/src-tauri",             # Playback & sequencing (independent MIDI)
-    "app/src-tauri",             # Unified frontend app
+    "app/src-tauri",             # Unified frontend app (has own core/db/health/logging modules)
     # "studio/src-tauri",        # Removed - incomplete, may add later
-    "shared/rust",               # Shared MIDI parsing & analysis
+    "shared/rust",               # Legacy - still used by pipeline/daw (TODO: migrate away)
     "scripts/import-tool",       # CLI utilities
     "scripts/test-midi-files",   # MIDI testing tool
     "verification",              # Verification suite

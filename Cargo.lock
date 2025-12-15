@@ -3953,12 +3953,19 @@ dependencies = [
 name = "midi-software-center"
 version = "1.0.0"
 dependencies = [
+ "anyhow",
  "chrono",
  "dirs 5.0.1",
  "dotenv",
+ "hex",
+ "lazy_static",
  "midi-pipeline",
  "midi-software-center-daw",
+ "midly",
  "opener",
+ "reqwest 0.11.27",
+ "rust_decimal",
+ "rust_decimal_macros",
  "sentry",
  "sentry-tracing",
  "serde",
@@ -3966,10 +3973,15 @@ dependencies = [
  "sqlx",
  "tauri",
  "tauri-build",
+ "tempfile",
+ "thiserror 1.0.69",
  "tokio",
+ "tokio-test",
  "tracing",
  "tracing-appender",
+ "tracing-error",
  "tracing-subscriber",
+ "uuid",
 ]
 
 [[package]]

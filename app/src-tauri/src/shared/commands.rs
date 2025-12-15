@@ -5,8 +5,8 @@
 //! MUST be defined here to prevent name mismatches.
 //!
 //! # Usage
-//! ```rust
-//! use crate::shared::commands::TauriCommands;
+//! ```ignore
+//! use midi_app::shared::TauriCommands;
 //!
 //! // Get command name
 //! let cmd = TauriCommands::MIXER_SET_MASTER_VOLUME;
