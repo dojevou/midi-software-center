@@ -11,10 +11,10 @@ use std::sync::atomic::{AtomicU64, AtomicUsize, Ordering};
 use std::sync::Arc;
 use std::time::Instant;
 
-use midi_app::core::midi::parse_midi_file;
 use midi_app::core::analysis::bpm_detector::detect_bpm;
 use midi_app::core::analysis::key_detector::detect_key;
 use midi_app::core::hash::calculate_file_hash;
+use midi_app::core::midi::parse_midi_file;
 use midi_app::db::models::pipeline::{NewFile, NewMusicalMetadata};
 use midi_app::db::repositories::pipeline::file_repository::FileRepository;
 use midi_app::db::repositories::pipeline::metadata_repository::MetadataRepository;

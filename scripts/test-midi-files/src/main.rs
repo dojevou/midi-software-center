@@ -88,7 +88,11 @@ fn analyze_file(file_path: &Path) -> Result<TestResult> {
 
     let key_result = detect_key(&midi_file);
     let key = if key_result.confidence > 0.5 {
-        println!("  🎹 Key: {} (confidence: {:.1}%)", key_result.key, key_result.confidence * 100.0);
+        println!(
+            "  🎹 Key: {} (confidence: {:.1}%)",
+            key_result.key,
+            key_result.confidence * 100.0
+        );
         Some(key_result.key.clone())
     } else {
         println!("  ⚠️  Key: Unable to detect (low confidence or insufficient notes)");

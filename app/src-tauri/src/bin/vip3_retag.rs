@@ -64,10 +64,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!();
 
     // Connect to database
-    let pool = PgPoolOptions::new()
-        .max_connections(10)
-        .connect(&args.database_url)
-        .await?;
+    let pool = PgPoolOptions::new().max_connections(10).connect(&args.database_url).await?;
 
     // Load category maps
     println!("📂 Loading category maps...");
@@ -84,9 +81,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let extractor = Arc::new(Vip3Extractor::new());
 
     // Get total file count
-    let total_files: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM files")
-        .fetch_one(&pool)
-        .await?;
+    let total_files: (i64,) = sqlx::query_as("SELECT COUNT(*) FROM files").fetch_one(&pool).await?;
     let total_files = total_files.0;
     println!("📊 Total files to process: {}", total_files);
     println!();
@@ -108,10 +103,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         let batch_start = Instant::now();
 
         // Convert to format expected by extractor
-        let file_tuples: Vec<(i64, String, String)> = files
-            .iter()
-            .map(|f| (f.id, f.filename.clone(), f.filepath.clone()))
-            .collect();
+        let file_tuples: Vec<(i64, String, String)> =
+            files.iter().map(|f| (f.id, f.filename.clone(), f.filepath.clone())).collect();
 
         // Extract categories in parallel
         let results = extractor.extract_batch(&file_tuples);
@@ -193,7 +186,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     println!("   Timbres added:   {}", timbres_added);
     println!("   Styles added:    {}", styles_added);
     println!("   Articulations:   {}", articulations_added);
-    println!("   Total tags:      {}", timbres_added + styles_added + articulations_added);
+    println!(
+        "   Total tags:      {}",
+        timbres_added + styles_added + articulations_added
+    );
     println!("   Time elapsed:    {:.2}s", elapsed_seconds);
     println!("   Speed:           {:.0} files/sec", files_per_second);
 
@@ -205,39 +201,23 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     Ok(())
 }
 
-async fn load_category_maps(
-    pool: &sqlx::PgPool,
-) -> Result<CategoryMaps, sqlx::Error> {
-    let timbre_rows: Vec<(i16, String)> = sqlx::query_as("SELECT id, name FROM timbres")
-        .fetch_all(pool)
-        .await?;
-    let timbres: HashMap<String, i16> = timbre_rows
-        .into_iter()
-        .map(|(id, name)| (name, id))
-        .collect();
+async fn load_category_maps(pool: &sqlx::PgPool) -> Result<CategoryMaps, sqlx::Error> {
+    let timbre_rows: Vec<(i16, String)> =
+        sqlx::query_as("SELECT id, name FROM timbres").fetch_all(pool).await?;
+    let timbres: HashMap<String, i16> =
+        timbre_rows.into_iter().map(|(id, name)| (name, id)).collect();
 
-    let style_rows: Vec<(i16, String)> = sqlx::query_as("SELECT id, name FROM styles")
-        .fetch_all(pool)
-        .await?;
-    let styles: HashMap<String, i16> = style_rows
-        .into_iter()
-        .map(|(id, name)| (name, id))
-        .collect();
+    let style_rows: Vec<(i16, String)> =
+        sqlx::query_as("SELECT id, name FROM styles").fetch_all(pool).await?;
+    let styles: HashMap<String, i16> =
+        style_rows.into_iter().map(|(id, name)| (name, id)).collect();
 
     let articulation_rows: Vec<(i16, String)> =
-        sqlx::query_as("SELECT id, name FROM articulations")
-            .fetch_all(pool)
-            .await?;
-    let articulations: HashMap<String, i16> = articulation_rows
-        .into_iter()
-        .map(|(id, name)| (name, id))
-        .collect();
+        sqlx::query_as("SELECT id, name FROM articulations").fetch_all(pool).await?;
+    let articulations: HashMap<String, i16> =
+        articulation_rows.into_iter().map(|(id, name)| (name, id)).collect();
 
-    Ok(CategoryMaps {
-        timbres,
-        styles,
-        articulations,
-    })
+    Ok(CategoryMaps { timbres, styles, articulations })
 }
 
 async fn fetch_file_batch(
@@ -260,11 +240,7 @@ async fn fetch_file_batch(
 
     Ok(rows
         .into_iter()
-        .map(|(id, filename, filepath)| FileRecord {
-            id,
-            filename,
-            filepath,
-        })
+        .map(|(id, filename, filepath)| FileRecord { id, filename, filepath })
         .collect())
 }
 

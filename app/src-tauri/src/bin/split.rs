@@ -197,9 +197,7 @@ fn sanitize_filename(name: &str) -> String {
 }
 
 /// Serialize a MIDI file back to bytes
-fn serialize_midi_file(
-    midi_file: &midi_app::core::midi::types::MidiFile,
-) -> Result<Vec<u8>> {
+fn serialize_midi_file(midi_file: &midi_app::core::midi::types::MidiFile) -> Result<Vec<u8>> {
     let mut buffer = Vec::new();
 
     // Write MThd header
