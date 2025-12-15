@@ -1,53 +1,49 @@
+/// Analysis modules for MIDI file processing
+// TODO: Fix arena_midi lifetime issues before enabling
+// pub mod arena_midi;
 pub mod auto_tagger;
-/// Musical analysis modules
-///
-/// This module provides:
-/// - BPM detection
-/// - Key detection
-/// - Auto-tagging
-/// - Key profile data (genre-specific profiles for key detection)
 pub mod bpm_detector;
+pub mod chord_analyzer;
+pub mod drum_analyzer;
+pub mod filename_metadata;
 pub mod key_detector;
 pub mod key_profiles;
+pub mod ml_features;
+pub mod optimized_analyzer;
+pub mod simd_bpm;
+pub mod vip3_retagger;
 
-// Re-export main functions
-pub use auto_tagger::generate_tags;
-pub use bpm_detector::detect_bpm;
-pub use key_detector::detect_key;
-
-// Re-export key profile types and constants
-pub use key_profiles::{
-    calculate_profile_correlation,
-    calculate_profile_strength,
-    combine_profiles,
-    create_key_profile,
-    detect_profile_type,
-    get_all_profiles,
-    get_default_profile,
-    get_profiles_for_genre,
-    get_scale_degree_weights,
-    normalize_profile,
-    // Utility functions
-    rotate_profile,
-    // Profile type and structs
-    KeyProfile,
-    ProfileType,
-    AMBIENT_PROFILE,
-    // Genre-specific profiles
-    BLUES_PROFILE,
-    CLASSICAL_PROFILE,
-    DRUM_AND_BASS_PROFILE,
-    EDM_PROFILE,
-    HIPHOP_PROFILE,
-    JAZZ_MAJOR_PROFILE,
-    JAZZ_MINOR_PROFILE,
-    // Standard profiles
-    KRUMHANSL_MAJOR_PROFILE,
-    KRUMHANSL_MINOR_PROFILE,
-    POP_PROFILE,
-    SIMPLE_MAJOR_PROFILE,
-    SIMPLE_MINOR_PROFILE,
-    TEMPERLEY_MAJOR_PROFILE,
-    TEMPERLEY_MINOR_PROFILE,
-    TRANCE_PROFILE,
+// Re-export main types
+// pub use arena_midi::{ArenaEvent, ArenaMidiFile, ArenaParser, ArenaTimedEvent, ArenaTrack};
+pub use auto_tagger::{AutoTagger, Tag};
+pub use bpm_detector::{
+    detect_bpm, detect_bpm_hybrid, detect_bpm_with_onsets, BpmDetectionMethod, BpmDetectionResult,
+    BpmMetadata,
 };
+pub use chord_analyzer::{analyze_chords, ChordAnalysis};
+pub use drum_analyzer::{
+    analyze_drum_midi, detect_cymbal_types, detect_techniques, extract_drum_notes,
+    extract_time_signature_from_meta, extract_time_signature_from_path, generate_drum_tags,
+    has_drum_channel, note_to_drum_type, CymbalType, DrumAnalysis, DrumNote, DrumTechnique,
+    PatternType, RhythmicFeel, SongStructure, TimeSignature,
+};
+pub use filename_metadata::{
+    classify_leading_number, extract_genres_from_filename, extract_key_from_filename,
+    extract_leading_number, extract_structure_tags, normalize_key_signature, validate_bpm,
+    validate_bpm_for_genre, validate_key_signature, FilenameMetadata, KeyValidationResult,
+    NumberType,
+};
+pub use key_detector::{detect_key, KeyDetectionResult, ScaleType};
+pub use ml_features::{
+    HeuristicClassifier, MidiFeatures, MlClassification, MlTagger, GENRE_LABELS, MODEL_INPUT_SIZE,
+    MOOD_LABELS,
+};
+pub use simd_bpm::{
+    batch_detect_onsets_simd, detect_bpm_from_onsets, detect_onsets_simd_vectorized,
+    extract_onsets_simd, Onset, OnsetBpmResult,
+};
+pub use vip3_retagger::{RetagStats, Vip3Categories, Vip3Extractor};
+
+// Test modules
+#[cfg(test)]
+mod tests;

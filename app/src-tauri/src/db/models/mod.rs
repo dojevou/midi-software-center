@@ -14,6 +14,7 @@
 //! - `musical_key` - Musical keys for filtering
 //! - `collection` - User collections/playlists
 //! - `saved_search` - Saved filter configurations
+//! - `pipeline` - Pipeline-specific models (for CLI tools)
 
 pub mod analysis;
 pub mod articulation;
@@ -23,6 +24,7 @@ pub mod error;
 pub mod midi;
 pub mod midi_file;
 pub mod musical_key;
+pub mod pipeline;
 pub mod saved_search;
 pub mod search;
 pub mod sequencer;
@@ -128,4 +130,14 @@ pub use collection::{
 pub use saved_search::{
     BrowserFilters, CreateRecentSearch, CreateSavedSearch, RecentSearch, SavedSearch,
     UpdateSavedSearch,
+};
+
+// ============================================================================
+// Pipeline Models (for CLI tools and batch processing)
+// ============================================================================
+
+pub use pipeline::{
+    bigdecimal_to_f64, f64_to_bigdecimal, File as PipelineFile, FileSearchResult,
+    FileWithMetadata, MusicalMetadata, NewFile, NewMusicalMetadata,
+    SearchFilters as PipelineSearchFilters, SearchResults as PipelineSearchResults,
 };

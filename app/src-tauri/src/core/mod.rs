@@ -1,3 +1,9 @@
+/// Core modules for MIDI processing and analysis
 pub mod analysis;
-/// Core MIDI processing modules
+pub mod hash;
 pub mod midi;
+pub mod naming;
+pub mod normalization;
+pub mod performance;
+pub mod pipeline;
+pub mod splitting;

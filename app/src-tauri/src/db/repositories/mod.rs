@@ -10,11 +10,13 @@
 //! - `ArticulationRepository` - Playing styles/pattern types (VIP3 filtering)
 //! - `CollectionRepository` - User collections/playlists
 //! - `SavedSearchRepository` - Saved filter configurations
+//! - `pipeline` - Pipeline-specific repositories (for CLI tools)
 
 pub mod articulation_repository;
 pub mod collection_repository;
 pub mod file_repository;
 pub mod metadata_repository;
+pub mod pipeline;
 pub mod saved_search_repository;
 pub mod search_repository;
 pub mod style_repository;

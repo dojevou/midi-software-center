@@ -2,6 +2,7 @@
 name = "midi-software-center"
 version = "1.0.0"
 edition = "2021"
+description = "MIDI Software Center - Unified application with Pipeline and DAW"
 
 [lib]
 name = "midi_app"
@@ -12,26 +13,31 @@ name = "midi-software-center"
 path = "src/main.rs"
 
 [dependencies]
+# Tauri framework
 tauri = { version = "2.0", features = [] }
+tauri-plugin-shell = { workspace = true }
+tauri-plugin-dialog = { workspace = true }
+tauri-plugin-fs = { workspace = true }
 serde = { version = "1.0", features = ["derive"] }
 serde_json = "1.0"
-sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "postgres", "migrate", "chrono", "bigdecimal", "uuid", "rust_decimal"] }
-tokio = { version = "1.35", features = ["full"] }
-dotenv = "0.15"
-tracing = "0.1"
-tracing-subscriber = { version = "0.3", features = ["env-filter", "json", "fmt"] }
-tracing-appender = "0.2"
-tracing-error = "0.2"
-sentry = { workspace = true }
-sentry-tracing = "0.32"
-chrono = { version = "0.4", features = ["serde"] }
-dirs = "5.0"
-opener = { version = "0.7", features = ["reveal"] }
-midi-pipeline = { path = "../../pipeline/src-tauri" }
+
+# DAW library (still separate)
 midi-software-center-daw = { path = "../../daw/src-tauri" }
+
+# Shared library (common code)
+midi-library-shared = { path = "../../shared/rust", features = ["database"] }
+
+# Database
+sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "postgres", "migrate", "chrono", "bigdecimal", "uuid", "rust_decimal"] }
+
+# Async runtime
+tokio = { version = "1.35", features = ["full"] }
+tokio-util = "0.7"
 
 # MIDI parsing
 midly = "0.5"
+rimd = "0.0.1"
+rust-music-theory = "0.3"
 
 # Error handling
 thiserror = "1.0"
@@ -40,17 +46,136 @@ anyhow = "1.0"
 # UUID for database models
 uuid = { version = "1.6", features = ["v4", "serde"] }
 
-# Decimal for precise numeric types (BPM, velocity, etc.)
+# Decimal for precise numeric types
 rust_decimal = { version = "1.33", features = ["serde"] }
 
-# Hex encoding for hash display
+# Date/time
+chrono = { version = "0.4", features = ["serde"] }
+
+# Configuration
+dotenv = "0.15"
+config = { workspace = true }
+directories = "5.0"
+dirs = "5.0"
+
+# Logging and tracing
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter", "json", "fmt"] }
+tracing-appender = "0.2"
+tracing-error = "0.2"
+sentry = { workspace = true }
+sentry-tracing = "0.32"
+
+# Hex encoding
 hex = "0.4"
 
-# HTTP client for health checks
+# HTTP client
 reqwest = { version = "0.11", default-features = false, features = ["json", "rustls-tls"] }
 
 # Statics
 lazy_static = "1.4"
+once_cell = "1.19"
+
+# File opening
+opener = { version = "0.7", features = ["reveal"] }
+
+# Parallel processing
+rayon = "1.8"
+crossbeam-channel = "0.5"
+crossbeam-queue = "0.3"
+crossbeam = "0.8.4"
+num_cpus = "1.16"
+flume = "0.11"
+
+# File handling
+walkdir = "2"
+jwalk = "0.8"
+glob = "0.3"
+
+# Archive handling
+zip = { version = "0.6", default-features = false, features = ["deflate", "bzip2"] }
+unrar = "0.5"
+sevenz-rust = "0.5"
+flate2 = { version = "1.0", features = ["zlib-ng"] }
+async-compression = { version = "0.4", features = ["tokio", "gzip", "bzip2", "xz", "zstd"] }
+bzip2 = "0.4"
+zstd = "0.13.3"
+lz4 = "1.28.1"
+snap = "1.1.1"
+zune-inflate = "0.2.54"
+libdeflater = "1.25.0"
+lzma = "0.2.2"
+miniz_oxide = "0.8.9"
+
+# Hashing and deduplication
+blake3 = "1.5"
+sha2 = "0.10"
+xxhash-rust = { version = "0.8", features = ["xxh3"] }
+
+# String utilities
+regex = "1.10"
+unicode-normalization = "0.1"
+unicode-segmentation = "1.10"
+strsim = "0.11"
+num-traits = "0.2"
+
+# Performance monitoring
+sysinfo = "0.30"
+
+# CLI tools
+clap = { version = "4.4", features = ["derive", "env"] }
+indicatif = "0.17"
+futures = "0.3"
+
+# Performance optimizations
+memmap2 = "0.9"
+mimalloc = "0.1.48"
+parking_lot = "0.12"
+typed-arena = "2.0"
+ahash = "0.8.12"
+dashmap = "6.1.0"
+bumpalo = "3.19.0"
+memchr = "2.7.6"
+simdutf8 = "0.1.5"
+aho-corasick = "1.1.4"
+smartstring = "1.0.1"
+compact_str = "0.9.0"
+itoa = "1.0.15"
+ryu = "1.0.20"
+dtoa = "1.0.10"
+
+# SIMD and performance
+highway = "1.3.0"
+wyhash = "0.6.0"
+ultraviolet = "0.10.0"
+rustfft = "6.4.1"
+realfft = "3.5.0"
+wide = "0.8.3"
+nalgebra = "0.33.2"
+ndarray = "0.17.1"
+
+# Parsing
+nom = "8.0.0"
+winnow = "0.7.13"
+
+# Lock-free data structures
+lockfree = "0.5.1"
+atomic-counter = "1.0.1"
+
+# Templating
+askama = "0.14.0"
+
+# Async I/O (optional)
+monoio = "0.2.4"
+
+# SIMD abstraction
+simdeez = "2.0.0"
+
+# Alternative allocator
+snmalloc-rs = "0.3.8"
+
+# Postgres direct (for some CLI tools)
+tokio-postgres = "0.7.15"
 
 [features]
 default = ["database"]
@@ -60,6 +185,143 @@ database = []
 tokio-test = "0.4"
 tempfile = "3.8"
 rust_decimal_macros = "1.33"
+criterion = "0.5"
+proptest = "1.4"
+rand = "0.8"
+pprof = "0.15.0"
+tracy-client = "0.18.3"
+dhat = "0.3.3"
 
 [build-dependencies]
 tauri-build = { version = "2.0", features = [] }
+
+# =============================================================================
+# CLI Binary Targets (migrated from pipeline)
+# =============================================================================
+
+[[bin]]
+name = "import_unified"
+path = "src/bin/import_unified.rs"
+
+[[bin]]
+name = "orchestrator"
+path = "src/bin/orchestrator.rs"
+
+[[bin]]
+name = "parallel_extract"
+path = "src/bin/parallel_extract.rs"
+
+[[bin]]
+name = "normalize_filenames"
+path = "src/bin/normalize_filenames.rs"
+
+[[bin]]
+name = "pipeline-orchestrator"
+path = "src/bin/pipeline-orchestrator.rs"
+
+[[bin]]
+name = "midi_to_mpcpattern"
+path = "src/bin/midi_to_mpcpattern.rs"
+
+[[bin]]
+name = "midi_to_mpcpattern_parallel"
+path = "src/bin/midi_to_mpcpattern_parallel.rs"
+
+[[bin]]
+name = "analyze"
+path = "src/bin/analyze.rs"
+
+[[bin]]
+name = "analyze_full_collection"
+path = "src/bin/analyze_full_collection.rs"
+
+[[bin]]
+name = "batch_import"
+path = "src/bin/batch_import.rs"
+
+[[bin]]
+name = "batch_split"
+path = "src/bin/batch_split.rs"
+
+[[bin]]
+name = "batch_split_optimized"
+path = "src/bin/batch_split_optimized.rs"
+
+[[bin]]
+name = "extract_instruments"
+path = "src/bin/extract_instruments.rs"
+
+[[bin]]
+name = "fast_tagger"
+path = "src/bin/fast_tagger.rs"
+
+[[bin]]
+name = "fast_tagger_full"
+path = "src/bin/fast_tagger_full.rs"
+
+[[bin]]
+name = "find_duplicates"
+path = "src/bin/find_duplicates.rs"
+
+[[bin]]
+name = "import"
+path = "src/bin/import.rs"
+
+[[bin]]
+name = "import_split_files"
+path = "src/bin/import_split_files.rs"
+
+[[bin]]
+name = "infer_instruments"
+path = "src/bin/infer_instruments.rs"
+
+[[bin]]
+name = "midi_doctor"
+path = "src/bin/midi_doctor.rs"
+
+[[bin]]
+name = "mpc_backup"
+path = "src/bin/mpc_backup.rs"
+
+[[bin]]
+name = "organize_files"
+path = "src/bin/organize_files.rs"
+
+[[bin]]
+name = "pipeline-cli"
+path = "src/bin/pipeline-cli.rs"
+
+[[bin]]
+name = "split"
+path = "src/bin/split.rs"
+
+[[bin]]
+name = "tag_files_sequential"
+path = "src/bin/tag_files_sequential.rs"
+
+[[bin]]
+name = "trim_split_tracks"
+path = "src/bin/trim_split_tracks.rs"
+
+[[bin]]
+name = "vip3_retag"
+path = "src/bin/vip3_retag.rs"
+
+# Aggressive optimization profile
+[profile.release]
+opt-level = 3
+codegen-units = 1
+lto = "fat"
+panic = "abort"
+strip = true
+
+# MAXIMUM SPEED profile for batch converters
+[profile.ultra-fast]
+inherits = "release"
+opt-level = 3
+codegen-units = 1
+lto = "fat"
+panic = "abort"
+strip = true
+overflow-checks = false
+debug-assertions = false
