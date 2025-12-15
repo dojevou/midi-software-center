@@ -236,6 +236,7 @@ impl DependencyVerifier {
     }
 
     /// Get dependency version from a crate
+    #[allow(dead_code)]
     fn get_dependency_version(crate_name: &str, dep_name: &str) -> Option<String> {
         let paths = vec![
             format!("./app/src-tauri/Cargo.toml"),
