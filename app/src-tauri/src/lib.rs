@@ -10,7 +10,8 @@
 ///
 /// ## Structure
 ///
-/// - `core::midi` - MIDI parsing and types
+/// ### Core Modules
+/// - `core::midi` - MIDI parsing and types (analysis_parser for pipeline, playback_parser for DAW)
 /// - `core::analysis` - Musical analysis (BPM, key detection, etc.)
 /// - `core::hash` - Hashing utilities (BLAKE3)
 /// - `core::naming` - File naming and sanitization
@@ -18,11 +19,32 @@
 /// - `core::performance` - Performance utilities
 /// - `core::pipeline` - Batch processing pipeline
 /// - `core::splitting` - Track splitting
+/// - `core::sequencer` - DAW sequencer engine (real-time)
+/// - `core::compatibility` - DAW compatibility helpers
+///
+/// ### DAW Modules (real-time MIDI)
+/// - `hardware` - MIDI hardware integration
+/// - `midi` - Real-time MIDI I/O
+/// - `midi_clock` - MIDI clock sync
+/// - `editors` - MIDI editors (piano roll, etc.)
+/// - `sequencer` - High-level sequencer module
+/// - `scripting` - Lua scripting for automation
+/// - `settings` - DAW settings
+/// - `undo_redo` - Undo/redo system
+/// - `browsers` - Content browsers
+/// - `notation` - Music notation
+/// - `profiling` - Performance profiling
+/// - `automation` - Automation lanes
+/// - `command_palette` - Command palette UI
+///
+/// ### Database & I/O
 /// - `db::models` - Database model types
 /// - `db::repositories` - Database access layer
 /// - `io` - I/O operations (decompressor, etc.)
 /// - `database` - Database connection management
-/// - `commands` - Tauri commands (pipeline submodule)
+///
+/// ### Commands & Windows
+/// - `commands` - Tauri commands (pipeline + daw submodules)
 /// - `windows` - Window management
 /// - `health` - Service health monitoring
 /// - `logging` - Structured logging
@@ -49,6 +71,24 @@ pub mod windows;
 // App-specific modules
 pub mod shared;
 
+// DAW modules (migrated from daw/src-tauri)
+pub mod automation;
+pub mod browsers;
+pub mod command_palette;
+pub mod editors;
+pub mod hardware;
+pub mod midi_io;
+pub mod midi_clock;
+pub mod notation;
+pub mod profiling;
+pub mod scripting;
+pub mod sequencer;
+pub mod settings;
+pub mod undo_redo;
+
+// DAW models (migrated from daw/src-tauri)
+pub mod daw_models;
+
 // Re-export top-level modules for convenience
 pub use core::analysis;
 pub use core::midi;
@@ -74,10 +114,6 @@ pub use db::models::{
     bigdecimal_to_f64, f64_to_bigdecimal, MusicalMetadata, NewFile, NewMusicalMetadata,
     PipelineFile, PipelineSearchFilters, PipelineSearchResults,
 };
-
-// Re-export DAW library (package: midi-software-center-daw, lib: midi_software_center_daw)
-pub use midi_software_center_daw;
-pub use midi_software_center_daw::{AppError as DAWError, AppResult as DAWResult};
 
 /// Application state shared across all Tauri commands
 #[derive(Clone)]

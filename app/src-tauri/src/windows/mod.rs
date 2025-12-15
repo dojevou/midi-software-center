@@ -8,12 +8,14 @@ pub mod commands;
 /// # Architecture
 ///
 /// - `manager`: Core window management logic
-/// - `state`: Window state structures
+/// - `state`: Window state structures (windowing/docking)
+/// - `daw_state`: DAW-specific state (transport, mixer, tracks)
 /// - `commands`: Tauri command handlers
 /// - `menu`: Menu creation functions
 /// - `shortcuts`: Global shortcut registration
 /// - `layout`: Layout persistence
 /// - `pipeline_state`: Pipeline window-specific state (processing, progress)
+pub mod daw_state;
 pub mod manager;
 pub mod state;
 // NOTE: Menu and shortcuts modules disabled pending Tauri 2.x migration

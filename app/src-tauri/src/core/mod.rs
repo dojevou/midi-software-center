@@ -7,3 +7,7 @@ pub mod normalization;
 pub mod performance;
 pub mod pipeline;
 pub mod splitting;
+
+// DAW core modules (real-time sequencing)
+pub mod compatibility;
+pub mod sequencer;
