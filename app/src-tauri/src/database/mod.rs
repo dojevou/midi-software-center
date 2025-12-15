@@ -872,7 +872,9 @@ mod tests {
     /// Test database connection with optimized settings
     #[tokio::test]
     async fn test_database_connection() {
-        let db = Database::new(&get_test_database_url()).await.expect("Failed to connect to database");
+        let db = Database::new(&get_test_database_url())
+            .await
+            .expect("Failed to connect to database");
 
         let is_connected = db.test_connection().await.expect("Connection test failed");
 
@@ -882,7 +884,9 @@ mod tests {
     /// Test pool statistics with optimized pool
     #[tokio::test]
     async fn test_pool_stats() {
-        let db = Database::new(&get_test_database_url()).await.expect("Failed to connect to database");
+        let db = Database::new(&get_test_database_url())
+            .await
+            .expect("Failed to connect to database");
 
         let stats = db.get_pool_stats().await;
 
@@ -899,7 +903,9 @@ mod tests {
     /// Test health check functionality
     #[tokio::test]
     async fn test_health_check() {
-        let db = Database::new(&get_test_database_url()).await.expect("Failed to connect to database");
+        let db = Database::new(&get_test_database_url())
+            .await
+            .expect("Failed to connect to database");
 
         let health = db.health_check().await;
 
@@ -917,7 +923,9 @@ mod tests {
     /// Test retry logic with successful operation
     #[tokio::test]
     async fn test_retry_success() {
-        let db = Database::new(&get_test_database_url()).await.expect("Failed to connect to database");
+        let db = Database::new(&get_test_database_url())
+            .await
+            .expect("Failed to connect to database");
 
         let result = db
             .execute_with_retry(3, || async {
@@ -933,7 +941,9 @@ mod tests {
     /// Test pool reference access with optimized pool
     #[tokio::test]
     async fn test_pool_reference() {
-        let db = Database::new(&get_test_database_url()).await.expect("Failed to connect to database");
+        let db = Database::new(&get_test_database_url())
+            .await
+            .expect("Failed to connect to database");
 
         let pool = db.pool().await;
 
@@ -947,7 +957,9 @@ mod tests {
     /// Test graceful shutdown
     #[tokio::test]
     async fn test_close_connections() {
-        let db = Database::new(&get_test_database_url()).await.expect("Failed to connect to database");
+        let db = Database::new(&get_test_database_url())
+            .await
+            .expect("Failed to connect to database");
 
         // Verify pool is active
         let pool = db.pool().await;
@@ -964,7 +976,9 @@ mod tests {
     /// Test prepared statement cache is enabled
     #[tokio::test]
     async fn test_prepared_statement_cache() {
-        let db = Database::new(&get_test_database_url()).await.expect("Failed to connect to database");
+        let db = Database::new(&get_test_database_url())
+            .await
+            .expect("Failed to connect to database");
 
         let pool = db.pool().await;
 

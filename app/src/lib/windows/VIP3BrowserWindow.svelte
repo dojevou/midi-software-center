@@ -12,7 +12,7 @@
   import { api } from '$lib/api';
   import type { FileDetails, WindowId } from '$lib/types';
 
-  export let windowId: WindowId = 'vip3Browser';
+  export let windowId: WindowId = 'vip3-browser';
 
   // Context menu state
   let contextMenuFile: FileDetails | null = null;
@@ -139,58 +139,89 @@
     await executeSearch();
   });
 
+  // Helper to transform tag response to filter option format
+  interface TagResponse {
+    id: number;
+    name: string;
+    category: string | null;
+    usage_count: number;
+  }
+
+  function tagToOption(tag: TagResponse): { value: string; label: string; count: number } {
+    // Capitalize first letter for label
+    const label = tag.name.charAt(0).toUpperCase() + tag.name.slice(1);
+    return {
+      value: tag.name,
+      label: label,
+      count: tag.usage_count,
+    };
+  }
+
   async function loadFilterOptions() {
     try {
-      // These would call actual Tauri commands when backend is ready
-      // For now, populate with sample data
-      folderOptions = [
-        { value: 'drums', label: 'Drums', count: 1250 },
-        { value: 'bass', label: 'Bass', count: 890 },
-        { value: 'keys', label: 'Keys', count: 2100 },
-        { value: 'strings', label: 'Strings', count: 450 },
-        { value: 'synths', label: 'Synths', count: 3200 },
+      // Fetch all filter options from database in parallel
+      const [instrumentTags, styleTags, moodTags, keyTags] = await Promise.all([
+        invoke<TagResponse[]>('get_all_instruments'),
+        invoke<TagResponse[]>('get_vip3_styles'),
+        invoke<TagResponse[]>('get_vip3_moods'),
+        invoke<TagResponse[]>('get_vip3_keys'),
+      ]);
+
+      // Transform to filter option format
+      instrumentOptions = instrumentTags.map(tagToOption);
+      styleOptions = styleTags.map(tagToOption);
+      timbreOptions = moodTags.map(tagToOption);
+      keyOptions = keyTags.map(tagToOption);
+
+      // Folders use the same instrument categories (drums, bass, keys, etc.)
+      // Group by category for folder-level filtering
+      const categoryMap = new Map<string, number>();
+      for (const tag of instrumentTags) {
+        if (tag.category) {
+          const current = categoryMap.get(tag.category) || 0;
+          categoryMap.set(tag.category, current + tag.usage_count);
+        }
+      }
+      folderOptions = Array.from(categoryMap.entries())
+        .map(([category, count]) => ({
+          value: category,
+          label: category.charAt(0).toUpperCase() + category.slice(1),
+          count,
+        }))
+        .sort((a, b) => b.count - a.count);
+
+      // BPM ranges - static for now (could be from DB)
+      bpmRangeOptions = [
+        { value: '60-80', label: '60-80 BPM', count: 0 },
+        { value: '80-100', label: '80-100 BPM', count: 0 },
+        { value: '100-120', label: '100-120 BPM', count: 0 },
+        { value: '120-140', label: '120-140 BPM', count: 0 },
+        { value: '140-160', label: '140-160 BPM', count: 0 },
+        { value: '160+', label: '160+ BPM', count: 0 },
       ];
 
-      instrumentOptions = [
-        { value: 'piano', label: 'Piano', count: 1800 },
-        { value: 'guitar', label: 'Guitar', count: 950 },
-        { value: 'bass', label: 'Bass', count: 890 },
-        { value: 'drums', label: 'Drums', count: 1250 },
-        { value: 'strings', label: 'Strings', count: 450 },
-        { value: 'brass', label: 'Brass', count: 320 },
-        { value: 'woodwind', label: 'Woodwind', count: 180 },
-        { value: 'synth', label: 'Synth', count: 3200 },
-      ];
+      // Channel options - static (MIDI channels 1-16)
+      channelOptions = Array.from({ length: 16 }, (_, i) => ({
+        value: String(i + 1),
+        label: `Channel ${i + 1}`,
+        count: 0,
+      }));
 
-      timbreOptions = [
-        { value: 'bright', label: 'Bright', count: 1200 },
-        { value: 'dark', label: 'Dark', count: 980 },
-        { value: 'warm', label: 'Warm', count: 1450 },
-        { value: 'cold', label: 'Cold', count: 560 },
-        { value: 'aggressive', label: 'Aggressive', count: 890 },
-        { value: 'soft', label: 'Soft', count: 1100 },
-      ];
-
-      styleOptions = [
-        { value: 'jazz', label: 'Jazz', count: 580 },
-        { value: 'rock', label: 'Rock', count: 920 },
-        { value: 'pop', label: 'Pop', count: 1200 },
-        { value: 'electronic', label: 'Electronic', count: 2100 },
-        { value: 'classical', label: 'Classical', count: 350 },
-        { value: 'hiphop', label: 'Hip Hop', count: 890 },
-        { value: 'rnb', label: 'R&B', count: 450 },
-      ];
-
-      articulationOptions = [
-        { value: 'sustain', label: 'Sustain', count: 2400 },
-        { value: 'staccato', label: 'Staccato', count: 890 },
-        { value: 'legato', label: 'Legato', count: 1100 },
-        { value: 'pizzicato', label: 'Pizzicato', count: 220 },
-        { value: 'tremolo', label: 'Tremolo', count: 180 },
-        { value: 'vibrato', label: 'Vibrato', count: 340 },
-      ];
+      console.log('Filter options loaded from database:', {
+        instruments: instrumentOptions.length,
+        styles: styleOptions.length,
+        moods: timbreOptions.length,
+        keys: keyOptions.length,
+        folders: folderOptions.length,
+      });
     } catch (error) {
       console.error('Failed to load filter options:', error);
+      // Fallback to empty arrays on error
+      instrumentOptions = [];
+      styleOptions = [];
+      timbreOptions = [];
+      keyOptions = [];
+      folderOptions = [];
     }
   }
 

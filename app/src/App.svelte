@@ -48,24 +48,28 @@ import ScriptEditorWindow from '$lib/windows/ScriptEditorWindow.svelte';
 import MidiLearnWindow from '$lib/windows/MidiLearnWindow.svelte';
 import LinkSyncWindow from '$lib/windows/LinkSyncWindow.svelte';
 import MidiLearnOverlay from '$lib/components/MidiLearnOverlay.svelte';
+import VIP3BrowserWindow from '$lib/windows/VIP3BrowserWindow.svelte';
+import CommandPaletteWindow from '$lib/windows/CommandPaletteWindow.svelte';
+import ExportWindow from '$lib/windows/ExportWindow.svelte';
+import TagEditorWindow from '$lib/windows/TagEditorWindow.svelte';
+import FavoritesWindow from '$lib/windows/FavoritesWindow.svelte';
 import { isLearning } from '$lib/stores/learnStore';
+import type { WindowId } from '$lib/types';
 
   let destroy: (() => void) | undefined;
   let showShortcuts = false;
 
   // Window IDs for keyboard navigation
-  type WindowId = 'arrangement' | 'daw' | 'mixer' | 'database' | 'pipeline' | 'piano-roll' | 'midi-io-setup' | 'midi-monitor' | 'preferences' | 'gear-manager' | 'presets-manager' | 'score' | 'script-editor' | 'midi-learn' | 'link-sync';
-
   const windowIds: WindowId[] = [
     'arrangement', 'mixer', 'database', 'pipeline', 'piano-roll',
     'midi-io-setup', 'midi-monitor', 'preferences', 'gear-manager', 'presets-manager',
-    'score', 'script-editor', 'midi-learn', 'link-sync'
+    'score', 'script-editor', 'midi-learn', 'link-sync', 'vip3-browser', 'export', 'tag-editor', 'favorites'
   ];
 
   const popupWindows: WindowId[] = [
     'presets-manager', 'gear-manager', 'preferences', 'piano-roll',
     'midi-monitor', 'midi-io-setup', 'pipeline',
-    'score', 'script-editor', 'midi-learn', 'link-sync'
+    'score', 'script-editor', 'midi-learn', 'link-sync', 'vip3-browser', 'export', 'tag-editor', 'favorites'
   ];
 
   onMount(() => {
@@ -110,6 +114,10 @@ import { isLearning } from '$lib/stores/learnStore';
       'window.scriptEditor': () => uiActions.openWindow('script-editor'),
       'window.midiLearn': () => uiActions.openWindow('midi-learn'),
       'window.linkSync': () => uiActions.openWindow('link-sync'),
+      'window.vip3Browser': () => uiActions.openWindow('vip3-browser'),
+      'window.export': () => uiActions.openWindow('export'),
+      'window.tagEditor': () => uiActions.openWindow('tag-editor'),
+      'window.favorites': () => uiActions.openWindow('favorites'),
       'view.toggleSidebar': () => uiActions.toggleSidebar(),
       'view.toggleInspector': () => uiActions.toggleInspector(),
       'view.toggleFullscreen': () => console.log('Fullscreen not implemented'),
@@ -269,6 +277,32 @@ import { isLearning } from '$lib/stores/learnStore';
             event.preventDefault();
             // Toggle MIDI Monitor
             uiActions.toggleWindow('midi-monitor');
+            break;
+          case 'b':
+            event.preventDefault();
+            // Toggle VIP3 Browser
+            uiActions.toggleWindow('vip3-browser');
+            break;
+          case 'e':
+            event.preventDefault();
+            // Toggle Export Window
+            uiActions.toggleWindow('export');
+            break;
+        }
+      }
+
+      // Ctrl+Shift shortcuts for additional windows
+      if (event.ctrlKey && event.shiftKey && !event.altKey) {
+        switch (event.key.toLowerCase()) {
+          case 't':
+            event.preventDefault();
+            // Toggle Tag Editor
+            uiActions.toggleWindow('tag-editor');
+            break;
+          case 'f':
+            event.preventDefault();
+            // Toggle Favorites
+            uiActions.toggleWindow('favorites');
             break;
         }
       }
@@ -616,6 +650,54 @@ import { isLearning } from '$lib/stores/learnStore';
       </div>
     </div>
   {/if}
+
+  <!-- VIP3 Browser Window as Modal/Popup (Ctrl+B) -->
+  {#if $uiStore.windows['vip3-browser']?.visible}
+    <div class="modal-overlay" on:click={(e) => e.target === e.currentTarget && uiActions.hideWindow('vip3-browser')} on:keydown={(e) => e.key === 'Escape' && uiActions.hideWindow('vip3-browser')} role="dialog" aria-modal="true" tabindex="-1">
+      <div class="modal-content modal-content-extra-wide" role="document">
+        <VIP3BrowserWindow windowId="vip3-browser" />
+      </div>
+    </div>
+  {/if}
+
+  <!-- Export Window as Modal/Popup (Ctrl+E) -->
+  {#if $uiStore.windows['export']?.visible}
+    <div class="modal-overlay" on:click={(e) => e.target === e.currentTarget && uiActions.hideWindow('export')} on:keydown={(e) => e.key === 'Escape' && uiActions.hideWindow('export')} role="dialog" aria-modal="true" tabindex="-1">
+      <div class="modal-content modal-content-wide" role="document">
+        <div class="modal-header">
+          <h2>Export</h2>
+          <button class="modal-close" on:click={() => uiActions.hideWindow('export')} aria-label="Close">×</button>
+        </div>
+        <ExportWindow />
+      </div>
+    </div>
+  {/if}
+
+  <!-- Tag Editor Window as Modal/Popup (Ctrl+Shift+T) -->
+  {#if $uiStore.windows['tag-editor']?.visible}
+    <div class="modal-overlay" on:click={(e) => e.target === e.currentTarget && uiActions.hideWindow('tag-editor')} on:keydown={(e) => e.key === 'Escape' && uiActions.hideWindow('tag-editor')} role="dialog" aria-modal="true" tabindex="-1">
+      <div class="modal-content modal-content-wide" role="document">
+        <div class="modal-header">
+          <h2>Tag Editor</h2>
+          <button class="modal-close" on:click={() => uiActions.hideWindow('tag-editor')} aria-label="Close">×</button>
+        </div>
+        <TagEditorWindow />
+      </div>
+    </div>
+  {/if}
+
+  <!-- Favorites Window as Modal/Popup (Ctrl+Shift+F) -->
+  {#if $uiStore.windows['favorites']?.visible}
+    <div class="modal-overlay" on:click={(e) => e.target === e.currentTarget && uiActions.hideWindow('favorites')} on:keydown={(e) => e.key === 'Escape' && uiActions.hideWindow('favorites')} role="dialog" aria-modal="true" tabindex="-1">
+      <div class="modal-content modal-content-wide" role="document">
+        <div class="modal-header">
+          <h2>Favorites</h2>
+          <button class="modal-close" on:click={() => uiActions.hideWindow('favorites')} aria-label="Close">×</button>
+        </div>
+        <FavoritesWindow />
+      </div>
+    </div>
+  {/if}
 </div>
 
 <WindowDockBar />
@@ -630,6 +712,9 @@ import { isLearning } from '$lib/stores/learnStore';
 {#if $isLearning}
   <MidiLearnOverlay visible={$isLearning} on:close={() => {}} />
 {/if}
+
+<!-- Command Palette (Ctrl+P or Ctrl+K) - manages its own visibility -->
+<CommandPaletteWindow />
 
 <style>
   .workspace {
@@ -719,6 +804,12 @@ import { isLearning } from '$lib/stores/learnStore';
     max-width: 1400px;
     width: 95%;
     max-height: 85vh;
+  }
+
+  .modal-content-extra-wide {
+    max-width: 1600px;
+    width: 98%;
+    max-height: 90vh;
   }
 
   .modal-header {

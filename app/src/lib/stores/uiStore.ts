@@ -185,12 +185,36 @@ const initialState: UIState = {
       z_index: 10,
       visible: false,
     },
-    'vip3Browser': {
+    'vip3-browser': {
       x: 160,
       y: 60,
       width: 1200,
       height: 700,
       z_index: 11,
+      visible: false,
+    },
+    'export': {
+      x: 180,
+      y: 80,
+      width: 700,
+      height: 550,
+      z_index: 16,
+      visible: false,
+    },
+    'tag-editor': {
+      x: 200,
+      y: 100,
+      width: 800,
+      height: 600,
+      z_index: 17,
+      visible: false,
+    },
+    'favorites': {
+      x: 220,
+      y: 120,
+      width: 900,
+      height: 650,
+      z_index: 18,
       visible: false,
     },
     'score': {

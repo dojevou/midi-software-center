@@ -352,7 +352,7 @@ export interface PipelineState {
 }
 
 // Window management types
-export type WindowId = 'arrangement' | 'database' | 'daw' | 'mixer' | 'midi-io-setup' | 'midi-monitor' | 'pipeline' | 'preferences' | 'gear-manager' | 'presets-manager' | 'vip3Browser' | 'score' | 'script-editor' | 'midi-learn' | 'link-sync' | 'piano-roll';
+export type WindowId = 'arrangement' | 'database' | 'daw' | 'mixer' | 'midi-io-setup' | 'midi-monitor' | 'pipeline' | 'preferences' | 'gear-manager' | 'presets-manager' | 'vip3-browser' | 'score' | 'script-editor' | 'midi-learn' | 'link-sync' | 'piano-roll' | 'export' | 'tag-editor' | 'favorites';
 
 // ============================================================================
 // SEQUENCER TRACK TYPES (MPC 3.0 style)
