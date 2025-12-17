@@ -367,6 +367,28 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             midi_app::commands::daw::midi_io::midi_io_update_port,
             midi_app::commands::daw::midi_io::midi_io_remove_port,
             midi_app::commands::daw::midi_io::midi_io_set_port_connected,
+            // MIDI I/O port listing commands (Stream F)
+            midi_app::commands::daw::midi_io::midi_io_list_ports,
+            midi_app::commands::daw::midi_io::midi_io_list_inputs,
+            midi_app::commands::daw::midi_io::midi_io_list_outputs,
+            midi_app::commands::daw::midi_io::midi_io_get_port,
+            midi_app::commands::daw::midi_io::midi_io_register_port,
+            midi_app::commands::daw::midi_io::midi_io_refresh_ports,
+            // MIDI I/O port group commands (Stream F)
+            midi_app::commands::daw::midi_io::midi_io_list_port_groups,
+            midi_app::commands::daw::midi_io::midi_io_create_port_group,
+            midi_app::commands::daw::midi_io::midi_io_update_port_group,
+            midi_app::commands::daw::midi_io::midi_io_delete_port_group,
+            // MIDI I/O routing commands (Stream F)
+            midi_app::commands::daw::midi_io::midi_io_list_routes,
+            midi_app::commands::daw::midi_io::midi_io_get_route,
+            midi_app::commands::daw::midi_io::midi_io_create_route,
+            midi_app::commands::daw::midi_io::midi_io_update_route,
+            midi_app::commands::daw::midi_io::midi_io_set_route_enabled,
+            midi_app::commands::daw::midi_io::midi_io_delete_route,
+            // MIDI I/O utility commands (Stream F)
+            midi_app::commands::daw::midi_io::midi_io_panic,
+            midi_app::commands::daw::midi_io::midi_io_get_stats,
             midi_app::midi_io::output::midi_send_cc,
             midi_app::midi_io::output::midi_output_list_devices,
             // Sequencer commands
