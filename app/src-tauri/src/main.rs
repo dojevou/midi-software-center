@@ -93,8 +93,38 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         },
     };
 
+    // Initialize VIP3 analytics service (DuckDB for fast aggregations)
+    let vip3_analytics = Arc::new(
+        midi_app::services::VIP3AnalyticsService::new(database_url.clone())
+            .expect("Failed to initialize VIP3 analytics service")
+    );
+    info!("✅ VIP3 analytics service initialized (DuckDB)");
+
+    // Initialize Meilisearch client (optional - for full-text search)
+    let meilisearch = match std::env::var("MEILISEARCH_URL") {
+        Ok(url) => {
+            let api_key = std::env::var("MEILISEARCH_API_KEY").ok();
+            match midi_app::services::MeilisearchClient::new(&url, api_key.as_deref(), None) {
+                Ok(client) => {
+                    info!("✅ Meilisearch client initialized ({})", url);
+                    Some(Arc::new(client))
+                },
+                Err(e) => {
+                    warn!("⚠️  Meilisearch initialization failed: {}", e);
+                    warn!("⚠️  Full-text search will not be available");
+                    None
+                }
+            }
+        },
+        Err(_) => {
+            info!("ℹ️  MEILISEARCH_URL not set, skipping Meilisearch initialization");
+            info!("ℹ️  Full-text search will not be available");
+            None
+        }
+    };
+
     // Create Pipeline state
-    let pipeline_state = PipelineState { database };
+    let pipeline_state = PipelineState { database, vip3_analytics, meilisearch };
 
     // Clone db_pool before moving it into state (needed for DAW commands)
     let db_pool_for_daw = db_pool.clone();
@@ -236,12 +266,14 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             midi_app::commands::pipeline::tags::get_tag_stats,
             // VIP3 Browser lookup commands (legacy tags module)
             midi_app::commands::pipeline::tags::get_all_instruments,
-            midi_app::commands::pipeline::tags::get_vip3_styles,
+            midi_app::commands::pipeline::tags::get_vip3_genre_tags,
             midi_app::commands::pipeline::tags::get_vip3_moods,
             midi_app::commands::pipeline::tags::get_vip3_keys,
             // VIP3 Browser - Search
             midi_app::commands::pipeline::vip3::search::search_files_vip3,
             midi_app::commands::pipeline::vip3::search::get_vip3_filter_counts,
+            // VIP3 Browser - Dynamic Filter Counts (repository-based)
+            midi_app::commands::pipeline::vip3::filter_counts::get_vip3_dynamic_filter_counts,
             // VIP3 Browser - Lookups
             midi_app::commands::pipeline::vip3::lookups::get_all_timbres,
             midi_app::commands::pipeline::vip3::lookups::get_all_styles,
@@ -256,6 +288,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             midi_app::commands::pipeline::vip3::categories::remove_timbre_from_file,
             midi_app::commands::pipeline::vip3::categories::remove_style_from_file,
             midi_app::commands::pipeline::vip3::categories::remove_articulation_from_file,
+            // VIP3 Browser - Category List Fetching (for initialization)
+            midi_app::commands::pipeline::vip3::categories::get_vip3_folders,
+            midi_app::commands::pipeline::vip3::categories::get_vip3_instruments,
+            midi_app::commands::pipeline::vip3::categories::get_vip3_timbres,
+            midi_app::commands::pipeline::vip3::categories::get_vip3_styles,
+            midi_app::commands::pipeline::vip3::categories::get_vip3_articulations,
+            midi_app::commands::pipeline::vip3::categories::get_vip3_manufacturers,
+            // VIP3 Browser - Combined Categories (for efficient initialization)
+            midi_app::commands::pipeline::vip3::categories::get_all_vip3_categories,
+            // VIP3 Browser - Filter Counts (DuckDB analytics for 10-20x faster aggregations)
+            midi_app::commands::pipeline::vip3::categories::get_vip3_analytics_counts,
             // VIP3 Browser - Favorites
             midi_app::commands::pipeline::vip3::favorites::toggle_favorite,
             midi_app::commands::pipeline::vip3::favorites::set_favorite,
@@ -270,6 +313,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             midi_app::commands::pipeline::vip3::collections::add_file_to_collection,
             midi_app::commands::pipeline::vip3::collections::remove_file_from_collection,
             midi_app::commands::pipeline::vip3::collections::get_collection_files,
+            midi_app::commands::pipeline::vip3::collections::batch_add_files_to_collection,
+            midi_app::commands::pipeline::vip3::collections::batch_remove_files_from_collection,
+            midi_app::commands::pipeline::vip3::collections::clear_collection,
+            midi_app::commands::pipeline::vip3::collections::reorder_collection_files,
             // VIP3 Browser - Saved Searches
             midi_app::commands::pipeline::vip3::saved_searches::save_search,
             midi_app::commands::pipeline::vip3::saved_searches::get_saved_searches,
@@ -279,6 +326,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             // VIP3 Bulk retag commands (high-performance Rust + Rayon)
             midi_app::commands::pipeline::vip3::bulk_retag::bulk_retag_vip3,
             midi_app::commands::pipeline::vip3::bulk_retag::update_vip3_counts,
+            // Meilisearch commands (full-text search)
+            midi_app::commands::pipeline::meilisearch::meilisearch_initialize,
+            midi_app::commands::pipeline::meilisearch::meilisearch_search,
+            midi_app::commands::pipeline::meilisearch::meilisearch_faceted_search,
+            midi_app::commands::pipeline::meilisearch::meilisearch_index_file,
+            midi_app::commands::pipeline::meilisearch::meilisearch_index_files_batch,
+            midi_app::commands::pipeline::meilisearch::meilisearch_delete_file,
+            midi_app::commands::pipeline::meilisearch::meilisearch_delete_files_batch,
+            midi_app::commands::pipeline::meilisearch::meilisearch_clear_index,
+            midi_app::commands::pipeline::meilisearch::meilisearch_get_stats,
+            midi_app::commands::pipeline::meilisearch::meilisearch_rebuild_index,
             // Progress tracking commands
             midi_app::commands::pipeline::progress::start_progress_tracking,
             midi_app::commands::pipeline::progress::update_progress,
@@ -302,6 +360,15 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             midi_app::commands::daw::midi::midi_is_connected,
             midi_app::commands::daw::midi::midi_get_current_device,
             midi_app::commands::daw::midi::midi_send_test_note,
+            // MIDI I/O commands (port management, sync, routing)
+            midi_app::commands::daw::midi_io::midi_io_get_state,
+            midi_app::commands::daw::midi_io::midi_io_detect_ports,
+            midi_app::commands::daw::midi_io::midi_io_add_port,
+            midi_app::commands::daw::midi_io::midi_io_update_port,
+            midi_app::commands::daw::midi_io::midi_io_remove_port,
+            midi_app::commands::daw::midi_io::midi_io_set_port_connected,
+            midi_app::midi_io::output::midi_send_cc,
+            midi_app::midi_io::output::midi_output_list_devices,
             // Sequencer commands
             midi_app::commands::daw::sequencer::start_sequencer,
             midi_app::commands::daw::sequencer::stop_sequencer,
@@ -312,6 +379,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             midi_app::commands::daw::sequencer::set_tempo,
             midi_app::commands::daw::sequencer::get_tempo,
             midi_app::commands::daw::sequencer::add_track,
+            midi_app::commands::daw::sequencer::load_file_to_daw,
             midi_app::commands::daw::sequencer::remove_track,
             midi_app::commands::daw::sequencer::update_track,
             midi_app::commands::daw::sequencer::get_tracks,
@@ -383,6 +451,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             midi_app::commands::daw::mixer::mixer_set_pan,
             midi_app::commands::daw::mixer::mixer_set_mute,
             midi_app::commands::daw::mixer::mixer_set_solo,
+            midi_app::commands::daw::mixer::mixer_toggle_mute,
+            midi_app::commands::daw::mixer::mixer_toggle_solo,
             midi_app::commands::daw::mixer::mixer_set_enabled,
             midi_app::commands::daw::mixer::mixer_set_transpose,
             midi_app::commands::daw::mixer::mixer_set_octave_shift,
@@ -407,6 +477,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             midi_app::commands::daw::mixer::mixer_set_midi_port,
             // Master channel commands
             midi_app::commands::daw::mixer::mixer_set_master_volume,
+            midi_app::commands::daw::mixer::mixer_set_master_pan,
+            midi_app::commands::daw::mixer::mixer_get_meters,
             midi_app::commands::daw::mixer::mixer_set_master_limiter,
             midi_app::commands::daw::mixer::mixer_set_master_compressor,
             midi_app::commands::daw::mixer::mixer_set_master_enabled,
@@ -432,9 +504,37 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             midi_app::commands::daw::mixer::mixer_add_effect,
             midi_app::commands::daw::mixer::mixer_remove_effect,
             midi_app::commands::daw::mixer::mixer_set_effect_enabled,
+            midi_app::commands::daw::mixer::mixer_bypass_effect,
             midi_app::commands::daw::mixer::mixer_set_effect_parameter,
             midi_app::commands::daw::mixer::mixer_reorder_effects,
             midi_app::commands::daw::mixer::mixer_toggle_channel_effect,
+            // Send and routing commands
+            midi_app::commands::daw::mixer::mixer_set_send,
+            midi_app::commands::daw::mixer::mixer_add_send,
+            midi_app::commands::daw::mixer::mixer_remove_send,
+            midi_app::commands::daw::mixer::mixer_create_bus,
+            midi_app::commands::daw::mixer::mixer_remove_bus,
+            midi_app::commands::daw::mixer::mixer_route_track,
+            midi_app::commands::daw::mixer::mixer_get_routing,
+            midi_app::commands::daw::mixer::mixer_get_buses,
+            // Reset and copy commands
+            midi_app::commands::daw::mixer::mixer_reset_track,
+            midi_app::commands::daw::mixer::mixer_reset_all,
+            midi_app::commands::daw::mixer::mixer_copy_settings,
+            // Monitoring & Recording commands (Day 3)
+            midi_app::commands::daw::mixer::mixer_set_monitoring,
+            midi_app::commands::daw::mixer::mixer_set_record_arm,
+            midi_app::commands::daw::mixer::mixer_set_latency_compensation,
+            midi_app::commands::daw::mixer::mixer_get_latency_report,
+            // Preset commands (Day 4)
+            midi_app::commands::daw::mixer::mixer_save_preset,
+            midi_app::commands::daw::mixer::mixer_load_preset,
+            midi_app::commands::daw::mixer::mixer_get_presets,
+            midi_app::commands::daw::mixer::mixer_delete_preset,
+            midi_app::commands::daw::mixer::mixer_toggle_preset_favorite,
+            // Plugin Discovery commands (Day 5)
+            midi_app::commands::daw::mixer::mixer_get_plugin_list,
+            midi_app::commands::daw::mixer::mixer_scan_plugins,
             // Automation commands
             midi_app::commands::daw::automation::create_automation_lane,
             midi_app::commands::daw::automation::delete_automation_lane,
@@ -447,6 +547,8 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             midi_app::commands::daw::automation::get_automation_value,
             midi_app::commands::daw::automation::clear_track_automation,
             midi_app::commands::daw::automation::clear_all_automation,
+            midi_app::commands::daw::automation::set_automation_mode,
+            midi_app::commands::daw::automation::get_automation_mode,
             // ========================================================================
             // UNDO/REDO COMMANDS
             // ========================================================================
@@ -702,7 +804,7 @@ async fn health_check(state: tauri::State<'_, AppState>) -> Result<HealthCheckRe
     let sentry_configured = SENTRY_GUARD.get().map(|guard| guard.is_some()).unwrap_or(false);
 
     let sentry_env = if sentry_configured {
-        std::env::var("SENTRY_ENVIRONMENT").ok()
+        std::env::var("SENtry_ENVIRONMENT").ok()
     } else {
         None
     };
