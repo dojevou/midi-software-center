@@ -549,6 +549,25 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             midi_app::commands::daw::automation::clear_all_automation,
             midi_app::commands::daw::automation::set_automation_mode,
             midi_app::commands::daw::automation::get_automation_mode,
+            // Automation batch & utility commands (Stream D)
+            midi_app::commands::daw::automation::delete_automation_points_batch,
+            midi_app::commands::daw::automation::get_automation_points_in_range,
+            midi_app::commands::daw::automation::get_automation_point_count,
+            midi_app::commands::daw::automation::get_automation_lane_count,
+            midi_app::commands::daw::automation::get_automation_lane_display_name,
+            midi_app::commands::daw::automation::get_automation_lane_color,
+            midi_app::commands::daw::automation::clear_automation_curve,
+            midi_app::commands::daw::automation::get_parameter_type_string,
+            midi_app::commands::daw::automation::get_parameter_type_color,
+            // Automation copy/paste commands (Stream D)
+            midi_app::commands::daw::automation::copy_automation_points,
+            midi_app::commands::daw::automation::paste_automation_points,
+            midi_app::commands::daw::automation::cut_automation_points,
+            // CC Recording commands (Stream D)
+            midi_app::commands::daw::automation::start_cc_recording,
+            midi_app::commands::daw::automation::record_cc_value,
+            midi_app::commands::daw::automation::stop_cc_recording,
+            midi_app::commands::daw::automation::record_cc_automation_batch,
             // ========================================================================
             // UNDO/REDO COMMANDS
             // ========================================================================
