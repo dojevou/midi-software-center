@@ -8,7 +8,7 @@ export default defineConfig({
   workers: process.env.CI ? 1 : undefined,
   reporter: 'html',
   use: {
-    baseURL: 'http://localhost:1420',
+    baseURL: 'http://localhost:5173',
     trace: 'on-first-retry',
     screenshot: 'only-on-failure',
     video: 'retain-on-failure',
@@ -19,19 +19,13 @@ export default defineConfig({
       name: 'chromium',
       use: { ...devices['chromium'] },
     },
-    {
-      name: 'firefox',
-      use: { ...devices['firefox'] },
-    },
-    {
-      name: 'webkit',
-      use: { ...devices['webkit'] },
-    },
   ],
 
-  webServer: {
-    command: 'npm run tauri dev',
-    url: 'http://localhost:1420',
-    reuseExistingServer: !process.env.CI,
-  },
+  // Web server already running via pnpm dev
+  // Comment out webServer to use existing server
+  // webServer: {
+  //   command: 'npm run tauri dev',
+  //   url: 'http://localhost:1420',
+  //   reuseExistingServer: !process.env.CI,
+  // },
 });

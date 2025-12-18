@@ -37,6 +37,9 @@ use midi_app::profiling::commands::ProfilingState;
 use midi_app::sequencer::SequencerEngine;
 use midi_app::undo_redo::commands::UndoRedoState;
 
+// Import Scripting state (Lua runtime)
+use midi_app::scripting::ScriptingState;
+
 /// Combined application state
 #[allow(dead_code)]
 struct AppState {
@@ -185,6 +188,10 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
     let recent_projects_state = RecentProjectsState::default();
     info!("✅ Preferences states initialized (settings, layouts, shortcuts, recent)");
 
+    // Create scripting state (Lua runtime for MIDI processing, automation, macros)
+    let scripting_state = ScriptingState::default();
+    info!("✅ Scripting state initialized (Lua runtime)");
+
     // Create DAW AppState for DAW commands (search, analysis, etc.)
     let daw_app_state = DawAppState { db_pool: db_pool_for_daw };
     info!("✅ DAW AppState initialized with database pool");
@@ -208,6 +215,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
         .manage(window_layout_state)
         .manage(keyboard_shortcuts_state)
         .manage(recent_projects_state)
+        .manage(scripting_state)
         .invoke_handler(tauri::generate_handler![
             // ========================================================================
             // APP LIFECYCLE COMMANDS
@@ -313,6 +321,7 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             midi_app::commands::pipeline::vip3::collections::add_file_to_collection,
             midi_app::commands::pipeline::vip3::collections::remove_file_from_collection,
             midi_app::commands::pipeline::vip3::collections::get_collection_files,
+            midi_app::commands::pipeline::vip3::collections::get_smart_collection_files,
             midi_app::commands::pipeline::vip3::collections::batch_add_files_to_collection,
             midi_app::commands::pipeline::vip3::collections::batch_remove_files_from_collection,
             midi_app::commands::pipeline::vip3::collections::clear_collection,
@@ -762,6 +771,17 @@ async fn main() -> Result<(), Box<dyn std::error::Error>> {
             midi_app::commands::daw::preferences::recent_remove,
             midi_app::commands::daw::preferences::recent_clear,
             midi_app::commands::daw::preferences::recent_clear_all,
+            // ========================================================================
+            // SCRIPTING COMMANDS (Lua Runtime for MIDI Processing, Automation, Macros)
+            // ========================================================================
+            midi_app::scripting::lua_runtime::scripting_load_script,
+            midi_app::scripting::lua_runtime::scripting_unload_script,
+            midi_app::scripting::lua_runtime::scripting_list_scripts,
+            midi_app::scripting::lua_runtime::scripting_run_function,
+            midi_app::scripting::lua_runtime::scripting_process_midi,
+            midi_app::scripting::lua_runtime::scripting_set_enabled,
+            midi_app::scripting::lua_runtime::scripting_get_script,
+            midi_app::scripting::lua_runtime::scripting_get_example_scripts,
         ])
         .setup(|_app| {
             info!("✅ Application setup complete");
