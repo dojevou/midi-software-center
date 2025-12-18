@@ -153,3 +153,328 @@ impl SongPosition {
         Self { beats: (lsb as u16 & 0x7F) | ((msb as u16 & 0x7F) << 7) }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ==========================================================================
+    // MidiClockMessage Tests
+    // ==========================================================================
+
+    #[test]
+    fn test_midi_clock_message_to_byte() {
+        assert_eq!(MidiClockMessage::TimingClock.to_byte(), 0xF8);
+        assert_eq!(MidiClockMessage::Start.to_byte(), 0xFA);
+        assert_eq!(MidiClockMessage::Continue.to_byte(), 0xFB);
+        assert_eq!(MidiClockMessage::Stop.to_byte(), 0xFC);
+        assert_eq!(MidiClockMessage::ActiveSensing.to_byte(), 0xFE);
+        assert_eq!(MidiClockMessage::SystemReset.to_byte(), 0xFF);
+    }
+
+    #[test]
+    fn test_midi_clock_message_from_byte() {
+        assert_eq!(
+            MidiClockMessage::from_byte(0xF8),
+            Some(MidiClockMessage::TimingClock)
+        );
+        assert_eq!(
+            MidiClockMessage::from_byte(0xFA),
+            Some(MidiClockMessage::Start)
+        );
+        assert_eq!(
+            MidiClockMessage::from_byte(0xFB),
+            Some(MidiClockMessage::Continue)
+        );
+        assert_eq!(
+            MidiClockMessage::from_byte(0xFC),
+            Some(MidiClockMessage::Stop)
+        );
+        assert_eq!(
+            MidiClockMessage::from_byte(0xFE),
+            Some(MidiClockMessage::ActiveSensing)
+        );
+        assert_eq!(
+            MidiClockMessage::from_byte(0xFF),
+            Some(MidiClockMessage::SystemReset)
+        );
+    }
+
+    #[test]
+    fn test_midi_clock_message_from_byte_invalid() {
+        assert_eq!(MidiClockMessage::from_byte(0x00), None);
+        assert_eq!(MidiClockMessage::from_byte(0x90), None);
+        assert_eq!(MidiClockMessage::from_byte(0xF7), None);
+        assert_eq!(MidiClockMessage::from_byte(0xF9), None);
+        assert_eq!(MidiClockMessage::from_byte(0xFD), None);
+    }
+
+    #[test]
+    fn test_midi_clock_message_roundtrip() {
+        let messages = [
+            MidiClockMessage::TimingClock,
+            MidiClockMessage::Start,
+            MidiClockMessage::Continue,
+            MidiClockMessage::Stop,
+            MidiClockMessage::ActiveSensing,
+            MidiClockMessage::SystemReset,
+        ];
+
+        for msg in messages {
+            let byte = msg.to_byte();
+            let recovered = MidiClockMessage::from_byte(byte);
+            assert_eq!(recovered, Some(msg));
+        }
+    }
+
+    // ==========================================================================
+    // FrameRate Tests
+    // ==========================================================================
+
+    #[test]
+    fn test_frame_rate_fps() {
+        assert!((FrameRate::Fps24.frames_per_second() - 24.0).abs() < 0.001);
+        assert!((FrameRate::Fps25.frames_per_second() - 25.0).abs() < 0.001);
+        assert!((FrameRate::Fps30Drop.frames_per_second() - 29.97).abs() < 0.001);
+        assert!((FrameRate::Fps30.frames_per_second() - 30.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_frame_rate_to_mtc_type() {
+        assert_eq!(FrameRate::Fps24.to_mtc_type(), 0);
+        assert_eq!(FrameRate::Fps25.to_mtc_type(), 1);
+        assert_eq!(FrameRate::Fps30Drop.to_mtc_type(), 2);
+        assert_eq!(FrameRate::Fps30.to_mtc_type(), 3);
+    }
+
+    // ==========================================================================
+    // MidiTimecode Tests
+    // ==========================================================================
+
+    #[test]
+    fn test_midi_timecode_new() {
+        let tc = MidiTimecode::new(FrameRate::Fps30);
+        assert_eq!(tc.hours, 0);
+        assert_eq!(tc.minutes, 0);
+        assert_eq!(tc.seconds, 0);
+        assert_eq!(tc.frames, 0);
+        assert_eq!(tc.frame_rate, FrameRate::Fps30);
+    }
+
+    #[test]
+    fn test_midi_timecode_from_millis_zero() {
+        let tc = MidiTimecode::from_millis(0, FrameRate::Fps30);
+        assert_eq!(tc.hours, 0);
+        assert_eq!(tc.minutes, 0);
+        assert_eq!(tc.seconds, 0);
+        assert_eq!(tc.frames, 0);
+    }
+
+    #[test]
+    fn test_midi_timecode_from_millis_one_second() {
+        let tc = MidiTimecode::from_millis(1000, FrameRate::Fps30);
+        assert_eq!(tc.hours, 0);
+        assert_eq!(tc.minutes, 0);
+        assert_eq!(tc.seconds, 1);
+        assert_eq!(tc.frames, 0);
+    }
+
+    #[test]
+    fn test_midi_timecode_from_millis_one_minute() {
+        let tc = MidiTimecode::from_millis(60_000, FrameRate::Fps30);
+        assert_eq!(tc.hours, 0);
+        assert_eq!(tc.minutes, 1);
+        assert_eq!(tc.seconds, 0);
+    }
+
+    #[test]
+    fn test_midi_timecode_from_millis_one_hour() {
+        let tc = MidiTimecode::from_millis(3_600_000, FrameRate::Fps30);
+        assert_eq!(tc.hours, 1);
+        assert_eq!(tc.minutes, 0);
+        assert_eq!(tc.seconds, 0);
+    }
+
+    #[test]
+    fn test_midi_timecode_from_millis_complex() {
+        // 1 hour, 23 minutes, 45 seconds, some frames at 30fps
+        let millis = 3_600_000 + (23 * 60_000) + (45 * 1000);
+        let tc = MidiTimecode::from_millis(millis, FrameRate::Fps30);
+        assert_eq!(tc.hours, 1);
+        assert_eq!(tc.minutes, 23);
+        assert_eq!(tc.seconds, 45);
+    }
+
+    #[test]
+    fn test_midi_timecode_to_millis() {
+        let tc = MidiTimecode {
+            hours: 1,
+            minutes: 30,
+            seconds: 45,
+            frames: 15,
+            frame_rate: FrameRate::Fps30,
+        };
+
+        let millis = tc.to_millis();
+        // 1 hour = 3,600,000ms
+        // 30 min = 1,800,000ms
+        // 45 sec = 45,000ms
+        // 15 frames at 30fps = 500ms
+        // Total = 5,445,500ms
+        assert_eq!(millis, 5_445_500);
+    }
+
+    #[test]
+    fn test_midi_timecode_roundtrip() {
+        let original_millis = 5_445_500u64;
+        let tc = MidiTimecode::from_millis(original_millis, FrameRate::Fps30);
+        let recovered_millis = tc.to_millis();
+
+        // Allow small rounding error due to frame quantization
+        assert!(
+            (original_millis as i64 - recovered_millis as i64).abs() < 34,
+            "Expected ~{}, got {}",
+            original_millis,
+            recovered_millis
+        );
+    }
+
+    #[test]
+    fn test_midi_timecode_quarter_frames_structure() {
+        let tc = MidiTimecode {
+            hours: 1,
+            minutes: 23,
+            seconds: 45,
+            frames: 15,
+            frame_rate: FrameRate::Fps30,
+        };
+
+        let qf = tc.to_quarter_frames();
+        assert_eq!(qf.len(), 8);
+
+        // Check that the quarter frames follow MTC spec
+        // Low nibbles of each type should be in sequence
+        assert_eq!(qf[0] & 0xF0, 0x00); // Frame low
+        assert_eq!(qf[1] & 0xF0, 0x10); // Frame high
+        assert_eq!(qf[2] & 0xF0, 0x20); // Seconds low
+        assert_eq!(qf[3] & 0xF0, 0x30); // Seconds high
+        assert_eq!(qf[4] & 0xF0, 0x40); // Minutes low
+        assert_eq!(qf[5] & 0xF0, 0x50); // Minutes high
+        assert_eq!(qf[6] & 0xF0, 0x60); // Hours low
+        assert_eq!(qf[7] & 0xF0, 0x70); // Hours high + frame rate
+    }
+
+    #[test]
+    fn test_midi_timecode_quarter_frames_values() {
+        let tc = MidiTimecode {
+            hours: 0,
+            minutes: 0,
+            seconds: 0,
+            frames: 15,
+            frame_rate: FrameRate::Fps30,
+        };
+
+        let qf = tc.to_quarter_frames();
+
+        // Frames = 15 = 0x0F
+        // Low nibble = 0x0F & 0x0F = 0x0F
+        assert_eq!(qf[0] & 0x0F, 0x0F);
+        // High nibble = (0x0F >> 4) & 0x01 = 0x00
+        assert_eq!(qf[1] & 0x01, 0x00);
+    }
+
+    #[test]
+    fn test_midi_timecode_serialization() {
+        let tc = MidiTimecode {
+            hours: 1,
+            minutes: 23,
+            seconds: 45,
+            frames: 15,
+            frame_rate: FrameRate::Fps30,
+        };
+
+        let json = serde_json::to_string(&tc).unwrap();
+        let deserialized: MidiTimecode = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(deserialized.hours, tc.hours);
+        assert_eq!(deserialized.minutes, tc.minutes);
+        assert_eq!(deserialized.seconds, tc.seconds);
+        assert_eq!(deserialized.frames, tc.frames);
+        assert_eq!(deserialized.frame_rate, tc.frame_rate);
+    }
+
+    // ==========================================================================
+    // SongPosition Tests
+    // ==========================================================================
+
+    #[test]
+    fn test_song_position_new() {
+        let sp = SongPosition::new(100);
+        assert_eq!(sp.beats, 100);
+    }
+
+    #[test]
+    fn test_song_position_new_clamped() {
+        // Max is 16383 (14-bit value)
+        let sp = SongPosition::new(20000);
+        assert_eq!(sp.beats, 16383);
+    }
+
+    #[test]
+    fn test_song_position_from_bars() {
+        // 4 bars in 4/4 time = 4 * 4 * 4 = 64 sixteenth notes
+        let sp = SongPosition::from_bars(4, 4);
+        assert_eq!(sp.beats, 64);
+    }
+
+    #[test]
+    fn test_song_position_from_bars_different_time_sig() {
+        // 2 bars in 3/4 time = 2 * 3 * 4 = 24 sixteenth notes
+        let sp = SongPosition::from_bars(2, 3);
+        assert_eq!(sp.beats, 24);
+    }
+
+    #[test]
+    fn test_song_position_to_bytes() {
+        let sp = SongPosition::new(1234);
+        let bytes = sp.to_bytes();
+
+        // 1234 = 0x04D2
+        // LSB (7 bits) = 1234 & 0x7F = 82 (0x52)
+        // MSB (7 bits) = (1234 >> 7) & 0x7F = 9 (0x09)
+        assert_eq!(bytes[0], 82);
+        assert_eq!(bytes[1], 9);
+    }
+
+    #[test]
+    fn test_song_position_from_bytes() {
+        let sp = SongPosition::from_bytes(82, 9);
+        assert_eq!(sp.beats, 1234);
+    }
+
+    #[test]
+    fn test_song_position_bytes_roundtrip() {
+        let original = SongPosition::new(8000);
+        let bytes = original.to_bytes();
+        let recovered = SongPosition::from_bytes(bytes[0], bytes[1]);
+        assert_eq!(original.beats, recovered.beats);
+    }
+
+    #[test]
+    fn test_song_position_bytes_max_value() {
+        let sp = SongPosition::new(16383); // Max 14-bit value
+        let bytes = sp.to_bytes();
+        let recovered = SongPosition::from_bytes(bytes[0], bytes[1]);
+        assert_eq!(recovered.beats, 16383);
+    }
+
+    #[test]
+    fn test_song_position_serialization() {
+        let sp = SongPosition::new(5000);
+
+        let json = serde_json::to_string(&sp).unwrap();
+        let deserialized: SongPosition = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(deserialized.beats, sp.beats);
+    }
+}
