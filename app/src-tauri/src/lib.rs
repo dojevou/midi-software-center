@@ -59,6 +59,7 @@ pub mod core;
 pub mod db;
 pub mod health;
 pub mod logging;
+pub mod services;
 
 // Pipeline modules (migrated from pipeline/src-tauri)
 pub mod commands;
@@ -87,6 +88,9 @@ pub mod undo_redo;
 
 // DAW models (migrated from daw/src-tauri)
 pub mod daw_models;
+
+// DAW processing (DSP effects)
+pub mod daw;
 
 // Re-export top-level modules for convenience
 pub use core::analysis;
@@ -118,4 +122,6 @@ pub use db::models::{
 #[derive(Clone)]
 pub struct AppState {
     pub database: Database,
+    pub vip3_analytics: std::sync::Arc<services::VIP3AnalyticsService>,
+    pub meilisearch: Option<std::sync::Arc<services::MeilisearchClient>>,
 }

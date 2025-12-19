@@ -15,12 +15,15 @@
 //! - `collection` - User collections/playlists
 //! - `saved_search` - Saved filter configurations
 //! - `pipeline` - Pipeline-specific models (for CLI tools)
+//! - `filter_counts` - VIP3 browser filter counts
+//! - `vip3_filters` - VIP3 browser search filter selections
 
 pub mod analysis;
 pub mod articulation;
 pub mod bpm_range;
 pub mod collection;
 pub mod error;
+pub mod filter_counts;
 pub mod midi;
 pub mod midi_file;
 pub mod musical_key;
@@ -30,6 +33,7 @@ pub mod search;
 pub mod sequencer;
 pub mod style;
 pub mod timbre;
+pub mod vip3_filters;
 
 // ============================================================================
 // MIDI File Models
@@ -131,6 +135,18 @@ pub use saved_search::{
     BrowserFilters, CreateRecentSearch, CreateSavedSearch, RecentSearch, SavedSearch,
     UpdateSavedSearch,
 };
+
+// ============================================================================
+// VIP3 Filter Counts Model
+// ============================================================================
+
+pub use filter_counts::FilterCounts;
+
+// ============================================================================
+// VIP3 Filters Model
+// ============================================================================
+
+pub use vip3_filters::Vip3Filters;
 
 // ============================================================================
 // Pipeline Models (for CLI tools and batch processing)

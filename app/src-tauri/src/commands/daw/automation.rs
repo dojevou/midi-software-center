@@ -3,7 +3,7 @@
 //!
 //! Grown-up Script: Tauri commands with side effects for automation management.
 
-use crate::automation::{AutomationLane, AutomationManager, CurveType, ParameterType};
+use crate::automation::{AutomationLane, AutomationManager, AutomationMode, CurveType, ParameterType};
 use std::sync::Mutex;
 use tauri::State;
 
@@ -674,6 +674,44 @@ pub fn get_automation_lane_count(
     let manager = state.manager.lock().map_err(|e| format!("Failed to lock manager: {}", e))?;
     let track = manager.get_track(track_id)?;
     Ok(track.lane_count())
+}
+
+/// Set automation mode
+///
+/// # Arguments
+/// * `track_id` - Track ID
+/// * `parameter_type` - Parameter type
+/// * `mode` - Automation mode (Off, Read, Write, Latch, Touch)
+///
+/// # Returns
+/// Ok or error message
+#[tauri::command]
+pub fn set_automation_mode(
+    track_id: i32,
+    parameter_type: ParameterType,
+    mode: AutomationMode,
+    state: State<'_, AutomationState>,
+) -> Result<(), String> {
+    let mut manager = state.manager.lock().map_err(|e| format!("Failed to lock manager: {}", e))?;
+    manager.set_automation_mode(track_id, parameter_type, mode)
+}
+
+/// Get automation mode
+///
+/// # Arguments
+/// * `track_id` - Track ID
+/// * `parameter_type` - Parameter type
+///
+/// # Returns
+/// Current automation mode, or error message
+#[tauri::command]
+pub fn get_automation_mode(
+    track_id: i32,
+    parameter_type: ParameterType,
+    state: State<'_, AutomationState>,
+) -> Result<AutomationMode, String> {
+    let manager = state.manager.lock().map_err(|e| format!("Failed to lock manager: {}", e))?;
+    manager.get_automation_mode(track_id, parameter_type)
 }
 
 #[cfg(test)]

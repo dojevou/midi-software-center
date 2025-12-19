@@ -94,14 +94,41 @@ const PRESET_LAYOUTS: WindowLayout[] = [
 
 const initialState: UIState = {
   windows: {
-    // Main arrangement window (MPC 3.0 style) - DEFAULT VIEW
-    arrangement: {
-      x: 280,
+    // VIP3 Browser - Pro Tools style left side (2/5ths of 1920px = 768px)
+    'vip3-browser': {
+      x: 0,
       y: 32,
-      width: 1000,
-      height: 700,
+      width: 768,
+      height: 1024,  // Full height minus menu/status bars
       z_index: 1,
       visible: true,
+    },
+    // Arrangement window - Pro Tools style top right (3/5ths width)
+    arrangement: {
+      x: 768,
+      y: 32,
+      width: 1152,
+      height: 512,
+      z_index: 2,
+      visible: true,
+    },
+    // MIDI Mixer - Pro Tools style bottom right (3/5ths width)
+    mixer: {
+      x: 768,
+      y: 544,
+      width: 1152,
+      height: 512,
+      z_index: 3,
+      visible: true,
+    },
+    // Database window - hidden by default (replaced by VIP3)
+    database: {
+      x: 0,
+      y: 32,
+      width: 280,
+      height: 900,
+      z_index: 4,
+      visible: false,
     },
     // Legacy DAW window - hidden by default
     daw: {
@@ -109,31 +136,15 @@ const initialState: UIState = {
       y: 50,
       width: 800,
       height: 600,
-      z_index: 2,
+      z_index: 5,
       visible: false,
-    },
-    mixer: {
-      x: 280,
-      y: 732,
-      width: 1000,
-      height: 200,
-      z_index: 3,
-      visible: true,
-    },
-    database: {
-      x: 0,
-      y: 32,
-      width: 280,
-      height: 900,
-      z_index: 4,
-      visible: true,
     },
     pipeline: {
       x: 700,
       y: 700,
       width: 600,
       height: 400,
-      z_index: 5,
+      z_index: 6,
       visible: false,
     },
     // Piano Roll - detachable editor
@@ -142,7 +153,7 @@ const initialState: UIState = {
       y: 200,
       width: 900,
       height: 500,
-      z_index: 6,
+      z_index: 7,
       visible: false,
     },
     'midi-io-setup': {
@@ -150,7 +161,7 @@ const initialState: UIState = {
       y: 150,
       width: 900,
       height: 600,
-      z_index: 6,
+      z_index: 8,
       visible: false,
     },
     'midi-monitor': {
@@ -158,7 +169,7 @@ const initialState: UIState = {
       y: 200,
       width: 800,
       height: 500,
-      z_index: 7,
+      z_index: 9,
       visible: false,
     },
     'preferences': {
@@ -166,7 +177,7 @@ const initialState: UIState = {
       y: 100,
       width: 900,
       height: 650,
-      z_index: 8,
+      z_index: 10,
       visible: false,
     },
     'gear-manager': {
@@ -174,7 +185,7 @@ const initialState: UIState = {
       y: 120,
       width: 950,
       height: 700,
-      z_index: 9,
+      z_index: 11,
       visible: false,
     },
     'presets-manager': {
@@ -182,15 +193,7 @@ const initialState: UIState = {
       y: 140,
       width: 950,
       height: 700,
-      z_index: 10,
-      visible: false,
-    },
-    'vip3-browser': {
-      x: 160,
-      y: 60,
-      width: 1200,
-      height: 700,
-      z_index: 11,
+      z_index: 12,
       visible: false,
     },
     'export': {

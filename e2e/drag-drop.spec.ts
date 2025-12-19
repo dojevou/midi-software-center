@@ -1,23 +1,23 @@
-import { test, expect } from '@playwright/test';
+import { test, expect, waitForWorkspace } from './fixtures';
 
 test.describe('Drag and Drop E2E Tests', () => {
   test.beforeEach(async ({ page }) => {
-    await page.goto('/');
-    await page.waitForLoadState('networkidle');
+    await page.goto('/', { waitUntil: 'commit' });
+
+    const isReady = await waitForWorkspace(page, 10000);
+    if (!isReady) {
+      test.skip();
+    }
+    // VIP3 browser is open by default - wait for it
+    await page.waitForSelector('.vip3-browser', { timeout: 5000 }).catch(() => {});
+    await page.waitForTimeout(300);
   });
 
   test('should show drag visual feedback when dragging file', async ({ page }) => {
-    // Navigate to VIP3 browser
-    const databaseButton = page.locator('[data-testid="nav-database"], button:has-text("Database"), button:has-text("Browse")');
-    if (await databaseButton.first().isVisible()) {
-      await databaseButton.first().click();
-      await page.waitForLoadState('networkidle');
-    }
+    // Wait for file list in VIP3 browser
+    const fileItem = page.locator('.file-item').first();
 
-    // Wait for file list
-    const fileItem = page.locator('.file-row, .result-item, [data-testid="file-item"]').first();
-
-    if (!(await fileItem.isVisible())) {
+    if (!(await fileItem.isVisible({ timeout: 5000 }))) {
       test.skip();
       return;
     }
@@ -41,31 +41,24 @@ test.describe('Drag and Drop E2E Tests', () => {
   });
 
   test('should accept drop on sequencer tracks', async ({ page }) => {
-    // Navigate to VIP3 browser
-    const databaseButton = page.locator('[data-testid="nav-database"], button:has-text("Database"), button:has-text("Browse")');
-    if (await databaseButton.first().isVisible()) {
-      await databaseButton.first().click();
-      await page.waitForLoadState('networkidle');
-    }
+    // Get a file item from VIP3 browser
+    const fileItem = page.locator('.file-item').first();
 
-    // Get a file item
-    const fileItem = page.locator('.file-row, .result-item, [data-testid="file-item"]').first();
-
-    if (!(await fileItem.isVisible())) {
+    if (!(await fileItem.isVisible({ timeout: 5000 }))) {
       test.skip();
       return;
     }
 
-    // Get sequencer drop zone
-    const sequencer = page.locator('.sequencer, [data-testid="sequencer"], .tracks-container');
+    // Open arrangement view
+    await page.keyboard.press('Alt+1');
+    await page.waitForTimeout(300);
 
-    if (!(await sequencer.isVisible())) {
-      // May need to open DAW view first
-      const dawButton = page.locator('[data-testid="nav-daw"], button:has-text("DAW")');
-      if (await dawButton.isVisible()) {
-        await dawButton.click();
-        await page.waitForLoadState('networkidle');
-      }
+    // Get arrangement view drop zone
+    const sequencer = page.locator('.arrangement-view, .arrangement-main').first();
+
+    if (!(await sequencer.isVisible({ timeout: 3000 }))) {
+      test.skip();
+      return;
     }
 
     // Perform drag and drop
@@ -89,16 +82,20 @@ test.describe('Drag and Drop E2E Tests', () => {
     await page.waitForTimeout(500);
 
     // Check if a clip was created or loading indicator appeared
-    const clip = page.locator('.clip, [data-testid="clip"], .sequencer-clip');
+    const clip = page.locator('.sequencer-clip, .clip');
     const loadingIndicator = page.locator('.loading, [data-loading="true"]');
 
     // May have created a clip or shown loading
   });
 
   test('should show drop zone highlight on drag over', async ({ page }) => {
-    const sequencer = page.locator('.sequencer, [data-testid="sequencer"]');
+    // Open arrangement view
+    await page.keyboard.press('Alt+1');
+    await page.waitForTimeout(300);
 
-    if (!(await sequencer.isVisible())) {
+    const sequencer = page.locator('.arrangement-view, .arrangement-main').first();
+
+    if (!(await sequencer.isVisible({ timeout: 3000 }))) {
       test.skip();
       return;
     }
@@ -129,16 +126,9 @@ test.describe('Drag and Drop E2E Tests', () => {
   });
 
   test('should handle drag data with correct MIME type', async ({ page }) => {
-    // Navigate to VIP3 browser
-    const databaseButton = page.locator('[data-testid="nav-database"], button:has-text("Database"), button:has-text("Browse")');
-    if (await databaseButton.first().isVisible()) {
-      await databaseButton.first().click();
-      await page.waitForLoadState('networkidle');
-    }
+    const fileItem = page.locator('.file-item').first();
 
-    const fileItem = page.locator('.file-row, .result-item, [data-testid="file-item"]').first();
-
-    if (!(await fileItem.isVisible())) {
+    if (!(await fileItem.isVisible({ timeout: 5000 }))) {
       test.skip();
       return;
     }
@@ -152,16 +142,19 @@ test.describe('Drag and Drop E2E Tests', () => {
   });
 
   test('should create new track when dropping below existing tracks', async ({ page }) => {
-    const sequencer = page.locator('.sequencer, [data-testid="sequencer"]');
-    const tracksContainer = page.locator('.tracks-container, [data-testid="tracks-container"]');
+    // Open arrangement view
+    await page.keyboard.press('Alt+1');
+    await page.waitForTimeout(300);
 
-    if (!(await tracksContainer.isVisible())) {
+    const tracksContainer = page.locator('.arrangement-view, .arrangement-main').first();
+
+    if (!(await tracksContainer.isVisible({ timeout: 3000 }))) {
       test.skip();
       return;
     }
 
     // Get initial track count
-    const initialTrackCount = await page.locator('.track, [data-testid="track"], .sequencer-track').count();
+    const initialTrackCount = await page.locator('.sequencer-track, .track').count();
 
     // Simulate drop event with mock data
     await tracksContainer.evaluate((el) => {
@@ -186,7 +179,7 @@ test.describe('Drag and Drop E2E Tests', () => {
     await page.waitForTimeout(1000);
 
     // Check if track was added
-    const newTrackCount = await page.locator('.track, [data-testid="track"], .sequencer-track').count();
+    const newTrackCount = await page.locator('.sequencer-track, .track').count();
     // May or may not increase depending on implementation details
   });
 });

@@ -6,6 +6,7 @@ pub mod daw;
 pub mod effect;
 pub mod export;
 pub mod gear;
+pub mod hardware_sync;
 pub mod logging;
 pub mod midi;
 pub mod midi_clock;
@@ -16,6 +17,7 @@ pub mod pipeline;
 pub mod preferences;
 pub mod presets;
 pub mod project;
+pub mod project_v2;
 pub mod repair;
 // pub mod scripting;  // Temporarily disabled - depends on scripting module
 pub mod search;
@@ -32,6 +34,8 @@ pub mod window;
 pub use automation::AutomationState;
 #[allow(unused_imports)] // Used by external crates
 pub use daw::DawState;
+#[allow(unused_imports)] // Used by external crates
+pub use hardware_sync::HardwareSyncState;
 #[allow(unused_imports)] // Used by external crates
 pub use midi_clock::MidiClockState;
 #[allow(unused_imports)] // Used by external crates

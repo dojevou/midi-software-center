@@ -67,17 +67,41 @@ pub enum CurveType {
     Hold,
 }
 
+/// Automation mode
+///
+/// Defines how automation behaves during playback and recording.
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Default)]
+pub enum AutomationMode {
+    /// Automation is disabled, manual control only
+    Off,
+    /// Read automation data during playback
+    #[default]
+    Read,
+    /// Write (overwrite) automation data during playback
+    Write,
+    /// Latch mode: write when parameter changes, hold last value
+    Latch,
+    /// Touch mode: write while touching, return to automation when released
+    Touch,
+}
+
 /// Parameter type for automation
 ///
 /// Defines which track parameter is being automated.
 #[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Hash)]
 pub enum ParameterType {
-    /// Track volume (0-127 MIDI)
+    /// Track volume/gain (0-127 MIDI, or normalized 0.0-1.0)
     Volume,
-    /// Stereo pan (0-127, 64=center)
+    /// Alias for Volume (mixer gain control)
+    Gain,
+    /// Stereo pan (0-127, 64=center, or normalized -1.0 to 1.0)
     Pan,
     /// MIDI Control Change (0-127)
     CC(u8),
+    /// Aux send level (send_id, level 0.0-1.0)
+    Send(u32),
+    /// Effect/plugin parameter (effect_id, param_id)
+    EffectParam { effect_id: u32, param_id: u32 },
     /// Custom parameter (plugin/synth)
     Custom(u8),
 }
@@ -87,8 +111,13 @@ impl ParameterType {
     pub fn as_string(&self) -> String {
         match self {
             Self::Volume => "Volume".to_string(),
+            Self::Gain => "Gain".to_string(),
             Self::Pan => "Pan".to_string(),
             Self::CC(num) => format!("CC{}", num),
+            Self::Send(id) => format!("Send {}", id),
+            Self::EffectParam { effect_id, param_id } => {
+                format!("Effect {} Param {}", effect_id, param_id)
+            }
             Self::Custom(num) => format!("Custom{}", num),
         }
     }
@@ -96,10 +125,13 @@ impl ParameterType {
     /// Get color for visualization
     pub fn color(&self) -> &'static str {
         match self {
-            Self::Volume => "#4ade80",    // green
-            Self::Pan => "#60a5fa",       // blue
-            Self::CC(_) => "#a78bfa",     // purple
-            Self::Custom(_) => "#fbbf24", // yellow
+            Self::Volume => "#4ade80",        // green
+            Self::Gain => "#4ade80",          // green (same as Volume)
+            Self::Pan => "#60a5fa",           // blue
+            Self::CC(_) => "#a78bfa",         // purple
+            Self::Send(_) => "#f97316",       // orange
+            Self::EffectParam { .. } => "#ec4899", // pink
+            Self::Custom(_) => "#fbbf24",     // yellow
         }
     }
 }
@@ -350,6 +382,8 @@ pub struct AutomationLane {
     pub parameter_type: ParameterType,
     /// Automation curve data
     pub curve: AutomationCurve,
+    /// Automation mode (Off, Read, Write, Latch, Touch)
+    pub mode: AutomationMode,
     /// Lane enabled state
     pub enabled: bool,
     /// Display name (optional override)
@@ -369,6 +403,7 @@ impl AutomationLane {
             track_id,
             parameter_type,
             curve: AutomationCurve::new(),
+            mode: AutomationMode::Read,
             enabled: true,
             name: None,
         }
@@ -767,6 +802,43 @@ impl AutomationManager {
         track
             .get_lane_mut(parameter_type)
             .ok_or_else(|| format!("Lane for {:?} not found", parameter_type))
+    }
+
+    /// Set automation mode
+    ///
+    /// # Arguments
+    /// * `track_id` - Track ID
+    /// * `parameter_type` - Parameter type
+    /// * `mode` - New automation mode
+    ///
+    /// # Returns
+    /// Ok if set, Err if lane not found
+    pub fn set_automation_mode(
+        &mut self,
+        track_id: i32,
+        parameter_type: ParameterType,
+        mode: AutomationMode,
+    ) -> Result<(), String> {
+        let lane = self.get_lane_mut(track_id, parameter_type)?;
+        lane.mode = mode;
+        Ok(())
+    }
+
+    /// Get automation mode
+    ///
+    /// # Arguments
+    /// * `track_id` - Track ID
+    /// * `parameter_type` - Parameter type
+    ///
+    /// # Returns
+    /// Current automation mode, or Err if lane not found
+    pub fn get_automation_mode(
+        &self,
+        track_id: i32,
+        parameter_type: ParameterType,
+    ) -> Result<AutomationMode, String> {
+        let lane = self.get_lane(track_id, parameter_type)?;
+        Ok(lane.mode)
     }
 }
 
@@ -1318,5 +1390,127 @@ mod tests {
 
         let value = manager.get_value_at(10, ParameterType::Volume, 200);
         assert_eq!(value, Some(0.0)); // Should be clamped
+    }
+
+    #[test]
+    fn test_automation_mode() {
+        let mut manager = AutomationManager::new();
+        manager.create_lane(1, ParameterType::Volume).unwrap();
+
+        // Default mode should be Read
+        let mode = manager.get_automation_mode(1, ParameterType::Volume).unwrap();
+        assert_eq!(mode, AutomationMode::Read);
+
+        // Test setting different modes
+        manager.set_automation_mode(1, ParameterType::Volume, AutomationMode::Write).unwrap();
+        let mode = manager.get_automation_mode(1, ParameterType::Volume).unwrap();
+        assert_eq!(mode, AutomationMode::Write);
+
+        manager.set_automation_mode(1, ParameterType::Volume, AutomationMode::Off).unwrap();
+        let mode = manager.get_automation_mode(1, ParameterType::Volume).unwrap();
+        assert_eq!(mode, AutomationMode::Off);
+
+        manager.set_automation_mode(1, ParameterType::Volume, AutomationMode::Latch).unwrap();
+        let mode = manager.get_automation_mode(1, ParameterType::Volume).unwrap();
+        assert_eq!(mode, AutomationMode::Latch);
+
+        manager.set_automation_mode(1, ParameterType::Volume, AutomationMode::Touch).unwrap();
+        let mode = manager.get_automation_mode(1, ParameterType::Volume).unwrap();
+        assert_eq!(mode, AutomationMode::Touch);
+    }
+
+    #[test]
+    fn test_send_parameter_type() {
+        let mut manager = AutomationManager::new();
+
+        // Test Send parameter types
+        manager.create_lane(1, ParameterType::Send(0)).unwrap();
+        manager.create_lane(1, ParameterType::Send(1)).unwrap();
+        manager.create_lane(1, ParameterType::Send(2)).unwrap();
+
+        // Verify they are distinct
+        let lanes = manager.get_track_lanes(1);
+        assert_eq!(lanes.len(), 3);
+
+        // Test display names
+        assert_eq!(ParameterType::Send(0).as_string(), "Send 0");
+        assert_eq!(ParameterType::Send(1).as_string(), "Send 1");
+
+        // Test colors
+        assert_eq!(ParameterType::Send(0).color(), "#f97316");
+    }
+
+    #[test]
+    fn test_effect_param_type() {
+        let mut manager = AutomationManager::new();
+
+        // Test EffectParam parameter types
+        manager.create_lane(1, ParameterType::EffectParam { effect_id: 0, param_id: 0 }).unwrap();
+        manager.create_lane(1, ParameterType::EffectParam { effect_id: 0, param_id: 1 }).unwrap();
+        manager.create_lane(1, ParameterType::EffectParam { effect_id: 1, param_id: 0 }).unwrap();
+
+        // Verify they are distinct
+        let lanes = manager.get_track_lanes(1);
+        assert_eq!(lanes.len(), 3);
+
+        // Test display names
+        assert_eq!(
+            ParameterType::EffectParam { effect_id: 0, param_id: 5 }.as_string(),
+            "Effect 0 Param 5"
+        );
+
+        // Test colors
+        assert_eq!(ParameterType::EffectParam { effect_id: 0, param_id: 0 }.color(), "#ec4899");
+    }
+
+    #[test]
+    fn test_gain_parameter_type() {
+        let mut manager = AutomationManager::new();
+
+        // Test both Volume and Gain (they're aliases)
+        manager.create_lane(1, ParameterType::Volume).unwrap();
+        manager.create_lane(1, ParameterType::Gain).unwrap();
+
+        // Verify they are distinct parameters
+        let lanes = manager.get_track_lanes(1);
+        assert_eq!(lanes.len(), 2);
+
+        // Test display names
+        assert_eq!(ParameterType::Volume.as_string(), "Volume");
+        assert_eq!(ParameterType::Gain.as_string(), "Gain");
+
+        // Both should have same color (green)
+        assert_eq!(ParameterType::Volume.color(), "#4ade80");
+        assert_eq!(ParameterType::Gain.color(), "#4ade80");
+    }
+
+    #[test]
+    fn test_automation_with_new_parameter_types() {
+        let mut manager = AutomationManager::new();
+
+        // Create lanes for all new parameter types
+        manager.create_lane(1, ParameterType::Gain).unwrap();
+        manager.create_lane(1, ParameterType::Send(0)).unwrap();
+        manager.create_lane(1, ParameterType::EffectParam { effect_id: 0, param_id: 0 }).unwrap();
+
+        // Add points
+        manager.add_point(1, ParameterType::Gain, 0, 0.0).unwrap();
+        manager.add_point(1, ParameterType::Gain, 100, 1.0).unwrap();
+
+        manager.add_point(1, ParameterType::Send(0), 0, 0.5).unwrap();
+        manager.add_point(1, ParameterType::Send(0), 100, 0.8).unwrap();
+
+        manager.add_point(1, ParameterType::EffectParam { effect_id: 0, param_id: 0 }, 0, 0.3).unwrap();
+        manager.add_point(1, ParameterType::EffectParam { effect_id: 0, param_id: 0 }, 100, 0.7).unwrap();
+
+        // Verify interpolation works
+        let gain_value = manager.get_value_at(1, ParameterType::Gain, 50).unwrap();
+        assert!((gain_value - 0.5).abs() < 0.01);
+
+        let send_value = manager.get_value_at(1, ParameterType::Send(0), 50).unwrap();
+        assert!((send_value - 0.65).abs() < 0.01);
+
+        let effect_value = manager.get_value_at(1, ParameterType::EffectParam { effect_id: 0, param_id: 0 }, 50).unwrap();
+        assert!((effect_value - 0.5).abs() < 0.01);
     }
 }

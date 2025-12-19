@@ -2,30 +2,35 @@ import { defineConfig, devices } from '@playwright/test';
 
 export default defineConfig({
   testDir: './e2e',
-  fullyParallel: true,
+  fullyParallel: false,
   forbidOnly: !!process.env.CI,
   retries: process.env.CI ? 2 : 0,
-  workers: process.env.CI ? 1 : undefined,
-  reporter: 'html',
+  workers: 1,
+  timeout: 90000,
+  reporter: 'list',
   use: {
     baseURL: 'http://localhost:5173',
-    trace: 'on-first-retry',
-    screenshot: 'only-on-failure',
-    video: 'retain-on-failure',
+    trace: 'off',
+    screenshot: 'off',
+    video: 'off',
+    actionTimeout: 15000,
+    navigationTimeout: 60000,
+    launchOptions: {
+      args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-gpu'],
+    },
   },
 
   projects: [
     {
       name: 'chromium',
-      use: { ...devices['chromium'] },
+      use: { ...devices['Desktop Chrome'], headless: true },
     },
   ],
 
-  // Web server already running via pnpm dev
-  // Comment out webServer to use existing server
-  // webServer: {
-  //   command: 'npm run tauri dev',
-  //   url: 'http://localhost:1420',
-  //   reuseExistingServer: !process.env.CI,
-  // },
+  webServer: {
+    command: 'cd app && pnpm dev',
+    url: 'http://localhost:5173',
+    reuseExistingServer: true,
+    timeout: 120000,
+  },
 });

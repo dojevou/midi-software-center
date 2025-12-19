@@ -18,6 +18,17 @@
   import { keyboardStore } from '$lib/stores/keyboardStore';
   import { a11yStore, isKeyboardNav } from '$lib/stores/a11yStore';
   import { reducedMotion } from '$lib/stores/themeStore';
+  import { undoActions } from '$lib/stores/undoStore';
+  import { sequencerActions } from '$lib/stores/sequencerStore';
+  import { pianoRollActions } from '$lib/stores/pianoRollStore';
+
+  // Tauri APIs
+  import { getCurrentWindow } from '@tauri-apps/api/window';
+  import { save } from '@tauri-apps/plugin-dialog';
+  import { writeTextFile } from '@tauri-apps/plugin-fs';
+
+  // API
+  import { api } from '$lib/api';
 
   // Accessibility Components
   import SkipLinks from '$lib/components/SkipLinks.svelte';
@@ -25,6 +36,7 @@
   // Error and Loading Components
   import ErrorToast from '$lib/components/ErrorToast.svelte';
   import LoadingOverlay from '$lib/components/LoadingOverlay.svelte';
+  import Toast from '$lib/components/Toast.svelte';
 
   // Core Components
   import MenuBar from '$lib/components/MenuBar.svelte';
@@ -72,39 +84,124 @@ import type { WindowId } from '$lib/types';
     'score', 'script-editor', 'midi-learn', 'link-sync', 'vip3-browser', 'export', 'tag-editor', 'favorites'
   ];
 
+  // ============================================================================
+  // KEYBOARD SHORTCUT HELPER FUNCTIONS
+  // ============================================================================
+
+  let isFullscreen = false;
+
+  /** Toggle fullscreen mode using Tauri window API */
+  async function toggleFullscreen() {
+    try {
+      const window = getCurrentWindow();
+      isFullscreen = !isFullscreen;
+      await window.setFullscreen(isFullscreen);
+    } catch (error) {
+      console.error('Failed to toggle fullscreen:', error);
+    }
+  }
+
+  /** Save project with file picker dialog (Save As) */
+  async function saveProjectAs() {
+    try {
+      const filePath = await save({
+        filters: [{ name: 'MIDI Software Center Project', extensions: ['msc'] }],
+        defaultPath: `${$projectStore.projectName}.msc`,
+      });
+
+      if (!filePath) return;
+
+      // Serialize and save project state
+      const state = $projectStore;
+      const projectData = {
+        version: '1.0.0',
+        name: state.projectName,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+        tracks: state.tracks,
+      };
+      await writeTextFile(filePath, JSON.stringify(projectData, null, 2));
+
+      // Extract project name from file path and update state
+      const projectName = filePath.split(/[/\\]/).pop()?.replace(/\.msc$/, '') || state.projectName;
+      projectActions.setProjectName(projectName);
+      projectActions.markSaved();
+    } catch (error) {
+      console.error('Failed to save project as:', error);
+    }
+  }
+
+  /** Seek transport to beginning (rewind) */
+  async function transportRewind() {
+    try {
+      await api.window.setPlaybackPosition(0, 0, 0);
+    } catch (error) {
+      console.error('Failed to rewind:', error);
+    }
+  }
+
+  /** Seek transport forward by 1 bar */
+  async function transportForward() {
+    try {
+      const currentBar = $playbackStore.position?.current_bar ?? 0;
+      const currentBeat = $playbackStore.position?.current_beat ?? 0;
+      await api.window.setPlaybackPosition(currentBar + 1, currentBeat, 0);
+    } catch (error) {
+      console.error('Failed to skip forward:', error);
+    }
+  }
+
   onMount(() => {
-    // Initialize main windows visible, popups hidden
-    // Arrangement is the default main view (MPC 3.0 style)
-    uiActions.showWindow('arrangement');
-    uiActions.showWindow('mixer');
-    uiActions.showWindow('database');
-    uiActions.hideWindow('daw');  // DAW window replaced by Arrangement
+    // Initialize main windows visible (Pro Tools style layout)
+    uiActions.showWindow('vip3-browser');  // VIP3 browser on left (2/5ths width)
+    uiActions.showWindow('arrangement');    // Arrangement top-right (3/5ths width)
+    uiActions.showWindow('mixer');          // Mixer bottom-right (3/5ths width)
+    uiActions.hideWindow('database');       // Database hidden (replaced by VIP3)
+    uiActions.hideWindow('daw');            // Legacy DAW window hidden
     uiActions.hideWindow('pipeline');
     uiActions.hideWindow('piano-roll');  // Piano Roll opens on demand
 
     // Initialize keyboard shortcuts store with action mappings
     keyboardStore.init({
+      // Transport controls
       'transport.play': () => void playbackActions.play(),
       'transport.stop': () => void playbackActions.stop(),
       'transport.pause': () => void playbackActions.pause(),
-      'transport.record': () => console.log('Record not implemented'),
-      'transport.rewind': () => console.log('Rewind not implemented'),
-      'transport.forward': () => console.log('Forward not implemented'),
+      'transport.record': () => void playbackActions.record(),
+      'transport.rewind': () => void transportRewind(),
+      'transport.forward': () => void transportForward(),
+
+      // File operations
       'file.new': () => void projectActions.newProject(),
       'file.open': () => void projectActions.openProject(),
       'file.save': () => void projectActions.saveProject(),
-      'file.saveAs': () => console.log('Save As not implemented'),
+      'file.saveAs': () => void saveProjectAs(),
       'file.close': () => window.close(),
-      'editing.undo': () => console.log('Undo not implemented'),
-      'editing.redo': () => console.log('Redo not implemented'),
-      'editing.cut': () => console.log('Cut not implemented'),
-      'editing.copy': () => console.log('Copy not implemented'),
-      'editing.paste': () => console.log('Paste not implemented'),
-      'editing.delete': () => console.log('Delete not implemented'),
-      'editing.selectAll': () => console.log('Select All not implemented'),
-      'navigation.zoomIn': () => console.log('Zoom In not implemented'),
-      'navigation.zoomOut': () => console.log('Zoom Out not implemented'),
-      'navigation.zoomFit': () => console.log('Zoom Fit not implemented'),
+
+      // Editing operations
+      'editing.undo': () => void undoActions.undo(),
+      'editing.redo': () => void undoActions.redo(),
+      'editing.cut': () => {
+        const trackId = $projectStore.selectedTrackId;
+        if (trackId) void api.pianoRoll.cutNotes(trackId);
+      },
+      'editing.copy': () => {
+        const trackId = $projectStore.selectedTrackId;
+        if (trackId) void api.pianoRoll.copyNotes(trackId);
+      },
+      'editing.paste': () => {
+        const trackId = $projectStore.selectedTrackId;
+        if (trackId) void api.pianoRoll.pasteNotes(trackId, $playbackStore.position?.current_tick ?? 0);
+      },
+      'editing.delete': () => void pianoRollActions.deleteSelectedNotes(),
+      'editing.selectAll': () => pianoRollActions.selectAllNotes(),
+
+      // Navigation/Zoom
+      'navigation.zoomIn': () => sequencerActions.zoomIn(),
+      'navigation.zoomOut': () => sequencerActions.zoomOut(),
+      'navigation.zoomFit': () => sequencerActions.setZoom(100),
+
+      // Window toggles
       'windows.togglePipeline': () => uiActions.toggleWindow('pipeline'),
       'windows.toggleMixer': () => uiActions.toggleWindow('mixer'),
       'windows.toggleDatabase': () => uiActions.toggleWindow('database'),
@@ -118,12 +215,26 @@ import type { WindowId } from '$lib/types';
       'window.export': () => uiActions.openWindow('export'),
       'window.tagEditor': () => uiActions.openWindow('tag-editor'),
       'window.favorites': () => uiActions.openWindow('favorites'),
+
+      // View controls
       'view.toggleSidebar': () => uiActions.toggleSidebar(),
       'view.toggleInspector': () => uiActions.toggleInspector(),
-      'view.toggleFullscreen': () => console.log('Fullscreen not implemented'),
-      'tools.quantize': () => console.log('Quantize not implemented'),
-      'tools.transpose': () => console.log('Transpose not implemented'),
-      'tools.velocity': () => console.log('Velocity not implemented'),
+      'view.toggleFullscreen': () => void toggleFullscreen(),
+
+      // Tools (operate on selected track)
+      'tools.quantize': () => {
+        const trackId = $projectStore.selectedTrackId;
+        if (trackId) void api.pianoRoll.scaleQuantizeNotes(trackId, 60, 'major');
+      },
+      'tools.transpose': () => {
+        const trackId = $projectStore.selectedTrackId;
+        // Transpose by 0 semitones (no change) - dialog should be shown for user input
+        if (trackId) console.log('Transpose: Open dialog for semitone input');
+      },
+      'tools.velocity': () => {
+        const trackId = $projectStore.selectedTrackId;
+        if (trackId) void api.velocityEditor.scaleVelocities(trackId, 1.0);
+      },
     });
 
     // Setup backend event listeners
@@ -502,23 +613,27 @@ import type { WindowId } from '$lib/types';
 <MenuBar />
 
 <div id="main-content" class="workspace frogskin-radial" tabindex="-1">
-  <div class="grid-container">
-    {#if $uiStore.windows.database?.visible}
-      <div class="window-wrapper" style="grid-area: database;">
-        <DatabaseWindow />
-      </div>
-    {/if}
-    {#if $uiStore.windows.arrangement?.visible}
-      <div class="window-wrapper" style="grid-area: arrangement;">
-        <ArrangementWindow />
-      </div>
-    {/if}
-    {#if $uiStore.windows.mixer?.visible}
-      <div class="window-wrapper" style="grid-area: mixer;">
-        <MixerWindow />
-      </div>
-    {/if}
-  </div>
+  <!-- Pro Tools-style draggable/resizable main windows -->
+
+  <!-- VIP3 Browser - Left side (2/5ths width) -->
+  {#if $uiStore.windows['vip3-browser']?.visible}
+    <VIP3BrowserWindow windowId="vip3-browser" />
+  {/if}
+
+  <!-- Arrangement Window - Top-right (3/5ths width) -->
+  {#if $uiStore.windows.arrangement?.visible}
+    <ArrangementWindow />
+  {/if}
+
+  <!-- Mixer Window - Bottom-right (3/5ths width) -->
+  {#if $uiStore.windows.mixer?.visible}
+    <MixerWindow />
+  {/if}
+
+  <!-- Database Window - Hidden by default, can be opened from menu -->
+  {#if $uiStore.windows.database?.visible}
+    <DatabaseWindow />
+  {/if}
 
   <!-- Pipeline Window as Modal/Popup -->
   {#if $uiStore.windows.pipeline.visible}
@@ -651,14 +766,6 @@ import type { WindowId } from '$lib/types';
     </div>
   {/if}
 
-  <!-- VIP3 Browser Window as Modal/Popup (Ctrl+B) -->
-  {#if $uiStore.windows['vip3-browser']?.visible}
-    <div class="modal-overlay" on:click={(e) => e.target === e.currentTarget && uiActions.hideWindow('vip3-browser')} on:keydown={(e) => e.key === 'Escape' && uiActions.hideWindow('vip3-browser')} role="dialog" aria-modal="true" tabindex="-1">
-      <div class="modal-content modal-content-extra-wide" role="document">
-        <VIP3BrowserWindow windowId="vip3-browser" />
-      </div>
-    </div>
-  {/if}
 
   <!-- Export Window as Modal/Popup (Ctrl+E) -->
   {#if $uiStore.windows['export']?.visible}
@@ -707,6 +814,7 @@ import type { WindowId } from '$lib/types';
 <!-- Global Error and Loading Components -->
 <ErrorToast position="bottom-right" />
 <LoadingOverlay />
+<Toast />
 
 <!-- MIDI Learn Overlay - shows when in learn mode -->
 {#if $isLearning}
@@ -721,50 +829,9 @@ import type { WindowId } from '$lib/types';
     position: relative;
     height: calc(100vh - 4rem); /* Adjust for menu and status bar */
     overflow: hidden;
-    display: flex;
     /* Frogskin camo theme - Ruby, Emerald, Sapphire radial gradient */
     background: var(--frogskin-gradient-radial);
     background-attachment: fixed;
-  }
-
-  .grid-container {
-    display: grid;
-    grid-template-columns: 280px 1fr;
-    grid-template-rows: 1fr auto;
-    grid-template-areas:
-      'database arrangement'
-      'database mixer';
-    gap: 8px;
-    height: 100%;
-    width: 100%;
-    padding: 8px;
-  }
-
-  .window-wrapper {
-    min-height: 0;
-    min-width: 0;
-    overflow: auto;
-    border: 2px solid var(--emerald-500);
-    border-radius: 8px;
-    background-color: rgba(13, 17, 23, 0.65);
-    backdrop-filter: blur(12px);
-    box-shadow:
-      0 0 20px var(--ruby-glow),
-      0 0 40px var(--emerald-glow),
-      0 0 8px rgba(5, 150, 105, 0.3),
-      inset 0 0 30px rgba(0, 0, 0, 0.4);
-    transition: all 0.3s ease;
-  }
-
-  .window-wrapper:hover {
-    border-color: var(--sapphire-500);
-    background-color: rgba(13, 17, 23, 0.7);
-    box-shadow:
-      0 0 25px var(--ruby-glow),
-      0 0 50px var(--emerald-glow),
-      0 0 70px var(--sapphire-glow),
-      0 0 12px rgba(29, 78, 216, 0.4),
-      inset 0 0 30px rgba(0, 0, 0, 0.4);
   }
 
   /* Modal/Popup styles for Pipeline/Import */

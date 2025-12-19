@@ -52,6 +52,9 @@ spin_sleep = "1.2"
 # Lua scripting for macros and automation (vendored = bundled Lua, no system dep)
 mlua = { version = "0.9", features = ["lua54", "async", "serialize", "vendored"] }
 
+# ZeroMQ for high-performance IPC with external hardware
+zeromq = "0.4"
+
 # Meilisearch for full-text search
 meilisearch-sdk = "0.26"
 

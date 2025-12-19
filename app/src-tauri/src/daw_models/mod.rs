@@ -8,6 +8,7 @@ pub mod analysis;
 pub mod error;
 pub mod midi;
 pub mod midi_file;
+pub mod project;
 pub mod search;
 pub mod sequencer;
 
@@ -20,6 +21,8 @@ pub use error::AppError;
 pub use midi::{ConnectionStatus, MidiDevice, MidiEvent, MidiEventType, MidiNote, MidiPattern};
 #[allow(unused_imports)]
 pub use midi_file::{FileDetails, MidiFile};
+#[allow(unused_imports)]
+pub use project::{Project, Track as ProjectTrack, Clip, Note, MusicalSettings, ProjectMetadata};
 #[allow(unused_imports)]
 pub use search::{FilterOption, SearchFilters, SearchResponse, Suggestion};
 #[allow(unused_imports)]

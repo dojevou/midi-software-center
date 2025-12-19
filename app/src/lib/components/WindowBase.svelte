@@ -73,11 +73,10 @@
   };
   $: currentZIndex = position.z_index;
 
-  // Update store on position/size changes
-  $: if (position && !isMinimized) {
-    uiActions.setWindowPosition(windowId, position.x, position.y);
-    uiActions.setWindowSize(windowId, position.width, position.height);
-  }
+  // NOTE: Store updates are now handled by drag/resize handlers only
+  // The previous reactive statement here caused an infinite loop:
+  // position -> setWindowPosition -> store update -> position -> ...
+  // Window position/size should only be updated when user drags/resizes
 
   // Bring to front on mount
   onMount(() => {

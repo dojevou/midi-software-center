@@ -1132,9 +1132,10 @@
               </div>
 
               <div>
-                <label class="block text-sm dark:text-gray-400 mb-2">MIDI Files Location</label>
+                <label for="midiFilesLocation" class="block text-sm dark:text-gray-400 mb-2">MIDI Files Location</label>
                 <div class="flex gap-2">
                   <input
+                    id="midiFilesLocation"
                     type="text"
                     bind:value={settings.midiPath}
                     readonly
@@ -1150,9 +1151,10 @@
               </div>
 
               <div>
-                <label class="block text-sm dark:text-gray-400 mb-2">Projects Location</label>
+                <label for="projectsLocation" class="block text-sm dark:text-gray-400 mb-2">Projects Location</label>
                 <div class="flex gap-2">
                   <input
+                    id="projectsLocation"
                     type="text"
                     bind:value={settings.projectsPath}
                     readonly
@@ -1168,9 +1170,10 @@
               </div>
 
               <div>
-                <label class="block text-sm dark:text-gray-400 mb-2">Backup Location</label>
+                <label for="backupLocation" class="block text-sm dark:text-gray-400 mb-2">Backup Location</label>
                 <div class="flex gap-2">
                   <input
+                    id="backupLocation"
                     type="text"
                     bind:value={settings.backupPath}
                     readonly
@@ -1198,8 +1201,9 @@
                 <div class="grid grid-cols-2 gap-6">
                   <div class="space-y-4">
                     <div>
-                      <label class="block text-sm dark:text-gray-400 mb-2">Render Threads</label>
+                      <label for="renderThreads" class="block text-sm dark:text-gray-400 mb-2">Render Threads</label>
                       <input
+                        id="renderThreads"
                         type="range"
                         bind:value={settings.renderThreads}
                         min="1"
@@ -1231,10 +1235,11 @@
 
                   <div class="space-y-4">
                     <div>
-                      <label class="block text-sm dark:text-gray-400 mb-2"
+                      <label for="memoryCacheSize" class="block text-sm dark:text-gray-400 mb-2"
                         >Memory Cache Size (MB)</label
                       >
                       <input
+                        id="memoryCacheSize"
                         type="range"
                         bind:value={settings.cacheSize}
                         min="128"

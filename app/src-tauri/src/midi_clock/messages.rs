@@ -3,7 +3,7 @@
 use serde::{Deserialize, Serialize};
 
 /// MIDI Real-Time Messages for clock synchronization
-#[derive(Debug, Clone, Copy, PartialEq, Eq)]
+#[derive(Debug, Clone, Copy, PartialEq, Eq, Serialize, Deserialize)]
 pub enum MidiClockMessage {
     /// Timing Clock (0xF8) - sent 24 times per quarter note
     TimingClock,
