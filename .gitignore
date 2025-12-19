@@ -247,6 +247,10 @@ docker-volumes/
 **/docs/api/html/
 **/docs/api/json/
 
+# Checkpoint files (auto-generated session snapshots)
+**/checkpoints/
+**/docs/checkpoints/
+
 # Keep markdown
 !*.md
 
@@ -293,8 +297,11 @@ ENV/
 #=============================================================================
 # KILO CODE / OTHER TOOLS
 #=============================================================================
+.kilo-code/
+.kilo/
 .kilocode/
 .kilocodemodes
+${workspaceFolder}/
 
 #=============================================================================
 # BUILD OUTPUTS (PROJECT)
@@ -305,3 +312,8 @@ build_output/
 # MIDI LIBRARY DATA
 #=============================================================================
 midi-library/
+
+#=============================================================================
+# SQL SESSION FILES
+#=============================================================================
+*.session.sql
