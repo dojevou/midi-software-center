@@ -8,7 +8,7 @@ use chrono::{DateTime, Utc};
 use serde::{Deserialize, Serialize};
 use sqlx::types::Json;
 use sqlx::{PgPool, Row};
-use tracing::{error, info};
+use tracing::info;
 
 /// Database model for project metadata
 #[derive(Debug, Clone, Serialize, Deserialize)]

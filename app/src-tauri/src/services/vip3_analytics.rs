@@ -313,6 +313,6 @@ mod tests {
         println!("Timbres count: {}", counts.timbres.len());
         println!("Multi-track files: {}", counts.multi_track);
 
-        assert!(counts.bpm_ranges.len() > 0, "Should have BPM range counts");
+        assert!(!counts.bpm_ranges.is_empty(), "Should have BPM range counts");
     }
 }

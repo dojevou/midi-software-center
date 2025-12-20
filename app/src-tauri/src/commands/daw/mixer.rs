@@ -1915,14 +1915,14 @@ pub fn mixer_set_latency_compensation(
     }
 
     if let Some(hw_latency) = hardware_latency_ms {
-        if hw_latency < 0.0 || hw_latency > 500.0 {
+        if !(0.0..=500.0).contains(&hw_latency) {
             return Err("Hardware latency must be between 0 and 500 ms".to_string());
         }
         master.hardware_latency_ms = hw_latency;
     }
 
     if let Some(pdc) = plugin_delay_ms {
-        if pdc < 0.0 || pdc > 1000.0 {
+        if !(0.0..=1000.0).contains(&pdc) {
             return Err("Plugin delay compensation must be between 0 and 1000 ms".to_string());
         }
         master.plugin_delay_compensation_ms = pdc;
@@ -2224,9 +2224,9 @@ pub fn mixer_get_presets(
     let filtered: Vec<PresetInfo> = presets
         .into_iter()
         .filter(|p| {
-            preset_type.as_ref().map_or(true, |t| &p.preset_type == t)
-                && category.as_ref().map_or(true, |c| p.category.as_ref() == Some(c))
-                && favorites_only.map_or(true, |f| !f || p.is_favorite)
+            preset_type.as_ref().is_none_or(|t| &p.preset_type == t)
+                && category.as_ref().is_none_or(|c| p.category.as_ref() == Some(c))
+                && favorites_only.is_none_or(|f| !f || p.is_favorite)
         })
         .collect();
 
@@ -2337,6 +2337,7 @@ pub struct PluginScanResult {
 /// Returns built-in effects and any VST/AU plugins found during scanning.
 /// Built-in plugins are always available regardless of scan status.
 #[command]
+#[allow(clippy::vec_init_then_push)]
 pub fn mixer_get_plugin_list(
     plugin_type: Option<String>,
     category: Option<String>,

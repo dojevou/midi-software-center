@@ -98,7 +98,7 @@ async fn main() -> Result<()> {
             }
 
             let pool = Arc::clone(&pool);
-            let current_batch = batch_num;
+            let _current_batch = batch_num;
             batch_num += 1;
 
             set.spawn(async move { update_batch(&pool, BATCH_SIZE).await });

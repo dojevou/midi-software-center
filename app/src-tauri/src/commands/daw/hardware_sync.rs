@@ -9,7 +9,6 @@ use crate::services::zeromq_broker::{
 };
 use std::sync::Arc;
 use tauri::{command, State};
-use tokio::sync::RwLock;
 
 /// State for hardware sync via ZeroMQ
 pub struct HardwareSyncState {

@@ -1,15 +1,12 @@
-///! Meilisearch Commands - Full-text search with Meilisearch
-///!
-///! Provides high-performance, typo-tolerant search as an alternative/complement
-///! to the existing PostgreSQL-based search.
+//! Meilisearch Commands - Full-text search with Meilisearch
+//!
+//! Provides high-performance, typo-tolerant search as an alternative/complement
+//! to the existing PostgreSQL-based search.
 
-use crate::services::meilisearch_client::{
-    MeilisearchClient, MidiSearchDocument, SearchFilters, SearchResult,
-};
+use crate::services::meilisearch_client::{MidiSearchDocument, SearchFilters, SearchResult};
 use crate::AppState;
-use serde::{Deserialize, Serialize};
 use tauri::State;
-use tracing::{debug, error, info};
+use tracing::{debug, info};
 
 /// Initialize the Meilisearch index with optimal settings.
 ///
@@ -265,6 +262,7 @@ pub async fn meilisearch_rebuild_index(state: State<'_, AppState>) -> Result<Str
 
         for (file_id, filename, original_filename, filepath) in chunk {
             // Fetch additional metadata
+            #[allow(clippy::type_complexity)]
             let metadata: Option<(
                 Option<rust_decimal::Decimal>,
                 Option<String>,

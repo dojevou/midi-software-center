@@ -5,13 +5,10 @@
 
 use crate::commands::daw::DawAppState;
 use crate::daw_models::project::Project;
-use crate::db::repositories::{
-    CreateProjectParams, ProjectFilters, ProjectListResponse, ProjectRecord, ProjectRepository,
-    UpdateProjectParams,
-};
+use crate::db::repositories::{ProjectFilters, ProjectListResponse, ProjectRecord, ProjectRepository};
 use std::path::PathBuf;
 use tauri::State;
-use tracing::{error, info};
+use tracing::info;
 
 // ============================================================================
 // PROJECT CRUD COMMANDS

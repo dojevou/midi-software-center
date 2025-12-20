@@ -26,7 +26,7 @@ pub async fn create_collection(
     .bind(&request.description)
     .bind(&request.icon)
     .bind(&request.color)
-    .bind(&request.is_smart)
+    .bind(request.is_smart)
     .bind(&request.smart_filters)
     .fetch_one(&pool)
     .await

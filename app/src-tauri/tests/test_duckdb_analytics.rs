@@ -39,8 +39,8 @@ async fn test_duckdb_analytics_service() {
     println!("   Multi-track files: {}", counts.multi_track);
 
     // Verify we got reasonable results
-    assert!(counts.bpm_ranges.len() > 0, "Should have BPM ranges");
-    assert!(counts.keys.len() > 0, "Should have keys");
+    assert!(!counts.bpm_ranges.is_empty(), "Should have BPM ranges");
+    assert!(!counts.keys.is_empty(), "Should have keys");
 
     println!("\n✅ All assertions passed!");
 

@@ -39,7 +39,7 @@ async fn test_load_file_integration() {
         .expect("Failed to connect to database");
 
     // Get a sample file ID
-    let row = sqlx::query!("SELECT id, filepath FROM files WHERE deleted_at IS NULL LIMIT 1")
+    let row = sqlx::query!("SELECT id, filepath FROM files LIMIT 1")
         .fetch_one(&pool)
         .await
         .expect("No files in database");
@@ -91,7 +91,7 @@ async fn test_load_multiple_files() {
         .expect("Failed to connect to database");
 
     // Get 3 sample files
-    let rows = sqlx::query!("SELECT id FROM files WHERE deleted_at IS NULL LIMIT 3")
+    let rows = sqlx::query!("SELECT id FROM files LIMIT 3")
         .fetch_all(&pool)
         .await
         .expect("Not enough files in database");
@@ -138,7 +138,6 @@ async fn print_test_data() {
         r#"
         SELECT id, filepath, filename
         FROM files
-        WHERE deleted_at IS NULL
         LIMIT 10
         "#
     )
@@ -148,11 +147,7 @@ async fn print_test_data() {
 
     println!("Sample file IDs for testing:\n");
     for row in rows {
-        println!(
-            "  ID: {:6} | File: {}",
-            row.id,
-            row.filename.unwrap_or_else(|| "Unknown".to_string())
-        );
+        println!("  ID: {:6} | File: {}", row.id, row.filename);
     }
 
     println!("\nTest commands:");

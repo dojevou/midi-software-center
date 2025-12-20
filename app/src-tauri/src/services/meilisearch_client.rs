@@ -1,17 +1,17 @@
-/// Meilisearch integration for full-text search across MIDI files.
-///
-/// Provides high-performance, typo-tolerant search with faceting support for:
-/// - Filename search
-/// - Tag/instrument filtering
-/// - Musical metadata (BPM, key, time signature)
-/// - Collection and manufacturer filtering
+//! Meilisearch integration for full-text search across MIDI files.
+//!
+//! Provides high-performance, typo-tolerant search with faceting support for:
+//! - Filename search
+//! - Tag/instrument filtering
+//! - Musical metadata (BPM, key, time signature)
+//! - Collection and manufacturer filtering
 
 use meilisearch_sdk::client::Client;
 use meilisearch_sdk::indexes::Index;
 use meilisearch_sdk::settings::Settings;
 use serde::{Deserialize, Serialize};
 use std::collections::HashMap;
-use tracing::{debug, error, info, warn};
+use tracing::{debug, info, warn};
 
 /// Document structure for Meilisearch indexing.
 ///
@@ -180,10 +180,10 @@ impl MeilisearchClient {
         ];
 
         // Configure sortable attributes
-        let sortable_attributes = vec!["bpm", "duration_seconds", "filename", "num_tracks"];
+        let sortable_attributes = ["bpm", "duration_seconds", "filename", "num_tracks"];
 
         // Configure ranking rules (order matters!)
-        let ranking_rules = vec![
+        let ranking_rules = [
             "words",
             "typo",
             "proximity",

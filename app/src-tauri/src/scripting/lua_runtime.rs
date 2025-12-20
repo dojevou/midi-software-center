@@ -1283,7 +1283,7 @@ mod tests {
         let util: Table = globals.get("util").unwrap();
         let random: Function = util.get("random").unwrap();
         let result: i32 = random.call((1i32, 10i32)).unwrap();
-        assert!(result >= 1 && result <= 10);
+        assert!((1..=10).contains(&result));
     }
 
     #[test]
@@ -1293,7 +1293,7 @@ mod tests {
         let util: Table = globals.get("util").unwrap();
         let random_float: Function = util.get("random_float").unwrap();
         let result: f64 = random_float.call(()).unwrap();
-        assert!(result >= 0.0 && result < 1.0);
+        assert!((0.0..1.0).contains(&result));
     }
 
     #[test]

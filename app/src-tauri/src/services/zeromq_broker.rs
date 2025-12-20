@@ -36,7 +36,7 @@ use tokio::sync::{broadcast, mpsc, RwLock};
 use tracing::{debug, error, info, warn};
 use zeromq::{PubSocket, RepSocket, Socket, SocketRecv, SocketSend, SubSocket};
 
-use crate::midi_clock::{ClockConfig, ClockState, ClockTick, MidiClockMessage, SyncMode, PPQN};
+use crate::midi_clock::{ClockTick, MidiClockMessage, SyncMode, PPQN};
 
 // =============================================================================
 // Constants

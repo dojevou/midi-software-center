@@ -4,8 +4,10 @@
 // This template provides test structure for filter count queries
 // Target: >80% code coverage, <50ms response time
 
+#[allow(unused_imports)]
 use midi_app::commands::pipeline::vip3::filter_counts::*;
-use midi_app::db::repositories::vip3_repository::VIP3Repository;
+#[allow(unused_imports)]
+use midi_app::db::repositories::vip3_repository::Vip3Repository;
 use sqlx::PgPool;
 
 // ========================================
@@ -18,7 +20,7 @@ async fn create_test_pool() -> PgPool {
     PgPool::connect(&database_url).await.unwrap()
 }
 
-async fn setup_test_data(pool: &PgPool) {
+async fn setup_test_data(_pool: &PgPool) {
     // TODO: Insert test files with various:
     // - Folders (10 folders, 100 files each)
     // - Instruments (20 instruments)
@@ -27,7 +29,7 @@ async fn setup_test_data(pool: &PgPool) {
     // - Time signatures (4/4, 3/4, 6/8, etc.)
 }
 
-async fn cleanup_test_data(pool: &PgPool) {
+async fn cleanup_test_data(_pool: &PgPool) {
     // TODO: Clean up test data
 }
 
@@ -221,12 +223,11 @@ async fn test_track_count_distribution() {
 
 #[tokio::test]
 async fn test_filter_counts_performance_no_filters() {
-    use std::time::Instant;
-
     let pool = create_test_pool().await;
     setup_test_data(&pool).await;
 
     // TODO: Measure query time with no filters
+    // use std::time::Instant;
     // let start = Instant::now();
     // let filters = VIP3Filters::default();
     // let counts = get_vip3_filter_counts(state, filters).await.unwrap();
@@ -239,13 +240,12 @@ async fn test_filter_counts_performance_no_filters() {
 
 #[tokio::test]
 async fn test_filter_counts_performance_with_filters() {
-    use std::time::Instant;
-
     let pool = create_test_pool().await;
     setup_test_data(&pool).await;
 
     // TODO: Measure query time with multiple filters
     // Target: <50ms even with complex filters
+    // use std::time::Instant;
 
     cleanup_test_data(&pool).await;
 }

@@ -212,8 +212,6 @@ pub async fn is_sequencer_playing(engine: State<'_, Arc<SequencerEngine>>) -> Re
 
 #[cfg(test)]
 mod tests {
-    use super::*;
-
     /// Test that load_file_to_daw returns a valid track ID
     ///
     /// NOTE: This is a documentation test that shows the expected behavior.
@@ -230,8 +228,6 @@ mod tests {
         // 4. Loads file from database by ID
         // 5. Parses MIDI file and adds to sequencer
         // 6. Returns track ID on success
-
-        assert!(true, "Signature test passed");
     }
 
     #[test]

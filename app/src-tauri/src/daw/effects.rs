@@ -29,6 +29,10 @@ impl StereoBuffer {
         self.left.len()
     }
 
+    pub fn is_empty(&self) -> bool {
+        self.left.is_empty()
+    }
+
     pub fn clear(&mut self) {
         self.left.fill(0.0);
         self.right.fill(0.0);
@@ -323,7 +327,9 @@ pub struct Reverb {
     comb_buffers_r: [VecDeque<f32>; 8],
     allpass_buffers_l: [VecDeque<f32>; 4],
     allpass_buffers_r: [VecDeque<f32>; 4],
+    #[allow(dead_code)]
     comb_filters: [f32; 8],
+    #[allow(dead_code)]
     allpass_filters: [f32; 4],
 }
 

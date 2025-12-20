@@ -531,9 +531,7 @@ impl Project {
 
     /// Save project to file
     pub fn save_to_file<P: AsRef<Path>>(&self, path: P) -> Result<(), std::io::Error> {
-        let json = self
-            .to_json()
-            .map_err(|e| std::io::Error::new(std::io::ErrorKind::Other, e))?;
+        let json = self.to_json().map_err(std::io::Error::other)?;
         fs::write(path, json)
     }
 
@@ -607,8 +605,7 @@ impl Project {
     pub fn get_duration_seconds(&self) -> f64 {
         let ticks = self.get_duration_ticks();
         let beats = ticks as f64 / self.settings.ppqn as f64;
-        let seconds = (beats * 60.0) / self.settings.bpm;
-        seconds
+        (beats * 60.0) / self.settings.bpm
     }
 
     /// Add a track to the project
