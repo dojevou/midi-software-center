@@ -253,14 +253,14 @@ pub async fn get_all_instruments(state: State<'_, AppState>) -> Result<Vec<TagRe
 
 /// Get all style/genre tags for VIP3 browser
 #[tauri::command]
-pub async fn get_vip3_styles(state: State<'_, AppState>) -> Result<Vec<TagResponse>, String> {
+pub async fn get_vip3_genre_tags(state: State<'_, AppState>) -> Result<Vec<TagResponse>, String> {
     let pool = state.database.pool().await;
     let repo = TagRepository::new(pool);
 
     let tags = repo
         .get_tags_by_category("genre")
         .await
-        .map_err(|e| format!("Failed to get styles: {}", e))?;
+        .map_err(|e| format!("Failed to get genre tags: {}", e))?;
 
     Ok(tags.into_iter().map(TagResponse::from).collect())
 }

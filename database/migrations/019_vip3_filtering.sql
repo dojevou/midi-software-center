@@ -361,8 +361,7 @@ CREATE OR REPLACE FUNCTION update_file_search_vector()
 RETURNS TRIGGER AS $$
 BEGIN
     NEW.search_vector :=
-        setweight(to_tsvector('english', COALESCE(NEW.filename, '')), 'A') ||
-        setweight(to_tsvector('english', COALESCE(NEW.normalized_filename, '')), 'B');
+        setweight(to_tsvector('english', COALESCE(NEW.filename, '')), 'A');
     RETURN NEW;
 END;
 $$ LANGUAGE plpgsql;
@@ -370,10 +369,12 @@ $$ LANGUAGE plpgsql;
 -- Drop trigger if exists, then create
 DROP TRIGGER IF EXISTS files_search_vector_update ON files;
 CREATE TRIGGER files_search_vector_update
-    BEFORE INSERT OR UPDATE OF filename, normalized_filename ON files
+    BEFORE INSERT OR UPDATE OF filename ON files
     FOR EACH ROW EXECUTE FUNCTION update_file_search_vector();
 
 -- Auto-assign BPM range based on BPM value
+-- NOTE: This function is defined here but trigger will be created by migration 022
+-- Migration 022 creates triggers on musical_metadata, not files
 CREATE OR REPLACE FUNCTION assign_bpm_range()
 RETURNS TRIGGER AS $$
 BEGIN
@@ -388,10 +389,11 @@ BEGIN
 END;
 $$ LANGUAGE plpgsql;
 
-DROP TRIGGER IF EXISTS files_bpm_range_assign ON files;
-CREATE TRIGGER files_bpm_range_assign
-    BEFORE INSERT OR UPDATE OF bpm ON files
-    FOR EACH ROW EXECUTE FUNCTION assign_bpm_range();
+-- Trigger creation moved to migration 022
+-- DROP TRIGGER IF EXISTS files_bpm_range_assign ON files;
+-- CREATE TRIGGER files_bpm_range_assign
+--     BEFORE INSERT OR UPDATE OF bpm ON files
+--     FOR EACH ROW EXECUTE FUNCTION assign_bpm_range();
 
 -- Update timbre file counts
 CREATE OR REPLACE FUNCTION update_timbre_counts()

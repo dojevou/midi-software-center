@@ -893,6 +893,10 @@ pub fn scripting_get_example_scripts() -> Vec<(String, String, String)> {
 mod tests {
     use super::*;
 
+    // ==========================================================================
+    // Runtime Creation Tests
+    // ==========================================================================
+
     #[test]
     fn test_runtime_creation() {
         let result = LuaRuntime::new();
@@ -900,9 +904,545 @@ mod tests {
     }
 
     #[test]
+    fn test_runtime_creates_action_channel() {
+        let result = LuaRuntime::new();
+        assert!(result.is_ok());
+        let (_runtime, rx) = result.unwrap();
+        assert!(!rx.is_closed());
+    }
+
+    // ==========================================================================
+    // Simple Script Tests (using call on loaded chunks)
+    // ==========================================================================
+
+    #[test]
     fn test_simple_script() {
         let (runtime, _rx) = LuaRuntime::new().unwrap();
-        let result = runtime.lua.load("return 1 + 1").eval::<i32>();
-        assert_eq!(result.unwrap(), 2);
+        let chunk = runtime.lua.load("return 1 + 1");
+        let func = chunk.into_function().unwrap();
+        let result: i32 = func.call(()).unwrap();
+        assert_eq!(result, 2);
+    }
+
+    #[test]
+    fn test_string_concatenation() {
+        let (runtime, _rx) = LuaRuntime::new().unwrap();
+        let chunk = runtime.lua.load(r#"return "hello" .. " " .. "world""#);
+        let func = chunk.into_function().unwrap();
+        let result: String = func.call(()).unwrap();
+        assert_eq!(result, "hello world");
+    }
+
+    #[test]
+    fn test_table_creation() {
+        let (runtime, _rx) = LuaRuntime::new().unwrap();
+        let chunk = runtime.lua.load(r#"return { a = 1, b = 2 }"#);
+        let func = chunk.into_function().unwrap();
+        let table: Table = func.call(()).unwrap();
+        assert_eq!(table.get::<_, i32>("a").unwrap(), 1);
+        assert_eq!(table.get::<_, i32>("b").unwrap(), 2);
+    }
+
+    // ==========================================================================
+    // MIDI API Tests
+    // ==========================================================================
+
+    #[test]
+    fn test_midi_api_exists() {
+        let (runtime, _rx) = LuaRuntime::new().unwrap();
+        let globals = runtime.lua.globals();
+        let midi: Table = globals.get("midi").unwrap();
+        assert!(midi.get::<_, Function>("send").is_ok());
+        assert!(midi.get::<_, Function>("note_on").is_ok());
+        assert!(midi.get::<_, Function>("note_off").is_ok());
+        assert!(midi.get::<_, Function>("cc").is_ok());
+        assert!(midi.get::<_, Function>("program_change").is_ok());
+        assert!(midi.get::<_, Function>("pitch_bend").is_ok());
+    }
+
+    #[test]
+    fn test_midi_note_on_action() {
+        let (runtime, mut rx) = LuaRuntime::new().unwrap();
+        let globals = runtime.lua.globals();
+        let midi: Table = globals.get("midi").unwrap();
+        let note_on: Function = midi.get("note_on").unwrap();
+        let _: () = note_on.call(("test_device", 0u8, 60u8, 100u8)).unwrap();
+
+        let action = rx.try_recv();
+        assert!(action.is_ok());
+        match action.unwrap() {
+            ScriptAction::SendMidi { device, data } => {
+                assert_eq!(device, "test_device");
+                assert_eq!(data[0], 0x90);
+                assert_eq!(data[1], 60);
+                assert_eq!(data[2], 100);
+            },
+            _ => panic!("Expected SendMidi action"),
+        }
+    }
+
+    #[test]
+    fn test_midi_note_off_action() {
+        let (runtime, mut rx) = LuaRuntime::new().unwrap();
+        let globals = runtime.lua.globals();
+        let midi: Table = globals.get("midi").unwrap();
+        let note_off: Function = midi.get("note_off").unwrap();
+        let _: () = note_off.call(("test_device", 1u8, 72u8)).unwrap();
+
+        let action = rx.try_recv();
+        assert!(action.is_ok());
+        match action.unwrap() {
+            ScriptAction::SendMidi { device, data } => {
+                assert_eq!(device, "test_device");
+                assert_eq!(data[0], 0x81);
+                assert_eq!(data[1], 72);
+                assert_eq!(data[2], 0);
+            },
+            _ => panic!("Expected SendMidi action"),
+        }
+    }
+
+    #[test]
+    fn test_midi_cc_action() {
+        let (runtime, mut rx) = LuaRuntime::new().unwrap();
+        let globals = runtime.lua.globals();
+        let midi: Table = globals.get("midi").unwrap();
+        let cc: Function = midi.get("cc").unwrap();
+        let _: () = cc.call(("test_device", 0u8, 1u8, 64u8)).unwrap();
+
+        let action = rx.try_recv();
+        assert!(action.is_ok());
+        match action.unwrap() {
+            ScriptAction::SendMidi { device, data } => {
+                assert_eq!(device, "test_device");
+                assert_eq!(data[0], 0xB0);
+                assert_eq!(data[1], 1);
+                assert_eq!(data[2], 64);
+            },
+            _ => panic!("Expected SendMidi action"),
+        }
+    }
+
+    #[test]
+    fn test_midi_program_change_action() {
+        let (runtime, mut rx) = LuaRuntime::new().unwrap();
+        let globals = runtime.lua.globals();
+        let midi: Table = globals.get("midi").unwrap();
+        let program_change: Function = midi.get("program_change").unwrap();
+        let _: () = program_change.call(("test_device", 2u8, 10u8)).unwrap();
+
+        let action = rx.try_recv();
+        assert!(action.is_ok());
+        match action.unwrap() {
+            ScriptAction::SendMidi { device, data } => {
+                assert_eq!(device, "test_device");
+                assert_eq!(data[0], 0xC2);
+                assert_eq!(data[1], 10);
+            },
+            _ => panic!("Expected SendMidi action"),
+        }
+    }
+
+    // ==========================================================================
+    // Transport API Tests
+    // ==========================================================================
+
+    #[test]
+    fn test_transport_api_exists() {
+        let (runtime, _rx) = LuaRuntime::new().unwrap();
+        let globals = runtime.lua.globals();
+        let transport: Table = globals.get("transport").unwrap();
+        assert!(transport.get::<_, Function>("play").is_ok());
+        assert!(transport.get::<_, Function>("stop").is_ok());
+        assert!(transport.get::<_, Function>("record").is_ok());
+        assert!(transport.get::<_, Function>("set_tempo").is_ok());
+        assert!(transport.get::<_, Function>("set_position").is_ok());
+    }
+
+    #[test]
+    fn test_transport_play_action() {
+        let (runtime, mut rx) = LuaRuntime::new().unwrap();
+        let globals = runtime.lua.globals();
+        let transport: Table = globals.get("transport").unwrap();
+        let play: Function = transport.get("play").unwrap();
+        let _: () = play.call(()).unwrap();
+
+        let action = rx.try_recv();
+        assert!(action.is_ok());
+        assert!(matches!(action.unwrap(), ScriptAction::Play));
+    }
+
+    #[test]
+    fn test_transport_stop_action() {
+        let (runtime, mut rx) = LuaRuntime::new().unwrap();
+        let globals = runtime.lua.globals();
+        let transport: Table = globals.get("transport").unwrap();
+        let stop: Function = transport.get("stop").unwrap();
+        let _: () = stop.call(()).unwrap();
+
+        let action = rx.try_recv();
+        assert!(action.is_ok());
+        assert!(matches!(action.unwrap(), ScriptAction::Stop));
+    }
+
+    #[test]
+    fn test_transport_set_tempo_action() {
+        let (runtime, mut rx) = LuaRuntime::new().unwrap();
+        let globals = runtime.lua.globals();
+        let transport: Table = globals.get("transport").unwrap();
+        let set_tempo: Function = transport.get("set_tempo").unwrap();
+        let _: () = set_tempo.call(140.0f64).unwrap();
+
+        let action = rx.try_recv();
+        assert!(action.is_ok());
+        match action.unwrap() {
+            ScriptAction::SetTempo(bpm) => {
+                assert!((bpm - 140.0).abs() < 0.001);
+            },
+            _ => panic!("Expected SetTempo action"),
+        }
+    }
+
+    // ==========================================================================
+    // Parameter API Tests
+    // ==========================================================================
+
+    #[test]
+    fn test_params_api_exists() {
+        let (runtime, _rx) = LuaRuntime::new().unwrap();
+        let globals = runtime.lua.globals();
+        let params: Table = globals.get("params").unwrap();
+        assert!(params.get::<_, Function>("set").is_ok());
+    }
+
+    #[test]
+    fn test_params_set_action() {
+        let (runtime, mut rx) = LuaRuntime::new().unwrap();
+        let globals = runtime.lua.globals();
+        let params: Table = globals.get("params").unwrap();
+        let set: Function = params.get("set").unwrap();
+        let _: () = set.call(("volume", 0.75f64)).unwrap();
+
+        let action = rx.try_recv();
+        assert!(action.is_ok());
+        match action.unwrap() {
+            ScriptAction::SetParameter { path, value } => {
+                assert_eq!(path, "volume");
+                assert!((value - 0.75).abs() < 0.001);
+            },
+            _ => panic!("Expected SetParameter action"),
+        }
+    }
+
+    // ==========================================================================
+    // Music Theory API Tests
+    // ==========================================================================
+
+    #[test]
+    fn test_theory_api_exists() {
+        let (runtime, _rx) = LuaRuntime::new().unwrap();
+        let globals = runtime.lua.globals();
+        let theory: Table = globals.get("theory").unwrap();
+        assert!(theory.get::<_, Table>("scales").is_ok());
+        assert!(theory.get::<_, Table>("chords").is_ok());
+    }
+
+    #[test]
+    fn test_theory_scales_major() {
+        let (runtime, _rx) = LuaRuntime::new().unwrap();
+        let globals = runtime.lua.globals();
+        let theory: Table = globals.get("theory").unwrap();
+        let scales: Table = theory.get("scales").unwrap();
+        let major: Vec<i32> = scales.get("major").unwrap();
+        assert_eq!(major, vec![0, 2, 4, 5, 7, 9, 11]);
+    }
+
+    #[test]
+    fn test_theory_scales_minor() {
+        let (runtime, _rx) = LuaRuntime::new().unwrap();
+        let globals = runtime.lua.globals();
+        let theory: Table = globals.get("theory").unwrap();
+        let scales: Table = theory.get("scales").unwrap();
+        let minor: Vec<i32> = scales.get("minor").unwrap();
+        assert_eq!(minor, vec![0, 2, 3, 5, 7, 8, 10]);
+    }
+
+    #[test]
+    fn test_theory_chords_major() {
+        let (runtime, _rx) = LuaRuntime::new().unwrap();
+        let globals = runtime.lua.globals();
+        let theory: Table = globals.get("theory").unwrap();
+        let chords: Table = theory.get("chords").unwrap();
+        let major: Vec<i32> = chords.get("major").unwrap();
+        assert_eq!(major, vec![0, 4, 7]);
+    }
+
+    #[test]
+    fn test_theory_chords_minor() {
+        let (runtime, _rx) = LuaRuntime::new().unwrap();
+        let globals = runtime.lua.globals();
+        let theory: Table = globals.get("theory").unwrap();
+        let chords: Table = theory.get("chords").unwrap();
+        let minor: Vec<i32> = chords.get("minor").unwrap();
+        assert_eq!(minor, vec![0, 3, 7]);
+    }
+
+    // ==========================================================================
+    // Utility API Tests
+    // ==========================================================================
+
+    #[test]
+    fn test_utility_api_exists() {
+        let (runtime, _rx) = LuaRuntime::new().unwrap();
+        let globals = runtime.lua.globals();
+        let util: Table = globals.get("util").unwrap();
+        assert!(util.get::<_, Function>("log").is_ok());
+        assert!(util.get::<_, Function>("message").is_ok());
+        assert!(util.get::<_, Function>("random").is_ok());
+        assert!(util.get::<_, Function>("random_float").is_ok());
+        assert!(util.get::<_, Function>("clamp").is_ok());
+        assert!(util.get::<_, Function>("lerp").is_ok());
+        assert!(util.get::<_, Function>("map").is_ok());
+    }
+
+    #[test]
+    fn test_util_clamp_above_max() {
+        let (runtime, _rx) = LuaRuntime::new().unwrap();
+        let globals = runtime.lua.globals();
+        let util: Table = globals.get("util").unwrap();
+        let clamp: Function = util.get("clamp").unwrap();
+        let result: f64 = clamp.call((150.0f64, 0.0f64, 127.0f64)).unwrap();
+        assert!((result - 127.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_util_clamp_below_min() {
+        let (runtime, _rx) = LuaRuntime::new().unwrap();
+        let globals = runtime.lua.globals();
+        let util: Table = globals.get("util").unwrap();
+        let clamp: Function = util.get("clamp").unwrap();
+        let result: f64 = clamp.call((-10.0f64, 0.0f64, 127.0f64)).unwrap();
+        assert!((result - 0.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_util_clamp_within_range() {
+        let (runtime, _rx) = LuaRuntime::new().unwrap();
+        let globals = runtime.lua.globals();
+        let util: Table = globals.get("util").unwrap();
+        let clamp: Function = util.get("clamp").unwrap();
+        let result: f64 = clamp.call((64.0f64, 0.0f64, 127.0f64)).unwrap();
+        assert!((result - 64.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_util_lerp_at_zero() {
+        let (runtime, _rx) = LuaRuntime::new().unwrap();
+        let globals = runtime.lua.globals();
+        let util: Table = globals.get("util").unwrap();
+        let lerp: Function = util.get("lerp").unwrap();
+        let result: f64 = lerp.call((0.0f64, 100.0f64, 0.0f64)).unwrap();
+        assert!((result - 0.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_util_lerp_at_one() {
+        let (runtime, _rx) = LuaRuntime::new().unwrap();
+        let globals = runtime.lua.globals();
+        let util: Table = globals.get("util").unwrap();
+        let lerp: Function = util.get("lerp").unwrap();
+        let result: f64 = lerp.call((0.0f64, 100.0f64, 1.0f64)).unwrap();
+        assert!((result - 100.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_util_lerp_at_half() {
+        let (runtime, _rx) = LuaRuntime::new().unwrap();
+        let globals = runtime.lua.globals();
+        let util: Table = globals.get("util").unwrap();
+        let lerp: Function = util.get("lerp").unwrap();
+        let result: f64 = lerp.call((0.0f64, 100.0f64, 0.5f64)).unwrap();
+        assert!((result - 50.0).abs() < 0.001);
+    }
+
+    #[test]
+    fn test_util_map_range() {
+        let (runtime, _rx) = LuaRuntime::new().unwrap();
+        let globals = runtime.lua.globals();
+        let util: Table = globals.get("util").unwrap();
+        let map: Function = util.get("map").unwrap();
+        // Map 64 from 0-127 to 0-100
+        let result: f64 = map.call((64.0f64, 0.0f64, 127.0f64, 0.0f64, 100.0f64)).unwrap();
+        assert!((result - 50.39).abs() < 0.1);
+    }
+
+    #[test]
+    fn test_util_random_returns_within_range() {
+        let (runtime, _rx) = LuaRuntime::new().unwrap();
+        let globals = runtime.lua.globals();
+        let util: Table = globals.get("util").unwrap();
+        let random: Function = util.get("random").unwrap();
+        let result: i32 = random.call((1i32, 10i32)).unwrap();
+        assert!((1..=10).contains(&result));
+    }
+
+    #[test]
+    fn test_util_random_float_returns_between_0_and_1() {
+        let (runtime, _rx) = LuaRuntime::new().unwrap();
+        let globals = runtime.lua.globals();
+        let util: Table = globals.get("util").unwrap();
+        let random_float: Function = util.get("random_float").unwrap();
+        let result: f64 = random_float.call(()).unwrap();
+        assert!((0.0..1.0).contains(&result));
+    }
+
+    #[test]
+    fn test_util_log_action() {
+        let (runtime, mut rx) = LuaRuntime::new().unwrap();
+        let globals = runtime.lua.globals();
+        let util: Table = globals.get("util").unwrap();
+        let log: Function = util.get("log").unwrap();
+        let _: () = log.call("Test message".to_string()).unwrap();
+
+        let action = rx.try_recv();
+        assert!(action.is_ok());
+        match action.unwrap() {
+            ScriptAction::Log(message) => {
+                assert_eq!(message, "Test message");
+            },
+            _ => panic!("Expected Log action"),
+        }
+    }
+
+    #[test]
+    fn test_util_message_action() {
+        let (runtime, mut rx) = LuaRuntime::new().unwrap();
+        let globals = runtime.lua.globals();
+        let util: Table = globals.get("util").unwrap();
+        let message: Function = util.get("message").unwrap();
+        let _: () = message.call(("Title".to_string(), "Body".to_string())).unwrap();
+
+        let action = rx.try_recv();
+        assert!(action.is_ok());
+        match action.unwrap() {
+            ScriptAction::ShowMessage { title, message } => {
+                assert_eq!(title, "Title");
+                assert_eq!(message, "Body");
+            },
+            _ => panic!("Expected ShowMessage action"),
+        }
+    }
+
+    // ==========================================================================
+    // ScriptInfo Tests
+    // ==========================================================================
+
+    #[test]
+    fn test_script_info_serialization() {
+        let info = ScriptInfo {
+            id: "test_script".to_string(),
+            name: "Test Script".to_string(),
+            description: "A test script".to_string(),
+            author: "Test Author".to_string(),
+            version: "1.0.0".to_string(),
+            enabled: true,
+            path: "/path/to/script.lua".to_string(),
+            script_type: ScriptType::MidiProcessor,
+        };
+
+        let json = serde_json::to_string(&info).unwrap();
+        let deserialized: ScriptInfo = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(deserialized.id, info.id);
+        assert_eq!(deserialized.name, info.name);
+        assert_eq!(deserialized.description, info.description);
+        assert_eq!(deserialized.author, info.author);
+        assert_eq!(deserialized.version, info.version);
+        assert_eq!(deserialized.enabled, info.enabled);
+        assert_eq!(deserialized.path, info.path);
+    }
+
+    #[test]
+    fn test_script_type_midi_processor_serialization() {
+        let script_type = ScriptType::MidiProcessor;
+        let json = serde_json::to_string(&script_type).unwrap();
+        let _: ScriptType = serde_json::from_str(&json).unwrap();
+    }
+
+    #[test]
+    fn test_script_type_generator_serialization() {
+        let script_type = ScriptType::Generator;
+        let json = serde_json::to_string(&script_type).unwrap();
+        let _: ScriptType = serde_json::from_str(&json).unwrap();
+    }
+
+    #[test]
+    fn test_script_type_automation_serialization() {
+        let script_type = ScriptType::Automation;
+        let json = serde_json::to_string(&script_type).unwrap();
+        let _: ScriptType = serde_json::from_str(&json).unwrap();
+    }
+
+    // ==========================================================================
+    // ScriptingState Tests
+    // ==========================================================================
+
+    #[test]
+    fn test_scripting_state_default() {
+        let state = ScriptingState::default();
+        let scripts = state.scripts.lock().unwrap();
+        assert!(scripts.is_empty());
+    }
+
+    // ==========================================================================
+    // Example Scripts Tests
+    // ==========================================================================
+
+    #[test]
+    fn test_get_example_scripts_not_empty() {
+        let examples = scripting_get_example_scripts();
+        assert!(!examples.is_empty());
+    }
+
+    #[test]
+    fn test_get_example_scripts_has_arpeggiator() {
+        let examples = scripting_get_example_scripts();
+        let arpeggiator = examples.iter().find(|(name, _, _)| name == "arpeggiator");
+        assert!(arpeggiator.is_some());
+    }
+
+    #[test]
+    fn test_get_example_scripts_has_chord_trigger() {
+        let examples = scripting_get_example_scripts();
+        let chord_trigger = examples.iter().find(|(name, _, _)| name == "chord_trigger");
+        assert!(chord_trigger.is_some());
+    }
+
+    #[test]
+    fn test_get_example_scripts_has_velocity_curve() {
+        let examples = scripting_get_example_scripts();
+        let velocity_curve = examples.iter().find(|(name, _, _)| name == "velocity_curve");
+        assert!(velocity_curve.is_some());
+    }
+
+    #[test]
+    fn test_arpeggiator_script_loads() {
+        let (runtime, _rx) = LuaRuntime::new().unwrap();
+        let chunk = runtime.lua.load(SCRIPT_ARPEGGIATOR);
+        assert!(chunk.into_function().is_ok());
+    }
+
+    #[test]
+    fn test_chord_trigger_script_loads() {
+        let (runtime, _rx) = LuaRuntime::new().unwrap();
+        let chunk = runtime.lua.load(SCRIPT_CHORD_TRIGGER);
+        assert!(chunk.into_function().is_ok());
+    }
+
+    #[test]
+    fn test_velocity_curve_script_loads() {
+        let (runtime, _rx) = LuaRuntime::new().unwrap();
+        let chunk = runtime.lua.load(SCRIPT_VELOCITY_CURVE);
+        assert!(chunk.into_function().is_ok());
     }
 }

@@ -554,3 +554,812 @@ pub async fn midi_io_get_stats(
 
     Ok(stats)
 }
+
+// =============================================================================
+// FRONTEND API COMMANDS (Added for MidiSyncControls.svelte support)
+// =============================================================================
+
+/// Serializable state for frontend
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct MidiIOStateResponse {
+    pub ports: HashMap<u64, MidiPort>,
+    pub next_id: u64,
+}
+
+/// Get complete MIDI I/O state
+#[command]
+pub async fn midi_io_get_state(
+    state: State<'_, MidiIOState>,
+) -> Result<MidiIOStateResponse, String> {
+    let ports = state.ports.lock().unwrap();
+    let next_id = state.next_port_id.lock().unwrap();
+
+    Ok(MidiIOStateResponse {
+        ports: ports.clone(),
+        next_id: *next_id,
+    })
+}
+
+/// Detect/refresh MIDI ports from system
+#[command]
+pub async fn midi_io_detect_ports(
+    state: State<'_, MidiIOState>,
+) -> Result<Vec<MidiPort>, String> {
+    // Trigger port refresh (in real implementation, this would use midir)
+    midi_io_refresh_ports(state.clone()).await?;
+
+    // Return current port list
+    midi_io_list_ports(state).await
+}
+
+/// Add a new MIDI port (simplified version for frontend)
+#[command]
+pub async fn midi_io_add_port(
+    state: State<'_, MidiIOState>,
+    name: String,
+    direction: String,
+    device_name: Option<String>,
+) -> Result<MidiPort, String> {
+    // Use the existing register_port command with simplified parameters
+    midi_io_register_port(
+        state,
+        name,
+        device_name,
+        direction,
+        Some("hardware".to_string()),
+    )
+    .await
+}
+
+// =============================================================================
+// TESTS
+// =============================================================================
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    fn create_test_state() -> MidiIOState {
+        MidiIOState::new()
+    }
+
+    // -------------------------------------------------------------------------
+    // MidiPort Tests
+    // -------------------------------------------------------------------------
+
+    #[test]
+    fn test_midi_port_default() {
+        let port = MidiPort::default();
+        assert_eq!(port.id, 0);
+        assert_eq!(port.direction, "output");
+        assert_eq!(port.port_type, "hardware");
+        assert!(!port.is_connected);
+        assert!(port.enabled);
+        assert!(port.auto_connect);
+        assert!(!port.send_clock);
+        assert!(port.send_transport);
+        assert_eq!(port.route_to, "selected");
+    }
+
+    #[test]
+    fn test_midi_port_serialization() {
+        let port = MidiPort {
+            id: 1,
+            system_name: "Test Port".to_string(),
+            system_id: Some("test-123".to_string()),
+            display_name: Some("My Port".to_string()),
+            alias: None,
+            direction: "input".to_string(),
+            port_type: "virtual".to_string(),
+            is_connected: true,
+            enabled: true,
+            auto_connect: false,
+            send_clock: true,
+            send_transport: false,
+            route_to: "all".to_string(),
+        };
+
+        let json = serde_json::to_string(&port).unwrap();
+        let deserialized: MidiPort = serde_json::from_str(&json).unwrap();
+        assert_eq!(deserialized.id, port.id);
+        assert_eq!(deserialized.system_name, port.system_name);
+        assert_eq!(deserialized.direction, port.direction);
+    }
+
+    // -------------------------------------------------------------------------
+    // MidiRoute Tests
+    // -------------------------------------------------------------------------
+
+    #[test]
+    fn test_midi_route_default() {
+        let route = MidiRoute::default();
+        assert_eq!(route.id, 0);
+        assert!(route.enabled);
+        assert!(route.input_port_id.is_none());
+        assert!(route.input_channel.is_none());
+        assert!(route.output_port_id.is_none());
+        assert!(route.output_channel.is_none());
+        assert_eq!(route.filter_type, Some("all".to_string()));
+        assert_eq!(route.transpose, 0);
+        assert_eq!(route.velocity_scale, 100);
+    }
+
+    #[test]
+    fn test_midi_route_serialization() {
+        let route = MidiRoute {
+            id: 1,
+            name: Some("Test Route".to_string()),
+            enabled: true,
+            input_port_id: Some(1),
+            input_channel: Some(1),
+            output_port_id: Some(2),
+            output_channel: Some(10),
+            filter_type: Some("notes".to_string()),
+            transpose: -12,
+            velocity_scale: 80,
+        };
+
+        let json = serde_json::to_string(&route).unwrap();
+        let deserialized: MidiRoute = serde_json::from_str(&json).unwrap();
+        assert_eq!(deserialized.id, route.id);
+        assert_eq!(deserialized.transpose, -12);
+        assert_eq!(deserialized.velocity_scale, 80);
+    }
+
+    // -------------------------------------------------------------------------
+    // MidiPortGroup Tests
+    // -------------------------------------------------------------------------
+
+    #[test]
+    fn test_midi_port_group_creation() {
+        let group = MidiPortGroup {
+            id: 1,
+            name: "My Interface".to_string(),
+            icon: Some("🎹".to_string()),
+            ports: vec![1, 2, 3, 4],
+        };
+
+        assert_eq!(group.id, 1);
+        assert_eq!(group.name, "My Interface");
+        assert_eq!(group.ports.len(), 4);
+    }
+
+    #[test]
+    fn test_midi_port_group_serialization() {
+        let group = MidiPortGroup {
+            id: 1,
+            name: "Test Group".to_string(),
+            icon: None,
+            ports: vec![1, 2],
+        };
+
+        let json = serde_json::to_string(&group).unwrap();
+        let deserialized: MidiPortGroup = serde_json::from_str(&json).unwrap();
+        assert_eq!(deserialized.name, group.name);
+        assert_eq!(deserialized.ports, group.ports);
+    }
+
+    // -------------------------------------------------------------------------
+    // MidiIOState Tests
+    // -------------------------------------------------------------------------
+
+    #[test]
+    fn test_midi_io_state_new() {
+        let state = MidiIOState::new();
+        assert!(state.ports.lock().unwrap().is_empty());
+        assert!(state.port_groups.lock().unwrap().is_empty());
+        assert!(state.routes.lock().unwrap().is_empty());
+        assert_eq!(*state.next_port_id.lock().unwrap(), 1);
+        assert_eq!(*state.next_group_id.lock().unwrap(), 1);
+        assert_eq!(*state.next_route_id.lock().unwrap(), 1);
+    }
+
+    #[test]
+    fn test_midi_io_state_default() {
+        let state = MidiIOState::default();
+        assert!(state.ports.lock().unwrap().is_empty());
+    }
+
+    // -------------------------------------------------------------------------
+    // Port Command Tests (using direct state manipulation)
+    // -------------------------------------------------------------------------
+
+    #[test]
+    fn test_register_and_list_ports() {
+        let state = create_test_state();
+
+        // Register input port
+        let port = MidiPort {
+            id: 1,
+            system_name: "Input 1".to_string(),
+            direction: "input".to_string(),
+            is_connected: true,
+            ..MidiPort::default()
+        };
+        state.ports.lock().unwrap().insert(1, port);
+        *state.next_port_id.lock().unwrap() = 2;
+
+        // Register output port
+        let port2 = MidiPort {
+            id: 2,
+            system_name: "Output 1".to_string(),
+            direction: "output".to_string(),
+            is_connected: true,
+            ..MidiPort::default()
+        };
+        state.ports.lock().unwrap().insert(2, port2);
+        *state.next_port_id.lock().unwrap() = 3;
+
+        let ports = state.ports.lock().unwrap();
+        assert_eq!(ports.len(), 2);
+
+        let inputs: Vec<_> = ports.values().filter(|p| p.direction == "input").collect();
+        assert_eq!(inputs.len(), 1);
+
+        let outputs: Vec<_> = ports.values().filter(|p| p.direction == "output").collect();
+        assert_eq!(outputs.len(), 1);
+    }
+
+    #[test]
+    fn test_port_get_by_id() {
+        let state = create_test_state();
+
+        let port = MidiPort {
+            id: 1,
+            system_name: "Test Port".to_string(),
+            ..MidiPort::default()
+        };
+        state.ports.lock().unwrap().insert(1, port);
+
+        let ports = state.ports.lock().unwrap();
+        let retrieved = ports.get(&1);
+        assert!(retrieved.is_some());
+        assert_eq!(retrieved.unwrap().system_name, "Test Port");
+
+        let missing = ports.get(&999);
+        assert!(missing.is_none());
+    }
+
+    #[test]
+    fn test_port_update() {
+        let state = create_test_state();
+
+        let port = MidiPort {
+            id: 1,
+            system_name: "Test Port".to_string(),
+            display_name: None,
+            enabled: true,
+            ..MidiPort::default()
+        };
+        state.ports.lock().unwrap().insert(1, port);
+
+        // Update port
+        {
+            let mut ports = state.ports.lock().unwrap();
+            if let Some(p) = ports.get_mut(&1) {
+                p.display_name = Some("Updated Name".to_string());
+                p.enabled = false;
+                p.send_clock = true;
+            }
+        }
+
+        let ports = state.ports.lock().unwrap();
+        let updated = ports.get(&1).unwrap();
+        assert_eq!(updated.display_name, Some("Updated Name".to_string()));
+        assert!(!updated.enabled);
+        assert!(updated.send_clock);
+    }
+
+    #[test]
+    fn test_port_connection_status() {
+        let state = create_test_state();
+
+        let port = MidiPort {
+            id: 1,
+            system_name: "Test".to_string(),
+            is_connected: false,
+            ..MidiPort::default()
+        };
+        state.ports.lock().unwrap().insert(1, port);
+
+        // Set connected
+        {
+            let mut ports = state.ports.lock().unwrap();
+            if let Some(p) = ports.get_mut(&1) {
+                p.is_connected = true;
+            }
+        }
+
+        let ports = state.ports.lock().unwrap();
+        assert!(ports.get(&1).unwrap().is_connected);
+    }
+
+    #[test]
+    fn test_port_remove() {
+        let state = create_test_state();
+
+        let port = MidiPort { id: 1, system_name: "Test".to_string(), ..MidiPort::default() };
+        state.ports.lock().unwrap().insert(1, port);
+
+        let removed = state.ports.lock().unwrap().remove(&1);
+        assert!(removed.is_some());
+
+        let removed_again = state.ports.lock().unwrap().remove(&1);
+        assert!(removed_again.is_none());
+    }
+
+    // -------------------------------------------------------------------------
+    // Port Group Command Tests
+    // -------------------------------------------------------------------------
+
+    #[test]
+    fn test_port_group_create_and_list() {
+        let state = create_test_state();
+
+        let group = MidiPortGroup {
+            id: 1,
+            name: "Interface 1".to_string(),
+            icon: Some("🎹".to_string()),
+            ports: vec![1, 2, 3, 4],
+        };
+        state.port_groups.lock().unwrap().insert(1, group);
+
+        let groups = state.port_groups.lock().unwrap();
+        assert_eq!(groups.len(), 1);
+        assert_eq!(groups.get(&1).unwrap().name, "Interface 1");
+    }
+
+    #[test]
+    fn test_port_group_update() {
+        let state = create_test_state();
+
+        let group = MidiPortGroup {
+            id: 1,
+            name: "Original".to_string(),
+            icon: None,
+            ports: vec![1, 2],
+        };
+        state.port_groups.lock().unwrap().insert(1, group);
+
+        // Update
+        {
+            let mut groups = state.port_groups.lock().unwrap();
+            if let Some(g) = groups.get_mut(&1) {
+                g.name = "Updated".to_string();
+                g.icon = Some("🎸".to_string());
+                g.ports = vec![1, 2, 3];
+            }
+        }
+
+        let groups = state.port_groups.lock().unwrap();
+        let updated = groups.get(&1).unwrap();
+        assert_eq!(updated.name, "Updated");
+        assert_eq!(updated.icon, Some("🎸".to_string()));
+        assert_eq!(updated.ports.len(), 3);
+    }
+
+    #[test]
+    fn test_port_group_delete() {
+        let state = create_test_state();
+
+        let group = MidiPortGroup { id: 1, name: "Test".to_string(), icon: None, ports: vec![] };
+        state.port_groups.lock().unwrap().insert(1, group);
+
+        let removed = state.port_groups.lock().unwrap().remove(&1);
+        assert!(removed.is_some());
+
+        assert!(state.port_groups.lock().unwrap().is_empty());
+    }
+
+    // -------------------------------------------------------------------------
+    // Route Command Tests
+    // -------------------------------------------------------------------------
+
+    #[test]
+    fn test_route_create_and_list() {
+        let state = create_test_state();
+
+        let route = MidiRoute {
+            id: 1,
+            name: Some("Piano to Synth".to_string()),
+            input_port_id: Some(1),
+            output_port_id: Some(2),
+            ..MidiRoute::default()
+        };
+        state.routes.lock().unwrap().insert(1, route);
+
+        let routes = state.routes.lock().unwrap();
+        assert_eq!(routes.len(), 1);
+        assert_eq!(routes.get(&1).unwrap().name, Some("Piano to Synth".to_string()));
+    }
+
+    #[test]
+    fn test_route_get_by_id() {
+        let state = create_test_state();
+
+        let route = MidiRoute { id: 1, name: Some("Test Route".to_string()), ..MidiRoute::default() };
+        state.routes.lock().unwrap().insert(1, route);
+
+        let routes = state.routes.lock().unwrap();
+        assert!(routes.get(&1).is_some());
+        assert!(routes.get(&999).is_none());
+    }
+
+    #[test]
+    fn test_route_update() {
+        let state = create_test_state();
+
+        let route = MidiRoute {
+            id: 1,
+            name: Some("Original".to_string()),
+            enabled: true,
+            transpose: 0,
+            velocity_scale: 100,
+            ..MidiRoute::default()
+        };
+        state.routes.lock().unwrap().insert(1, route);
+
+        // Update
+        {
+            let mut routes = state.routes.lock().unwrap();
+            if let Some(r) = routes.get_mut(&1) {
+                r.name = Some("Updated".to_string());
+                r.enabled = false;
+                r.transpose = 12;
+                r.velocity_scale = 80;
+            }
+        }
+
+        let routes = state.routes.lock().unwrap();
+        let updated = routes.get(&1).unwrap();
+        assert_eq!(updated.name, Some("Updated".to_string()));
+        assert!(!updated.enabled);
+        assert_eq!(updated.transpose, 12);
+        assert_eq!(updated.velocity_scale, 80);
+    }
+
+    #[test]
+    fn test_route_enable_disable() {
+        let state = create_test_state();
+
+        let route = MidiRoute { id: 1, enabled: true, ..MidiRoute::default() };
+        state.routes.lock().unwrap().insert(1, route);
+
+        // Disable
+        {
+            let mut routes = state.routes.lock().unwrap();
+            routes.get_mut(&1).unwrap().enabled = false;
+        }
+
+        assert!(!state.routes.lock().unwrap().get(&1).unwrap().enabled);
+
+        // Enable
+        {
+            let mut routes = state.routes.lock().unwrap();
+            routes.get_mut(&1).unwrap().enabled = true;
+        }
+
+        assert!(state.routes.lock().unwrap().get(&1).unwrap().enabled);
+    }
+
+    #[test]
+    fn test_route_delete() {
+        let state = create_test_state();
+
+        let route = MidiRoute { id: 1, ..MidiRoute::default() };
+        state.routes.lock().unwrap().insert(1, route);
+
+        let removed = state.routes.lock().unwrap().remove(&1);
+        assert!(removed.is_some());
+        assert!(state.routes.lock().unwrap().is_empty());
+    }
+
+    #[test]
+    fn test_route_channel_validation() {
+        // Channels should be 1-16
+        let route = MidiRoute {
+            id: 1,
+            input_channel: Some(16),
+            output_channel: Some(1),
+            ..MidiRoute::default()
+        };
+
+        assert!(route.input_channel.unwrap() <= 16);
+        assert!(route.output_channel.unwrap() >= 1);
+    }
+
+    #[test]
+    fn test_route_transpose_range() {
+        let route = MidiRoute { id: 1, transpose: -48, ..MidiRoute::default() };
+        assert_eq!(route.transpose, -48);
+
+        let route2 = MidiRoute { id: 2, transpose: 48, ..MidiRoute::default() };
+        assert_eq!(route2.transpose, 48);
+    }
+
+    #[test]
+    fn test_route_velocity_scale_range() {
+        let route = MidiRoute { id: 1, velocity_scale: 0, ..MidiRoute::default() };
+        assert_eq!(route.velocity_scale, 0);
+
+        let route2 = MidiRoute { id: 2, velocity_scale: 200, ..MidiRoute::default() };
+        assert_eq!(route2.velocity_scale, 200);
+    }
+
+    // -------------------------------------------------------------------------
+    // Statistics Tests
+    // -------------------------------------------------------------------------
+
+    #[test]
+    fn test_stats_calculation() {
+        let state = create_test_state();
+
+        // Add ports
+        let input = MidiPort {
+            id: 1,
+            system_name: "In".to_string(),
+            direction: "input".to_string(),
+            is_connected: true,
+            enabled: true,
+            ..MidiPort::default()
+        };
+        let output = MidiPort {
+            id: 2,
+            system_name: "Out".to_string(),
+            direction: "output".to_string(),
+            is_connected: true,
+            enabled: false,
+            ..MidiPort::default()
+        };
+        let disconnected = MidiPort {
+            id: 3,
+            system_name: "Disc".to_string(),
+            direction: "output".to_string(),
+            is_connected: false,
+            enabled: true,
+            ..MidiPort::default()
+        };
+        {
+            let mut ports = state.ports.lock().unwrap();
+            ports.insert(1, input);
+            ports.insert(2, output);
+            ports.insert(3, disconnected);
+        }
+
+        // Add routes
+        let route1 = MidiRoute { id: 1, enabled: true, ..MidiRoute::default() };
+        let route2 = MidiRoute { id: 2, enabled: false, ..MidiRoute::default() };
+        {
+            let mut routes = state.routes.lock().unwrap();
+            routes.insert(1, route1);
+            routes.insert(2, route2);
+        }
+
+        // Calculate stats
+        let ports = state.ports.lock().unwrap();
+        let routes = state.routes.lock().unwrap();
+
+        let total_ports = ports.len();
+        let input_ports = ports.values().filter(|p| p.direction == "input").count();
+        let output_ports = ports.values().filter(|p| p.direction == "output").count();
+        let connected_ports = ports.values().filter(|p| p.is_connected).count();
+        let enabled_ports = ports.values().filter(|p| p.enabled).count();
+        let total_routes = routes.len();
+        let enabled_routes = routes.values().filter(|r| r.enabled).count();
+
+        assert_eq!(total_ports, 3);
+        assert_eq!(input_ports, 1);
+        assert_eq!(output_ports, 2);
+        assert_eq!(connected_ports, 2);
+        assert_eq!(enabled_ports, 2);
+        assert_eq!(total_routes, 2);
+        assert_eq!(enabled_routes, 1);
+    }
+
+    // -------------------------------------------------------------------------
+    // Panic Test
+    // -------------------------------------------------------------------------
+
+    #[test]
+    fn test_panic_requires_connected_outputs() {
+        let state = create_test_state();
+
+        // No ports - panic should fail
+        let ports = state.ports.lock().unwrap();
+        let output_count = ports
+            .values()
+            .filter(|p| p.direction == "output" && p.enabled && p.is_connected)
+            .count();
+        assert_eq!(output_count, 0);
+    }
+
+    #[test]
+    fn test_panic_with_connected_outputs() {
+        let state = create_test_state();
+
+        let output = MidiPort {
+            id: 1,
+            system_name: "Out".to_string(),
+            direction: "output".to_string(),
+            is_connected: true,
+            enabled: true,
+            ..MidiPort::default()
+        };
+        state.ports.lock().unwrap().insert(1, output);
+
+        let ports = state.ports.lock().unwrap();
+        let output_count = ports
+            .values()
+            .filter(|p| p.direction == "output" && p.enabled && p.is_connected)
+            .count();
+        assert_eq!(output_count, 1);
+    }
+
+    // -------------------------------------------------------------------------
+    // ID Generation Tests
+    // -------------------------------------------------------------------------
+
+    #[test]
+    fn test_port_id_increments() {
+        let state = create_test_state();
+
+        assert_eq!(*state.next_port_id.lock().unwrap(), 1);
+
+        *state.next_port_id.lock().unwrap() += 1;
+        assert_eq!(*state.next_port_id.lock().unwrap(), 2);
+
+        *state.next_port_id.lock().unwrap() += 1;
+        assert_eq!(*state.next_port_id.lock().unwrap(), 3);
+    }
+
+    #[test]
+    fn test_group_id_increments() {
+        let state = create_test_state();
+
+        assert_eq!(*state.next_group_id.lock().unwrap(), 1);
+
+        *state.next_group_id.lock().unwrap() += 1;
+        assert_eq!(*state.next_group_id.lock().unwrap(), 2);
+    }
+
+    #[test]
+    fn test_route_id_increments() {
+        let state = create_test_state();
+
+        assert_eq!(*state.next_route_id.lock().unwrap(), 1);
+
+        *state.next_route_id.lock().unwrap() += 1;
+        assert_eq!(*state.next_route_id.lock().unwrap(), 2);
+    }
+
+    // -------------------------------------------------------------------------
+    // State Response Tests
+    // -------------------------------------------------------------------------
+
+    #[test]
+    fn test_state_response_serialization() {
+        let mut ports = HashMap::new();
+        ports.insert(
+            1,
+            MidiPort { id: 1, system_name: "Test".to_string(), ..MidiPort::default() },
+        );
+
+        let response = MidiIOStateResponse { ports, next_id: 2 };
+
+        let json = serde_json::to_string(&response).unwrap();
+        let deserialized: MidiIOStateResponse = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(deserialized.next_id, 2);
+        assert_eq!(deserialized.ports.len(), 1);
+    }
+
+    // -------------------------------------------------------------------------
+    // Edge Cases
+    // -------------------------------------------------------------------------
+
+    #[test]
+    fn test_empty_state_operations() {
+        let state = create_test_state();
+
+        // All collections should be empty
+        assert!(state.ports.lock().unwrap().is_empty());
+        assert!(state.port_groups.lock().unwrap().is_empty());
+        assert!(state.routes.lock().unwrap().is_empty());
+    }
+
+    #[test]
+    fn test_concurrent_access() {
+        use std::thread;
+
+        let state = MidiIOState::new();
+        let state1 = state.clone();
+        let state2 = state.clone();
+
+        let handle1 = thread::spawn(move || {
+            for i in 1..=10 {
+                let port = MidiPort {
+                    id: i,
+                    system_name: format!("Port {}", i),
+                    ..MidiPort::default()
+                };
+                state1.ports.lock().unwrap().insert(i, port);
+            }
+        });
+
+        let handle2 = thread::spawn(move || {
+            for i in 11..=20 {
+                let port = MidiPort {
+                    id: i,
+                    system_name: format!("Port {}", i),
+                    ..MidiPort::default()
+                };
+                state2.ports.lock().unwrap().insert(i, port);
+            }
+        });
+
+        handle1.join().unwrap();
+        handle2.join().unwrap();
+
+        assert_eq!(state.ports.lock().unwrap().len(), 20);
+    }
+
+    #[test]
+    fn test_route_filter_types() {
+        let types = vec!["notes", "cc", "program", "all"];
+        for filter_type in types {
+            let route = MidiRoute {
+                id: 1,
+                filter_type: Some(filter_type.to_string()),
+                ..MidiRoute::default()
+            };
+            assert_eq!(route.filter_type, Some(filter_type.to_string()));
+        }
+    }
+
+    #[test]
+    fn test_port_types() {
+        let types = vec!["hardware", "virtual", "network"];
+        for port_type in types {
+            let port = MidiPort {
+                id: 1,
+                system_name: "Test".to_string(),
+                port_type: port_type.to_string(),
+                ..MidiPort::default()
+            };
+            assert_eq!(port.port_type, port_type);
+        }
+    }
+
+    #[test]
+    fn test_port_directions() {
+        let input = MidiPort {
+            id: 1,
+            system_name: "In".to_string(),
+            direction: "input".to_string(),
+            ..MidiPort::default()
+        };
+        assert_eq!(input.direction, "input");
+
+        let output = MidiPort {
+            id: 2,
+            system_name: "Out".to_string(),
+            direction: "output".to_string(),
+            ..MidiPort::default()
+        };
+        assert_eq!(output.direction, "output");
+    }
+
+    #[test]
+    fn test_port_route_to_options() {
+        let options = vec!["selected", "all", "none"];
+        for route_to in options {
+            let port = MidiPort {
+                id: 1,
+                system_name: "Test".to_string(),
+                route_to: route_to.to_string(),
+                ..MidiPort::default()
+            };
+            assert_eq!(port.route_to, route_to);
+        }
+    }
+}

@@ -3,6 +3,7 @@ name = "midi-software-center"
 version = "1.0.0"
 edition = "2021"
 description = "MIDI Software Center - Unified application with Pipeline and DAW"
+default-run = "midi-software-center"
 
 [lib]
 name = "midi_app"
@@ -52,6 +53,12 @@ spin_sleep = "1.2"
 # Lua scripting for macros and automation (vendored = bundled Lua, no system dep)
 mlua = { version = "0.9", features = ["lua54", "async", "serialize", "vendored"] }
 
+# ZeroMQ for high-performance IPC with external hardware
+zeromq = "0.4"
+
+# Meilisearch for full-text search
+meilisearch-sdk = "0.26"
+
 # Ableton Link sync (optional)
 rusty_link = { version = "0.3", optional = true }
 
@@ -66,6 +73,9 @@ rand = "0.8"
 
 # Database
 sqlx = { version = "0.7", features = ["runtime-tokio-rustls", "postgres", "migrate", "chrono", "bigdecimal", "uuid", "rust_decimal"] }
+
+# DuckDB for fast analytics (OLAP queries)
+duckdb = { version = "1.0", features = ["bundled"] }
 
 # Async runtime
 tokio = { version = "1.35", features = ["full"] }
@@ -354,11 +364,7 @@ name = "organize_files"
 path = "src/bin/organize_files.rs"
 
 [[bin]]
-name = "pipeline-cli"
-path = "src/bin/pipeline-cli.rs"
-
-[[bin]]
-name = "split"
+name = "midi-split"
 path = "src/bin/split.rs"
 
 [[bin]]

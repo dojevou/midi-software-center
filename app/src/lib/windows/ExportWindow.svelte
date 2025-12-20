@@ -181,17 +181,26 @@
     };
 
     try {
-      const exportParams = {
-        format: exportFormat,
-        options: exportOptions,
-        tracks: exportOptions.includeAllTracks ? [] : exportOptions.selectedTracks,
+      // Update to exporting status
+      exportProgress = {
+        ...exportProgress,
+        status: 'exporting',
+        message: 'Exporting project to MIDI...',
       };
 
-      const result = await api.export.exportProject(exportParams);
+      // Use the existing simple export command
+      // Note: Currently only supports MIDI export. Enhanced formats can be added later.
+      const outputPath = exportOptions.location;
+      await api.export.projectAsMidi(outputPath);
 
-      if (result.jobId) {
-        monitorExportProgress(result.jobId);
-      }
+      // Export completed successfully
+      exportProgress = {
+        status: 'completed',
+        current: 100,
+        total: 100,
+        message: `Export completed: ${outputPath}`,
+        errors: [],
+      };
     } catch (error) {
       exportProgress = {
         ...exportProgress,

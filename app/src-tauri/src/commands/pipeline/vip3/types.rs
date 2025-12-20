@@ -166,6 +166,8 @@ pub struct CreateCollectionRequest {
     pub description: Option<String>,
     pub icon: Option<String>,
     pub color: Option<String>,
+    pub is_smart: Option<bool>,
+    pub smart_filters: Option<Value>,
 }
 
 /// Response for file categories

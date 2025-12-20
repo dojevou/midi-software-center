@@ -10,6 +10,8 @@
   import SequencerTrack from './SequencerTrack.svelte';
   import SequencerTimeline from './SequencerTimeline.svelte';
   import SequencerTransport from './SequencerTransport.svelte';
+  import { Vip3BrowserApi } from '$lib/api/vip3BrowserApi';
+  import { toastStore } from '$lib/stores/toastStore';
 
   // Props
   export let width: number = 800;
@@ -19,6 +21,8 @@
   let containerRef: HTMLDivElement;
   let tracksContainerRef: HTMLDivElement;
   let isDragOver = false;
+  let isLoadingFile = false;
+  let loadingFileName = '';
 
   // Reactive state from store
   $: state = $sequencerStore;
@@ -168,6 +172,10 @@
       const data = JSON.parse(jsonData);
       if (data.type !== 'midi-file') { return; }
 
+      // Show loading state
+      isLoadingFile = true;
+      loadingFileName = data.filename;
+
       // Calculate drop position
       const rect = tracksContainerRef.getBoundingClientRect();
       const x = event.clientX - rect.left + scrollX - TRACK_HEADER_WIDTH;
@@ -196,15 +204,34 @@
         trackId = sequencerActions.addTrack(newTrackName);
       }
 
-      // Add clip to track
-      const clipName = data.filename.replace(/\.(mid|midi)$/i, '');
-      // Default clip length: 4 bars
-      const clipLength = project.timeSignature[0] * state.ticksPerBeat * 4;
-      sequencerActions.addClip(trackId, startTick, clipLength, data.id, clipName);
+      // Load MIDI file into the DAW engine
+      try {
+        const loadedTrackId = await Vip3BrowserApi.loadFileToDaw(data.id);
+        console.log(`Loaded file ${data.id} to DAW as track ${loadedTrackId}`);
 
-      console.log(`Added clip "${clipName}" to track at tick ${startTick}`);
+        // Add clip to track for visual representation
+        const clipName = data.filename.replace(/\.(mid|midi)$/i, '');
+        // Default clip length: 4 bars
+        const clipLength = project.timeSignature[0] * state.ticksPerBeat * 4;
+        sequencerActions.addClip(trackId, startTick, clipLength, data.id, clipName);
+
+        console.log(`Added clip "${clipName}" to track at tick ${startTick}`);
+
+        // Success notification
+        toastStore.success(`Successfully loaded "${data.filename}"`);
+      } catch (loadError) {
+        console.error('Failed to load MIDI file to DAW:', loadError);
+        // Error notification
+        toastStore.error(`Failed to load "${data.filename}": ${loadError}`);
+        throw loadError;
+      } finally {
+        isLoadingFile = false;
+        loadingFileName = '';
+      }
     } catch (error) {
       console.error('Failed to process dropped file:', error);
+      isLoadingFile = false;
+      loadingFileName = '';
     }
   }
 
@@ -321,6 +348,16 @@
       />
     </div>
   </div>
+
+  <!-- Loading Overlay -->
+  {#if isLoadingFile}
+    <div class="loading-overlay">
+      <div class="loading-spinner">
+        <div class="spinner"></div>
+        <p>Loading {loadingFileName}...</p>
+      </div>
+    </div>
+  {/if}
 </div>
 
 <style>
@@ -482,5 +519,50 @@
     background-size: 40px 80px; /* Will be dynamic based on zoom */
     opacity: 0.3;
     z-index: 0;
+  }
+
+  .loading-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.7);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 1000;
+  }
+
+  .loading-spinner {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+    padding: 32px;
+    background: var(--menu-bg, #2a2a2a);
+    border: 1px solid var(--border-color, #3a3a3a);
+    border-radius: 8px;
+  }
+
+  .loading-spinner p {
+    margin: 0;
+    color: var(--text-color, #e0e0e0);
+    font-size: 14px;
+    font-weight: 500;
+  }
+
+  .spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid var(--border-color, #3a3a3a);
+    border-top: 3px solid var(--primary-color, #3b82f6);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+  }
+
+  @keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
   }
 </style>

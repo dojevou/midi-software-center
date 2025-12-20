@@ -7,6 +7,7 @@
     getSnapTicks,
     snapToGrid,
   } from '$lib/stores/sequencerStore';
+  import { playbackStore } from '$lib/stores/playbackStore';
 
   // Props
   export let clip: SequencerClip;
@@ -122,7 +123,7 @@
       { label: 'Open in Piano Roll', action: () => dispatch('edit', { clipId: clip.id, trackId, fileId: clip.midiFileId, clipName: clip.name }) },
       { label: 'Duplicate Clip', action: () => duplicateClip() },
       { label: 'Delete Clip', action: () => sequencerActions.removeClip(trackId, clip.id) },
-      { label: 'Split at Playhead', action: () => console.log('Split clip at playhead - not implemented') },
+      { label: 'Split at Playhead', action: () => splitAtPlayhead() },
     ];
     console.log('Clip context menu:', clip.id, 'Options:', options.map(o => o.label));
   }
@@ -132,6 +133,42 @@
     // Place duplicated clip right after the current one
     const newStartTick = clip.startTick + clip.lengthTicks;
     sequencerActions.addClip(trackId, newStartTick, clip.lengthTicks, clip.midiFileId, `${clip.name} (copy)`);
+  }
+
+  // Split clip at the current playhead position
+  function splitAtPlayhead() {
+    const playheadTick = $playbackStore.position.current_tick;
+    const clipEnd = clip.startTick + clip.lengthTicks;
+
+    // Check if playhead is within clip boundaries (excluding edges)
+    if (playheadTick <= clip.startTick || playheadTick >= clipEnd) {
+      console.log('Playhead not within clip bounds - cannot split');
+      return;
+    }
+
+    // Calculate the lengths for both clips
+    const firstClipLength = playheadTick - clip.startTick;
+    const secondClipLength = clipEnd - playheadTick;
+
+    // Ensure both clips would have meaningful length
+    if (firstClipLength < snapTicks || secondClipLength < snapTicks) {
+      console.log('Split would create clips too small - minimum is', snapTicks, 'ticks');
+      return;
+    }
+
+    // Update the original clip to end at the playhead
+    sequencerActions.updateClip(trackId, clip.id, { lengthTicks: firstClipLength });
+
+    // Create a new clip starting at the playhead with the remaining content
+    sequencerActions.addClip(
+      trackId,
+      playheadTick,
+      secondClipLength,
+      clip.midiFileId,
+      `${clip.name} (split)`
+    );
+
+    console.log('Split clip at tick', playheadTick, '- first:', firstClipLength, 'second:', secondClipLength);
   }
 
   // Handle delete key when focused

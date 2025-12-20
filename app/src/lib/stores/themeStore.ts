@@ -4,6 +4,18 @@ import { writable, derived } from 'svelte/store';
 // TYPES
 // ============================================================================
 
+/**
+ * MIDI Pattern Theme Names
+ * Each theme name is an acronym following the MIDI pattern naming convention:
+ * - DARK = Deep Ambient Rich Kontrast
+ * - WARM = Wooden Amber Rustic Mellow
+ * - NEON = Night Electric Orange Noir
+ * - MINT = Modern Icy Neutral Teal
+ * - ROSE = Rosy Ochre Soft Elegant
+ * - BASS = Bold Abyss Slate Shadow
+ */
+export type ThemeName = 'DARK' | 'WARM' | 'NEON' | 'MINT' | 'ROSE' | 'BASS';
+
 export type ThemeMode = 'light' | 'dark' | 'system';
 
 export interface ThemeColors {
@@ -59,6 +71,7 @@ export interface ThemeColors {
 
 export interface ThemeConfig {
   mode: ThemeMode;
+  themeName: ThemeName;
   colors: {
     light: ThemeColors;
     dark: ThemeColors;
@@ -81,6 +94,7 @@ export interface ThemeState {
 // DEFAULT THEMES
 // ============================================================================
 
+// DARK = Deep Ambient Rich Kontrast - High contrast dark theme
 const DARK_THEME: ThemeColors = {
   bgPrimary: '#121212',
   bgSecondary: '#1e1e1e',
@@ -123,6 +137,231 @@ const DARK_THEME: ThemeColors = {
   vuMeterGreen: '#00ff00',
   vuMeterYellow: '#ffff00',
   vuMeterRed: '#ff0000',
+};
+
+// WARM = Wooden Amber Rustic Mellow - Browns, oranges, cozy studio feel
+const WARM_THEME: ThemeColors = {
+  bgPrimary: '#1a1512',
+  bgSecondary: '#2a221a',
+  bgTertiary: '#3a3025',
+  bgHover: '#4a3d30',
+  bgActive: '#5a4a38',
+
+  textPrimary: '#f5e6d3',
+  textSecondary: '#c9b8a5',
+  textMuted: '#8a7a68',
+  textInverse: '#1a1512',
+
+  accent: '#e8a54b',
+  accentHover: '#d4923a',
+  accentMuted: 'rgba(232, 165, 75, 0.25)',
+
+  success: '#7cb342',
+  warning: '#ffa726',
+  error: '#e57373',
+  info: '#81d4fa',
+
+  border: '#4a3d30',
+  borderFocus: '#e8a54b',
+
+  windowHeader: '#2a221a',
+  menuBar: '#1f1a15',
+  statusBar: '#1f1a15',
+  scrollbar: '#5a4a38',
+  scrollbarHover: '#6a5a45',
+
+  pianoRollWhiteKey: '#4a3d30',
+  pianoRollBlackKey: '#1f1a15',
+  pianoRollGrid: '#3a3025',
+  pianoRollNote: '#e8a54b',
+  pianoRollNoteSelected: '#f5c67a',
+  sequencerTrackEven: '#2a221a',
+  sequencerTrackOdd: '#332a20',
+  waveformFg: '#e8a54b',
+  waveformBg: '#1f1a15',
+  vuMeterGreen: '#8bc34a',
+  vuMeterYellow: '#ffc107',
+  vuMeterRed: '#ef5350',
+};
+
+// NEON = Night Electric Orange Noir - Cyberpunk, bright accents on black
+const NEON_THEME: ThemeColors = {
+  bgPrimary: '#0a0a0f',
+  bgSecondary: '#12121a',
+  bgTertiary: '#1a1a25',
+  bgHover: '#252530',
+  bgActive: '#30303d',
+
+  textPrimary: '#ffffff',
+  textSecondary: '#b0b0c0',
+  textMuted: '#606070',
+  textInverse: '#0a0a0f',
+
+  accent: '#ff6b2b',
+  accentHover: '#ff8a50',
+  accentMuted: 'rgba(255, 107, 43, 0.25)',
+
+  success: '#00ff9f',
+  warning: '#ffea00',
+  error: '#ff1744',
+  info: '#00e5ff',
+
+  border: '#2a2a35',
+  borderFocus: '#ff6b2b',
+
+  windowHeader: '#12121a',
+  menuBar: '#0d0d12',
+  statusBar: '#0d0d12',
+  scrollbar: '#30303d',
+  scrollbarHover: '#404050',
+
+  pianoRollWhiteKey: '#1a1a25',
+  pianoRollBlackKey: '#0d0d12',
+  pianoRollGrid: '#252530',
+  pianoRollNote: '#ff6b2b',
+  pianoRollNoteSelected: '#00e5ff',
+  sequencerTrackEven: '#12121a',
+  sequencerTrackOdd: '#18182a',
+  waveformFg: '#00ff9f',
+  waveformBg: '#0d0d12',
+  vuMeterGreen: '#00ff9f',
+  vuMeterYellow: '#ffea00',
+  vuMeterRed: '#ff1744',
+};
+
+// MINT = Modern Icy Neutral Teal - Cool greens and teals, minimal
+const MINT_THEME: ThemeColors = {
+  bgPrimary: '#0f1614',
+  bgSecondary: '#162220',
+  bgTertiary: '#1e2e2a',
+  bgHover: '#283a35',
+  bgActive: '#324540',
+
+  textPrimary: '#e8f5f2',
+  textSecondary: '#a8c8c0',
+  textMuted: '#5a8078',
+  textInverse: '#0f1614',
+
+  accent: '#26c6a0',
+  accentHover: '#2dd4aa',
+  accentMuted: 'rgba(38, 198, 160, 0.2)',
+
+  success: '#4caf50',
+  warning: '#ffb74d',
+  error: '#ef5350',
+  info: '#4dd0e1',
+
+  border: '#283a35',
+  borderFocus: '#26c6a0',
+
+  windowHeader: '#162220',
+  menuBar: '#121a18',
+  statusBar: '#121a18',
+  scrollbar: '#324540',
+  scrollbarHover: '#3c5550',
+
+  pianoRollWhiteKey: '#1e2e2a',
+  pianoRollBlackKey: '#121a18',
+  pianoRollGrid: '#243532',
+  pianoRollNote: '#26c6a0',
+  pianoRollNoteSelected: '#64ffda',
+  sequencerTrackEven: '#162220',
+  sequencerTrackOdd: '#1a2a28',
+  waveformFg: '#26c6a0',
+  waveformBg: '#121a18',
+  vuMeterGreen: '#4caf50',
+  vuMeterYellow: '#ffc107',
+  vuMeterRed: '#ff5722',
+};
+
+// ROSE = Rosy Ochre Soft Elegant - Soft pinks and roses, refined
+const ROSE_THEME: ThemeColors = {
+  bgPrimary: '#18121a',
+  bgSecondary: '#241c28',
+  bgTertiary: '#302636',
+  bgHover: '#3c3244',
+  bgActive: '#483e52',
+
+  textPrimary: '#f8e8f0',
+  textSecondary: '#c8b0c0',
+  textMuted: '#7a6878',
+  textInverse: '#18121a',
+
+  accent: '#e878a0',
+  accentHover: '#f090b0',
+  accentMuted: 'rgba(232, 120, 160, 0.2)',
+
+  success: '#81c784',
+  warning: '#ffcc80',
+  error: '#e57373',
+  info: '#90caf9',
+
+  border: '#3c3244',
+  borderFocus: '#e878a0',
+
+  windowHeader: '#241c28',
+  menuBar: '#1c1620',
+  statusBar: '#1c1620',
+  scrollbar: '#483e52',
+  scrollbarHover: '#584e62',
+
+  pianoRollWhiteKey: '#302636',
+  pianoRollBlackKey: '#1c1620',
+  pianoRollGrid: '#2c222e',
+  pianoRollNote: '#e878a0',
+  pianoRollNoteSelected: '#f8a0c0',
+  sequencerTrackEven: '#241c28',
+  sequencerTrackOdd: '#2a2230',
+  waveformFg: '#e878a0',
+  waveformBg: '#1c1620',
+  vuMeterGreen: '#81c784',
+  vuMeterYellow: '#ffd54f',
+  vuMeterRed: '#e57373',
+};
+
+// BASS = Bold Abyss Slate Shadow - Deep blacks, minimal pro look
+const BASS_THEME: ThemeColors = {
+  bgPrimary: '#08080a',
+  bgSecondary: '#101014',
+  bgTertiary: '#18181e',
+  bgHover: '#222228',
+  bgActive: '#2c2c34',
+
+  textPrimary: '#e8e8ec',
+  textSecondary: '#9898a0',
+  textMuted: '#505058',
+  textInverse: '#08080a',
+
+  accent: '#6366f1',
+  accentHover: '#818cf8',
+  accentMuted: 'rgba(99, 102, 241, 0.2)',
+
+  success: '#10b981',
+  warning: '#f59e0b',
+  error: '#ef4444',
+  info: '#3b82f6',
+
+  border: '#222228',
+  borderFocus: '#6366f1',
+
+  windowHeader: '#101014',
+  menuBar: '#0a0a0e',
+  statusBar: '#0a0a0e',
+  scrollbar: '#2c2c34',
+  scrollbarHover: '#38383f',
+
+  pianoRollWhiteKey: '#18181e',
+  pianoRollBlackKey: '#0a0a0e',
+  pianoRollGrid: '#1a1a20',
+  pianoRollNote: '#6366f1',
+  pianoRollNoteSelected: '#a5b4fc',
+  sequencerTrackEven: '#101014',
+  sequencerTrackOdd: '#141418',
+  waveformFg: '#6366f1',
+  waveformBg: '#0a0a0e',
+  vuMeterGreen: '#10b981',
+  vuMeterYellow: '#f59e0b',
+  vuMeterRed: '#ef4444',
 };
 
 const LIGHT_THEME: ThemeColors = {
@@ -169,8 +408,29 @@ const LIGHT_THEME: ThemeColors = {
   vuMeterRed: '#cc0000',
 };
 
+// Theme lookup map
+const THEMES: Record<ThemeName, ThemeColors> = {
+  DARK: DARK_THEME,
+  WARM: WARM_THEME,
+  NEON: NEON_THEME,
+  MINT: MINT_THEME,
+  ROSE: ROSE_THEME,
+  BASS: BASS_THEME,
+};
+
+// Theme descriptions for UI
+export const THEME_INFO: Record<ThemeName, { name: string; description: string }> = {
+  DARK: { name: 'DARK', description: 'Deep Ambient Rich Kontrast' },
+  WARM: { name: 'WARM', description: 'Wooden Amber Rustic Mellow' },
+  NEON: { name: 'NEON', description: 'Night Electric Orange Noir' },
+  MINT: { name: 'MINT', description: 'Modern Icy Neutral Teal' },
+  ROSE: { name: 'ROSE', description: 'Rosy Ochre Soft Elegant' },
+  BASS: { name: 'BASS', description: 'Bold Abyss Slate Shadow' },
+};
+
 const DEFAULT_CONFIG: ThemeConfig = {
   mode: 'dark',
+  themeName: 'DARK',
   colors: {
     light: LIGHT_THEME,
     dark: DARK_THEME,
@@ -200,13 +460,14 @@ function colorsToCssVariables(colors: ThemeColors, prefix = ''): Record<string, 
 }
 
 function generateCssVariables(state: ThemeState): Record<string, string> {
-  const { config, resolvedMode } = state;
-  const colors = config.colors[resolvedMode];
+  const { config } = state;
+  // Use named theme from THEMES map, fallback to DARK if not found
+  const themeColors = THEMES[config.themeName] || THEMES.DARK;
 
   // Merge with custom colors if any
   const mergedColors = config.customColors
-    ? { ...colors, ...config.customColors }
-    : colors;
+    ? { ...themeColors, ...config.customColors }
+    : themeColors;
 
   const vars = colorsToCssVariables(mergedColors);
 
@@ -332,6 +593,7 @@ function createThemeStore() {
   if (typeof window !== 'undefined') {
     applyCssVariables(initialState.cssVariables);
     document.documentElement.setAttribute('data-theme', resolvedMode);
+    document.documentElement.setAttribute('data-theme-name', config.themeName);
   }
 
   // Listen for system theme changes
@@ -377,6 +639,21 @@ function createThemeStore() {
         newState.cssVariables = generateCssVariables(newState);
         applyCssVariables(newState.cssVariables);
         document.documentElement.setAttribute('data-theme', resolvedMode);
+        saveConfig(newConfig);
+        return newState;
+      });
+    },
+
+    setTheme(themeName: ThemeName) {
+      update(state => {
+        const newConfig = { ...state.config, themeName };
+        const newState: ThemeState = {
+          ...state,
+          config: newConfig,
+        };
+        newState.cssVariables = generateCssVariables(newState);
+        applyCssVariables(newState.cssVariables);
+        document.documentElement.setAttribute('data-theme-name', themeName);
         saveConfig(newConfig);
         return newState;
       });
@@ -486,4 +763,8 @@ export const themeStore = createThemeStore();
 // Derived stores
 export const isDarkMode = derived(themeStore, $theme => $theme.resolvedMode === 'dark');
 export const themeMode = derived(themeStore, $theme => $theme.config.mode);
+export const themeName = derived(themeStore, $theme => $theme.config.themeName);
 export const reducedMotion = derived(themeStore, $theme => $theme.config.reducedMotion);
+
+// Export available theme names for UI
+export const THEME_NAMES: ThemeName[] = ['DARK', 'WARM', 'NEON', 'MINT', 'ROSE', 'BASS'];

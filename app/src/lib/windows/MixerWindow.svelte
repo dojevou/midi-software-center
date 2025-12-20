@@ -1,5 +1,6 @@
 <script lang="ts">
   import { onDestroy, onMount } from 'svelte';
+  import WindowBase from '$lib/components/WindowBase.svelte';
   import { api } from '$lib/api';
   import { Commands } from '$lib/api/commands';
   import { safeInvoke, safeListen } from '$lib/utils/tauri';
@@ -12,10 +13,26 @@
   // Detach state from arrangement store
   $: isDetached = $arrangementStore.mixerDetached;
 
-  let mixerState: MixerState | null = null;
+  // MIDI CC mixer state (extended to include CC parameters)
+  interface MixerChannelExtended extends MixerChannel {
+    expression?: number;  // CC11: 0-127
+    modulation?: number;  // CC1: 0-127
+  }
+
+  interface MixerStateExtended {
+    channels: Record<number, MixerChannelExtended>;
+    master: MixerChannelExtended;
+    show_meters: boolean;
+    show_effects: boolean;
+  }
+
+  let mixerState: MixerStateExtended | null = null;
   let meterData: any[] = [];
   let loadError: string | null = null;
   let isLoading = true;
+
+  // MIDI output device state
+  let midiDeviceId: string | null = null;
 
   // Effect rack state
   let channelEffects: Record<number, EffectSlot[]> = {};
@@ -23,14 +40,17 @@
   let selectedChannelForEffects: number | null = null;
 
   // Mock data for browser development (when not in Tauri)
-  const mockMixerState: MixerState = {
+  // Using MIDI CC values for volume/pan + adding expression/modulation
+  const mockMixerState: MixerStateExtended = {
     channels: {
       1: {
         id: 1,
         channel_type: 'audio',
         label: 'Track 1',
-        volume: 0.75,
-        pan: -0.2,
+        volume: 0.75,      // Will display as CC7
+        pan: -0.2,         // Will display as CC10
+        expression: 100,   // CC11: 0-127
+        modulation: 0,     // CC1: 0-127
         muted: false,
         soloed: false,
         meter_level: 0.4,
@@ -41,6 +61,8 @@
         label: 'Track 2',
         volume: 0.65,
         pan: 0.3,
+        expression: 90,
+        modulation: 0,
         muted: false,
         soloed: false,
         meter_level: 0.6,
@@ -51,6 +73,8 @@
         label: 'Drums',
         volume: 0.9,
         pan: 0,
+        expression: 110,
+        modulation: 0,
         muted: false,
         soloed: false,
         meter_level: 0.8,
@@ -61,6 +85,8 @@
         label: 'Bass',
         volume: 0.7,
         pan: 0.1,
+        expression: 95,
+        modulation: 0,
         muted: true,
         soloed: false,
         meter_level: 0.3,
@@ -71,6 +97,8 @@
         label: 'Synth',
         volume: 0.8,
         pan: -0.1,
+        expression: 105,
+        modulation: 0,
         muted: false,
         soloed: true,
         meter_level: 0.5,
@@ -82,6 +110,8 @@
       label: 'Master',
       volume: 0.85,
       pan: 0,
+      expression: 110,
+      modulation: 0,
       muted: false,
       soloed: false,
       meter_level: 0.7,
@@ -121,9 +151,28 @@
       onDestroy(() => unlistenTrackRemoved());
     }
 
+    // Load MIDI output devices
+    await loadMidiDevices();
+
     // Load initial mixer state
     await loadMixerState();
   });
+
+  async function loadMidiDevices() {
+    try {
+      const devices = await safeInvoke<Array<{ id: string; name: string; is_open: boolean }>>('midi_output_list_devices');
+      if (devices && devices.length > 0) {
+        // Use the first available device, or first open device if any
+        const openDevice = devices.find(d => d.is_open);
+        midiDeviceId = openDevice?.id || devices[0].id;
+        console.log(`[Mixer] Using MIDI output device: ${midiDeviceId}`);
+      } else {
+        console.warn('[Mixer] No MIDI output devices available');
+      }
+    } catch (error) {
+      console.error('[Mixer] Failed to load MIDI devices:', error);
+    }
+  }
 
   async function loadMixerState(retryCount = 0) {
     const maxRetries = 3;
@@ -170,6 +219,88 @@
       await loadMixerState(); // Refresh state
     } catch (error) {
       console.error('Failed to update pan:', error);
+    }
+  }
+
+  // MIDI CC update functions (values 0-127)
+  async function updateMidiCC(channelId: number, ccNumber: number, value: number) {
+    try {
+      // Clamp value to MIDI range
+      const clampedValue = Math.max(0, Math.min(127, Math.round(value)));
+
+      // Update local state
+      if (mixerState && mixerState.channels[channelId]) {
+        const channel = mixerState.channels[channelId];
+        switch (ccNumber) {
+          case 7: channel.volume = clampedValue; break;
+          case 10: channel.pan = clampedValue; break;
+          case 11: channel.expression = clampedValue; break;
+          case 1: channel.modulation = clampedValue; break;
+        }
+        mixerState = mixerState; // Trigger reactivity
+      }
+
+      // Send MIDI CC to backend (MIDI channel 0 = channel 1)
+      if (midiDeviceId) {
+        const midiChannel = channelId - 1; // Convert 1-based to 0-based
+        await safeInvoke('midi_send_cc', {
+          device_id: midiDeviceId,
+          channel: midiChannel,
+          controller: ccNumber,
+          value: clampedValue,
+        });
+        console.log(`Channel ${channelId} CC${ccNumber} = ${clampedValue} (sent to MIDI device ${midiDeviceId})`);
+      } else {
+        console.warn(`Channel ${channelId} CC${ccNumber} = ${clampedValue} (no MIDI device available)`);
+      }
+    } catch (error) {
+      console.error(`Failed to update CC${ccNumber}:`, error);
+    }
+  }
+
+  async function updateMasterCC(ccNumber: number, value: number) {
+    try {
+      const clampedValue = Math.max(0, Math.min(127, Math.round(value)));
+
+      // Update all channels with this CC value
+      if (mixerState) {
+        Object.values(mixerState.channels).forEach(channel => {
+          switch (ccNumber) {
+            case 7: channel.volume = clampedValue; break;
+            case 10: channel.pan = clampedValue; break;
+            case 11: channel.expression = clampedValue; break;
+            case 1: channel.modulation = clampedValue; break;
+          }
+        });
+
+        // Update master channel
+        switch (ccNumber) {
+          case 7: mixerState.master.volume = clampedValue; break;
+          case 10: mixerState.master.pan = clampedValue; break;
+          case 11: mixerState.master.expression = clampedValue; break;
+          case 1: mixerState.master.modulation = clampedValue; break;
+        }
+
+        mixerState = mixerState; // Trigger reactivity
+      }
+
+      // Send MIDI CC to all channels (channels 1-5 = MIDI channels 0-4)
+      if (midiDeviceId) {
+        for (let channelId = 1; channelId <= 5; channelId++) {
+          const midiChannel = channelId - 1; // Convert 1-based to 0-based
+          await safeInvoke('midi_send_cc', {
+            device_id: midiDeviceId,
+            channel: midiChannel,
+            controller: ccNumber,
+            value: clampedValue,
+          });
+        }
+        console.log(`Master CC${ccNumber} = ${clampedValue} (broadcast to MIDI channels 0-4 on device ${midiDeviceId})`);
+      } else {
+        console.warn(`Master CC${ccNumber} = ${clampedValue} (no MIDI device available)`);
+      }
+    } catch (error) {
+      console.error(`Failed to update master CC${ccNumber}:`, error);
     }
   }
 
@@ -220,6 +351,29 @@
     if (pan > 0.5) {
       return 'R';
     }
+    return 'C';
+  }
+
+  // MIDI CC helper functions
+  function audioToMidiCC(audioValue: number): number {
+    // Convert 0-1 audio value to 0-127 MIDI CC
+    return Math.round(audioValue * 127);
+  }
+
+  function panToMidiCC(panValue: number): number {
+    // Convert -1 to 1 pan value to 0-127 MIDI CC (64 = center)
+    return Math.round((panValue + 1) * 63.5);
+  }
+
+  function formatMidiCC(value: number | undefined, label: string): string {
+    if (value === undefined) return '---';
+    return `${value}`;
+  }
+
+  function formatMidiPan(value: number | undefined): string {
+    if (value === undefined) return 'C';
+    if (value < 54) return `L${64 - value}`;
+    if (value > 74) return `R${value - 64}`;
     return 'C';
   }
 
@@ -367,6 +521,17 @@
   }
 </script>
 
+<WindowBase
+  title="Mixer"
+  windowId="mixer"
+  width={1152}
+  height={512}
+  minWidth={600}
+  minHeight={300}
+  maximizable={true}
+  closable={true}
+  minimizable={true}
+>
 <div class="mixer-window dark:bg-window dark:text-app-text p-4 h-full flex flex-col">
   <!-- Mixer Toolbar -->
   {#if showToolbar}
@@ -421,36 +586,67 @@
             {channel.label || `Track ${channel.id}`}
           </div>
 
-          <!-- Volume Fader -->
-          <div class="volume-fader flex flex-col items-center space-y-1">
-            <label class="volume-label text-xs dark:text-gray-400">Vol</label>
-            <input
-              type="range"
-              min="0"
-              max="1"
-              step="0.01"
-              value={channel.volume}
-              on:input={(e) => updateVolume(channel.id, parseFloat(e.currentTarget.value))}
-              class="volume-slider dark:bg-input w-4 h-32"
-            />
-            <span class="volume-display text-xs dark:text-gray-300"
-              >{formatVolume(channel.volume)}</span
-            >
-          </div>
+          <!-- MIDI CC Controls (Rotary Knobs) -->
+          <div class="midi-cc-controls flex flex-col space-y-2 w-full">
+            <!-- CC7: Volume -->
+            <div class="cc-knob flex flex-col items-center">
+              <label class="text-xs dark:text-gray-400">Vol</label>
+              <input
+                type="range"
+                min="0"
+                max="127"
+                step="1"
+                value={audioToMidiCC(channel.volume)}
+                on:input={(e) => updateMidiCC(channel.id, 7, parseInt(e.currentTarget.value))}
+                class="cc-slider dark:bg-input w-full h-1 rounded"
+              />
+              <span class="text-xs dark:text-gray-300">{audioToMidiCC(channel.volume)}</span>
+            </div>
 
-          <!-- Pan Control -->
-          <div class="pan-control flex flex-col items-center space-y-1">
-            <label class="pan-label text-xs dark:text-gray-400">Pan</label>
-            <input
-              type="range"
-              min="-1"
-              max="1"
-              step="0.01"
-              value={channel.pan}
-              on:input={(e) => updatePan(channel.id, parseFloat(e.currentTarget.value))}
-              class="pan-slider dark:bg-input w-16 h-2"
-            />
-            <span class="pan-display text-xs dark:text-gray-300">{formatPan(channel.pan)}</span>
+            <!-- CC10: Pan -->
+            <div class="cc-knob flex flex-col items-center">
+              <label class="text-xs dark:text-gray-400">Pan</label>
+              <input
+                type="range"
+                min="0"
+                max="127"
+                step="1"
+                value={panToMidiCC(channel.pan)}
+                on:input={(e) => updateMidiCC(channel.id, 10, parseInt(e.currentTarget.value))}
+                class="cc-slider dark:bg-input w-full h-1 rounded"
+              />
+              <span class="text-xs dark:text-gray-300">{formatMidiPan(panToMidiCC(channel.pan))}</span>
+            </div>
+
+            <!-- CC11: Expression -->
+            <div class="cc-knob flex flex-col items-center">
+              <label class="text-xs dark:text-gray-400">Exp</label>
+              <input
+                type="range"
+                min="0"
+                max="127"
+                step="1"
+                value={channel.expression ?? 100}
+                on:input={(e) => updateMidiCC(channel.id, 11, parseInt(e.currentTarget.value))}
+                class="cc-slider dark:bg-input w-full h-1 rounded"
+              />
+              <span class="text-xs dark:text-gray-300">{formatMidiCC(channel.expression, 'Exp')}</span>
+            </div>
+
+            <!-- CC1: Modulation -->
+            <div class="cc-knob flex flex-col items-center">
+              <label class="text-xs dark:text-gray-400">Mod</label>
+              <input
+                type="range"
+                min="0"
+                max="127"
+                step="1"
+                value={channel.modulation ?? 0}
+                on:input={(e) => updateMidiCC(channel.id, 1, parseInt(e.currentTarget.value))}
+                class="cc-slider dark:bg-input w-full h-1 rounded"
+              />
+              <span class="text-xs dark:text-gray-300">{formatMidiCC(channel.modulation, 'Mod')}</span>
+            </div>
           </div>
 
           <!-- VU Meters -->
@@ -618,39 +814,92 @@
       </div>
     {/if}
 
-    <!-- Master Section -->
-    <div class="master dark:bg-menu p-3 rounded mt-auto">
-      <h3 class="dark:text-gray-200 mb-2">Master</h3>
-      <div class="flex items-center space-x-4">
-        <div class="volume-master flex flex-col items-center space-y-1">
-          <label class="volume-label text-xs dark:text-gray-400">Master Vol</label>
-          <input
-            type="range"
-            min="0"
-            max="1"
-            step="0.01"
-            value={masterVolume}
-            on:input={(e) => updateMasterVolume(parseFloat(e.currentTarget.value))}
-            class="volume-slider dark:bg-input w-4 h-32"
-            title="Master Volume"
-          />
-          <span class="volume-display text-xs dark:text-gray-300">{formatVolume(masterVolume)}</span
-          >
+    <!-- Master Section - MIDI CC Controls (broadcasts to all channels) -->
+    <div class="master dark:bg-menu p-4 rounded mt-auto">
+      <h3 class="dark:text-gray-200 mb-3 text-center font-semibold">Master (All Channels)</h3>
+      <div class="flex items-start space-x-6">
+        <!-- Master MIDI CC Controls -->
+        <div class="master-cc-controls flex flex-col space-y-3 flex-1">
+          <!-- Master CC7: Volume -->
+          <div class="cc-knob flex flex-col items-center">
+            <label class="text-xs dark:text-gray-400 font-medium">Volume (CC7)</label>
+            <input
+              type="range"
+              min="0"
+              max="127"
+              step="1"
+              value={audioToMidiCC(mixerState?.master?.volume ?? 1.0)}
+              on:input={(e) => updateMasterCC(7, parseInt(e.currentTarget.value))}
+              class="cc-slider dark:bg-primary w-full h-2 rounded"
+              title="Sets volume for all channels"
+            />
+            <span class="text-sm dark:text-gray-200 font-semibold">{audioToMidiCC(mixerState?.master?.volume ?? 1.0)}</span>
+          </div>
+
+          <!-- Master CC10: Pan -->
+          <div class="cc-knob flex flex-col items-center">
+            <label class="text-xs dark:text-gray-400 font-medium">Pan (CC10)</label>
+            <input
+              type="range"
+              min="0"
+              max="127"
+              step="1"
+              value={panToMidiCC(mixerState?.master?.pan ?? 0)}
+              on:input={(e) => updateMasterCC(10, parseInt(e.currentTarget.value))}
+              class="cc-slider dark:bg-primary w-full h-2 rounded"
+              title="Sets pan for all channels"
+            />
+            <span class="text-sm dark:text-gray-200 font-semibold">{formatMidiPan(panToMidiCC(mixerState?.master?.pan ?? 0))}</span>
+          </div>
+
+          <!-- Master CC11: Expression -->
+          <div class="cc-knob flex flex-col items-center">
+            <label class="text-xs dark:text-gray-400 font-medium">Expression (CC11)</label>
+            <input
+              type="range"
+              min="0"
+              max="127"
+              step="1"
+              value={mixerState?.master?.expression ?? 110}
+              on:input={(e) => updateMasterCC(11, parseInt(e.currentTarget.value))}
+              class="cc-slider dark:bg-primary w-full h-2 rounded"
+              title="Sets expression for all channels"
+            />
+            <span class="text-sm dark:text-gray-200 font-semibold">{formatMidiCC(mixerState?.master?.expression, 'Exp')}</span>
+          </div>
+
+          <!-- Master CC1: Modulation -->
+          <div class="cc-knob flex flex-col items-center">
+            <label class="text-xs dark:text-gray-400 font-medium">Modulation (CC1)</label>
+            <input
+              type="range"
+              min="0"
+              max="127"
+              step="1"
+              value={mixerState?.master?.modulation ?? 0}
+              on:input={(e) => updateMasterCC(1, parseInt(e.currentTarget.value))}
+              class="cc-slider dark:bg-primary w-full h-2 rounded"
+              title="Sets modulation for all channels"
+            />
+            <span class="text-sm dark:text-gray-200 font-semibold">{formatMidiCC(mixerState?.master?.modulation, 'Mod')}</span>
+          </div>
         </div>
+
+        <!-- Master VU Meters -->
         <div class="vu-master flex space-x-1">
           <div
             class={getMeterColor(getMasterMeter(meterData, 'left'))}
             style="height: {getMasterMeter(
               meterData,
               'left'
-            )}px; width: 2px; background: currentColor; rounded;"
+            )}px; width: 3px; background: currentColor; rounded;"
           ></div>
           <div
             class={getMeterColor(getMasterMeter(meterData, 'right'))}
             style="height: {getMasterMeter(
               meterData,
               'right'
-            )}px; width: 2px; background: currentColor; rounded;"
+            )}px; width: 3px; background: currentColor; rounded;"
           ></div>
         </div>
       </div>
@@ -684,6 +933,7 @@
     </div>
   {/if}
 </div>
+</WindowBase>
 
 <style>
   .mixer-window {

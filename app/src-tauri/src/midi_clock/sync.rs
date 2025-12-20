@@ -251,3 +251,235 @@ impl SyncManager {
         }
     }
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    // ==========================================================================
+    // SyncMode Tests
+    // ==========================================================================
+
+    #[test]
+    fn test_sync_mode_default() {
+        let mode = SyncMode::default();
+        assert_eq!(mode, SyncMode::Internal);
+    }
+
+    #[test]
+    fn test_sync_mode_variants() {
+        let _internal = SyncMode::Internal;
+        let _external = SyncMode::External;
+        let _mtc = SyncMode::MidiTimecode;
+    }
+
+    #[test]
+    fn test_sync_mode_equality() {
+        assert_eq!(SyncMode::Internal, SyncMode::Internal);
+        assert_ne!(SyncMode::Internal, SyncMode::External);
+        assert_ne!(SyncMode::External, SyncMode::MidiTimecode);
+    }
+
+    #[test]
+    fn test_sync_mode_serialization() {
+        let modes = [
+            SyncMode::Internal,
+            SyncMode::External,
+            SyncMode::MidiTimecode,
+        ];
+
+        for mode in modes {
+            let json = serde_json::to_string(&mode).unwrap();
+            let deserialized: SyncMode = serde_json::from_str(&json).unwrap();
+            assert_eq!(deserialized, mode);
+        }
+    }
+
+    #[test]
+    fn test_sync_mode_copy() {
+        let mode = SyncMode::External;
+        let copied = mode;
+        assert_eq!(copied, SyncMode::External);
+    }
+
+    // ==========================================================================
+    // SyncStatus Tests
+    // ==========================================================================
+
+    #[test]
+    fn test_sync_status_default() {
+        let status = SyncStatus::default();
+        assert_eq!(status.mode, SyncMode::Internal);
+        assert!(!status.is_locked);
+        assert!(status.external_bpm.is_none());
+        assert!((status.drift_ms - 0.0).abs() < 0.001);
+        assert!(status.clock_source.is_none());
+        assert!(status.last_sync.is_none());
+    }
+
+    #[test]
+    fn test_sync_status_with_values() {
+        let status = SyncStatus {
+            mode: SyncMode::External,
+            is_locked: true,
+            external_bpm: Some(120.0),
+            drift_ms: 2.5,
+            clock_source: Some("MPC ONE".to_string()),
+            last_sync: Some(Instant::now()),
+        };
+
+        assert_eq!(status.mode, SyncMode::External);
+        assert!(status.is_locked);
+        assert!((status.external_bpm.unwrap() - 120.0).abs() < 0.001);
+        assert!((status.drift_ms - 2.5).abs() < 0.001);
+        assert_eq!(status.clock_source.as_deref(), Some("MPC ONE"));
+        assert!(status.last_sync.is_some());
+    }
+
+    #[test]
+    fn test_sync_status_clone() {
+        let status = SyncStatus {
+            mode: SyncMode::MidiTimecode,
+            is_locked: true,
+            external_bpm: Some(140.0),
+            drift_ms: 1.0,
+            clock_source: Some("External DAW".to_string()),
+            last_sync: None, // Skip Instant for clone test
+        };
+
+        let cloned = status.clone();
+
+        assert_eq!(cloned.mode, status.mode);
+        assert_eq!(cloned.is_locked, status.is_locked);
+        assert_eq!(cloned.external_bpm, status.external_bpm);
+        assert!((cloned.drift_ms - status.drift_ms).abs() < 0.001);
+        assert_eq!(cloned.clock_source, status.clock_source);
+    }
+
+    #[test]
+    fn test_sync_status_serialization() {
+        let status = SyncStatus {
+            mode: SyncMode::External,
+            is_locked: true,
+            external_bpm: Some(128.0),
+            drift_ms: 0.5,
+            clock_source: Some("MIDI Interface".to_string()),
+            last_sync: None, // Instant is skipped in serialization
+        };
+
+        let json = serde_json::to_string(&status).unwrap();
+        let deserialized: SyncStatus = serde_json::from_str(&json).unwrap();
+
+        assert_eq!(deserialized.mode, status.mode);
+        assert_eq!(deserialized.is_locked, status.is_locked);
+        assert_eq!(deserialized.external_bpm, status.external_bpm);
+        assert!((deserialized.drift_ms - status.drift_ms).abs() < 0.001);
+        assert_eq!(deserialized.clock_source, status.clock_source);
+        // last_sync is skipped, so should be None after deserialization
+        assert!(deserialized.last_sync.is_none());
+    }
+
+    // ==========================================================================
+    // BpmDetector Tests (internal struct)
+    // ==========================================================================
+
+    #[test]
+    fn test_bpm_detector_new() {
+        let detector = BpmDetector::new(48);
+        assert!(detector.tick_times.is_empty());
+        assert_eq!(detector.max_samples, 48);
+    }
+
+    #[test]
+    fn test_bpm_detector_add_tick() {
+        let mut detector = BpmDetector::new(10);
+
+        for _ in 0..5 {
+            detector.add_tick(Instant::now());
+            std::thread::sleep(std::time::Duration::from_millis(1));
+        }
+
+        assert_eq!(detector.tick_times.len(), 5);
+    }
+
+    #[test]
+    fn test_bpm_detector_max_samples() {
+        let mut detector = BpmDetector::new(3);
+
+        for _ in 0..5 {
+            detector.add_tick(Instant::now());
+            std::thread::sleep(std::time::Duration::from_millis(1));
+        }
+
+        // Should only keep the last 3 samples
+        assert_eq!(detector.tick_times.len(), 3);
+    }
+
+    #[test]
+    fn test_bpm_detector_calculate_bpm_insufficient_samples() {
+        let detector = BpmDetector::new(48);
+        assert!(detector.calculate_bpm().is_none());
+
+        let mut detector_with_one = BpmDetector::new(48);
+        detector_with_one.add_tick(Instant::now());
+        assert!(detector_with_one.calculate_bpm().is_none());
+    }
+
+    #[test]
+    fn test_bpm_detector_reset() {
+        let mut detector = BpmDetector::new(48);
+
+        for _ in 0..10 {
+            detector.add_tick(Instant::now());
+        }
+
+        assert!(!detector.tick_times.is_empty());
+
+        detector.reset();
+
+        assert!(detector.tick_times.is_empty());
+    }
+
+    #[test]
+    fn test_bpm_detector_calculate_bpm_reasonable_values() {
+        // This test simulates a 120 BPM clock
+        // At 120 BPM with PPQN of 24, tick interval = 60 / (120 * 24) = 20.83ms
+        let mut detector = BpmDetector::new(48);
+        let start = Instant::now();
+
+        // Simulate 24 ticks at ~21ms intervals (120 BPM)
+        for i in 0..24 {
+            let tick_time = start + Duration::from_micros(20833 * i);
+            detector.tick_times.push(tick_time);
+        }
+
+        let bpm = detector.calculate_bpm();
+        assert!(bpm.is_some());
+
+        // Allow some tolerance due to integer division
+        let calculated_bpm = bpm.unwrap();
+        assert!(
+            calculated_bpm > 115.0 && calculated_bpm < 125.0,
+            "BPM {} should be close to 120",
+            calculated_bpm
+        );
+    }
+
+    #[test]
+    fn test_bpm_detector_rejects_extreme_values() {
+        // This test verifies that extreme BPM values are rejected
+        let mut detector = BpmDetector::new(48);
+
+        // Ticks that would result in BPM > 300 (too fast)
+        // At 1000 BPM with PPQN of 24, tick interval = 60 / (1000 * 24) = 2.5ms
+        let start = Instant::now();
+        for i in 0..24 {
+            let tick_time = start + Duration::from_micros(2500 * i);
+            detector.tick_times.push(tick_time);
+        }
+
+        let bpm = detector.calculate_bpm();
+        // Should reject because BPM > 300
+        assert!(bpm.is_none() || bpm.unwrap() <= 300.0);
+    }
+}

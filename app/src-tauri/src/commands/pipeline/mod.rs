@@ -10,6 +10,7 @@ pub mod archive_import;
 pub mod file_import;
 pub mod files;
 pub mod health;
+pub mod meilisearch;
 pub mod progress;
 pub mod search;
 pub mod split_file;

@@ -5,10 +5,89 @@ import { articulationsApi } from '../api/articulations';
 import { collectionsApi } from '../api/collections';
 import { savedSearchesApi } from '../api/savedSearches';
 import { vip3BrowserApi } from '../api/vip3Browser';
+import { Vip3BrowserApi } from '../api/vip3BrowserApi';
+import type {
+  FilterCounts,
+  Vip3Filters as Vip3FiltersType
+} from '../types/vip3';
 
 // =============================================================================
 // VIP3 BROWSER STATE - Akai VIP3-style category filtering
 // =============================================================================
+
+// Filter counts from the new get_vip3_filter_counts command
+export const filterCounts = writable<FilterCounts | null>(null);
+
+// Loading state for filter counts
+export const loadingFilterCounts = writable<boolean>(false);
+
+// Alias for component compatibility
+export const loadingCounts = loadingFilterCounts;
+
+// Derived store: Total matches from filter counts
+export const totalFilterMatches = derived(filterCounts, ($counts) => {
+  return $counts?.total_matches ?? 0;
+});
+
+// Alias for component compatibility
+export const totalMatches = totalFilterMatches;
+
+// VIP3 Filters store (compatible with Vip3FiltersType)
+export const vip3Filters = writable<Vip3FiltersType>({});
+
+// =============================================================================
+// MAIN VIP3 STORE STATE
+// =============================================================================
+
+const initialFilters: VIP3Filters = {
+  timbreIds: [],
+  styleIds: [],
+  articulationIds: [],
+  bpmRangeId: null,
+  keyIds: [],
+  searchQuery: '',
+  trackLayerFilter: 'all',
+  sortBy: 'filename',
+  sortOrder: 'asc',
+};
+
+const initialState: VIP3State = {
+  timbres: [],
+  styles: [],
+  articulations: [],
+  bpmRanges: [],
+  musicalKeys: [],
+  filters: { ...initialFilters },
+  files: [],
+  totalCount: 0,
+  isLoading: false,
+  error: null,
+  page: 1,
+  pageSize: 50,
+  savedSearches: [],
+  recentSearches: [],
+  collections: [],
+  activeCollectionId: null,
+};
+
+export const vip3Store = writable<VIP3State>(initialState);
+
+// =============================================================================
+// DERIVED STORES FOR CATEGORY DATA
+// =============================================================================
+
+// Derived stores that extract category lists from main store
+export const timbres = derived(vip3Store, ($state) =>
+  $state.timbres.map((t) => ({ id: t.id, name: t.name }))
+);
+
+export const styles = derived(vip3Store, ($state) =>
+  $state.styles.map((s) => ({ id: s.id, name: s.name }))
+);
+
+export const articulations = derived(vip3Store, ($state) =>
+  $state.articulations.map((a) => ({ id: a.id, name: a.name }))
+);
 
 // Category types matching database schema
 export interface Timbre {
@@ -58,6 +137,7 @@ export interface VIP3File {
   timbres: string[];
   styles: string[];
   articulations: string[];
+  favorite: boolean;
 }
 
 export interface SavedSearch {
@@ -116,39 +196,6 @@ export interface VIP3State {
   collections: Collection[];
   activeCollectionId: number | null;
 }
-
-const initialFilters: VIP3Filters = {
-  timbreIds: [],
-  styleIds: [],
-  articulationIds: [],
-  bpmRangeId: null,
-  keyIds: [],
-  searchQuery: '',
-  trackLayerFilter: 'all',
-  sortBy: 'filename',
-  sortOrder: 'asc',
-};
-
-const initialState: VIP3State = {
-  timbres: [],
-  styles: [],
-  articulations: [],
-  bpmRanges: [],
-  musicalKeys: [],
-  filters: { ...initialFilters },
-  files: [],
-  totalCount: 0,
-  isLoading: false,
-  error: null,
-  page: 1,
-  pageSize: 50,
-  savedSearches: [],
-  recentSearches: [],
-  collections: [],
-  activeCollectionId: null,
-};
-
-export const vip3Store = writable<VIP3State>(initialState);
 
 // =============================================================================
 // DERIVED STORES
@@ -229,59 +276,136 @@ function filtersToApiFormat(filters: VIP3Filters, page: number, pageSize: number
 // =============================================================================
 
 export const vip3Actions = {
+  // Initialize the VIP3 browser - load categories and initial counts
+  async initialize() {
+    await vip3Actions.loadCategories();
+    await vip3Actions.refreshCounts();
+    await vip3Actions.search();
+  },
+
+  // Refresh filter counts based on current filters
+  async refreshCounts() {
+    loadingFilterCounts.set(true);
+    try {
+      const filters = get(vip3Filters);
+      const counts = await Vip3BrowserApi.getFilterCounts(filters);
+      filterCounts.set(counts);
+
+      // Update category file_counts from the new counts
+      vip3Store.update((s) => ({
+        ...s,
+        timbres: s.timbres.map((t) => ({
+          ...t,
+          file_count: counts.timbre_counts[t.id] || 0,
+        })),
+        styles: s.styles.map((st) => ({
+          ...st,
+          file_count: counts.style_counts[st.id] || 0,
+        })),
+        articulations: s.articulations.map((a) => ({
+          ...a,
+          file_count: counts.articulation_counts[a.id] || 0,
+        })),
+      }));
+    } catch (error) {
+      console.error('Failed to refresh filter counts:', error);
+      filterCounts.set(null);
+    } finally {
+      loadingFilterCounts.set(false);
+    }
+  },
+
+  // Set a single filter value
+  setFilter<K extends keyof Vip3FiltersType>(key: K, value: Vip3FiltersType[K]) {
+    vip3Filters.update((filters) => {
+      if (value === undefined || (Array.isArray(value) && value.length === 0)) {
+        const { [key]: _, ...rest } = filters;
+        return rest;
+      }
+      return { ...filters, [key]: value };
+    });
+    // Trigger refresh
+    vip3Actions.refreshCounts();
+    vip3Actions.search();
+  },
+
+  // Set multiple filters at once (e.g., from a saved search)
+  setFilters(newFilters: Partial<Vip3FiltersType>) {
+    vip3Filters.update((filters) => {
+      // Merge new filters, removing undefined/empty values
+      const merged = { ...filters };
+      for (const [key, value] of Object.entries(newFilters)) {
+        if (value === undefined || (Array.isArray(value) && value.length === 0)) {
+          delete merged[key as keyof Vip3FiltersType];
+        } else {
+          (merged as Record<string, unknown>)[key] = value;
+        }
+      }
+      return merged;
+    });
+    // Trigger refresh
+    vip3Actions.refreshCounts();
+    vip3Actions.search();
+  },
+
+  // Toggle folder filter
+  toggleFolder(id: number) {
+    vip3Filters.update((filters) => {
+      const current = filters.folder_ids ?? [];
+      const updated = current.includes(id)
+        ? current.filter((x) => x !== id)
+        : [...current, id];
+      return {
+        ...filters,
+        folder_ids: updated.length > 0 ? updated : undefined,
+      };
+    });
+    vip3Actions.refreshCounts();
+    vip3Actions.search();
+  },
+
   // Load all category data from backend
   async loadCategories() {
     vip3Store.update((s) => ({ ...s, isLoading: true, error: null }));
     try {
-      const categories = await vip3BrowserApi.getAllCategories();
+      // Use Vip3BrowserApi (capital A) with real database data
+      const result = await Vip3BrowserApi.getAllCategories();
 
-      // Map API response to local types (adding file_count from counts if available)
-      const timbres: Timbre[] = categories.timbres.map((t) => ({
-        id: t.id,
-        name: t.name,
-        description: t.description || '',
+      // Convert string arrays to the format expected by the store
+      // Generate sequential IDs since the backend returns string arrays
+      const timbres: Timbre[] = result.timbres.map((name, idx) => ({
+        id: idx + 1,
+        name,
+        description: '',
         file_count: 0, // Will be updated when counts are loaded
       }));
 
-      const styles: Style[] = categories.styles.map((s) => ({
-        id: s.id,
-        name: s.name,
-        description: s.description || '',
+      const styles: Style[] = result.styles.map((name, idx) => ({
+        id: idx + 1,
+        name,
+        description: '',
         file_count: 0,
       }));
 
-      const articulations: Articulation[] = categories.articulations.map((a) => ({
-        id: a.id,
-        name: a.name,
-        description: a.description || '',
+      const articulations: Articulation[] = result.articulations.map((name, idx) => ({
+        id: idx + 1,
+        name,
+        description: '',
         file_count: 0,
       }));
 
-      const bpmRanges: BpmRange[] = categories.bpmRanges.map((b) => ({
-        id: b.id,
-        label: b.name,
-        min_bpm: b.min_bpm,
-        max_bpm: b.max_bpm,
-        file_count: 0,
-      }));
-
-      const musicalKeys: MusicalKey[] = categories.musicalKeys.map((k) => ({
-        id: k.id,
-        name: k.name,
-        display_name: k.name,
-        is_minor: k.mode === 'minor',
-        file_count: 0,
-      }));
-
+      // For now, we don't have BPM ranges and musical keys from the backend
+      // Keep the existing data or use empty arrays
       vip3Store.update((s) => ({
         ...s,
         timbres,
         styles,
         articulations,
-        bpmRanges,
-        musicalKeys,
         isLoading: false,
       }));
+
+      console.log(`✓ Loaded ${result.folders.length} folders, ${result.instruments.length} instruments`);
+      console.log(`✓ Loaded ${timbres.length} timbres, ${styles.length} styles, ${articulations.length} articulations`);
 
       // Load counts to update file_count values
       await vip3Actions.loadCounts();
@@ -314,6 +438,48 @@ export const vip3Actions = {
     }
   },
 
+  // Load category counts using new FilterCounts API
+  async loadFilterCounts() {
+    try {
+      const state = get(vip3Store);
+      // Convert VIP3Filters to Vip3FiltersType for the API
+      const filters: Vip3FiltersType = {
+        timbre_ids: state.filters.timbreIds.length > 0 ? state.filters.timbreIds : undefined,
+        style_ids: state.filters.styleIds.length > 0 ? state.filters.styleIds : undefined,
+        articulation_ids: state.filters.articulationIds.length > 0 ? state.filters.articulationIds : undefined,
+        // Map bpmRangeId to bpm_min/bpm_max if set
+        ...(state.filters.bpmRangeId !== null && {
+          bpm_min: state.bpmRanges.find(r => r.id === state.filters.bpmRangeId)?.min_bpm,
+          bpm_max: state.bpmRanges.find(r => r.id === state.filters.bpmRangeId)?.max_bpm,
+        }),
+      };
+      const counts = await Vip3BrowserApi.getFilterCounts(filters);
+      filterCounts.set(counts);
+
+      // Update category file_counts from the new counts
+      vip3Store.update((s) => ({
+        ...s,
+        timbres: s.timbres.map((t) => ({
+          ...t,
+          file_count: counts.timbre_counts[t.id] || 0,
+        })),
+        styles: s.styles.map((st) => ({
+          ...st,
+          file_count: counts.style_counts[st.id] || 0,
+        })),
+        articulations: s.articulations.map((a) => ({
+          ...a,
+          file_count: counts.articulation_counts[a.id] || 0,
+        })),
+      }));
+    } catch (error) {
+      console.error('Failed to refresh filter counts:', error);
+      filterCounts.set(null);
+    } finally {
+      loadingFilterCounts.set(false);
+    }
+  },
+
   // Search with current filters
   async search() {
     const state = get(vip3Store);
@@ -334,6 +500,7 @@ export const vip3Actions = {
         timbres: f.tags?.filter((t: string) => t.startsWith('timbre:')) || [],
         styles: f.tags?.filter((t: string) => t.startsWith('style:')) || [],
         articulations: f.tags?.filter((t: string) => t.startsWith('articulation:')) || [],
+        favorite: f.is_favorite ?? false,
       }));
 
       vip3Store.update((s) => ({
@@ -345,6 +512,9 @@ export const vip3Actions = {
 
       // Add to recent searches
       vip3Actions.addRecentSearch(state.filters);
+
+      // Refresh filter counts after search
+      vip3Actions.loadFilterCounts();
     } catch (error) {
       console.error('VIP3 search failed:', error);
       vip3Store.update((s) => ({
@@ -605,6 +775,7 @@ export const vip3Actions = {
           timbres: f.tags?.filter((t: string) => t.startsWith('timbre:')) || [],
           styles: f.tags?.filter((t: string) => t.startsWith('style:')) || [],
           articulations: f.tags?.filter((t: string) => t.startsWith('articulation:')) || [],
+          favorite: f.is_favorite ?? false,
         }));
 
         vip3Store.update((s) => ({
@@ -662,6 +833,24 @@ export const vip3Actions = {
       await articulationsApi.assignToFile(articulationId, fileId);
     } catch (error) {
       console.error('Failed to assign articulation:', error);
+    }
+  },
+
+  // Toggle favorite status for a file
+  async toggleFavorite(fileId: number): Promise<boolean> {
+    try {
+      const newState = await Vip3BrowserApi.toggleFavorite(fileId);
+      // Update the file's favorite status in the store
+      vip3Store.update((s) => ({
+        ...s,
+        files: s.files.map((f) =>
+          f.id === fileId ? { ...f, favorite: newState } : f
+        ),
+      }));
+      return newState;
+    } catch (error) {
+      console.error('Failed to toggle favorite:', error);
+      throw error;
     }
   },
 };
