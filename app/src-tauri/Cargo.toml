@@ -3,6 +3,7 @@ name = "midi-software-center"
 version = "1.0.0"
 edition = "2021"
 description = "MIDI Software Center - Unified application with Pipeline and DAW"
+default-run = "midi-software-center"
 
 [lib]
 name = "midi_app"
