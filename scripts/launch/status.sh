@@ -4,11 +4,25 @@
 # Configuration
 PROJECT_ROOT="$HOME/projects/midi-software-center"
 LOGS_DIR="$PROJECT_ROOT/logs"
-DB_HOST="localhost"
-DB_PORT="5433"
-DB_USER="midiuser"
-DB_PASSWORD="145278963"
-DB_NAME="midi_library"
+
+# Load environment variables from .env file if it exists
+if [ -f "$PROJECT_ROOT/.env" ]; then
+    set -a
+    source "$PROJECT_ROOT/.env"
+    set +a
+fi
+
+# Database configuration - prefer environment variables
+DB_HOST="${DB_HOST:-localhost}"
+DB_PORT="${DB_PORT:-5433}"
+DB_USER="${DB_USER:-midiuser}"
+DB_PASSWORD="${DB_PASSWORD:-${PGPASSWORD:-}}"
+DB_NAME="${DB_NAME:-midi_library}"
+
+# Warn if no password is set
+if [ -z "$DB_PASSWORD" ]; then
+    echo -e "\033[1;33m⚠️  Warning: DB_PASSWORD not set. Set it via environment variable or .env file.\033[0m" >&2
+fi
 
 # Colors for output
 RED='\033[0;31m'
